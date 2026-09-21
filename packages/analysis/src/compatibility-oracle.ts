@@ -65,6 +65,29 @@ export function verifyExitSemantics(
     })));
 }
 
+/** @id CODE-M5-COMPAT-BIN-001
+ * @implements REQ-M5-COMPAT-005 REQ-M5-COMPAT-006
+ * @design DES-M5-001 DES-M5-002
+ */
+export function validatePublishedBinContract(packageManifest: {
+  name?: unknown;
+  bin?: unknown;
+}): CompatibilityResult {
+  const expected = { musubix5: 'dist/packages/cli/src/main.js' };
+  const valid = packageManifest.name === 'musubix5'
+    && packageManifest.bin !== null
+    && typeof packageManifest.bin === 'object'
+    && !Array.isArray(packageManifest.bin)
+    && Buffer.compare(
+      canonicalBytes(packageManifest.bin),
+      canonicalBytes(expected),
+    ) === 0;
+  return result(valid ? [] : [{
+    code: 'COMPAT_BIN_CONTRACT_MISMATCH',
+    message: 'The package must expose exactly musubix5 -> dist/packages/cli/src/main.js.',
+  }]);
+}
+
 /** @id CODE-M5-COMPAT-CONFIG-001
  * @implements REQ-M5-COMPAT-004
  * @design DES-M5-001

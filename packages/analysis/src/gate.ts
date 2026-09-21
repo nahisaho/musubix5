@@ -29,6 +29,7 @@ import {
   domainOwning, domainsConfigured, resolveDomains, validateApprovals, validateApprovalsForFeatureGate,
   type ApprovalValidation,
 } from './approval.js';
+import { requiredCommandDiagnostics } from './quality-policy.js';
 
 export interface GateReport {
   schemaVersion: 1;
@@ -526,10 +527,14 @@ export async function runGate(root: string, options: {
     summary: `${approvalStages.filter((stage) => stage.status === 'approved').length}/${approvalStages.length} approval stage(s) are current.`,
     diagnostics: approvals.diagnostics,
   });
+  const missingCommandDiagnostics = requiredCommandDiagnostics(config.commands.map((command) => command.name));
   checks.push({
     name: 'commands', required: required('commands'),
-    status: !commandChecks.length ? 'skipped' : aggregateStatus(commandChecks) === 'fail' ? 'fail' : 'pass',
+    status: !commandChecks.length
+      ? 'skipped'
+      : missingCommandDiagnostics.length || aggregateStatus(commandChecks) === 'fail' ? 'fail' : 'pass',
     summary: commandChecks.length ? `${commandChecks.length} configured command(s) executed; optional failures are nonblocking.` : 'No configured commands; build/test evidence is missing.',
+    diagnostics: missingCommandDiagnostics,
   });
   const metrics: Record<string, number> = {
     'requirements.errors': countErrors(reqDiagnostics),
@@ -615,6 +620,19 @@ export async function runGate(root: string, options: {
   if (domainsOn) featureScopedCheckNames.add('approval');
   const [waivers, changeWaiverDiagnostics] = await Promise.all([activeWaivers(root), waiverEvidenceDiagnostics(root)]);
   const waiverDiagnostics = [...changeWaiverDiagnostics, ...workflowWaiverDiagnostics];
+  if (waivers.length || workflowWaivers.length) {
+    checks.push({
+      name: 'waiver',
+      required: true,
+      status: 'fail',
+      summary: `${waivers.length + workflowWaivers.length} active waiver(s); mandatory evidence remains non-pass.`,
+      diagnostics: [{
+        code: 'MANDATORY_EVIDENCE_WAIVED',
+        severity: 'error',
+        message: 'Active waivers never grant release readiness.',
+      }],
+    });
+  }
   const report: GateReport = {
     schemaVersion: 1,
     generatedAt,

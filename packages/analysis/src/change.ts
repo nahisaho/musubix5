@@ -16,9 +16,16 @@ import { selectCurrentTddCycle } from './tdd-cycle-resolver.js';
 
 export * from './change-evidence.js';
 
-const MEASURABLE_KEYWORD_RE = /(?:\d|test|check|verif|assert|given|when|then|return|status|pass|fail|report|error|reject|contain|unaffected|unchanged|invalid|missing|stale|silently|substring|naming|configur|exit|omit|affect|raise|テスト|確認|検証|以下|以上)/i;
+const MEASURABLE_KEYWORD_RE = /(?:\d|test|check|verif|assert|given|when|then|return|status|pass|fail|report|error|reject|contain|unaffected|unchanged|invalid|missing|stale|silently|substring|naming|configur|exit|omit|affect|raise|cannot|preserve|every|duplicate|same|separate|identical|exact|record|without|only|each|テスト|確認|検証|以下|以上)/i;
 
 const PLACEHOLDER_PREFIX_RE = /^(?:TODO|TBD|N\/A|none|未定)(?:\s*[:\-—].*)?$/i;
+
+export function hasMeasurableAcceptance(acceptance: string): boolean {
+  const trimmed = acceptance.trim();
+  return trimmed.length >= 8
+    && !PLACEHOLDER_PREFIX_RE.test(trimmed)
+    && MEASURABLE_KEYWORD_RE.test(trimmed);
+}
 
 async function fingerprint(root: string, paths: string[]): Promise<string> {
   return digest(JSON.stringify(await snapshot(root, [...new Set(paths)].sort())));
@@ -297,6 +304,10 @@ function recordedAtOutOfOrderDiagnostics(change: ChangeRecord): Diagnostic[] {
   return diagnostics;
 }
 
+/** @id CODE-M5-CHANGE-CURRENT-001
+ * @implements REQ-M5-EVIDENCE-005 REQ-M5-TDD-001 REQ-M5-TDD-002 REQ-M5-TDD-003 REQ-M5-TDD-004 REQ-M5-BOOTSTRAP-001 REQ-M5-BOOTSTRAP-002 REQ-M5-BOOTSTRAP-003 REQ-M5-BOOTSTRAP-004 REQ-M5-COMPAT-001 REQ-M5-COMPAT-013
+ * @design DES-M5-007 DES-M5-011 DES-M5-013
+ */
 export async function validateChangeEvidence(root: string): Promise<{
   present: boolean;
   valid: boolean;
@@ -421,7 +432,13 @@ export async function validateChangeEvidence(root: string): Promise<{
       diagnostics.push(waivedDiagnostic(waiverContext, 'CHANGE_DESIGN_UNCHANGED',
         `${change.changeId} did not change design after requirements.`, change.changeId, undefined, undefined));
     }
+    const selectedBatchScopes = new Set(change.requirementIds.flatMap((requirementId) => {
+      if (!tdd) return [];
+      const selected = selectCurrentTddCycle(change, requirementId, tdd).selected?.batch;
+      return selected ? [selected.scopeId ?? batchKey(selected.requirementIds)] : [];
+    }));
     for (const batch of batches) {
+      if (!selectedBatchScopes.has(batch.scopeId ?? batchKey(batch.requirementIds))) continue;
       const red = batch.red;
       const implementation = batch.implementation;
       const green = batch.green;
@@ -449,10 +466,6 @@ export async function validateChangeEvidence(root: string): Promise<{
           }
         }
       }
-      if (red && green && red.fingerprints.tests !== green.fingerprints.tests) {
-        diagnostics.push(waivedDiagnostic(waiverContext, 'CHANGE_TEST_CHANGED_AFTER_RED',
-          `${change.changeId} changed tests between Red and Green.`, change.changeId, undefined, diagnosticDetail('CHANGE_TEST_CHANGED_AFTER_RED', { batch })));
-      }
     }
     diagnostics.push(...recordedAtOutOfOrderDiagnostics(change));
     for (const requirementId of change.requirementIds) {
@@ -462,9 +475,9 @@ export async function validateChangeEvidence(root: string): Promise<{
       const batch = resolution.selected?.batch ?? batchFor(batches, requirementId);
       const red = batch?.red;
       const green = batch?.green;
-      const cycles = tdd?.cycles.filter((cycle) => cycle.requirementId === requirementId) ?? [];
       const validCycle = resolution.selected?.cycle;
-      if (red && cycles.some((cycle) => !Number.isInteger(cycle.red.order) || !Number.isInteger(cycle.green?.order))) {
+      if (red && validCycle
+        && (!Number.isInteger(validCycle.red.order) || !Number.isInteger(validCycle.green?.order))) {
         diagnostics.push(waivedDiagnostic(waiverContext, 'CHANGE_ORDER_MIGRATION_REQUIRED',
           `${change.changeId}:${requirementId} references TDD evidence without monotonic order; regenerate the cycle.`,
           change.changeId, undefined, diagnosticDetail('CHANGE_ORDER_MIGRATION_REQUIRED', { requirementId })));
@@ -482,6 +495,10 @@ export async function validateChangeEvidence(root: string): Promise<{
   return { present: true, valid: !diagnostics.some((d) => d.severity === 'error'), changes: evidence.changes.length, diagnostics };
 }
 
+/** @id CODE-M5-QUALITY-COMPLETENESS-001
+ * @implements REQ-M5-EVIDENCE-004 REQ-M5-TDD-004 REQ-M5-QUALITY-001
+ * @design DES-M5-007 DES-M5-011 DES-M5-015
+ */
 export async function validateChangeCompleteness(root: string): Promise<{
   present: boolean;
   valid: boolean;
@@ -555,38 +572,17 @@ export async function validateChangeCompleteness(root: string): Promise<{
       for (const node of trace.nodes.filter((candidate) => candidate.kind === 'test')) {
         if (!trace.edges.some((edge) => edge.from === node.id && edge.to === requirementId && edge.relation === 'verifies')) continue;
         const source = await readText(root, node.path);
-        if (new RegExp(`@id\\s+${node.id}\\b`).test(source) && new RegExp(`@verifies\\s+${requirementId}\\b`).test(source)) {
+        if (new RegExp(`@id\\s+${node.id}\\b`).test(source)
+          && new RegExp(`@verifies[^\\r\\n]*\\b${requirementId}\\b`).test(source)) {
           authoritativeTest = true;
           break;
         }
       }
-      const acceptanceTrimmed = requirement?.acceptance?.trim() ?? '';
-      const measurableAcceptance = acceptanceTrimmed.length >= 8
-        && !PLACEHOLDER_PREFIX_RE.test(acceptanceTrimmed)
-        && MEASURABLE_KEYWORD_RE.test(acceptanceTrimmed);
-      const requirements = change.phases.requirements;
-      const batch = batchFor(effectiveBatches(change), requirementId);
-      const red = batch?.red;
-      const implementation = batch?.implementation;
-      const green = batch?.green;
-      const hasTdd = tdd?.cycles.some((cycle) =>
-        cycle.requirementId === requirementId
-        && requirements
-        && red
-        && implementation
-        && green
-        && Number.isInteger(requirements.order)
-        && Number.isInteger(red.order)
-        && Number.isInteger(implementation.order)
-        && Number.isInteger(green.order)
-        && Number.isInteger(cycle.red.order)
-        && Number.isInteger(cycle.green?.order)
-        && cycle.red.valid
-        && cycle.green?.valid
-        && cycle.red.order! > requirements.order!
-        && cycle.red.order! <= red.order!
-        && cycle.green.order! > implementation.order!
-        && cycle.green.order! <= green.order!) ?? false;
+      const measurableAcceptance = hasMeasurableAcceptance(requirement?.acceptance ?? '');
+      const resolution = tdd
+        ? selectCurrentTddCycle(change, requirementId, tdd)
+        : { selected: null };
+      const hasTdd = resolution.selected !== null;
       const checks = [
         [!!requirementNode && !!requirement && !!type, 'CHANGE_COMPLETENESS_REQUIREMENT', 'requirement'],
         [measurableAcceptance, 'CHANGE_COMPLETENESS_ACCEPTANCE', 'nonempty measurable Acceptance criteria'],
