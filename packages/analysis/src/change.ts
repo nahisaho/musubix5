@@ -8,7 +8,8 @@ import { appendEvidenceOrder, evidenceOrderRecord, inspectEvidenceOrder } from '
 import { loadChangeWaiverEvidence, buildWaiverContext, diagnosticDetail, errorFor, reportWaiverEvidenceDiagnostics, waivedDiagnostic } from './change-waiver.js';
 import {
   batchFor, batchForRecording, batchKey, changePhases, effectiveBatches,
-  loadChangeEvidence, nextBatchScopeId,
+  loadChangeEvidence, nextBatchScopeId, nextQualityOrdinal, qualityFingerprintPreviouslyRecorded,
+  supersedeQualityPhase,
   type ChangeCompleteness, type ChangeEvidence, type ChangeFingerprints, type ChangePhase,
   type ChangePhaseEvidence, type ChangeRecord, type ChangeTddBatch,
 } from './change-evidence.js';
@@ -158,7 +159,7 @@ export async function recordChangePhase(
     // impact/requirements/design/quality (always), and red/implementation/green
     // recorded with the change's exact full requirement ID set: identical,
     // unchanged, once-per-change behavior (REQ-CHANGE-REQUIREMENT-BATCHES-002).
-    if (change.phases[phase]) throw new Error(`${changeId}:${phase} is already recorded.`);
+    if (change.phases[phase] && phase !== 'quality') throw new Error(`${changeId}:${phase} is already recorded.`);
     if (phase === 'requirements' && !change.phases.impact) throw new Error('requirements requires the preceding impact phase.');
     if (phase === 'design' && !change.phases.requirements) throw new Error('design requires the preceding requirements phase.');
     if (phase === 'red' && !change.phases.design) throw new Error('red requires the preceding design phase.');
@@ -191,13 +192,27 @@ export async function recordChangePhase(
       fingerprints,
       ...(phase === 'requirements' && options.allowUnchanged ? { allowUnchanged: true } : {}),
     };
+    if (phase === 'quality' && qualityFingerprintPreviouslyRecorded(change, candidate.fingerprints)) {
+      throw new Error(`CHANGE_QUALITY_UNCHANGED: ${changeId}:quality has no changed fingerprint to supersede.`);
+    }
     if (options.dryRun) {
       return { schemaVersion: evidence.schemaVersion, changes: evidence.changes.map((entry) =>
         entry.changeId === changeId ? { ...entry, phases: { ...entry.phases, [phase]: candidate } } : entry) };
     }
-    const order = await appendEvidenceOrder(root, { kind: 'change', entityId: changeId, phase });
+    const qualityOrdinal: number | undefined = phase === 'quality'
+      ? nextQualityOrdinal(change)
+      : undefined;
+    const orderPhase = qualityOrdinal !== undefined && qualityOrdinal > 1
+      ? `quality:${qualityOrdinal}`
+      : phase;
+    const order = await appendEvidenceOrder(root, {
+      kind: 'change',
+      entityId: changeId,
+      phase: orderPhase,
+    });
     candidate.order = order.sequence;
-    change.phases[phase] = candidate;
+    if (phase === 'quality') supersedeQualityPhase(change, candidate);
+    else change.phases[phase] = candidate;
   } else {
     // red/implementation/green recorded with a proper, non-empty subset of the
     // change's requirement IDs: an independent requirement batch
@@ -263,7 +278,22 @@ function collectRecordedAtEntries(change: ChangeRecord): { label: string; order:
   const candidates: { label: string; order: number | undefined; recordedAt: string }[] = [];
   for (const singularPhase of singularPhases) {
     const item = change.phases[singularPhase];
-    if (item) candidates.push({ label: singularPhase, order: item.order, recordedAt: item.recordedAt });
+    if (item) {
+      candidates.push({
+        label: singularPhase === 'quality' ? `quality:${item.qualityOrdinal ?? 1}` : singularPhase,
+        order: item.order,
+        recordedAt: item.recordedAt,
+      });
+    }
+  }
+  for (const quality of change.qualityHistory ?? []) {
+    if (quality) {
+      candidates.push({
+        label: `quality:${quality.qualityOrdinal ?? 1}`,
+        order: quality.order,
+        recordedAt: quality.recordedAt,
+      });
+    }
   }
   const fullSetKey = batchKey(change.requirementIds);
   for (const batch of effectiveBatches(change)) {
@@ -362,10 +392,30 @@ export async function validateChangeEvidence(root: string): Promise<{
           `${change.changeId}:${singularPhase} lacks monotonic order evidence; regenerate this change chronology.`,
           change.changeId, undefined, diagnosticDetail('CHANGE_ORDER_MIGRATION_REQUIRED', { phaseName: singularPhase })));
       } else if (item) {
-        const record = evidenceOrderRecord(order.records, 'change', change.changeId, singularPhase);
+        const phaseKey = singularPhase === 'quality' && (item.qualityOrdinal ?? 1) > 1
+          ? `quality:${item.qualityOrdinal}`
+          : singularPhase;
+        const record = evidenceOrderRecord(order.records, 'change', change.changeId, phaseKey);
         if (!record || record.sequence !== item.order) {
           diagnostics.push(error('CHANGE_ORDER_MISMATCH', `${change.changeId}:${singularPhase} does not match the monotonic evidence order log.`));
         }
+      }
+    }
+    for (const [index, item] of (change.qualityHistory ?? []).entries()) {
+      const qualityOrdinal = item.qualityOrdinal ?? index + 1;
+      if (!Number.isInteger(item.order)) {
+        diagnostics.push(waivedDiagnostic(waiverContext, 'CHANGE_ORDER_MIGRATION_REQUIRED',
+          `${change.changeId}:quality:${qualityOrdinal} lacks monotonic order evidence; regenerate this change chronology.`,
+          change.changeId, undefined, diagnosticDetail('CHANGE_ORDER_MIGRATION_REQUIRED', { phaseName: 'quality' })));
+        continue;
+      }
+      const phaseKey = qualityOrdinal === 1 ? 'quality' : `quality:${qualityOrdinal}`;
+      const record = evidenceOrderRecord(order.records, 'change', change.changeId, phaseKey);
+      if (!record || record.sequence !== item.order) {
+        diagnostics.push(error(
+          'CHANGE_ORDER_MISMATCH',
+          `${change.changeId}:${phaseKey} does not match the monotonic evidence order log.`,
+        ));
       }
     }
     if (change.phases.requirements?.order !== undefined && change.phases.impact?.order !== undefined

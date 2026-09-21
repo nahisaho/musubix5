@@ -27,9 +27,19 @@ describe('approval manifest scope', () => {
     const root = mkdtempSync(join(tmpdir(), 'musubix5-approval-scope-'));
     temporaryDirectories.push(root);
     execFileSync('git', ['init', '--quiet', root]);
+    execFileSync('git', ['-C', root, 'config', 'user.email', 'test@example.com']);
+    execFileSync('git', ['-C', root, 'config', 'user.name', 'Test User']);
     write(root, '.musubix/constitution.md', '# Constitution\n');
     write(root, '.musubix/features/sample/requirements.md', '# Requirements\n');
-    write(root, '.musubix/features/sample/design.md', '# Design\n');
+    write(root, '.musubix/features/sample/design.md', [
+      '## DES-SAMPLE-001: Sample',
+      'Responsibilities: Respond.',
+      'Interfaces: `respond()`.',
+      'Constraints: Deterministic.',
+      'Requirements: REQ-SAMPLE-001',
+      'ADRs: ADR-0001',
+      '',
+    ].join('\n'));
     write(root, '.musubix/features/sample/trace.json', '{}\n');
     write(root, '.musubix/decisions/ADR-0001.md', '# ADR\n');
     write(root, '.musubix/evidence/current.json', '{"changeId":"CHANGE-0002"}\n');
@@ -52,7 +62,7 @@ describe('approval manifest scope', () => {
     write(root, 'src/index.ts', 'export const value = 1;\n');
     write(root, 'docs/history/old.md', 'old\n');
     write(root, 'logs/run/output.txt', 'log\n');
-    write(root, 'run-local/output.json', '{}\n');
+    write(root, '.musubix/runs/output.json', '{}\n');
     write(root, 'archive.tgz', 'archive\n');
     const { prepareStageApproval } = await import('../packages/analysis/src/native-approval.js');
 
@@ -82,6 +92,7 @@ describe('approval manifest scope', () => {
       '.musubix/features/sample/requirements.md',
     ]);
     expect(Object.keys(design.projection as object)).toEqual([
+      'schemaVersion',
       'commands',
       'requiredChecks',
       'thresholds',
@@ -94,10 +105,15 @@ describe('approval manifest scope', () => {
       'attestation',
     ]);
 
+    execFileSync('git', ['-C', root, 'add', '.']);
+    execFileSync('git', ['-C', root, 'commit', '--quiet', '-m', 'candidate']);
+    const { persistCandidateSnapshot } =
+      await import('../packages/analysis/src/workspace-manager.js');
+    await persistCandidateSnapshot(root, 'CHANGE-0002');
     const release = await prepareStageApproval(root, {
       stage: 'release',
       changeId: 'CHANGE-0002',
-      runLocalPaths: ['run-local'],
+      runLocalPaths: [],
     });
     expect(Object.keys(release.artifacts)).toContain('src/index.ts');
     expect(release.exclusions.map((entry) => [entry.path, entry.reason])).toEqual(expect.arrayContaining([
@@ -106,7 +122,7 @@ describe('approval manifest scope', () => {
       ['archive.tgz', 'package-archive'],
       ['docs/history/old.md', 'historical'],
       ['logs/run/output.txt', 'log-directory'],
-      ['run-local/output.json', 'run-local'],
+      ['.musubix/runs/output.json', 'run-local'],
     ]));
   });
 });

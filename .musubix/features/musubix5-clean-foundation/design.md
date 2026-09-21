@@ -24,11 +24,11 @@ Canonical encoding is UTF-8 JSON with lexicographically sorted object keys, no
 insignificant whitespace, and exactly one trailing LF byte.
 
 ```json
-{"architecture":{"forbidCycles":true,"rules":[]},"attestation":{"githubOidc":{"mode":"off"},"maxAgeSeconds":3600,"maxFutureSkewSeconds":60,"mode":"local","trustedPublicKeys":[]},"codeGraph":{"mode":"compatible"},"commands":[{"args":["run","typecheck"],"command":"npm","name":"typecheck","required":true,"timeoutMs":120000},{"args":["run","build"],"command":"npm","name":"build","required":true,"timeoutMs":120000},{"adapter":"vitest","args":["vitest","run"],"command":"npx","name":"test","required":true,"timeoutMs":180000},{"args":["run","test:compat"],"command":"npm","name":"compatibility","required":true,"timeoutMs":180000},{"args":["run","pack:check"],"command":"npm","name":"pack-check","required":true,"timeoutMs":120000},{"args":["run","pack:smoke"],"command":"npm","name":"pack-smoke","required":true,"timeoutMs":180000}],"formal":{"minModeledFraction":0,"solver":"none","timeoutMs":12000},"mutation":{"mode":"compatible"},"requiredChecks":["requirements","design","constitution","trace","graph","commands"],"tdd":{"redPreflightCommands":[]},"thresholds":{"design":1,"implementation":1,"tests":1},"workflow":{"maxAgeSeconds":3600,"maxFutureSkewSeconds":60,"mode":"compatible"}}
+{"architecture":{"forbidCycles":true,"rules":[]},"attestation":{"githubOidc":{"mode":"off"},"maxAgeSeconds":3600,"maxFutureSkewSeconds":60,"mode":"local","trustedPublicKeys":[]},"codeGraph":{"mode":"compatible"},"commands":[{"args":["run","typecheck"],"command":"npm","name":"typecheck","required":true,"timeoutMs":120000},{"args":["run","build"],"command":"npm","name":"build","required":true,"timeoutMs":120000},{"adapter":"vitest","args":["vitest","run"],"command":"npx","name":"test","required":true,"timeoutMs":180000},{"args":["run","test:compat"],"command":"npm","name":"compatibility","required":true,"timeoutMs":180000},{"args":["run","pack:check"],"command":"npm","name":"pack-check","required":true,"timeoutMs":120000},{"args":["run","pack:smoke"],"command":"npm","name":"pack-smoke","required":true,"timeoutMs":180000}],"formal":{"minModeledFraction":0,"solver":"none","timeoutMs":12000},"mutation":{"mode":"compatible"},"requiredChecks":["requirements","design","constitution","trace","graph","commands"],"schemaVersion":1,"tdd":{"redPreflightCommands":[]},"thresholds":{"design":1,"implementation":1,"tests":1},"workflow":{"maxAgeSeconds":3600,"maxFutureSkewSeconds":60,"mode":"compatible"}}
 ```
 
 SHA-256:
-`ce8ea54dfa8aec62583e1097119c262e497ed66fe175e05830fc934e4dc51798`
+`a430a78ceb25e57e279ad630ae2a99e6880f164f8a32d0de786b6f4df8a78779`
 
 `qualityProfile` is excluded because the projection contains every effective
 policy field and the profile label has no independent enforcement effect.
@@ -45,11 +45,12 @@ before verified-auto can be enabled:
 SHA-256:
 `d2b5761764ecc3cb7cf10f81ef77157efc56286c587d11048c55c2b78f1c13d9`
 
-If `approvalAutomation` is absent, configuration normalization materializes
-exactly the object above before hashing. The digest covers both modes and
-limits. Enabling verified-auto changes the digest and therefore requires a new
-design approval before execution; tests exercise enabled configurations through
-explicit approved test manifests.
+If `approvalAutomation` is absent, orchestration configuration normalization
+materializes exactly the object above before comparison with this separately
+design-approved extension digest. The digest covers both modes and limits.
+Enabling verified-auto changes the normative design-controlled digest and
+therefore requires a new design approval before execution; tests exercise
+enabled configurations through explicit approved test manifests.
 
 ## DES-M5-001: Compatibility oracle adapter
 Responsibilities: Build the pinned musubix3 v0.1.18 source, capture command contracts, execute the approved Node.js and operating-system matrix, normalize only approved package or executable tokens, and compare observable CLI, API, configuration, package, and filesystem behavior.
@@ -91,12 +92,12 @@ ADRs: ADR-0003 ADR-0005
 Depends-On: DES-M5-003 DES-M5-004 DES-M5-007
 
 ## DES-M5-006: Approval manifest service
-Responsibilities: Resolve stage-owned normative paths and configuration projections, produce sorted manifests, record exact-hash approvals, and propagate supersession.
+Responsibilities: Resolve domain-scoped normative paths and effective configuration projections, read release blobs from an immutable candidate commit, classify every included or excluded path, produce canonical schema-v1 manifests, record exact-hash approvals, and propagate supersession.
 Interfaces: `prepareApproval(stage, domain?)`, `recordApproval(input)`, `validateApprovals()`, `supersedeFrom(change)`.
-Constraints: Requirements, design, and release scopes follow REQ-M5-APPROVAL-007; manual confirmation is mandatory; bootstrap approvals authorize development only; native approval is required before release; release manifests read an immutable candidate Git tree and write the release approval outside that tree, preventing self-reference.
+Constraints: Requirements and design use `approval-normative-path-set-v1` and effective defaulted projections; release is domain-less, resolves the active CHANGE binding internally, and obtains its persisted immutable commit, typed Git entries, and blob bytes from DES-M5-012 under `release-candidate-tree-v1`, never from caller-selected identities or mutable worktree bytes. Blob hashing uses DES-M5-003 `sha256(bytes)`; symbolic-link and Gitlink classification uses only tree-derived mode and object-type data. `approval-manifest-schema-v1` contains exactly `schemaVersion`, `stage`, optional `domain`, optional `changeId`, `artifacts`, `projection`, and `exclusions`; `artifacts` binds only included raw blob hashes, `exclusions` binds only path/reason pairs, displayed excluded hashes remain outside the aggregate, and NFC UTF-8 path byte order overrides generic object-key order for path-keyed data. Canonical serialization, domain rules, exclusion precedence, and all `APPROVAL_*` diagnostics follow REQ-M5-APPROVAL-007 and its three versioned specifications. Both release approval destinations are excluded producer-independently to avoid self-reference; manual confirmation is mandatory; bootstrap approvals authorize development only and native schema-v1 approval is required before release.
 Requirements: REQ-M5-APPROVAL-001 REQ-M5-APPROVAL-002 REQ-M5-APPROVAL-007 REQ-M5-APPROVAL-008 REQ-M5-APPROVAL-009 REQ-M5-COMPAT-013
 ADRs: ADR-0002 ADR-0004 ADR-0008
-Depends-On: DES-M5-003 DES-M5-004 DES-M5-007
+Depends-On: DES-M5-003 DES-M5-004 DES-M5-007 DES-M5-012
 
 ## DES-M5-007: Evidence registry
 Responsibilities: Validate evidence schemas, ownership, producer and input bindings, dependency heads, currency, status taxonomy, and derived projections.
@@ -109,7 +110,7 @@ Depends-On: DES-M5-003 DES-M5-004
 ## DES-M5-008: Approval boundary coordinator
 Responsibilities: Coordinate producer output, Reviewer execution, duplicate-manifest detection, bounded repair, durable attempt, nonce, and repair counters, terminal reasons, and manual-boundary handoff.
 Interfaces: `evaluateBoundary(boundaryKey, manifest)`, `resumeBoundary(pendingId)`, `classifyFinding(finding)`.
-Constraints: Verified-auto is explicit opt-in for requirements or design only; release remains manual; effective `approvalAutomation` configuration must hash to the design-approved extension digest or execution fails closed; repair identity is boundary key plus rejected ordinal; duplicate rejection and repair exhaustion terminate deterministically; counters increment only in the idempotent terminal commit for the bound pending invocation.
+Constraints: Verified-auto is explicit opt-in for requirements or design only; release remains manual; effective `approvalAutomation` configuration must match the separately design-approved extension digest or execution fails closed; repair identity is boundary key plus rejected ordinal; duplicate rejection and repair exhaustion terminate deterministically; counters increment only in the idempotent terminal commit for the bound pending invocation.
 Requirements: REQ-M5-APPROVAL-003 REQ-M5-APPROVAL-004 REQ-M5-APPROVAL-005 REQ-M5-APPROVAL-006
 ADRs: ADR-0004 ADR-0009
 Depends-On: DES-M5-004 DES-M5-006 DES-M5-009 DES-M5-010
@@ -139,9 +140,9 @@ ADRs: ADR-0005
 Depends-On: DES-M5-003 DES-M5-004 DES-M5-007
 
 ## DES-M5-012: Workspace manager
-Responsibilities: Create and identify baseline, candidate, and QA workspaces; preserve unrelated dirty paths; track generated-output ownership; and recover rejected candidates.
-Interfaces: `captureBaseline()`, `createCandidate(changeId)`, `createQa(candidateId)`, `collectOwnedChanges(changeId)`, `recover(candidateId)`.
-Constraints: Candidate work requires an immutable baseline commit; one CHANGE owns one branch or worktree; byte, mode, staged, unstaged, deleted, and untracked identities are preserved.
+Responsibilities: Create and identify baseline, candidate, and QA workspaces; preserve unrelated dirty paths; persist the active CHANGE binding and immutable candidate snapshot commit; enumerate candidate Git entries without reading the worktree; track generated-output ownership; and recover rejected candidates.
+Interfaces: `captureBaseline()`, `createCandidate(changeId)`, `createQa(candidateId)`, `persistCandidateSnapshot(changeId, commit)`, `resolveCandidateCommit(changeId)`, `listCandidateEntries(commit): { rawPath, nfcPath, objectId, gitMode, objectType }[]`, `readCandidateBlob(commit, objectId)`, `collectOwnedChanges(changeId)`, `recover(candidateId)`.
+Constraints: Candidate work requires an immutable baseline commit; one CHANGE owns one branch or worktree; byte, mode, staged, unstaged, deleted, and untracked identities are preserved. The workspace manager accepts a snapshot commit only after verifying repository identity and reachability from that CHANGE's candidate branch head; failure is `APPROVAL_CANDIDATE_UNAVAILABLE`. Snapshot selection is persisted as an ordered journal record, is immutable for its approval attempt, and selecting a different verified snapshot supersedes the prior release manifest and approval. Entry enumeration and blob reads address immutable Git objects and never fall back to worktree paths.
 Requirements: REQ-M5-WORKTREE-001 REQ-M5-WORKTREE-002 REQ-M5-WORKTREE-003 REQ-M5-WORKTREE-004
 ADRs: ADR-0006
 Depends-On: DES-M5-003 DES-M5-004 DES-M5-007
@@ -234,8 +235,10 @@ deleting their history.
   journal/
     normal/
     bootstrap/
+  runs/
   evidence/
     approvals/
+      native/
     bootstrap/
     changes.json
     order.json
@@ -248,6 +251,9 @@ deleting their history.
     trace/
     graph/
     quality.json
+    performance.json
+    native/
+      test/
     release/
     benchmarks/
     waivers/
@@ -269,6 +275,13 @@ order. Compatibility JSON files under `.musubix/evidence` and feature-local
 analysis inputs. Missing or corrupt journal history is `journal-unavailable`
 and cannot be replaced by a projection.
 
+DES-M5-006 owns compatibility and native approval projections under
+`.musubix/evidence/approvals/`. DES-M5-010 owns run-local diagnostics under
+`.musubix/runs/`. DES-M5-015 owns gate-regenerated `quality.json`,
+`performance.json`, and `.musubix/evidence/native/test/`; benchmark execution
+records remain separately owned under `.musubix/evidence/benchmarks/`.
+DES-M5-014 owns feature-local `.musubix/features/*/trace.json` projections.
+
 When any bootstrap run exists for a CHANGE, the normal orchestrator shall
 ingest its summary before readiness evaluation by verifying the bootstrap
 journal head and writing
@@ -282,7 +295,11 @@ producer identity. Bootstrap never writes that record directly.
 | gate/status JSON | `missing-command` diagnostic | Additive diagnostic; baseline `commands` check remains `skipped`, gate exits 1, status exits 0 with `ready: false` |
 | approval manifest | canonical requirements-policy projection | Intentional extension governed by ADR-0008 |
 | approval manifest | canonical execution-policy projection | Intentional extension governed by ADR-0008 |
-| release exclusions | history, run-local, and foreign-CHANGE paths | Intentional extension governed by ADR-0008 |
+| normative approval paths | `approval-normative-path-set-v1`: domain-scoped feature selection, non-transitive design `ADRs:` references, and required-path failures | Intentional extension governed by REQ-M5-COMPAT-013 and ADR-0008 |
+| approval manifest | `approval-manifest-schema-v1`, domain binding, effective defaults, NFC path ordering, and displayed included/excluded hashes | Intentional extension governed by REQ-M5-COMPAT-013 and ADR-0008 |
+| release manifest source | persisted immutable `release-candidate-tree-v1` commit instead of mutable worktree files | Intentional extension governed by REQ-M5-COMPAT-013 and ADR-0008 |
+| release exclusions | `symlink`, `generated-trace`, `package-archive`, `log-directory`, `historical`, `run-local`, `release-self-reference`, `gate-self-reference`, and `foreign-change-evidence` in closed first-match order | Intentional extension governed by REQ-M5-COMPAT-013 and ADR-0008 |
+| approval diagnostics | `APPROVAL_DOMAIN_MISMATCH`, `APPROVAL_NORMATIVE_MISSING`, `APPROVAL_NORMATIVE_SYMLINK`, `APPROVAL_CANDIDATE_UNAVAILABLE`, `APPROVAL_PATH_ENCODING`, `APPROVAL_PATH_COLLISION`, and `APPROVAL_GITLINK_UNSUPPORTED` | Intentional classified failure surface governed by REQ-M5-COMPAT-013 and ADR-0008 |
 | configuration | `approvalAutomation` extension | Additive, design-approved configuration governed by ADR-0009 |
 | CLI | `bootstrap run`, `bootstrap resume`, and `bootstrap status` | musubix5-only explicit mode governed by REQ-M5-BOOTSTRAP-001 and ADR-0006 |
 

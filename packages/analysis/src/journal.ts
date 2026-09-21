@@ -5,7 +5,7 @@ import {
 } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { promisify } from 'node:util';
-import { canonicalBytes, sha256 } from './canonical.js';
+import { canonicalBytes, legacyCanonicalBytes, sha256 } from './canonical.js';
 
 const execFileAsync = promisify(execFile);
 const leaseTtlMs = 30_000;
@@ -201,9 +201,11 @@ async function journalRecords(root: string): Promise<JournalRecord[]> {
   for (const [index, record] of records.entries()) {
     const { recordSha256, ...payload } = record;
     const previous = index === 0 ? null : records[index - 1]!.recordSha256;
+    const canonicalSha256 = sha256(canonicalBytes(payload));
+    const legacySha256 = sha256(legacyCanonicalBytes(payload));
     if (record.order !== index + 1
       || record.previousSha256 !== previous
-      || recordSha256 !== sha256(canonicalBytes(payload))) {
+      || (recordSha256 !== canonicalSha256 && recordSha256 !== legacySha256)) {
       throw new Error(`Invalid journal chain at order ${record.order}.`);
     }
   }

@@ -93,8 +93,8 @@ Acceptance: CI records the source identity, build command, invocation, exit code
 Priority: must
 Type: functional
 Pattern: ubiquitous
-Statement: The system shall treat configuration projections and additional historical or run-local release exclusions as intentional extensions to the musubix3 approval manifest contract.
-Acceptance: An ADR, migration-guide entry, and regression tests cover the additional projection entries, exclusion predicates, displayed reasons, and changed aggregate hashes before implementation.
+Statement: The system shall treat configuration projections, approval-normative-path-set-v1, approval-manifest-schema-v1, release-candidate-tree-v1, every release exclusion predicate and reason, and every `APPROVAL_*` diagnostic defined by REQ-M5-APPROVAL-007, approval-normative-path-set-v1, or release-candidate-tree-v1 as intentional extensions to the musubix3 approval manifest contract.
+Acceptance: An ADR, migration-guide entry, and regression tests register each extension under the compatibility policy, cover projection and schema entries, candidate-tree sourcing, exclusion predicates and reasons, diagnostic codes, displayed output, and changed aggregate hashes before implementation.
 
 ## REQ-M5-LIFECYCLE-001: Enforce the protected lifecycle
 Priority: must
@@ -171,7 +171,7 @@ Priority: must
 Type: functional
 Pattern: event-driven
 Statement: When approval is prepared for a stage, the system shall build the sorted manifest from the stage's declared normative path set and apply only explicitly defined exclusions.
-Acceptance: Requirements approval includes the constitution, each feature's `requirements.md`, and a canonical projection of configuration fields `schemaVersion` and `approval`; bootstrap approval through musubix3 binds that projection digest from active requirements; design approval includes the constitution, every feature requirements file, every feature design file, every ADR, and a canonical projection of `commands`, `requiredChecks`, `thresholds`, `architecture`, `codeGraph`, `formal`, `mutation`, `tdd`, `workflow`, and `attestation`; bootstrap design approval embeds that projection and its SHA-256 in the approved design; release approval excludes only feature-local `trace.json`, `*.tgz`, directories named `log`, `logs`, `session-log`, or `session-logs`, `docs/history/**`, declared run-local paths, and evidence whose metadata identifies another CHANGE; empty directories are excluded; every included or excluded path is printed with its reason and per-file hash when a file exists.
+Acceptance: Native musubix5 approval uses `approval-manifest-schema-v1`; pinned-musubix3 bootstrap approval is validated only against its exact manifest hash and bound projection digest and is not required to emit schema-v1; requirements and design use `approval-normative-path-set-v1`, read every selected path from the `--root` project directory of the invoking workspace, use its NFC-normalized root-relative POSIX path as the `artifacts` key, and hash its raw on-disk bytes, with cross-platform digest identity required only for byte-identical inputs; when `approval.domains` is a nonempty list, `--domain` is required for requirements/design, the supplied value is NFC-normalized, must byte-exactly match one NFC-normalized configured domain name, and narrows the path set through that domain's configured feature list; for requirements/design, two configured names with the same NFC form, supplying `--domain` without configured domains, omitting it when domains are nonempty, or naming an unknown domain fails with `APPROVAL_DOMAIN_MISMATCH`; release does not evaluate domain-name collisions and supplying any domain to release approval fails with `APPROVAL_DOMAIN_MISMATCH`; requirements/design inspect every root-relative ancestor segment before existence checks, so a dangling symlink, a symlink at a selected path, or a symlinked ancestor fails first with `APPROVAL_NORMATIVE_SYMLINK`; another non-regular selected path also fails with `APPROVAL_NORMATIVE_SYMLINK`; requirements/design reject non-UTF-8 paths with `APPROVAL_PATH_ENCODING`, reject NFC path collisions with `APPROVAL_PATH_COLLISION`, and include requirements-stage effective configuration fields `schemaVersion` and `approval` or design-stage effective fields `schemaVersion`, `commands`, `requiredChecks`, `thresholds`, `architecture`, `codeGraph`, `formal`, `mutation`, `tdd`, `workflow`, and `attestation`, after default resolution with every declared field present so making an implicit default explicit does not change the projection; release approval is repository-wide and domain-less, uses `release-candidate-tree-v1`, and then applies rules 1–9 to its surviving blobs; release exclusion uses exactly one first-match reason in this precedence order: (1) a symbolic-link blob outside the four normative release path patterns listed by `release-candidate-tree-v1` as `symlink`, (2) `.musubix/features/*/trace.json` as `generated-trace`, (3) root-relative `**/*.tgz` as `package-archive`, (4) files below a byte-exact lowercase NFC-normalized directory segment named `log`, `logs`, `session-log`, or `session-logs` as `log-directory`, including root-level matching directories but not a regular file with one of those names, (5) `docs/history/**` as `historical`, (6) the fixed `.musubix/runs/**` prefix as `run-local`, (7) both `.musubix/evidence/approvals/release.json` and `.musubix/evidence/approvals/native/release.json` as `release-self-reference`, (8) `.musubix/evidence/formal.json`, `.musubix/evidence/model-correspondence.json`, `.musubix/evidence/mutation.json`, `.musubix/evidence/performance.json`, `.musubix/evidence/quality.json`, and `.musubix/evidence/native/test/**` as `gate-self-reference`; this is the closed gate-self-reference list and any other evidence path, including an unlisted native counterpart, is included unless rule 9 applies, and (9) blobs with a byte-exact lowercase `.json` suffix at or below `.musubix/evidence/`, at any depth, whose effective change ID is a nonempty string byte-exactly different from the active CHANGE as `foreign-change-evidence`; top-level `changeId` wins when it is a nonempty string, otherwise `metadata.changeId` is used; when no active CHANGE is bound, rule 9 never matches; invalid JSON, non-object roots, and missing or empty change IDs remain included; release `artifacts` contains exactly the included blobs and every excluded path appears only in `exclusions`; included blobs are printed with raw SHA-256 only, while excluded blobs are printed with the selected reason and raw SHA-256; re-verification of the same candidate commit under the same active-CHANGE binding, including the unbound case, reproduces the same manifest regardless of worktree-only file creation, deletion, modification, unreadability, or log/run-local activity, while a candidate tree differing in an included blob path or content, a changed active-CHANGE binding, an added or removed excluded blob, or a changed reason produces a different aggregate.
 
 ## REQ-M5-APPROVAL-008: Supersede downstream approval
 Priority: must
@@ -442,8 +442,62 @@ Baseline identity:
   `675ceaf3fb693488bfcf3da0a9db475b666164db4c304ded0a2524ce09a4ede0`
 - bootstrap requirements-policy projection:
   `{"approval":{"domains":[],"mode":"required"},"schemaVersion":1}`
-- projection canonical encoding: UTF-8 JSON with lexicographically sorted object
-  keys, no insignificant whitespace, and exactly one trailing LF byte
+- projection canonical encoding: UTF-8 JSON with object keys sorted by ascending
+  byte-wise comparison of their UTF-8 encoding, no insignificant whitespace,
+  and exactly one trailing LF byte; strings use RFC 8785 escaping while emitting
+  unescaped Unicode as UTF-8; finite JSON numbers use RFC 8785
+  shortest-round-trip decimal serialization, negative zero is serialized as
+  `0`, and non-finite numbers are rejected
+- path-pattern semantics for every path pattern in this document: paths are
+  root-relative NFC-normalized POSIX strings; every literal and pattern
+  comparison is byte-exact with no case folding; `*` between `/` separators matches exactly one
+  path segment; filename-local `*` matches zero or more characters except `/`;
+  `**/` matches zero or more path segments; trailing `/**` matches every blob at
+  any depth below the literal directory prefix
+- `approval-normative-path-set-v1`: requirements includes literal
+  `.musubix/constitution.md` and pattern
+  `.musubix/features/*/requirements.md`; design includes those entries plus
+  `.musubix/features/*/design.md` and the ADR files referenced by the selected
+  design components; a design component references ADRs only through its
+  parsed `ADRs:` field containing byte-exact `ADR-<digits>` tokens; references
+  are non-transitive and every referenced
+  `.musubix/decisions/<ADR-ID>.md` must exist or manifest construction fails
+  with `APPROVAL_NORMATIVE_MISSING`; the constitution literal and at least one selected
+  requirements or design file required by the stage must exist, otherwise
+  manifest construction fails with `APPROVAL_NORMATIVE_MISSING`; when
+  `approval.domains` is configured, each domain object maps its NFC-normalized
+  `name` to an explicit `features` slug list, feature patterns are restricted to
+  those slugs, and only ADRs referenced by the selected domain designs are
+  included
+- `release-candidate-tree-v1`: the exact candidate snapshot commit identified
+  and persisted under REQ-M5-WORKTREE-001; enumerate every blob recursively by
+  its NFC-normalized, root-relative POSIX path without reading the mutable
+  worktree; an absent or unresolvable persisted candidate commit fails with
+  `APPROVAL_CANDIDATE_UNAVAILABLE`; a raw Git path that is not valid UTF-8 fails
+  with `APPROVAL_PATH_ENCODING`; if two raw Git paths normalize to the same NFC
+  path, fail with `APPROVAL_PATH_COLLISION`; omit tree entries; reject Gitlink/submodule entries
+  with `APPROVAL_GITLINK_UNSUPPORTED`; reject symbolic-link blobs at
+  `.musubix/constitution.md`, `.musubix/features/*/requirements.md`,
+  `.musubix/features/*/design.md`, or `.musubix/decisions/ADR-*.md` with
+  `APPROVAL_NORMATIVE_SYMLINK`
+- `approval-manifest-schema-v1`: canonical UTF-8 JSON using the projection
+  canonical encoding above, with exactly `schemaVersion`, `stage`, optional
+  `domain`, optional `changeId`, `artifacts`, `projection`, and `exclusions`;
+  `schemaVersion` is `1`; `stage` is exactly `requirements`, `design`, or
+  `release`; `domain` is present exactly for domain-scoped requirements or
+  design approval and is omitted for repository-wide stages; `changeId` is
+  present only when a CHANGE is bound and is omitted otherwise; paths are
+  ordered by ascending byte-wise comparison of their NFC-normalized UTF-8
+  root-relative POSIX representation; this path ordering overrides the generic
+  object-key ordering for path-keyed objects; `artifacts` is an object whose keys use
+  that order and whose values are 64-character lowercase hexadecimal raw
+  SHA-256 strings; `projection` is the stage-specific canonical configuration
+  object for requirements or design and is `null` for release; `exclusions` is
+  an empty array for requirements and design and an array of
+  `{"path":string,"reason":string}` entries using the same path order for
+  release; the aggregate SHA-256 hashes the canonical bytes of this complete
+  object including the required trailing LF byte; displayed
+  excluded-file SHA-256 values are outside the aggregate and informational only
 - bootstrap requirements-policy projection SHA-256:
   `27f2ac60f53ee975eb97fa919f0ea34e21eac1680b88d085391b9ed8cc38b8df`
 - reproducible source oracle:

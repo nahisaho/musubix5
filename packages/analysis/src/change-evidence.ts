@@ -1,6 +1,7 @@
 import { exists, readText, within } from './files.js';
 import type { TddEvidence } from './tdd.js';
 import { selectCurrentTddCycle } from './tdd-cycle-resolver.js';
+import { canonicalBytes } from './canonical.js';
 
 // Shared change-chronology data model and pure accessors used by both
 // change.ts (recording/validation) and change-waiver.ts (waiver evidence).
@@ -26,6 +27,7 @@ export interface ChangeFingerprints {
 export interface ChangePhaseEvidence {
   phase: ChangePhase;
   order?: number;
+  qualityOrdinal?: number;
   recordedAt: string;
   fingerprints: ChangeFingerprints;
   allowUnchanged?: boolean;
@@ -43,6 +45,7 @@ export interface ChangeRecord {
   changeId: string;
   requirementIds: string[];
   phases: Partial<Record<ChangePhase, ChangePhaseEvidence>>;
+  qualityHistory?: ChangePhaseEvidence[];
   tddBatches?: ChangeTddBatch[];
 }
 
@@ -86,6 +89,54 @@ export function batchFor(batches: ChangeTddBatch[], requirementId: string): Chan
 
 export function batchKey(requirementIds: string[]): string {
   return [...new Set(requirementIds)].sort().join(',');
+}
+
+/** @id CODE-M5-QUALITY-SUPERSESSION-001
+ * @implements REQ-M5-LIFECYCLE-003 REQ-M5-EVIDENCE-005 REQ-M5-QUALITY-001 REQ-M5-QUALITY-003
+ * @design DES-M5-004 DES-M5-007 DES-M5-015
+ */
+export function supersedeQualityPhase(
+  change: ChangeRecord,
+  candidate: ChangePhaseEvidence,
+): { phaseKey: string; qualityOrdinal: number } {
+  const current = change.phases.quality;
+  const qualityOrdinal = nextQualityOrdinal(change);
+  if (current) {
+    change.qualityHistory ??= [];
+    for (const [index, historical] of change.qualityHistory.entries()) {
+      historical.qualityOrdinal ??= index + 1;
+    }
+    current.qualityOrdinal ??= change.qualityHistory.length + 1;
+    change.qualityHistory.push(current);
+  }
+  candidate.qualityOrdinal = qualityOrdinal;
+  change.phases.quality = candidate;
+  return {
+    phaseKey: qualityOrdinal === 1 ? 'quality' : `quality:${qualityOrdinal}`,
+    qualityOrdinal,
+  };
+}
+
+export function nextQualityOrdinal(change: ChangeRecord): number {
+  const current = change.phases.quality;
+  return current
+    ? (current.qualityOrdinal ?? (change.qualityHistory?.length ?? 0) + 1) + 1
+    : 1;
+}
+
+export function qualityFingerprintsEqual(
+  left: ChangeFingerprints,
+  right: ChangeFingerprints,
+): boolean {
+  return Buffer.compare(canonicalBytes(left), canonicalBytes(right)) === 0;
+}
+
+export function qualityFingerprintPreviouslyRecorded(
+  change: ChangeRecord,
+  candidate: ChangeFingerprints,
+): boolean {
+  return [change.phases.quality, ...(change.qualityHistory ?? [])]
+    .some((entry) => entry !== undefined && qualityFingerprintsEqual(entry.fingerprints, candidate));
 }
 
 export function nextBatchScopeId(batches: ChangeTddBatch[], requirementIds: string[]): string {

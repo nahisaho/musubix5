@@ -28,25 +28,63 @@ implementation.
 
 ## Approval manifest extensions
 
-musubix5 retains exact-manifest SHA-256 approval but extends manifest
-composition:
+Native musubix5 approvals use `approval-manifest-schema-v1`. Requirements and
+design approvals read selected raw files from the invoking `--root` worktree
+using `approval-normative-path-set-v1`, including domain-scoped feature paths,
+non-transitive ADR references parsed from design `ADRs:` fields, and
+required-path failure behavior. They also bind effective, default-resolved
+configuration projections. If `approval.domains` is nonempty, `--domain` is
+mandatory for requirements and design; release is always repository-wide and
+rejects `--domain`. Making an implicit default explicit does not change the
+hash, but changing a declared default does and requires renewed approval.
 
-- requirements approval additionally binds a canonical projection of
-  `schemaVersion` and `approval` configuration;
-- design approval additionally binds a canonical execution-policy projection;
-- release approval additionally excludes `docs/history/**`, declared run-local
-  paths, and evidence owned by another CHANGE.
+Release approval reads the persisted candidate commit rather than mutable
+worktree files. It applies this closed first-match exclusion registry:
 
-These extensions intentionally change aggregate approval hashes from musubix3.
-Bootstrap approvals recorded by musubix3 remain development authorizations
-only and must be re-recorded natively before release readiness.
+| Precedence | Reason | Predicate |
+|---:|---|---|
+| 1 | `symlink` | Non-normative symbolic-link blob; symlinks at the four normative release path patterns fail with `APPROVAL_NORMATIVE_SYMLINK` instead |
+| 2 | `generated-trace` | `.musubix/features/*/trace.json` |
+| 3 | `package-archive` | `**/*.tgz` |
+| 4 | `log-directory` | Blob below a lowercase `log`, `logs`, `session-log`, or `session-logs` directory segment |
+| 5 | `historical` | `docs/history/**` |
+| 6 | `run-local` | `.musubix/runs/**` |
+| 7 | `release-self-reference` | `.musubix/evidence/approvals/release.json` or `.musubix/evidence/approvals/native/release.json` |
+| 8 | `gate-self-reference` | `.musubix/evidence/formal.json`, `.musubix/evidence/model-correspondence.json`, `.musubix/evidence/mutation.json`, `.musubix/evidence/performance.json`, `.musubix/evidence/quality.json`, or `.musubix/evidence/native/test/**` |
+| 9 | `foreign-change-evidence` | A lowercase-suffix `.json` blob at or below `.musubix/evidence/` whose effective nonempty CHANGE ID differs byte-exactly from the active CHANGE |
+
+For rule 9, a nonempty top-level `changeId` wins over
+`metadata.changeId`. When no active CHANGE is bound, the rule never matches.
+Invalid JSON, non-object roots, and missing or empty IDs remain included.
+
+Included blobs are displayed with raw SHA-256. Excluded blobs are displayed
+with reason and raw SHA-256, but excluded raw hashes are informational and do
+not enter the aggregate; their normalized path/reason pairs do.
+
+Manifest construction fails with classified diagnostics:
+
+| Diagnostic | Meaning |
+|---|---|
+| `APPROVAL_DOMAIN_MISMATCH` | Missing, unexpected, colliding, or unknown domain |
+| `APPROVAL_NORMATIVE_MISSING` | Required normative path or referenced ADR is absent |
+| `APPROVAL_NORMATIVE_SYMLINK` | Normative path, ancestor, or other selected non-regular path is unsafe |
+| `APPROVAL_CANDIDATE_UNAVAILABLE` | Persisted release candidate commit is absent or unresolvable |
+| `APPROVAL_PATH_ENCODING` | A selected path is not valid UTF-8 |
+| `APPROVAL_PATH_COLLISION` | Distinct paths normalize to the same NFC identity |
+| `APPROVAL_GITLINK_UNSUPPORTED` | Candidate tree contains a Gitlink/submodule |
+
+These schema, projection, candidate-tree, exclusion, display, and diagnostic
+extensions intentionally change approval output and aggregate hashes from
+musubix3. Bootstrap approvals recorded by pinned musubix3 remain development
+authorizations only and must be re-recorded natively before release readiness.
 
 ## Configuration and gate extensions
 
 - `approvalAutomation` is a versioned musubix5 configuration extension. It is
   manual by default. An absent key materializes the approved default object.
-  Its modes and limits are hash-bound, so enabling verified-auto requires a new
-  design approval with the revised projection digest.
+  Its modes and limits are bound by a separate normative design digest, so
+  enabling verified-auto requires a new design approval with the revised
+  extension digest.
 - When required command verification has no configured commands, musubix5
   preserves the musubix3 `skipped` check status, gate exit code 1, and status
   exit code 0 with `ready: false`, and adds a structured `missing-command`

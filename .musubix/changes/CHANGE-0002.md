@@ -1,8 +1,8 @@
 ---
 schemaVersion: 1
 id: CHANGE-0002
-summary: Define the clean musubix5 compatibility and architecture requirements
-status: proposed
+summary: Implement the clean musubix5 compatibility and architecture foundation
+status: quality-blocked
 ---
 # CHANGE-0002: musubix5-clean-foundation
 
@@ -50,3 +50,48 @@ input only.
   `.musubix/features/musubix5-clean-foundation/requirements.md`
 - musubix3 tag `v0.1.18`
 - musubix4 tag `v0.1.3` and its dirty state as non-release design evidence
+
+## Implemented outcome
+
+- Preserved the pinned musubix3 CLI, JSON, exit-code, configuration, trace,
+  graph, TDD, approval, gate, status, installation, and startup contracts.
+- Added repository-wide monotonic order, durable leases, resumable lifecycle
+  transitions, separated evidence registries, native exact-hash approvals,
+  budget reservations, repairable verified-auto boundaries, run-local
+  specification isolation, deterministic current TDD-cycle selection, and
+  isolated candidate/QA workspaces.
+- Added an explicit, bounded Bootstrap Runner that cannot write normal
+  approval, TDD, trace, graph, workflow, quality, release, package, or waiver
+  evidence and cannot authorize a release.
+- Added deterministic quality/readiness classification and a separate,
+  candidate-bound, single-purpose authorization guard for publish, tag, and
+  push operations.
+- Removed inherited musubix3 trace declarations so all authoritative trace
+  links and generated evidence belong to musubix5.
+
+## Quality evidence
+
+- TypeScript typecheck and build pass.
+- The complete Vitest suite and pinned compatibility suite pass.
+- Package contents and isolated installation/startup smoke checks pass.
+- Strict trace coverage and graph gate pass.
+- The current quality checkpoint follows the latest complete Red,
+  Implementation, and Green evidence for every requirement.
+- The optional formal check reports `fail` because all 59 prose requirements
+  are `FORMAL_UNSUPPORTED` by the current Boolean abstraction; it grants no
+  proof credit.
+- The required overall gate remains `fail` until
+  `WORKFLOW_INVOCATION_UNVERIFIED` is reconciled from the completed Copilot
+  transcript and the exact release manifest receives human approval.
+- `CHANGE_RECORDEDAT_OUT_OF_ORDER` remains a non-blocking historical warning:
+  monotonic order 216 precedes 217 even though their wall-clock `recordedAt`
+  values are reversed. Persisted order, not wall-clock time, is authoritative.
+
+## Release boundary
+
+The candidate is version `0.1.0` on branch `change/CHANGE-0002`; its immutable
+commit and exact release manifest SHA-256 will be established only after these
+changes are committed and workflow evidence is reconciled. Release approval
+remains pending. No package publication, Git tag, or remote push has been
+performed. Each external operation additionally requires a separate explicit
+human authorization bound to the approved candidate.

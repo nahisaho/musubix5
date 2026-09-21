@@ -14,6 +14,7 @@ export async function recordApproval(
   expectedArtifactSha256: string,
   config: ApprovalConfig,
   domainName?: string,
+  releaseChangeId?: string,
 ): Promise<ApprovalEvidence> {
   const normalizedApprover = approver.trim();
   if (!normalizedApprover || normalizedApprover.includes('\0')) {
@@ -43,13 +44,15 @@ export async function recordApproval(
       throw new Error(`Release approval requires passing non-approval quality checks: ${blockers.map((check) => check.name).join(', ')}.`);
     }
   }
-  const manifest = await approvalManifest(root, stage, domain);
+  const manifest = await approvalManifest(root, stage, domain, releaseChangeId);
+  if (stage === 'release' && manifest.changeId === undefined) {
+    throw new Error('Release approval requires exactly one CHANGE document in the isolated candidate worktree.');
+  }
   if (!Object.keys(manifest.artifacts).length) throw new Error(`No artifacts are available for ${stage} approval.`);
   if (manifest.artifactSha256 !== expectedArtifactSha256) {
     throw new Error(`Approval artifact manifest changed: expected ${expectedArtifactSha256}, current ${manifest.artifactSha256}. Review the current manifest before approving.`);
   }
   const evidence: ApprovalEvidence = {
-    schemaVersion: 1,
     ...manifest,
     approver: normalizedApprover,
     approvedAt: new Date().toISOString(),

@@ -1,6 +1,7 @@
 import { canonicalBytes, sha256 } from './canonical.js';
+import { loadApprovalProjectionConfig } from './config.js';
 import { appendEvidence } from './evidence-registry.js';
-import { files, readText, snapshot, writeJson } from './files.js';
+import { snapshot, writeJson } from './files.js';
 import { error, type Diagnostic } from '../../domain/src/index.js';
 import {
   acquireChangeLease,
@@ -8,12 +9,20 @@ import {
   assertChangeLeaseCurrent,
   releaseChangeLease,
 } from './journal.js';
+import {
+  buildReleaseCandidateContent, releaseExclusionIdentity,
+} from './release-manifest.js';
+import {
+  resolveNormativeArtifacts, snapshotNormativeArtifacts,
+} from './approval-normative.js';
 
 export type NativeApprovalStage = 'requirements' | 'design' | 'release';
 
 export interface NativeApprovalManifest {
   schemaVersion: 1;
   stage: NativeApprovalStage;
+  domain?: string;
+  changeId?: string;
   artifacts: Record<string, string>;
   projection: unknown;
   exclusions: Array<{ path: string; reason: string; sha256: string }>;
@@ -24,6 +33,7 @@ export interface PrepareNativeApprovalInput {
   stage: NativeApprovalStage;
   paths: string[];
   projection: unknown;
+  changeId?: string;
   exclusions?: Array<{ path: string; reason: string; sha256: string }>;
 }
 
@@ -74,20 +84,41 @@ export async function prepareNativeApproval(
 ): Promise<NativeApprovalManifest> {
   const paths = [...new Set(input.paths)].sort();
   const artifacts = await snapshot(root, paths);
+  return nativeManifestFromArtifacts(input.stage, artifacts, input.projection, {
+    ...(input.changeId ? { changeId: input.changeId } : {}),
+    ...(input.exclusions ? { exclusions: input.exclusions } : {}),
+  });
+}
+
+function nativeManifestFromArtifacts(
+  stage: NativeApprovalStage,
+  artifacts: Record<string, string>,
+  projection: unknown,
+  input: {
+    changeId?: string;
+    exclusions?: Array<{ path: string; reason: string; sha256: string }>;
+  } = {},
+): NativeApprovalManifest {
   const payload = {
     schemaVersion: 1 as const,
-    stage: input.stage,
+    stage,
+    ...(input.changeId ? { changeId: input.changeId } : {}),
     artifacts,
-    projection: input.projection,
+    projection,
     exclusions: input.exclusions ?? [],
+  };
+  const digestPayload = {
+    ...payload,
+    exclusions: releaseExclusionIdentity(payload.exclusions),
   };
   return {
     ...payload,
-    artifactSha256: sha256(canonicalBytes(payload)),
+    artifactSha256: sha256(canonicalBytes(digestPayload)),
   };
 }
 
 const designProjectionKeys = [
+  'schemaVersion',
   'commands',
   'requiredChecks',
   'thresholds',
@@ -104,24 +135,8 @@ function selectProjection(config: Record<string, unknown>, keys: readonly string
   return Object.fromEntries(keys.map((key) => [key, config[key]]));
 }
 
-function releaseExclusion(
-  path: string,
-  changeId: string,
-  runLocalPaths: string[],
-  evidenceChangeId: string | null,
-): string | null {
-  if (/^\.musubix\/features\/[^/]+\/trace\.json$/.test(path)) return 'generated-trace';
-  if (path.endsWith('.tgz')) return 'package-archive';
-  if (/(?:^|\/)(?:log|logs|session-log|session-logs)\//.test(path)) return 'log-directory';
-  if (path.startsWith('docs/history/')) return 'historical';
-  if (runLocalPaths.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))) return 'run-local';
-  if (path === '.musubix/evidence/approvals/native/release.json') return 'release-self-reference';
-  if (evidenceChangeId !== null && evidenceChangeId !== changeId) return 'foreign-change-evidence';
-  return null;
-}
-
 /** @id CODE-M5-APPROVAL-007
- * @implements REQ-M5-APPROVAL-007
+ * @implements REQ-M5-APPROVAL-007 REQ-M5-COMPAT-013 REQ-M5-WORKTREE-001
  * @design DES-M5-006
  */
 export async function prepareStageApproval(root: string, input: {
@@ -129,48 +144,47 @@ export async function prepareStageApproval(root: string, input: {
   changeId: string;
   runLocalPaths: string[];
 }): Promise<NativeApprovalManifest> {
-  const allPaths = await files(root, { includeEvidence: input.stage === 'release' });
-  const config = JSON.parse(await readText(root, '.musubix/config.json')) as Record<string, unknown>;
-  if (input.stage === 'requirements') {
-    return prepareNativeApproval(root, {
+  if (input.stage === 'release') {
+    const content = await buildReleaseCandidateContent(root, input.changeId);
+    const payload = {
+      schemaVersion: 1 as const,
       stage: input.stage,
-      paths: allPaths.filter((path) =>
-        path === '.musubix/constitution.md'
-        || /^\.musubix\/features\/[^/]+\/requirements\.md$/.test(path)),
-      projection: selectProjection(config, ['schemaVersion', 'approval']),
-    });
+      changeId: content.changeId,
+      artifacts: content.artifacts,
+      projection: null,
+      exclusions: content.exclusions,
+    };
+    return {
+      ...payload,
+      artifactSha256: sha256(canonicalBytes({
+        ...payload,
+        exclusions: releaseExclusionIdentity(content.exclusions),
+      })),
+    };
+  }
+  const config = await loadApprovalProjectionConfig(root);
+  if (input.stage === 'requirements') {
+    const artifacts = await snapshotNormativeArtifacts(
+      root,
+      await resolveNormativeArtifacts(root, 'requirements'),
+    );
+    return nativeManifestFromArtifacts(input.stage, artifacts, selectProjection(
+      config as unknown as Record<string, unknown>,
+      ['schemaVersion', 'approval'],
+    ));
   }
   if (input.stage === 'design') {
-    return prepareNativeApproval(root, {
-      stage: input.stage,
-      paths: allPaths.filter((path) =>
-        path === '.musubix/constitution.md'
-        || /^\.musubix\/features\/[^/]+\/(?:requirements|design)\.md$/.test(path)
-        || /^\.musubix\/decisions\/ADR-\d+\.md$/.test(path)),
-      projection: selectProjection(config, designProjectionKeys),
-    });
+    const artifacts = await snapshotNormativeArtifacts(
+      root,
+      await resolveNormativeArtifacts(root, 'design'),
+    );
+    return nativeManifestFromArtifacts(
+      input.stage,
+      artifacts,
+      selectProjection(config as unknown as Record<string, unknown>, designProjectionKeys),
+    );
   }
-  const exclusions: Array<{ path: string; reason: string; sha256: string }> = [];
-  const included: string[] = [];
-  for (const path of allPaths) {
-    let evidenceChangeId: string | null = null;
-    if (path.startsWith('.musubix/evidence/') && path.endsWith('.json')) {
-      const value = JSON.parse(await readText(root, path)) as { changeId?: unknown };
-      if (typeof value.changeId === 'string') evidenceChangeId = value.changeId;
-    }
-    const reason = releaseExclusion(path, input.changeId, input.runLocalPaths, evidenceChangeId);
-    if (reason === null) included.push(path);
-    else {
-      const hashes = await snapshot(root, [path]);
-      exclusions.push({ path, reason, sha256: hashes[path]! });
-    }
-  }
-  return prepareNativeApproval(root, {
-    stage: input.stage,
-    paths: included,
-    projection: null,
-    exclusions: exclusions.sort((left, right) => left.path.localeCompare(right.path)),
-  });
+  throw new Error(`APPROVAL_STAGE_INVALID: ${input.stage}`);
 }
 
 /** @id CODE-M5-APPROVAL-001
@@ -189,7 +203,18 @@ export async function recordNativeApproval(
   if (!/^[a-f0-9]{64}$/.test(input.expectedArtifactSha256)) {
     throw new Error('APPROVAL_HASH_INVALID: expected artifact SHA-256 must be lowercase hexadecimal.');
   }
-  const manifest = await prepareNativeApproval(root, input);
+  const manifest = input.stage === 'release'
+    ? await prepareStageApproval(root, {
+      stage: 'release',
+      changeId: input.changeId,
+      runLocalPaths: [],
+    })
+    : await prepareNativeApproval(root, {
+      stage: input.stage,
+      paths: input.paths,
+      projection: input.projection,
+      ...(input.exclusions ? { exclusions: input.exclusions } : {}),
+    });
   if (manifest.artifactSha256 !== input.expectedArtifactSha256) {
     throw new Error(
       `APPROVAL_MANIFEST_CHANGED: expected ${input.expectedArtifactSha256}, current ${manifest.artifactSha256}.`,

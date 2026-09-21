@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { Command, CommanderError, InvalidArgumentError } from 'commander';
+import { Command, CommanderError, InvalidArgumentError, Option } from 'commander';
 import { basename, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -13,7 +13,7 @@ import {
   validateTddEvidence, verifyWorkflowLogFile, migrateTddFingerprint, voidTddCycle, type ChangePhase, type TddPhase,
   attestationSigningPayload, createUnsignedAttestation, githubOidcAudience, verifyEvidenceAttestation,
   mutationDoctor, mutationIdentity, validateMutationEvidence, validateModelCorrespondenceEvidence, within,
-  approvalManifest, approvalStages, recordApproval, requireApproval,   requireDomainOption, requireValidateDomainOption, resolveDesignFileDomain, resolveNamedDomain,
+  approvalManifest, approvalStages, formatApprovalManifestText, recordApproval, requireApproval, requireDomainOption, requireValidateDomainOption, resolveDesignFileDomain, resolveNamedDomain,
   validateApprovals, validateApprovalsForDomain, type ApprovalStage,
   scaffoldCommands, scaffoldRequirements, scaffoldDesign,
   recordChangeWaiver, recordWorkflowWaiver, recordAllWorkflowWaivers,
@@ -533,30 +533,42 @@ export function createProgram(): Command {
   const approval = program.command('approval').description('Prepare, record and validate explicit artifact-bound human approvals');
   common(approval.command('prepare <stage>').description('Show the exact artifact manifest a human must review'))
     .option('--domain <name>', 'Approval domain (required when approval.domains is configured, except for release)')
-    .action(async (stage: string, options: { root: string; json?: boolean; domain?: string }) => {
+    .addOption(new Option('--change-id <id>').hideHelp())
+    .action(async (stage: string, options: { root: string; json?: boolean; domain?: string; changeId?: string }) => {
       if (!approvalStages.includes(stage as ApprovalStage)) throw new Error(`stage must be one of: ${approvalStages.join(', ')}`);
       const root = resolve(options.root);
       const config = await loadConfig(root);
       requireDomainOption(config.approval, stage as ApprovalStage, options.domain);
       const domain = options.domain ? await resolveNamedDomain(root, config.approval, options.domain) : undefined;
-      const manifest = await approvalManifest(root, stage as ApprovalStage, domain);
-      output(manifest, !!options.json, `${stage} artifact manifest: ${manifest.artifactSha256}\n${Object.keys(manifest.artifacts).join('\n')}`);
+      if (stage !== 'release' && options.changeId !== undefined) throw new Error('--change-id is accepted only for release approval.');
+      const manifest = await approvalManifest(root, stage as ApprovalStage, domain, options.changeId);
+      output(manifest, !!options.json, formatApprovalManifestText(manifest));
     });
   common(approval.command('record <stage>'))
     .requiredOption('--approver <name>', 'Human approver name')
     .requiredOption('--artifact-sha256 <hash>', 'Exact manifest SHA-256 shown to and approved by the human')
     .requiredOption('--confirm', 'Explicitly confirm this human approval')
     .option('--domain <name>', 'Approval domain (required when approval.domains is configured, except for release)')
+    .addOption(new Option('--change-id <id>').hideHelp())
     .action(async (stage: string, options: {
-      root: string; json?: boolean; approver: string; artifactSha256: string; confirm: boolean; domain?: string;
+      root: string; json?: boolean; approver: string; artifactSha256: string; confirm: boolean; domain?: string; changeId?: string;
     }) => {
       if (!approvalStages.includes(stage as ApprovalStage)) {
         throw new Error(`stage must be one of: ${approvalStages.join(', ')}`);
       }
       if (options.confirm !== true) throw new Error('--confirm is required to record human approval.');
+      if (stage !== 'release' && options.changeId !== undefined) throw new Error('--change-id is accepted only for release approval.');
       const root = resolve(options.root);
       const config = await loadConfig(root);
-      const evidence = await recordApproval(root, stage as ApprovalStage, options.approver, options.artifactSha256, config.approval, options.domain);
+      const evidence = await recordApproval(
+        root,
+        stage as ApprovalStage,
+        options.approver,
+        options.artifactSha256,
+        config.approval,
+        options.domain,
+        options.changeId,
+      );
       output(evidence, !!options.json, `Recorded explicit ${stage} approval by ${evidence.approver} for ${evidence.artifactSha256}.`);
     });
   common(approval.command('validate'))

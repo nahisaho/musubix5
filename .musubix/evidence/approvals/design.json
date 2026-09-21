@@ -9,12 +9,124 @@
     ".musubix/decisions/ADR-0005.md": "f94c20196f66891cb0fc640a1bb8ea485d1315a35b5f4aa7d166571d2335a964",
     ".musubix/decisions/ADR-0006.md": "5649e9d4ae9c4c4756bd872ac023d588acd90d32fc2e2c149ab3f29cf2b67ac1",
     ".musubix/decisions/ADR-0007.md": "d931c13da6a9baa087a763542bac502a6cd217359e72a1a1cbe422668418b949",
-    ".musubix/decisions/ADR-0008.md": "f204a51d02e053538eda103be69f007a2b293e40c4a172358ec7cf38c283277e",
+    ".musubix/decisions/ADR-0008.md": "fded9131107049bdf25d03e4bc09ae843a9810618d01915895fc19340b1c0ce9",
     ".musubix/decisions/ADR-0009.md": "5e38a2e75f754b89ad51bcb242ad6994e36393c41c53630f2d6dd76e67d8294e",
-    ".musubix/features/musubix5-clean-foundation/design.md": "684e3d3d258245bb9725e121c9074a8e6ac3c530cb29242a41df1cb9f95ee705",
-    ".musubix/features/musubix5-clean-foundation/requirements.md": "619c823a061212934b26705fd9c88935f71e490f78d73cf58bd897a8f359dc41"
+    ".musubix/features/musubix5-clean-foundation/design.md": "65faf7a058b8d77e0b9679fa8dcf5fe811c1ec20ebbb3ebd16b96917f40d7be2",
+    ".musubix/features/musubix5-clean-foundation/requirements.md": "9cabf55ef6d730f98d6ca895925821df6c89ed449fe988e07cc93c1042030f12"
   },
-  "artifactSha256": "1695948d8a9e04a3833a94e3b9b09025178333a5d3752d204a6cdea754ed37bd",
+  "projection": {
+    "schemaVersion": 1,
+    "commands": [
+      {
+        "name": "typecheck",
+        "command": "npm",
+        "args": [
+          "run",
+          "typecheck"
+        ],
+        "required": true,
+        "timeoutMs": 120000
+      },
+      {
+        "name": "build",
+        "command": "npm",
+        "args": [
+          "run",
+          "build"
+        ],
+        "required": true,
+        "timeoutMs": 120000
+      },
+      {
+        "name": "test",
+        "command": "npx",
+        "args": [
+          "vitest",
+          "run"
+        ],
+        "adapter": "vitest",
+        "required": true,
+        "timeoutMs": 180000
+      },
+      {
+        "name": "compatibility",
+        "command": "npm",
+        "args": [
+          "run",
+          "test:compat"
+        ],
+        "required": true,
+        "timeoutMs": 180000
+      },
+      {
+        "name": "pack-check",
+        "command": "npm",
+        "args": [
+          "run",
+          "pack:check"
+        ],
+        "required": true,
+        "timeoutMs": 120000
+      },
+      {
+        "name": "pack-smoke",
+        "command": "npm",
+        "args": [
+          "run",
+          "pack:smoke"
+        ],
+        "required": true,
+        "timeoutMs": 180000
+      }
+    ],
+    "requiredChecks": [
+      "requirements",
+      "design",
+      "constitution",
+      "trace",
+      "graph",
+      "commands"
+    ],
+    "thresholds": {
+      "design": 1,
+      "implementation": 1,
+      "tests": 1
+    },
+    "architecture": {
+      "forbidCycles": true,
+      "rules": []
+    },
+    "codeGraph": {
+      "mode": "compatible"
+    },
+    "formal": {
+      "solver": "none",
+      "minModeledFraction": 0,
+      "timeoutMs": 12000
+    },
+    "mutation": {
+      "mode": "compatible"
+    },
+    "tdd": {
+      "redPreflightCommands": []
+    },
+    "workflow": {
+      "mode": "compatible",
+      "maxAgeSeconds": 3600,
+      "maxFutureSkewSeconds": 60
+    },
+    "attestation": {
+      "mode": "local",
+      "maxAgeSeconds": 3600,
+      "maxFutureSkewSeconds": 60,
+      "trustedPublicKeys": [],
+      "githubOidc": {
+        "mode": "off"
+      }
+    }
+  },
+  "exclusions": [],
+  "artifactSha256": "8a7b323e583a9365b001b7a75a45b542b25d18989a0c3472bf6ccec49dcc4442",
   "approver": "@nahisaho",
-  "approvedAt": "2026-09-21T04:37:13.803Z"
+  "approvedAt": "2026-09-21T10:29:53.303Z"
 }

@@ -3,11 +3,19 @@ import {
   error, validateConstitution, validateDesign, validateRequirements, type Diagnostic,
 } from '../../domain/src/index.js';
 import type { ApprovalConfig } from './config.js';
-import { digest, exists, files, readText, snapshot, within } from './files.js';
+import { loadApprovalProjectionConfig } from './config.js';
+import { canonicalBytes, sha256 } from './canonical.js';
+import { exists, files, readText, snapshot, within } from './files.js';
 import {
   domainOwning, domainsConfigured, featureOwningDesignFile, featureOwningRequirement, resolveDomains,
   type ResolvedDomain,
 } from './approval-domains.js';
+import {
+  buildReleaseCandidateContent, releaseExclusionIdentity, type ReleaseExclusion,
+} from './release-manifest.js';
+import {
+  resolveNormativeArtifacts, snapshotNormativeArtifacts,
+} from './approval-normative.js';
 
 export {
   domainsConfigured, domainOwning, featureOwningDesignFile, featureOwningRequirement, resolveDomains,
@@ -19,10 +27,14 @@ export type ApprovalStage = typeof approvalStages[number];
 export type ApprovalStatus = 'approved' | 'missing' | 'stale';
 
 export interface ApprovalManifest {
+  schemaVersion: 1;
   stage: ApprovalStage;
   domain?: string;
   features?: string[];
+  changeId?: string;
   artifacts: Record<string, string>;
+  projection: unknown;
+  exclusions: ReleaseExclusion[];
   artifactSha256: string;
 }
 
@@ -67,58 +79,91 @@ export function approvalPath(stage: ApprovalStage, domain?: string): string {
 const featureRequirementsPattern = /^\.musubix\/features\/([^/]+)\/requirements\.md$/;
 const featureDesignPattern = /^\.musubix\/features\/([^/]+)\/design\.md$/;
 
-function stagePaths(paths: string[], stage: ApprovalStage): string[] {
-  const requirements = (path: string): boolean =>
-    path === '.musubix/constitution.md' || featureRequirementsPattern.test(path);
-  if (stage === 'requirements') return paths.filter(requirements).sort();
-  if (stage === 'design') {
-    return paths.filter((path) =>
-      requirements(path)
-      || featureDesignPattern.test(path)
-      || /^\.musubix\/decisions\/ADR-\d+\.md$/.test(path)).sort();
+export async function approvalManifest(
+  root: string,
+  stage: ApprovalStage,
+  domain?: ResolvedDomain,
+  releaseChangeId?: string,
+): Promise<ApprovalManifest> {
+  if (stage === 'release' && domain) {
+    throw new Error('APPROVAL_DOMAIN_MISMATCH: release approval is repository-wide.');
   }
-  return paths.filter((path) =>
-    !/^\.musubix\/features\/[^/]+\/trace\.json$/.test(path)
-    && !path.endsWith('.tgz')
-    && !/(?:^|\/)(?:logs?|session-logs)\//.test(path)).sort();
-}
-
-async function domainStagePaths(root: string, stage: 'requirements' | 'design', domain: ResolvedDomain): Promise<string[]> {
-  const allPaths = await files(root);
-  const owns = (slug: string): boolean => domain.features.includes(slug);
-  const base = allPaths.filter((path) => {
-    if (path === '.musubix/constitution.md') return true;
-    const slug = featureRequirementsPattern.exec(path)?.[1];
-    return slug !== undefined && owns(slug);
-  });
-  if (stage === 'requirements') return base.sort();
-  const designPaths = allPaths.filter((path) => {
-    const slug = featureDesignPattern.exec(path)?.[1];
-    return slug !== undefined && owns(slug);
-  });
-  const adrIds = new Set<string>();
-  for (const path of designPaths) {
-    for (const component of validateDesign(await readText(root, path), path).value) {
-      for (const id of component.decisions) adrIds.add(id);
-    }
+  let projection: unknown = null;
+  if (stage !== 'release') {
+    const config = await loadApprovalProjectionConfig(root);
+    projection = stage === 'requirements'
+      ? { schemaVersion: config.schemaVersion, approval: config.approval }
+      : Object.fromEntries([
+        'schemaVersion',
+        'commands',
+        'requiredChecks',
+        'thresholds',
+        'architecture',
+        'codeGraph',
+        'formal',
+        'mutation',
+        'tdd',
+        'workflow',
+        'attestation',
+      ].map((key) => [key, config[key as keyof typeof config]]));
   }
-  const adrPaths = allPaths.filter((path) => /^\.musubix\/decisions\/ADR-\d+\.md$/.test(path) && adrIds.has(basename(path, '.md')));
-  return [...base, ...designPaths, ...adrPaths].sort();
-}
-
-export async function approvalManifest(root: string, stage: ApprovalStage, domain?: ResolvedDomain): Promise<ApprovalManifest> {
   if (domain && stage !== 'release') {
-    const artifacts = await snapshot(root, await domainStagePaths(root, stage, domain));
-    return {
+    const artifacts = await snapshotNormativeArtifacts(
+      root,
+      await resolveNormativeArtifacts(root, stage, domain.features),
+    );
+    const identity = {
+      schemaVersion: 1 as const,
       stage,
       domain: domain.name,
-      features: domain.features,
       artifacts,
-      artifactSha256: digest(JSON.stringify({ stage, domain: domain.name, features: domain.features, artifacts })),
+      projection,
+      exclusions: [],
+    };
+    return {
+      ...identity,
+      features: domain.features,
+      artifactSha256: sha256(canonicalBytes(identity)),
     };
   }
-  const artifacts = await snapshot(root, stagePaths(await files(root), stage));
-  return { stage, artifacts, artifactSha256: digest(JSON.stringify({ stage, artifacts })) };
+  if (stage === 'release') {
+    const content = await buildReleaseCandidateContent(root, releaseChangeId);
+    const identity = {
+      schemaVersion: 1 as const,
+      stage,
+      changeId: content.changeId,
+      artifacts: content.artifacts,
+      projection: null,
+      exclusions: releaseExclusionIdentity(content.exclusions),
+    };
+    return {
+      ...identity,
+      exclusions: content.exclusions,
+      artifactSha256: sha256(canonicalBytes(identity)),
+    };
+  }
+  const artifacts = await snapshotNormativeArtifacts(
+    root,
+    await resolveNormativeArtifacts(root, stage),
+  );
+  const identity = {
+    schemaVersion: 1 as const,
+    stage,
+    artifacts,
+    projection,
+    exclusions: [],
+  };
+  return { ...identity, artifactSha256: sha256(canonicalBytes(identity)) };
+}
+
+export function formatApprovalManifestText(manifest: ApprovalManifest): string {
+  const lines = [
+    `${manifest.stage} artifact manifest: ${manifest.artifactSha256}`,
+    ...Object.entries(manifest.artifacts).map(([path, sha256]) => `INCLUDED ${path} ${sha256}`),
+    ...(manifest.exclusions ?? []).map((entry) =>
+      `EXCLUDED ${entry.path} ${entry.sha256} ${entry.reason}`),
+  ];
+  return lines.join('\n');
 }
 
 export async function loadApproval(root: string, stage: ApprovalStage, domain?: string): Promise<ApprovalEvidence | null> {
@@ -132,6 +177,12 @@ export async function loadApproval(root: string, stage: ApprovalStage, domain?: 
     || !value.artifacts || typeof value.artifacts !== 'object' || Array.isArray(value.artifacts)
     || Object.entries(value.artifacts).some(([path, sha256]) => !path || path.startsWith('/')
       || path.includes('\0') || typeof sha256 !== 'string' || !/^[a-f0-9]{64}$/.test(sha256))
+    || (value.exclusions !== undefined && (!Array.isArray(value.exclusions)
+      || value.exclusions.some((entry) => !entry || typeof entry !== 'object'
+        || typeof entry.path !== 'string' || !entry.path || entry.path.startsWith('/')
+        || entry.path.includes('\0') || typeof entry.reason !== 'string' || !entry.reason
+        || typeof entry.sha256 !== 'string' || !/^[a-f0-9]{64}$/.test(entry.sha256))))
+    || (stage === 'release' && (typeof value.changeId !== 'string' || !/^CHANGE-\d+$/.test(value.changeId)))
     || (domain !== undefined && (value.domain !== domain || !Array.isArray(value.features) || value.features.some((f) => typeof f !== 'string')))) {
     throw new Error(`Invalid ${stage} approval evidence.`);
   }
@@ -144,7 +195,6 @@ export async function validateApprovalStage(
   config: ApprovalConfig,
   domain?: ResolvedDomain,
 ): Promise<ApprovalStageValidation> {
-  const current = await approvalManifest(root, stage, domain);
   const path = approvalPath(stage, domain?.name);
   const present = await exists(within(root, path));
   let evidence: ApprovalEvidence | null;
@@ -157,9 +207,55 @@ export async function validateApprovalStage(
       cause instanceof Error ? cause.message : String(cause),
       path,
     )];
-    return { stage, ...(domain ? { domain: domain.name } : {}), required, present, status: 'stale', evidence: null, currentArtifactSha256: current.artifactSha256, diagnostics };
+    try {
+      const current = await approvalManifest(root, stage, domain);
+      return { stage, ...(domain ? { domain: domain.name } : {}), required, present, status: 'stale', evidence: null, currentArtifactSha256: current.artifactSha256, diagnostics };
+    } catch (manifestCause) {
+      const message = manifestCause instanceof Error ? manifestCause.message : String(manifestCause);
+      if (stage !== 'release' || !message.startsWith('APPROVAL_CANDIDATE_UNAVAILABLE:')) {
+        throw manifestCause;
+      }
+      diagnostics.push(error('APPROVAL_CANDIDATE_UNAVAILABLE', message, path));
+      return {
+        stage,
+        ...(domain ? { domain: domain.name } : {}),
+        required,
+        present,
+        status: 'stale',
+        evidence: null,
+        currentArtifactSha256: sha256(canonicalBytes({
+          schemaVersion: 1,
+          stage,
+          diagnostic: 'APPROVAL_CANDIDATE_UNAVAILABLE',
+        })),
+        diagnostics,
+      };
+    }
   }
   const required = config.mode === 'required';
+  let current: ApprovalManifest;
+  try {
+    current = await approvalManifest(root, stage, domain, stage === 'release' ? evidence?.changeId : undefined);
+  } catch (cause) {
+    const message = cause instanceof Error ? cause.message : String(cause);
+    if (stage !== 'release' || !message.startsWith('APPROVAL_CANDIDATE_UNAVAILABLE:')) throw cause;
+    const diagnostics = [error('APPROVAL_CANDIDATE_UNAVAILABLE', message, path)];
+    const diagnosticSha256 = sha256(canonicalBytes({
+      schemaVersion: 1,
+      stage,
+      diagnostic: 'APPROVAL_CANDIDATE_UNAVAILABLE',
+    }));
+    return {
+      stage,
+      ...(domain ? { domain: domain.name } : {}),
+      required,
+      present,
+      status: evidence ? 'stale' : 'missing',
+      evidence,
+      currentArtifactSha256: diagnosticSha256,
+      diagnostics,
+    };
+  }
   if (!evidence) {
     const diagnostics = required
       ? [error('APPROVAL_MISSING', `Current ${stage} approval is required.`, path)]
@@ -167,7 +263,9 @@ export async function validateApprovalStage(
     return { stage, ...(domain ? { domain: domain.name } : {}), required, present: false, status: 'missing', evidence: null, currentArtifactSha256: current.artifactSha256, diagnostics };
   }
   const stale = evidence.artifactSha256 !== current.artifactSha256
-    || JSON.stringify(evidence.artifacts) !== JSON.stringify(current.artifacts);
+    || JSON.stringify(evidence.artifacts) !== JSON.stringify(current.artifacts)
+    || JSON.stringify(releaseExclusionIdentity(evidence.exclusions ?? []))
+      !== JSON.stringify(releaseExclusionIdentity(current.exclusions ?? []));
   const diagnostics = stale
     ? [error('APPROVAL_STALE', `${stage} approval does not match the current artifact manifest.`, path)]
     : [];

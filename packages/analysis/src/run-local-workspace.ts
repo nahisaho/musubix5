@@ -3,6 +3,9 @@ import { dirname, relative, resolve, sep } from 'node:path';
 import { canonicalBytes, sha256 } from './canonical.js';
 import { snapshot } from './files.js';
 import type { NativeApprovalManifest } from './native-approval.js';
+import {
+  resolveNormativeArtifacts, snapshotNormativeArtifacts,
+} from './approval-normative.js';
 
 export interface RunLocalWorkspace {
   root: string;
@@ -33,7 +36,15 @@ export async function assertApprovedSpecificationCurrent(
 ): Promise<void> {
   let current: Record<string, string>;
   try {
-    current = await snapshot(workspace.root, Object.keys(workspace.approval.artifacts));
+    if (workspace.approval.stage === 'release') {
+      throw new Error('release approval is not valid for a run-local workspace.');
+    }
+    current = Object.hasOwn(workspace.approval.artifacts, '.musubix/constitution.md')
+      ? await snapshotNormativeArtifacts(
+        workspace.root,
+        await resolveNormativeArtifacts(workspace.root, workspace.approval.stage),
+      )
+      : await snapshot(workspace.root, Object.keys(workspace.approval.artifacts));
   } catch (cause) {
     throw new Error('APPROVED_SPECIFICATION_CHANGED: an approved normative file is unavailable.', {
       cause,

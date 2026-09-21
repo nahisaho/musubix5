@@ -3,7 +3,7 @@ import { lstat, mkdir, readFile, readlink } from 'node:fs/promises';
 import { dirname, relative, resolve, sep } from 'node:path';
 import { promisify } from 'node:util';
 import { canonicalBytes, sha256 } from './canonical.js';
-import { appendJournalRecord } from './journal.js';
+import { appendJournalRecord, verifyJournal } from './journal.js';
 
 const execFileAsync = promisify(execFile);
 const generatedStatePrefixes = ['.musubix/evidence/', '.musubix/journal/'];
@@ -45,6 +45,22 @@ export interface QaWorkspace {
   order: number;
 }
 
+export interface CandidateSnapshot {
+  changeId: string;
+  repositoryId: string;
+  branch: string;
+  commit: string;
+  order: number;
+}
+
+export interface CandidateGitEntry {
+  rawPath: Buffer;
+  nfcPath: string;
+  objectId: string;
+  gitMode: string;
+  objectType: string;
+}
+
 async function git(root: string, args: string[], allowFailure = false): Promise<string> {
   try {
     const { stdout } = await execFileAsync('git', ['-C', root, ...args], {
@@ -72,6 +88,19 @@ async function gitRaw(root: string, args: string[]): Promise<string> {
   }
 }
 
+async function gitBuffer(root: string, args: string[]): Promise<Buffer> {
+  try {
+    const { stdout } = await execFileAsync('git', ['-C', root, ...args], {
+      encoding: 'buffer',
+      maxBuffer: 100 * 1024 * 1024,
+    });
+    return stdout;
+  } catch (cause) {
+    const message = cause instanceof Error ? cause.message : String(cause);
+    throw new Error(`WORKSPACE_GIT_FAILED: git ${args.join(' ')}: ${message}`, { cause });
+  }
+}
+
 async function pathExists(path: string): Promise<boolean> {
   try {
     await lstat(path);
@@ -84,6 +113,14 @@ async function pathExists(path: string): Promise<boolean> {
 
 async function gitCommonDirectory(root: string): Promise<string> {
   return resolve(root, await git(root, ['rev-parse', '--git-common-dir']));
+}
+
+async function repositoryIdentity(root: string): Promise<string> {
+  const repositoryRoot = await git(root, ['rev-parse', '--show-toplevel']);
+  const remote = await git(root, ['config', '--get', 'remote.origin.url'], true);
+  return `repository:${sha256(canonicalBytes({
+    identity: remote || `local:${repositoryRoot}`,
+  }))}`;
 }
 
 function portable(path: string): string {
@@ -150,10 +187,7 @@ export async function captureBaseline(root: string, changeId: string): Promise<B
     throw new Error('WORKSPACE_BASELINE_COMMIT_REQUIRED: candidate execution requires an immutable commit.');
   }
   const dirty = await captureDirtyState(root);
-  const remote = await git(root, ['config', '--get', 'remote.origin.url'], true);
-  const repositoryId = `repository:${sha256(canonicalBytes({
-    identity: remote || `local:${commitSha}`,
-  }))}`;
+  const repositoryId = await repositoryIdentity(root);
   const record = await appendJournalRecord(root, {
     stream: 'normal',
     changeId,
@@ -272,6 +306,140 @@ export async function createQaWorkspace(root: string, input: CandidateWorkspace 
     candidateCommit: input.candidateCommit,
     order: record.order,
   };
+}
+
+/** @id CODE-M5-WORKTREE-CANDIDATE-SNAPSHOT-001
+ * @implements REQ-M5-WORKTREE-001 REQ-M5-APPROVAL-007
+ * @design DES-M5-012
+ */
+export async function persistCandidateSnapshot(
+  root: string,
+  changeId: string,
+): Promise<CandidateSnapshot> {
+  if (!/^CHANGE-\d+$/.test(changeId)) {
+    throw new Error('APPROVAL_CANDIDATE_UNAVAILABLE: changeId must match CHANGE-<digits>.');
+  }
+  if (await gitRaw(root, ['status', '--porcelain=v1', '-z', '--untracked-files=all'])) {
+    throw new Error('APPROVAL_CANDIDATE_UNAVAILABLE: candidate snapshot requires a clean worktree.');
+  }
+  const commit = await git(root, ['rev-parse', '--verify', 'HEAD^{commit}'], true);
+  const branch = await git(root, ['branch', '--show-current'], true);
+  const ownedChange = /(?:^|\/)(CHANGE-\d+)(?:$|\/)/.exec(branch)?.[1];
+  if (ownedChange !== undefined && ownedChange !== changeId) {
+    throw new Error('APPROVAL_CANDIDATE_UNAVAILABLE: candidate branch belongs to another CHANGE.');
+  }
+  const mergeBase = commit && branch ? await git(root, ['merge-base', commit, branch], true) : '';
+  if (!commit || !branch || mergeBase !== commit) {
+    throw new Error('APPROVAL_CANDIDATE_UNAVAILABLE: candidate commit is not reachable from its branch.');
+  }
+  const repositoryId = await repositoryIdentity(root);
+  const record = await appendJournalRecord(root, {
+    stream: 'normal',
+    changeId,
+    kind: 'workspace-candidate-snapshot',
+    idempotencyKey: `workspace:${changeId}:candidate-snapshot:${commit}`,
+    payload: { repositoryId, branch, commit },
+  });
+  return { changeId, repositoryId, branch, commit, order: record.order };
+}
+
+export async function resolveCandidateSnapshot(
+  root: string,
+  requestedChangeId?: string,
+): Promise<CandidateSnapshot> {
+  const snapshots = (await verifyJournal(root)).flatMap((record) => {
+    if (record.stream !== 'normal' || record.kind !== 'workspace-candidate-snapshot') return [];
+    const payload = record.payload as Partial<CandidateSnapshot>;
+    if (typeof payload.repositoryId !== 'string'
+      || typeof payload.branch !== 'string'
+      || typeof payload.commit !== 'string') return [];
+    return [{
+      changeId: record.changeId,
+      repositoryId: payload.repositoryId,
+      branch: payload.branch,
+      commit: payload.commit,
+      order: record.order,
+    }];
+  });
+  const latestByChange = new Map<string, CandidateSnapshot>();
+  for (const snapshot of snapshots) {
+    const current = latestByChange.get(snapshot.changeId);
+    if (!current || snapshot.order > current.order) latestByChange.set(snapshot.changeId, snapshot);
+  }
+  const selected = requestedChangeId === undefined
+    ? [...latestByChange.values()]
+    : [latestByChange.get(requestedChangeId)].filter(
+      (snapshot): snapshot is CandidateSnapshot => snapshot !== undefined,
+    );
+  if (selected.length !== 1) {
+    throw new Error('APPROVAL_CANDIDATE_UNAVAILABLE: exactly one persisted candidate snapshot is required.');
+  }
+  const snapshot = selected[0]!;
+  if (snapshot.repositoryId !== await repositoryIdentity(root)) {
+    throw new Error('APPROVAL_CANDIDATE_UNAVAILABLE: candidate snapshot belongs to another repository.');
+  }
+  const commit = await git(root, ['rev-parse', '--verify', `${snapshot.commit}^{commit}`], true);
+  const branchHead = await git(root, ['rev-parse', '--verify', `${snapshot.branch}^{commit}`], true);
+  const mergeBase = commit && branchHead
+    ? await git(root, ['merge-base', snapshot.commit, branchHead], true)
+    : '';
+  if (commit !== snapshot.commit || !branchHead || mergeBase !== snapshot.commit) {
+    throw new Error('APPROVAL_CANDIDATE_UNAVAILABLE: persisted candidate snapshot is not reachable.');
+  }
+  return snapshot;
+}
+
+export async function listCandidateEntries(
+  root: string,
+  commit: string,
+): Promise<CandidateGitEntry[]> {
+  const output = await gitBuffer(root, [
+    'ls-tree',
+    '-rz',
+    '--full-tree',
+    '--format=%(objectmode) %(objecttype) %(objectname)%x09%(path)',
+    commit,
+  ]);
+  const decoder = new TextDecoder('utf-8', { fatal: true });
+  const entries: CandidateGitEntry[] = [];
+  const normalized = new Set<string>();
+  const rawEntries = output.length ? output.subarray(0, -1).toString('binary').split('\0') : [];
+  for (const rawEntry of rawEntries) {
+    const bytes = Buffer.from(rawEntry, 'binary');
+    const separator = bytes.indexOf(0x09);
+    if (separator < 0) throw new Error('APPROVAL_CANDIDATE_UNAVAILABLE: malformed Git tree entry.');
+    const metadata = bytes.subarray(0, separator).toString('ascii').split(' ');
+    const rawPath = bytes.subarray(separator + 1);
+    let path: string;
+    try {
+      path = decoder.decode(rawPath);
+    } catch {
+      throw new Error('APPROVAL_PATH_ENCODING: candidate Git path is not valid UTF-8.');
+    }
+    const nfcPath = path.normalize('NFC');
+    if (normalized.has(nfcPath)) {
+      throw new Error(`APPROVAL_PATH_COLLISION: candidate paths normalize to ${nfcPath}.`);
+    }
+    normalized.add(nfcPath);
+    entries.push({
+      rawPath,
+      nfcPath,
+      gitMode: metadata[0] ?? '',
+      objectType: metadata[1] ?? '',
+      objectId: metadata[2] ?? '',
+    });
+  }
+  return entries.sort((left, right) =>
+    Buffer.compare(Buffer.from(left.nfcPath, 'utf8'), Buffer.from(right.nfcPath, 'utf8')));
+}
+
+export async function readCandidateBlob(
+  root: string,
+  commit: string,
+  objectId: string,
+): Promise<Buffer> {
+  await git(root, ['cat-file', '-e', `${commit}^{commit}`]);
+  return gitBuffer(root, ['cat-file', 'blob', objectId]);
 }
 
 /** @id CODE-M5-WORKTREE-003

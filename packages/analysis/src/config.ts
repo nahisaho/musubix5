@@ -590,6 +590,32 @@ export async function loadConfig(root: string): Promise<Config> {
   return parseConfig(JSON.parse(await readText(root, path)) as unknown);
 }
 
+export async function loadApprovalProjectionConfig(root: string): Promise<Config> {
+  const path = '.musubix/config.json';
+  if (!await exists(within(root, path))) throw new Error('Missing .musubix/config.json; run musubix5 init.');
+  const raw = JSON.parse(await readText(root, path)) as unknown;
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return parseConfig(raw);
+  const allowed = new Set([
+    'schemaVersion',
+    'language',
+    'qualityProfile',
+    'commands',
+    'requiredChecks',
+    'thresholds',
+    'architecture',
+    'codeGraph',
+    'formal',
+    'mutation',
+    'tdd',
+    'approval',
+    'workflow',
+    'attestation',
+  ]);
+  return parseConfig(Object.fromEntries(
+    Object.entries(raw).filter(([key]) => allowed.has(key)),
+  ));
+}
+
 export interface CommandScaffoldProposal {
   toolchain: 'go' | 'cargo' | 'maven' | 'python' | 'node';
   directory: string;

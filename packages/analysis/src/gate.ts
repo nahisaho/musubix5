@@ -653,6 +653,10 @@ export async function runGate(root: string, options: {
   return report;
 }
 
+/** @id CODE-M5-STATUS-GUIDANCE-001
+ * @implements REQ-M5-COMPAT-005 REQ-M5-COMPAT-006 REQ-M5-COMPAT-007
+ * @design DES-M5-002
+ */
 export async function projectStatus(root: string): Promise<{
   initialized: boolean;
   artifacts: { requirements: number; designs: number; decisions: number };
@@ -709,26 +713,26 @@ export async function projectStatus(root: string): Promise<{
     workflowWaivers,
     waiverDiagnostics,
     next: !initialized
-      ? ['musubix3 init']
+      ? ['musubix5 init']
       : approvals && !approvals.valid
         ? approvals.domains
           ? [
             ...approvals.domains.flatMap((d) => d.stages.filter((stage) =>
               stage.status !== 'approved' && (stage.required || stage.present))
               .flatMap((stage) => [
-                `musubix3 approval prepare ${stage.stage} --domain ${d.name}`,
-                `musubix3 approval record ${stage.stage} --approver <name> --artifact-sha256 <approved-hash> --domain ${d.name} --confirm`,
+                `musubix5 approval prepare ${stage.stage} --domain ${d.name}`,
+                `musubix5 approval record ${stage.stage} --approver <name> --artifact-sha256 <approved-hash> --domain ${d.name} --confirm`,
               ])),
             ...(approvals.release && approvals.release.status !== 'approved' && (approvals.release.required || approvals.release.present)
-              ? ['musubix3 approval prepare release', 'musubix3 approval record release --approver <name> --artifact-sha256 <approved-hash> --confirm']
+              ? ['musubix5 approval prepare release', 'musubix5 approval record release --approver <name> --artifact-sha256 <approved-hash> --confirm']
               : []),
           ]
           : approvals.stages.filter((stage) =>
             stage.status !== 'approved' && (stage.required || stage.present))
             .flatMap((stage) => [
-              `musubix3 approval prepare ${stage.stage}`,
-              `musubix3 approval record ${stage.stage} --approver <name> --artifact-sha256 <approved-hash> --confirm`,
+              `musubix5 approval prepare ${stage.stage}`,
+              `musubix5 approval record ${stage.stage} --approver <name> --artifact-sha256 <approved-hash> --confirm`,
             ])
-        : status !== 'pass' ? ['musubix3 trace build', 'musubix3 gate'] : [],
+        : status !== 'pass' ? ['musubix5 trace build', 'musubix5 gate'] : [],
   };
 }
