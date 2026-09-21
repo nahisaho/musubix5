@@ -10,14 +10,14 @@ description: "Use when eliciting, refining, or validating EARS requirements and 
 Respond and generate guidance in the user's input language (日本語 / English).
 Use Copilot's native planning, questions, research and editing; do not create an
 interview engine or research agent framework.
-After the work, run `npx musubix3 workflow-record sdd-requirements complete
+After the work, run `npx musubix5 workflow-record sdd-requirements complete
 --status completed` exactly once.
 
 1. For every new natural-language development request, create/use a fresh
    `.musubix/features/<new-slug>/requirements.md`; do not edit or reuse a prior
    session's feature, approval, or change evidence unless continuation is explicit.
    Inspect `.musubix/constitution.md` and relevant existing requirements only as
-   context. If absent, preview `npx musubix3 init --dry-run` before installing.
+   context. If absent, preview `npx musubix5 init --dry-run` before installing.
 2. Treat a request such as 「○○を開発」/"develop ○○" as requirements elicitation,
    not permission to start coding. Use native planning to clarify scope, stakeholders, measurable acceptance and
    failure behavior. Separate assumptions from confirmed requirements. If required
@@ -47,8 +47,8 @@ After the work, run `npx musubix3 workflow-record sdd-requirements complete
    - While a state holds, when an event occurs, the system shall respond.
    Japanese equivalents use `システムは…しなければならない。`, with
    `…とき、` / `…間、` / `もし…ならば、` / `…場合、` clauses.
-5. Validate with `npx musubix3 requirements validate <file> --json` and
-   `npx musubix3 constitution validate --json`. Rules use `PRINC-001`, `RULE-001`,
+5. Validate with `npx musubix5 requirements validate <file> --json` and
+   `npx musubix5 constitution validate --json`. Rules use `PRINC-001`, `RULE-001`,
    a supported `Metric:` and numeric `Limit:`. Validation is not execution evidence.
 6. Before requesting human approval, run Copilot's native `rubber-duck`
    review agent on `requirements.md`. Fix every reported issue, then re-run

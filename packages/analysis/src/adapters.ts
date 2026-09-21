@@ -110,11 +110,16 @@ export function mergeAdapterArgs(
   return [...configuredArgs, ...invocationArgs];
 }
 
-function reportPath(commandName: string, testId?: string, adapter?: TestAdapter): string {
+function reportPath(
+  commandName: string,
+  testId?: string,
+  adapter?: TestAdapter,
+  root = '.musubix/evidence/native',
+): string {
   const suffix = adapter === 'junit' || adapter === 'dotnet' ? '' : '.json';
   return testId
-    ? `.musubix/evidence/native/${commandName}/${testId}${suffix}`
-    : `.musubix/evidence/native/${commandName}/aggregate${suffix}`;
+    ? `${root}/${commandName}/${testId}${suffix}`
+    : `${root}/${commandName}/aggregate${suffix}`;
 }
 
 function identifier(testId: string): string {
@@ -126,8 +131,9 @@ export function adapterInvocation(
   commandName: string,
   testId?: string,
   testPath?: string,
+  reportRoot?: string,
 ): AdapterInvocation {
-  const path = reportPath(commandName, testId, adapter);
+  const path = reportPath(commandName, testId, adapter, reportRoot);
   if (adapter === 'vitest') {
     return {
       args: [...testPath ? [testPath] : [], ...testId ? ['-t', testId] : [], '--reporter=json', `--outputFile=${path}`],

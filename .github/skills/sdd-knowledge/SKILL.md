@@ -7,12 +7,12 @@ description: "Use when retrieving local SDD decisions, requirements and Git co-c
 Follow the user's input language (日本語 / English). Use Copilot's native memory
 for conversational/project memory and native research for external information.
 This tool indexes local evidence; it is not another memory or research service.
-After the work, run `npx musubix3 workflow-record sdd-knowledge complete --status
+After the work, run `npx musubix5 workflow-record sdd-knowledge complete --status
 completed` exactly once.
 
-1. Run `npx musubix3 knowledge build`. Markdown artifacts and the last 100 Git
+1. Run `npx musubix5 knowledge build`. Markdown artifacts and the last 100 Git
    commits are indexed locally in `.musubix/cache/knowledge.json`.
-2. Query `npx musubix3 knowledge query "your requirement or decision" --json`.
+2. Query `npx musubix5 knowledge query "your requirement or decision" --json`.
    Ranking is deterministic TF-IDF/cosine with Japanese bigram tokenization,
    not GraphRAG, embeddings, learned expertise or a semantic truth engine.
 3. Read returned source paths before making claims. Scores indicate lexical

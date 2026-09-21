@@ -1,0 +1,213 @@
+name: Candidate gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      changeId:
+        description: CHANGE identifier
+        required: true
+        type: string
+      generation:
+        description: Active CHANGE generation
+        required: true
+        type: number
+      candidateCommit:
+        description: Candidate commit SHA
+        required: true
+        type: string
+      repositoryId:
+        description: Persisted musubix5 repository identity
+        required: true
+        type: string
+      gateInputFingerprint:
+        description: gate-input-fingerprint-v1 SHA-256
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  verify:
+    name: ${{ matrix.os }}-node${{ matrix.node }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            os: ubuntu
+            node: 20
+          - runner: ubuntu-latest
+            os: ubuntu
+            node: 22
+          - runner: ubuntu-latest
+            os: ubuntu
+            node: 24
+          - runner: windows-latest
+            os: windows
+            node: 22
+          - runner: macos-latest
+            os: macos
+            node: 22
+    runs-on: ${{ matrix.runner }}
+    env:
+      CANDIDATE_COMMIT: ${{ inputs.candidateCommit }}
+      CHANGE_ID: ${{ inputs.changeId }}
+      GENERATION: ${{ inputs.generation }}
+      GATE_INPUT_FINGERPRINT: ${{ inputs.gateInputFingerprint }}
+      MATRIX_OS: ${{ matrix.os }}
+      MATRIX_NODE: ${{ matrix.node }}
+      REPOSITORY_ID: ${{ inputs.repositoryId }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.candidateCommit }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Run closed verification matrix
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { spawnSync } from 'node:child_process';
+          import { createHash } from 'node:crypto';
+          import { mkdirSync, writeFileSync } from 'node:fs';
+          import { join } from 'node:path';
+          import { requiredCandidateGateCommands } from './dist/packages/analysis/src/candidate-gate.js';
+
+          const canonical = (value) => Array.isArray(value)
+            ? `[${value.map(canonical).join(',')}]`
+            : value && typeof value === 'object'
+              ? `{${Object.entries(value).sort(([a], [b]) => Buffer.compare(Buffer.from(a), Buffer.from(b))).map(([key, nested]) => `${JSON.stringify(key)}:${canonical(nested)}`).join(',')}}`
+              : JSON.stringify(value);
+          const digest = (value) => createHash('sha256').update(`${canonical(value)}\n`).digest('hex');
+          const run = (command, args) => spawnSync(command, args, {
+            cwd: process.cwd(),
+            encoding: 'utf8',
+            shell: process.platform === 'win32',
+          });
+          const head = run('git', ['rev-parse', 'HEAD']).stdout.trim();
+          if (head.toLowerCase() !== process.env.CANDIDATE_COMMIT.toLowerCase()) {
+            throw new Error('Checked out commit does not match candidateCommit.');
+          }
+          const treeClean = () => {
+            const status = run('git', ['status', '--porcelain=v1', '--untracked-files=no']);
+            return status.status === 0 && status.stdout.length === 0;
+          };
+          const preTreeMatchesCandidate = treeClean();
+          const completed = spawnSync(process.execPath, [
+            'dist/packages/cli/src/main.js',
+            'gate',
+            '--matrix',
+            '--json',
+          ], {
+            cwd: process.cwd(),
+            encoding: 'utf8',
+            maxBuffer: 100_000_000,
+          });
+          if (!completed.stdout) throw new Error(`Matrix gate produced no JSON: ${completed.stderr}`);
+          const report = JSON.parse(completed.stdout);
+          const commands = report.checks
+            .filter(({ name }) => name.startsWith('command:'))
+            .map((check) => {
+            const details = {
+              name: check.name.slice('command:'.length),
+              exitCode: check.exitCode ?? -1,
+              stdout: check.stdout ?? '',
+              stderr: check.stderr ?? '',
+            };
+            return {
+              name: details.name,
+              exitCode: details.exitCode,
+              digest: digest(details),
+              status: check.status === 'pass' ? 'pass' : 'fail',
+            };
+          });
+          const postTreeMatchesCandidate = treeClean();
+          const commandNames = commands.map(({ name }) => name).sort();
+          const expectedCommandNames = [...requiredCandidateGateCommands].sort();
+          const commandsPassed = report.status === 'pass'
+            && commandNames.join('\n') === expectedCommandNames.join('\n')
+            && commands.every(({ status }) => status === 'pass');
+          const result = {
+            schemaVersion: 1,
+            repositoryId: process.env.REPOSITORY_ID,
+            changeId: process.env.CHANGE_ID,
+            generation: Number(process.env.GENERATION),
+            candidateCommit: process.env.CANDIDATE_COMMIT,
+            gateInputFingerprint: process.env.GATE_INPUT_FINGERPRINT,
+            job: { os: process.env.MATRIX_OS, nodeMajor: Number(process.env.MATRIX_NODE) },
+            producer: 'github-actions',
+            runtime: { os: process.env.MATRIX_OS, nodeMajor: Number(process.env.MATRIX_NODE) },
+            commands,
+            gateReportDigest: digest(report),
+            commandsPassed,
+            preTreeMatchesCandidate,
+            postTreeMatchesCandidate,
+            status: commandsPassed && preTreeMatchesCandidate && postTreeMatchesCandidate ? 'pass' : 'fail',
+          };
+          mkdirSync(process.env.RUNNER_TEMP, { recursive: true });
+          writeFileSync(join(process.env.RUNNER_TEMP, 'candidate-gate-result.json'), `${canonical(result)}\n`);
+          NODE
+      - name: Sign with GitHub OIDC-bound ephemeral key
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { createHash, generateKeyPairSync, sign } from 'node:crypto';
+          import { readFileSync, writeFileSync } from 'node:fs';
+          import { join } from 'node:path';
+          import { candidateGateFingerprintConfig } from './dist/packages/analysis/src/candidate-gate.js';
+
+          const canonical = (value) => Array.isArray(value)
+            ? `[${value.map(canonical).join(',')}]`
+            : value && typeof value === 'object'
+              ? `{${Object.entries(value).sort(([a], [b]) => Buffer.compare(Buffer.from(a), Buffer.from(b))).map(([key, nested]) => `${JSON.stringify(key)}:${canonical(nested)}`).join(',')}}`
+              : JSON.stringify(value);
+          const result = JSON.parse(readFileSync(join(process.env.RUNNER_TEMP, 'candidate-gate-result.json'), 'utf8'));
+          const artifactDigest = createHash('sha256').update(`${canonical(result)}\n`).digest('hex');
+          const { privateKey, publicKey } = generateKeyPairSync('ed25519');
+          const publicKeyPem = publicKey.export({ type: 'spki', format: 'pem' }).toString();
+          const publicKeyDer = publicKey.export({ type: 'spki', format: 'der' });
+          const projection = await candidateGateFingerprintConfig(process.cwd());
+          const audienceBase = projection.candidateGate.attestation.githubOidc.audience;
+          const audience = `${audienceBase}#musubix3-key-sha256=${createHash('sha256').update(publicKeyDer).digest('base64url')}`;
+          const requestUrl = new URL(process.env.ACTIONS_ID_TOKEN_REQUEST_URL);
+          requestUrl.searchParams.set('audience', audience);
+          const response = await fetch(requestUrl, {
+            headers: { authorization: `Bearer ${process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN}` },
+          });
+          if (!response.ok) throw new Error(`OIDC token request failed: ${response.status}`);
+          const token = (await response.json()).value;
+          const unsigned = {
+            schemaVersion: 1,
+            repository: process.env.GITHUB_REPOSITORY,
+            commitSha: process.env.CANDIDATE_COMMIT,
+            ci: { provider: 'github', runId: process.env.GITHUB_RUN_ID },
+            evidenceHeads: { candidateGate: artifactDigest },
+            issuedAt: new Date().toISOString(),
+            keyId: `candidate-gate-${process.env.MATRIX_OS}-node${process.env.MATRIX_NODE}-${process.env.GITHUB_RUN_ID}`,
+            githubOidc: { token, publicKey: publicKeyPem },
+          };
+          const attestation = {
+            ...unsigned,
+            signature: sign(null, Buffer.from(canonical(unsigned)), privateKey).toString('base64'),
+          };
+          writeFileSync(
+            join(process.env.RUNNER_TEMP, 'candidate-gate-envelope.json'),
+            `${canonical({ schemaVersion: 1, result, attestation })}\n`,
+          );
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: candidate-gate-${{ matrix.os }}-node${{ matrix.node }}
+          path: ${{ runner.temp }}/candidate-gate-envelope.json
+          if-no-files-found: error
+      - name: Enforce terminal result
+        shell: bash
+        run: |
+          node --input-type=module -e "import {readFileSync} from 'node:fs'; import {join} from 'node:path'; const r=JSON.parse(readFileSync(join(process.env.RUNNER_TEMP,'candidate-gate-result.json'),'utf8')); process.exit(r.status==='pass'?0:1)"

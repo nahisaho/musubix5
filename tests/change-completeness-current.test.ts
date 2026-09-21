@@ -1,4 +1,4 @@
-import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 describe('current change completeness', () => {
@@ -9,7 +9,7 @@ describe('current change completeness', () => {
   it('TEST-M5-QUALITY-COMPLETENESS-001 uses authoritative trace links and current TDD cycles', async () => {
     const { validateChangeCompleteness } =
       await import('../packages/analysis/src/change.js');
-    const root = resolve(new URL('..', import.meta.url).pathname);
+    const root = fileURLToPath(new URL('..', import.meta.url));
     const validation = await validateChangeCompleteness(root);
 
     expect(validation.diagnostics.filter((diagnostic) =>

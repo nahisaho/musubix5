@@ -8,8 +8,9 @@ import { buildTrace, type TraceNode } from './trace.js';
 import { adapterInvocation, clearAdapterOutput, mergeAdapterArgs, normalizeAdapterReport, readAdapterOutput } from './adapters.js';
 import { appendEvidenceOrder, evidenceOrderRecord, inspectEvidenceOrder, type validateEvidenceOrderLog } from './order.js';
 import { requireApproval, resolveRequirementDomain } from './approval.js';
-import type { MusubixTestReport } from './test-report.js';
-export type { MusubixTestReport } from './test-report.js';
+import { activeChangeContext } from './change-generation.js';
+import { parseMusubixTestReport, type MusubixTestReport } from './test-report.js';
+export { parseMusubixTestReport, type MusubixTestReport } from './test-report.js';
 
 export type TddPhase = 'red' | 'green' | 'refactor';
 
@@ -54,6 +55,8 @@ export interface TddVoidEvidence {
 
 export interface TddCycle {
   cycleId?: string;
+  changeId?: string;
+  generation?: number;
   requirementId: string;
   testId: string;
   testPath: string;
@@ -68,6 +71,8 @@ export interface TddCycle {
 export interface TddChainRecord {
   sequence: number;
   cycleId: string;
+  changeId?: string;
+  generation?: number;
   requirementId: string;
   testId: string;
   testPath: string;
@@ -88,22 +93,6 @@ function render(value: string, testId: string, testPath: string, reportPath: str
   return value.replaceAll('{testId}', testId).replaceAll('{testPath}', testPath).replaceAll('{reportPath}', reportPath);
 }
 
-export function parseMusubixTestReport(text: string): MusubixTestReport {
-  const value = JSON.parse(text) as MusubixTestReport;
-  if (value.schemaVersion !== 1 || !Array.isArray(value.tests)) throw new Error('Invalid structured TDD report.');
-  for (const test of value.tests) {
-    if (!test || typeof test.id !== 'string' || !['passed', 'failed', 'skipped', 'error'].includes(test.status)) {
-      throw new Error('Invalid structured TDD test result.');
-    }
-    if (test.operations !== undefined && (!test.operations || typeof test.operations !== 'object' || Array.isArray(test.operations)
-      || Object.entries(test.operations).some(([name, count]) => !/^[\p{L}_][\p{L}\p{N}_.:-]{0,127}$/u.test(name)
-        || typeof count !== 'number' || !Number.isSafeInteger(count) || count < 0))) {
-      throw new Error('Structured test operations must be nonnegative integer counters.');
-    }
-  }
-  return value;
-}
-
 function chainRecordSha256(record: Omit<TddChainRecord, 'recordSha256'>): string {
   return digest(JSON.stringify(record));
 }
@@ -120,6 +109,7 @@ function appendChainRecord(evidence: TddEvidence, cycle: TddCycle, phase: TddCha
   const payload: Omit<TddChainRecord, 'recordSha256'> = {
     sequence: evidence.chain.length + 1,
     cycleId: cycle.cycleId,
+    ...(cycle.changeId ? { changeId: cycle.changeId, generation: cycle.generation } : {}),
     requirementId: cycle.requirementId,
     testId: cycle.testId,
     testPath: cycle.testPath,
@@ -410,6 +400,7 @@ export async function runTddPhase(
     throw new Error(`${testId} does not verify ${requirementId}.`);
   }
   const currentFingerprint = await testFingerprint(root, test);
+  const activeChange = await activeChangeContext(root);
   const evidence: TddEvidence = await loadTddEvidence(root) ?? { schemaVersion: 1, cycles: [], chain: [] };
   if (evidence.cycles.some((cycle) =>
     [cycle.red, cycle.green, cycle.refactor].some((item) => item && !Number.isInteger(item.order)))) {
@@ -431,6 +422,10 @@ export async function runTddPhase(
     if (!previous.red.valid) throw new Error(`A valid Red phase is required before ${phase}.`);
     if (previous.red.testFingerprint !== currentFingerprint) throw new Error('The test changed after Red; run the Red phase again.');
     if (phase === 'refactor' && !previous.green?.valid) throw new Error('A valid Green phase is required before Refactor.');
+    if (activeChange && previous.changeId !== undefined
+      && (previous.changeId !== activeChange.changeId || previous.generation !== activeChange.generation)) {
+      throw new Error('CHANGE_GENERATION_MIXED: TDD phases cannot cross CHANGE generations.');
+    }
   }
   const adapter = command.adapter ? adapterInvocation(command.adapter, command.name, testId, test.path) : null;
   const reportPath = command.tddReport
@@ -550,10 +545,22 @@ export async function runTddPhase(
     phase,
   })).sequence;
   if (phase === 'red') {
-    const cycle: TddCycle = { cycleId, requirementId, testId, testPath: test.path, commandName, red: result };
+    const cycle: TddCycle = {
+      cycleId,
+      ...(activeChange ? { changeId: activeChange.changeId, generation: activeChange.generation } : {}),
+      requirementId,
+      testId,
+      testPath: test.path,
+      commandName,
+      red: result,
+    };
     evidence.cycles.push(cycle);
     appendChainRecord(evidence, cycle, phase, result);
   } else {
+    if (activeChange && previous!.changeId === undefined) {
+      previous!.changeId = activeChange.changeId;
+      previous!.generation = activeChange.generation;
+    }
     previous![phase] = result;
     appendChainRecord(evidence, previous!, phase, result);
   }
@@ -569,6 +576,10 @@ export async function validateTddEvidence(root: string): Promise<{
   if (!evidence?.cycles.length) return { present: false, valid: false, diagnostics: [], cycles: 0, voided: [] };
   const diagnostics: Diagnostic[] = [];
   const order = await inspectEvidenceOrder(root);
+  const activeChange = await activeChangeContext(root);
+  const activeCycle = (cycle: TddCycle): boolean => !activeChange
+    || ((cycle.generation ?? 1) === activeChange.generation
+      && (cycle.changeId === undefined || cycle.changeId === activeChange.changeId));
   diagnostics.push(...order.diagnostics);
   if (!evidence.chain) {
     diagnostics.push(error('TDD_CHAIN_MISSING', 'TDD evidence lacks the append-only hash chain.'));
@@ -616,8 +627,9 @@ export async function validateTddEvidence(root: string): Promise<{
     }
   }
   const latestCycles = new Map<string, TddCycle>();
-  for (const cycle of evidence.cycles) latestCycles.set(cycle.testId, cycle);
+  for (const cycle of evidence.cycles.filter(activeCycle)) latestCycles.set(cycle.testId, cycle);
   const supersededCycles = new Set<TddCycle>();
+  for (const cycle of evidence.cycles.filter((entry) => !activeCycle(entry))) supersededCycles.add(cycle);
   {
     const cyclesByTest = new Map<string, TddCycle[]>();
     for (const cycle of evidence.cycles) {
@@ -654,6 +666,8 @@ export async function validateTddEvidence(root: string): Promise<{
       .filter((edge) => edge.relation === 'verifies' && edge.to === requirement.id)
       .map((edge) => edge.from);
     const covered = evidence.cycles.some((cycle) =>
+      activeCycle(cycle)
+      &&
       cycle.requirementId === requirement.id
       && verifiedTests.includes(cycle.testId)
       && cycle.red.valid
@@ -667,7 +681,7 @@ export async function validateTddEvidence(root: string): Promise<{
       ));
     }
   }
-  for (const cycle of evidence.cycles) {
+  for (const cycle of evidence.cycles.filter(activeCycle)) {
     for (const phase of ['red', 'green', 'refactor'] as const) {
       const item = cycle[phase];
       if (!item) continue;
@@ -751,7 +765,7 @@ export async function validateTddEvidence(root: string): Promise<{
   }
   for (const phase of ['red', 'green', 'refactor'] as const) {
     const hashes = new Map<string, TddCycle>();
-    for (const cycle of evidence.cycles) {
+    for (const cycle of evidence.cycles.filter(activeCycle)) {
       const item = cycle[phase];
       if (!item) continue;
       // The structured report names the selected test, so it is the authoritative

@@ -66,7 +66,7 @@ export function verifyExitSemantics(
 }
 
 /** @id CODE-M5-COMPAT-BIN-001
- * @implements REQ-M5-COMPAT-005 REQ-M5-COMPAT-006
+ * @implements REQ-M5-COMPAT-005 REQ-M5-COMPAT-006 REQ-M5-COMPAT-007
  * @design DES-M5-001 DES-M5-002
  */
 export function validatePublishedBinContract(packageManifest: {

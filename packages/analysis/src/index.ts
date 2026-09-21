@@ -30,6 +30,8 @@ export * from './mutation.js';
 export * from './model-correspondence.js';
 export * from './order.js';
 export * from './change.js';
+export * from './change-generation.js';
+export * from './candidate-gate.js';
 export * from './change-waiver.js';
 export * from './workflow-waiver.js';
 export * from './approval.js';

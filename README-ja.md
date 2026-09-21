@@ -607,6 +607,17 @@ approver文字列は明示的なlocal証拠であり、認証済みidentityで�
 local承認証拠は明示的な意思を記録しますが、承認者の暗号学的な本人確認ではありません。
 release権限はrepository review、CODEOWNERS/branch protection、またはCI/OIDC attestationで
 保護してください。
+candidateのrelease承認には`.github/workflows/candidate-gate.yml`の閉じた
+GitHub Actions matrixも必要です。`musubix5 candidate-gate context`で候補に
+bindingされた入力を準備し、その候補commitでworkflowを実行して5個のopaque artifactを
+取得し、`musubix5 candidate-gate ingest <artifact...>`で取り込み、
+`musubix5 candidate-gate validate`で完全性を確認します。取り込みは署名なし、
+stale、候補不一致、同一batch内job重複、CI run再利用を拒否し、検証はtracked
+tree変更を報告したrecordを拒否します。
+workflowはtipがcandidate commitそのものであるbranchまたはtag refを指定して
+dispatchします。検証済み`workflow_sha` claimもcandidate commitとの一致が必須です。
+候補選定後にrefを進めた場合は、新しいcandidateを作るか、明示的に認可された不変refを
+復元してから再実行します。
 `tdd.redPreflightCommands`にはformatter等のplain command名を指定でき、
 Redのtest fingerprintを取得する前に成功が必須です。
 通常ファイルの`pyvenv.cfg`を含む`.venv`と`venv`に加え、生成された

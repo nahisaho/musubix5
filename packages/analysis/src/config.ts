@@ -139,7 +139,13 @@ export const defaultConfig: Config = {
   mutation: { mode: 'compatible' },
   tdd: { redPreflightCommands: [] },
   approval: { mode: 'required', domains: [] },
-  workflow: { mode: 'compatible', maxAgeSeconds: 3600, maxFutureSkewSeconds: 60 },
+  workflow: {
+    mode: 'compatible',
+    maxAgeSeconds: 3600,
+    maxFutureSkewSeconds: 60,
+    maxTranscriptBytes: 100_000_000,
+    maxTranscriptLineBytes: 1_000_000,
+  },
   attestation: {
     mode: 'local',
     maxAgeSeconds: 3600,
@@ -148,6 +154,20 @@ export const defaultConfig: Config = {
     githubOidc: { mode: 'off' },
   },
 };
+
+export function materializeExecutionPolicy(
+  config: Config,
+): Record<string, unknown> {
+  return {
+    ...config,
+    workflow: {
+      ...config.workflow,
+      maxEventSkewMs: config.workflow.maxEventSkewMs ?? null,
+      maxTranscriptBytes: config.workflow.maxTranscriptBytes ?? 100_000_000,
+      maxTranscriptLineBytes: config.workflow.maxTranscriptLineBytes ?? 1_000_000,
+    },
+  };
+}
 
 export const defaultPolicyBaseline: PolicyBaseline = {
   schemaVersion: 1,
@@ -587,7 +607,56 @@ export function parseConfig(input: unknown): Config {
 export async function loadConfig(root: string): Promise<Config> {
   const path = '.musubix/config.json';
   if (!await exists(within(root, path))) throw new Error('Missing .musubix/config.json; run musubix5 init.');
-  return parseConfig(JSON.parse(await readText(root, path)) as unknown);
+  const raw = JSON.parse(await readText(root, path)) as unknown;
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return parseConfig(raw);
+  const extensions = raw as Record<string, unknown>;
+  if (extensions.approvalAutomation !== undefined) {
+    const automation = object(extensions.approvalAutomation, 'approvalAutomation');
+    keys(automation, ['requirements', 'design', 'release'], 'approvalAutomation');
+    for (const stage of ['requirements', 'design'] as const) {
+      const boundary = object(automation[stage], `approvalAutomation.${stage}`);
+      keys(boundary, ['mode', 'producerRepairLimit', 'repairPlannerBudgetUnits', 'reviewerBudgetUnits'], `approvalAutomation.${stage}`);
+      if (!['manual', 'verified-auto'].includes(String(boundary.mode))) {
+        throw new Error(`approvalAutomation.${stage}.mode must be manual or verified-auto.`);
+      }
+      for (const limit of ['producerRepairLimit', 'repairPlannerBudgetUnits', 'reviewerBudgetUnits'] as const) {
+        if (typeof boundary[limit] !== 'number' || !Number.isInteger(boundary[limit]) || Number(boundary[limit]) < 1) {
+          throw new Error(`approvalAutomation.${stage}.${limit} must be a positive integer.`);
+        }
+      }
+    }
+    const release = object(automation.release, 'approvalAutomation.release');
+    keys(release, ['mode'], 'approvalAutomation.release');
+    if (release.mode !== 'manual') throw new Error('approvalAutomation.release.mode must remain manual.');
+  }
+  if (extensions.candidateGate !== undefined) {
+    const gate = object(extensions.candidateGate, 'candidateGate');
+    keys(gate, ['attestation'], 'candidateGate');
+    const attestation = object(gate.attestation, 'candidateGate.attestation');
+    keys(attestation, ['mode', 'repository', 'maxAgeSeconds', 'maxFutureSkewSeconds', 'trustedPublicKeys', 'githubOidc'], 'candidateGate.attestation');
+    if (attestation.mode !== 'ci-required'
+      || typeof attestation.repository !== 'string'
+      || !attestation.repository
+      || !Array.isArray(attestation.trustedPublicKeys)
+      || attestation.trustedPublicKeys.length !== 0) {
+      throw new Error('candidateGate.attestation must use ci-required mode, a repository, and ephemeral OIDC keys.');
+    }
+    const oidc = object(attestation.githubOidc, 'candidateGate.attestation.githubOidc');
+    keys(oidc, ['mode', 'issuer', 'audience', 'repository', 'workflow', 'keyBinding'], 'candidateGate.attestation.githubOidc');
+    if (oidc.mode !== 'strict'
+      || oidc.issuer !== 'https://token.actions.githubusercontent.com'
+      || typeof oidc.audience !== 'string'
+      || !oidc.audience
+      || oidc.repository !== attestation.repository
+      || typeof oidc.workflow !== 'string'
+      || !oidc.workflow.startsWith('.github/workflows/')
+      || oidc.keyBinding !== 'public-key') {
+      throw new Error('candidateGate.attestation.githubOidc must use strict GitHub OIDC public-key binding.');
+    }
+  }
+  return parseConfig(Object.fromEntries(
+    Object.entries(extensions).filter(([key]) => !['approvalAutomation', 'candidateGate'].includes(key)),
+  ));
 }
 
 export async function loadApprovalProjectionConfig(root: string): Promise<Config> {

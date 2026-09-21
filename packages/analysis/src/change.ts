@@ -4,16 +4,21 @@ import { loadTddEvidence } from './tdd.js';
 import { buildTrace } from './trace.js';
 import { indexGraph } from './graph.js';
 import { validatePerformanceEvidence } from './performance.js';
-import { appendEvidenceOrder, evidenceOrderRecord, inspectEvidenceOrder } from './order.js';
+import {
+  appendEvidenceOrder, evidenceOrderRecord, inspectEvidenceOrder,
+  type EvidenceOrderRecord,
+} from './order.js';
 import { loadChangeWaiverEvidence, buildWaiverContext, diagnosticDetail, errorFor, reportWaiverEvidenceDiagnostics, waivedDiagnostic } from './change-waiver.js';
 import {
-  batchFor, batchForRecording, batchKey, changePhases, effectiveBatches,
+  abandonChangeGeneration, activeChangeGeneration, batchFor, batchForRecording, batchKey, changePhases, effectiveBatches,
+  generationOrderPhase,
   loadChangeEvidence, nextBatchScopeId, nextQualityOrdinal, qualityFingerprintPreviouslyRecorded,
-  supersedeQualityPhase,
+  reopenChangeGeneration, supersedeQualityPhase,
   type ChangeCompleteness, type ChangeEvidence, type ChangeFingerprints, type ChangePhase,
   type ChangePhaseEvidence, type ChangeRecord, type ChangeTddBatch,
 } from './change-evidence.js';
 import { selectCurrentTddCycle } from './tdd-cycle-resolver.js';
+import { acquireChangeLease, assertChangeLeaseCurrent, releaseChangeLease } from './journal.js';
 
 export * from './change-evidence.js';
 
@@ -88,6 +93,37 @@ const tddBatchPhases = ['red', 'implementation', 'green'] as const;
 type TddBatchPhase = typeof tddBatchPhases[number];
 const singularPhases = ['impact', 'requirements', 'design', 'quality'] as const;
 
+async function changeDocumentRequirementIds(root: string, changeId: string): Promise<string[]> {
+  const source = await readText(root, `.musubix/changes/${changeId}.md`);
+  const match = /^Requirements:\s+(.+)$/m.exec(source);
+  if (!match) throw new Error('CHANGE_GENERATION_REQUIREMENTS: CHANGE document is missing Requirements:.');
+  const requirementIds = [...new Set(match[1]!.trim().split(/\s+/))].sort();
+  if (!requirementIds.length || requirementIds.some((id) => !ids.requirement.test(id))) {
+    throw new Error('CHANGE_GENERATION_REQUIREMENTS: CHANGE document contains invalid requirement IDs.');
+  }
+  return requirementIds;
+}
+
+function sameRequirementSet(left: string[], right: string[]): boolean {
+  return JSON.stringify([...new Set(left)].sort()) === JSON.stringify([...new Set(right)].sort());
+}
+
+function orderPhaseFor(change: ChangeRecord, phase: string, scopeId?: string): string {
+  return generationOrderPhase(activeChangeGeneration(change) ?? change.generation ?? 1, phase, scopeId);
+}
+
+function generationEvidenceOrderRecord(
+  records: Map<string, EvidenceOrderRecord>,
+  change: ChangeRecord,
+  phase: string,
+): ReturnType<typeof evidenceOrderRecord> {
+  const generation = activeChangeGeneration(change) ?? change.generation ?? 1;
+  const qualified = evidenceOrderRecord(records, 'change', change.changeId, generationOrderPhase(generation, phase));
+  return qualified ?? (generation === 1
+    ? evidenceOrderRecord(records, 'change', change.changeId, phase)
+    : undefined);
+}
+
 // Returns null when nothing is unchanged, or a rejection message embedding
 // one of the five stable *_AT_RECORD codes otherwise.
 function unchangedRejection(
@@ -128,15 +164,57 @@ export async function recordChangePhase(
   changeId: string,
   phase: ChangePhase,
   requirementIds: string[],
-  options: { allowUnchanged?: boolean; dryRun?: boolean } = {},
+  options: { allowUnchanged?: boolean; dryRun?: boolean; reopen?: boolean } = {},
 ): Promise<ChangeEvidence> {
   if (!/^CHANGE-\d+$/.test(changeId)) throw new Error('Change ID must match CHANGE-<digits>.');
   if (!changePhases.includes(phase)) throw new Error('Unknown change phase.');
-  if (!requirementIds.length || requirementIds.some((id) => !ids.requirement.test(id))) {
+  if ((!options.reopen && !requirementIds.length) || requirementIds.some((id) => !ids.requirement.test(id))) {
     throw new Error('At least one valid REQ-* ID is required.');
   }
   if (phase === 'impact' && !await exists(within(root, `.musubix/changes/${changeId}.md`))) {
     throw new Error(`Missing staged change document: .musubix/changes/${changeId}.md`);
+  }
+  if (options.reopen && phase !== 'impact') {
+    throw new Error('CLI_ERROR: --reopen is accepted only for impact.');
+  }
+  if (options.reopen) {
+    const lease = await acquireChangeLease(root, changeId);
+    try {
+      const evidence = await loadChangeEvidence(root);
+      const change = evidence?.changes.find((entry) => entry.changeId === changeId);
+      if (!evidence || !change) {
+        throw new Error('CHANGE_GENERATION_PHASE: reopen requires an existing CHANGE generation.');
+      }
+      const documentRequirementIds = await changeDocumentRequirementIds(root, changeId);
+      const requestedRequirementIds = requirementIds.length ? [...new Set(requirementIds)].sort() : documentRequirementIds;
+      if (!sameRequirementSet(requestedRequirementIds, documentRequirementIds)) {
+        throw new Error('CHANGE_GENERATION_REQUIREMENTS: requirement IDs must exactly match the CHANGE document.');
+      }
+      const reopened = reopenChangeGeneration(change, documentRequirementIds);
+      if (reopened.resumed) return evidence;
+      const fingerprints = await currentFingerprints(root, changeId, documentRequirementIds);
+      const candidate: ChangePhaseEvidence = {
+        phase: 'impact',
+        recordedAt: new Date().toISOString(),
+        fingerprints,
+      };
+      if (options.dryRun) {
+        change.phases.impact = candidate;
+        return evidence;
+      }
+      await assertChangeLeaseCurrent(lease);
+      const order = await appendEvidenceOrder(root, {
+        kind: 'change',
+        entityId: changeId,
+        phase: generationOrderPhase(reopened.generation, 'impact'),
+      });
+      candidate.order = order.sequence;
+      change.phases.impact = candidate;
+      await writeJson(root, '.musubix/evidence/changes.json', evidence);
+      return evidence;
+    } finally {
+      await releaseChangeLease(lease);
+    }
   }
   const evidence = await loadChangeEvidence(root) ?? { schemaVersion: 1, changes: [] };
   if (evidence.changes.some((entry) =>
@@ -148,8 +226,25 @@ export async function recordChangePhase(
   let change = evidence.changes.find((entry) => entry.changeId === changeId);
   if (!change) {
     if (phase !== 'impact') throw new Error('The first recorded change phase must be impact.');
-    change = { changeId, requirementIds: [...new Set(requirementIds)].sort(), phases: {} };
+    change = {
+      changeId,
+      generation: 1,
+      activeGeneration: 1,
+      requirementIds: [...new Set(requirementIds)].sort(),
+      phases: {},
+    };
     evidence.changes.push(change);
+  }
+  if (activeChangeGeneration(change) === null) {
+    throw new Error('CHANGE_GENERATION_PHASE: no active generation; reopen impact is required.');
+  }
+  const documentRequirementIds = await changeDocumentRequirementIds(root, changeId);
+  const suppliedRequirementIds = [...new Set(requirementIds)].sort();
+  const isRequestedBatchPhase = (tddBatchPhases as readonly string[]).includes(phase);
+  if (!sameRequirementSet(change.requirementIds, documentRequirementIds)
+    || (!isRequestedBatchPhase && !sameRequirementSet(suppliedRequirementIds, documentRequirementIds))
+    || (isRequestedBatchPhase && !suppliedRequirementIds.every((id) => documentRequirementIds.includes(id)))) {
+    throw new Error('CHANGE_GENERATION_REQUIREMENTS: phase requirement IDs must exactly match the CHANGE document.');
   }
   const normalizedRequirementIds = [...new Set(requirementIds)].sort();
   const isFullSet = JSON.stringify(normalizedRequirementIds) === JSON.stringify([...change.requirementIds].sort());
@@ -177,7 +272,7 @@ export async function recordChangePhase(
     }
     const fingerprints = await currentFingerprints(root, changeId, change.requirementIds);
     const baseline = phase === 'requirements' ? change.phases.impact?.fingerprints
-      : phase === 'design' ? change.phases.requirements?.fingerprints
+      : phase === 'design' && (change.generation ?? 1) === 1 ? change.phases.requirements?.fingerprints
       : phase === 'red' ? change.phases.design?.fingerprints
       : phase === 'implementation' ? change.phases.red?.fingerprints
       : undefined;
@@ -208,7 +303,7 @@ export async function recordChangePhase(
     const order = await appendEvidenceOrder(root, {
       kind: 'change',
       entityId: changeId,
-      phase: orderPhase,
+      phase: orderPhaseFor(change, orderPhase),
     });
     candidate.order = order.sequence;
     if (phase === 'quality') supersedeQualityPhase(change, candidate);
@@ -261,13 +356,34 @@ export async function recordChangePhase(
     const order = await appendEvidenceOrder(root, {
       kind: 'change',
       entityId: changeId,
-      phase: `${phase}:${batch.scopeId ?? key}`,
+      phase: orderPhaseFor(change, phase, batch.scopeId ?? key),
     });
     candidate.order = order.sequence;
     batch[batchPhase] = candidate;
   }
   await writeJson(root, '.musubix/evidence/changes.json', evidence);
   return evidence;
+}
+
+export async function abandonPersistedChangeGeneration(
+  root: string,
+  changeId: string,
+  authority: { reason: string; approver: string; confirm: boolean },
+): Promise<ChangeEvidence> {
+  const lease = await acquireChangeLease(root, changeId);
+  try {
+    const evidence = await loadChangeEvidence(root);
+    const change = evidence?.changes.find((entry) => entry.changeId === changeId);
+    if (!evidence || !change) {
+      throw new Error('CHANGE_GENERATION_PHASE: generation abandon requires an existing CHANGE.');
+    }
+    abandonChangeGeneration(change, authority);
+    await assertChangeLeaseCurrent(lease);
+    await writeJson(root, '.musubix/evidence/changes.json', evidence);
+    return evidence;
+  } finally {
+    await releaseChangeLease(lease);
+  }
 }
 
 function isCanonicalIsoRecordedAt(value: string): boolean {
@@ -379,6 +495,18 @@ export async function validateChangeEvidence(root: string): Promise<{
     }
   }
   for (const change of evidence.changes) {
+    const activeGeneration = activeChangeGeneration(change);
+    if (activeGeneration === null) {
+      diagnostics.push(error(
+        'CHANGE_GENERATION_PHASE',
+        `${change.changeId} has no active generation; reopen impact is required.`,
+      ));
+    } else if (change.generation !== undefined && !change.phases.quality) {
+      diagnostics.push(error(
+        'CHANGE_GENERATION_INCOMPLETE',
+        `${change.changeId}:generation ${activeGeneration} has not reached quality.`,
+      ));
+    }
     const batches = effectiveBatches(change);
     const fullSetKey = batchKey(change.requirementIds);
     for (const singularPhase of singularPhases) {
@@ -395,7 +523,7 @@ export async function validateChangeEvidence(root: string): Promise<{
         const phaseKey = singularPhase === 'quality' && (item.qualityOrdinal ?? 1) > 1
           ? `quality:${item.qualityOrdinal}`
           : singularPhase;
-        const record = evidenceOrderRecord(order.records, 'change', change.changeId, phaseKey);
+        const record = generationEvidenceOrderRecord(order.records, change, phaseKey);
         if (!record || record.sequence !== item.order) {
           diagnostics.push(error('CHANGE_ORDER_MISMATCH', `${change.changeId}:${singularPhase} does not match the monotonic evidence order log.`));
         }
@@ -410,7 +538,7 @@ export async function validateChangeEvidence(root: string): Promise<{
         continue;
       }
       const phaseKey = qualityOrdinal === 1 ? 'quality' : `quality:${qualityOrdinal}`;
-      const record = evidenceOrderRecord(order.records, 'change', change.changeId, phaseKey);
+      const record = generationEvidenceOrderRecord(order.records, change, phaseKey);
       if (!record || record.sequence !== item.order) {
         diagnostics.push(error(
           'CHANGE_ORDER_MISMATCH',
@@ -448,7 +576,7 @@ export async function validateChangeEvidence(root: string): Promise<{
           continue;
         }
         const orderPhaseKey = isFullSet ? batchPhase : `${batchPhase}:${batch.scopeId ?? key}`;
-        const record = evidenceOrderRecord(order.records, 'change', change.changeId, orderPhaseKey);
+        const record = generationEvidenceOrderRecord(order.records, change, orderPhaseKey);
         if (!record || record.sequence !== item.order) {
           diagnostics.push(error('CHANGE_ORDER_MISMATCH', `${change.changeId}:${batchPhase} does not match the monotonic evidence order log.`));
         }
@@ -478,7 +606,8 @@ export async function validateChangeEvidence(root: string): Promise<{
       diagnostics.push(waivedDiagnostic(waiverContext, 'CHANGE_REQUIREMENTS_UNCHANGED',
         `${change.changeId} did not change requirements after impact analysis.`, change.changeId, undefined, undefined));
     }
-    if (requirements && design && requirements.fingerprints.design === design.fingerprints.design) {
+    if ((change.generation ?? 1) === 1
+      && requirements && design && requirements.fingerprints.design === design.fingerprints.design) {
       diagnostics.push(waivedDiagnostic(waiverContext, 'CHANGE_DESIGN_UNCHANGED',
         `${change.changeId} did not change design after requirements.`, change.changeId, undefined, undefined));
     }

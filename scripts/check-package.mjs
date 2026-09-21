@@ -20,6 +20,7 @@ const files = new Set(pack.files.map((file) => file.path));
 const manifest = JSON.parse(readFileSync('plugin.json', 'utf8'));
 const marketplace = JSON.parse(readFileSync('.github/plugin/marketplace.json', 'utf8'));
 const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+assert.equal(pkg.name, 'musubix5');
 assert.equal(manifest.skills, '.github/skills/');
 assert.equal(manifest.version, pkg.version);
 assert.equal(marketplace.plugins[0].source, '.');
@@ -34,5 +35,13 @@ for (const required of [
   'README.md', 'README-ja.md', 'LICENSE',
   ...skills.map((name) => `.github/skills/sdd-${name}/SKILL.md`),
 ]) assert(files.has(required), `Package is missing ${required}`);
+for (const skill of skills) {
+  const source = readFileSync(`.github/skills/sdd-${skill}/SKILL.md`, 'utf8');
+  assert(!source.includes('npx musubix3'), `Skill sdd-${skill} invokes the legacy musubix3 executable.`);
+  assert(
+    !source.includes("repository's exact `musubix3` CLI"),
+    `Skill sdd-${skill} identifies the legacy musubix3 executable as authoritative.`,
+  );
+}
 assert(![...files].some((path) => path.startsWith('tests/') || path.startsWith('.test-work/')));
 console.log(`Package verified: ${pack.filename}, ${files.size} files, ${skills.length} skills.`);

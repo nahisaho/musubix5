@@ -14,6 +14,8 @@ interface ResolverBatch {
 
 interface ResolverChangeRecord {
   changeId: string;
+  generation?: number;
+  activeGeneration?: number | null;
   requirementIds: string[];
   phases: {
     requirements?: ResolverPhaseEvidence;
@@ -32,7 +34,8 @@ export interface TddCycleExclusion {
   subject: string;
   reason: 'legacy-full-set-separated' | 'incomplete-batch' | 'invalid-phase-order'
     | 'older-complete-batch' | 'red-status-not-failed' | 'green-status-not-passed'
-    | 'command-changed' | 'cycle-outside-batch' | 'older-cycle' | 'ambiguous-terminal-order';
+    | 'command-changed' | 'cycle-outside-batch' | 'older-cycle' | 'ambiguous-terminal-order'
+    | 'superseded-generation';
 }
 
 export interface CurrentTddCycle {
@@ -165,7 +168,12 @@ export function selectCurrentTddCycle(
   const greenOrder = selectedBatch.batch.green!.order!;
   const requirementsOrder = change.phases.requirements?.order;
   const cycles: TddCycle[] = [];
+  const activeGeneration = change.activeGeneration ?? change.generation ?? 1;
   for (const cycle of evidence.cycles.filter((entry) => entry.requirementId === requirementId)) {
+    if ((cycle.generation ?? 1) !== activeGeneration || (cycle.changeId !== undefined && cycle.changeId !== change.changeId)) {
+      excluded.push({ subject: `cycle:${cycle.cycleId ?? cycle.testId}`, reason: 'superseded-generation' });
+      continue;
+    }
     if (!authoritativePhase(cycle.red, 'failed')) {
       excluded.push({ subject: `cycle:${cycle.cycleId ?? cycle.testId}`, reason: 'red-status-not-failed' });
       continue;

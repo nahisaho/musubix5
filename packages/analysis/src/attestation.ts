@@ -7,7 +7,7 @@ import { mutationEvidenceHead, validateMutationEvidence } from './mutation.js';
 import { modelCorrespondenceEvidenceHead, validateModelCorrespondenceEvidence } from './model-correspondence.js';
 import { loadEvidenceOrder } from './order.js';
 import { runProcess, type Runner } from './process.js';
-import { workflowEvidenceHead, type WorkflowManifest } from './workflow.js';
+import { workflowEvidenceHead, type WorkflowManifest } from './workflow-types.js';
 
 export interface EvidenceAttestation {
   schemaVersion: 1;
@@ -34,6 +34,7 @@ export type AttestationFetch = (
 export interface AttestationVerificationOptions {
   fetch?: AttestationFetch;
   now?: () => Date;
+  expectedWorkflowSha?: string;
 }
 
 export type AttestationTrust =
@@ -197,7 +198,7 @@ function currentCi(environment: NodeJS.ProcessEnv): (EvidenceAttestation['ci'] &
   return null;
 }
 
-function ed25519PublicKey(value: string): KeyObject {
+export function ed25519PublicKey(value: string): KeyObject {
   if (/BEGIN [A-Z ]*PRIVATE KEY/.test(value)) throw new Error('Private keys are not accepted.');
   const key = createPublicKey(value);
   if (key.asymmetricKeyType !== 'ed25519') throw new Error('Signing key is not Ed25519.');
@@ -235,7 +236,7 @@ function claimNumber(claims: Record<string, unknown>, name: string): number | nu
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 
-async function verifyGithubOidc(
+export async function verifyGithubOidc(
   attestation: EvidenceAttestation,
   config: AttestationConfig,
   options: AttestationVerificationOptions,
@@ -344,6 +345,7 @@ async function verifyGithubOidc(
   }
 
   const now = (options.now ?? (() => new Date()))().getTime() / 1000;
+  const attestationTime = Date.parse(attestation.issuedAt) / 1000;
   const skew = config.maxFutureSkewSeconds ?? 60;
   const exp = claimNumber(claims!, 'exp');
   const nbf = claimNumber(claims!, 'nbf');
@@ -351,11 +353,10 @@ async function verifyGithubOidc(
   if (exp === null || nbf === null || iat === null) {
     diagnostics.push(error('ATTESTATION_OIDC_TIME', 'GitHub OIDC token must contain numeric exp, nbf, and iat claims.', path));
   } else {
-    if (now > exp + skew) diagnostics.push(error('ATTESTATION_OIDC_EXPIRED', 'GitHub OIDC token has expired.', path));
-    if (nbf > now + skew) diagnostics.push(error('ATTESTATION_OIDC_NOT_BEFORE', 'GitHub OIDC token is not yet valid.', path));
-    if (iat > now + skew) diagnostics.push(error('ATTESTATION_OIDC_ISSUED_AT', 'GitHub OIDC token iat is in the future.', path));
+    if (attestationTime > exp + skew) diagnostics.push(error('ATTESTATION_OIDC_EXPIRED', 'GitHub OIDC token was expired when the attestation was issued.', path));
+    if (nbf > attestationTime + skew) diagnostics.push(error('ATTESTATION_OIDC_NOT_BEFORE', 'GitHub OIDC token was not valid when the attestation was issued.', path));
+    if (iat > attestationTime + skew) diagnostics.push(error('ATTESTATION_OIDC_ISSUED_AT', 'GitHub OIDC token was issued after the attestation.', path));
     if (nbf > exp || iat > exp) diagnostics.push(error('ATTESTATION_OIDC_TIME', 'GitHub OIDC token time claims are inconsistent.', path));
-    const attestationTime = Date.parse(attestation.issuedAt) / 1000;
     if (attestationTime < iat - skew || attestationTime > exp + skew) {
       diagnostics.push(error('ATTESTATION_OIDC_ATTESTATION_TIME', 'Attestation was not issued during the OIDC token authorization window.', path));
     }
@@ -372,11 +373,77 @@ async function verifyGithubOidc(
   if ((typeof runId !== 'string' && typeof runId !== 'number') || String(runId) !== attestation.ci.runId) {
     diagnostics.push(error('ATTESTATION_OIDC_RUN', 'GitHub OIDC run_id claim does not match the attested CI run.', path));
   }
-  if (oidc.workflow && claimString(claims!, 'workflow') !== oidc.workflow) {
-    diagnostics.push(error('ATTESTATION_OIDC_WORKFLOW', 'GitHub OIDC workflow claim does not match the configured workflow.', path));
+  if (oidc.workflow) {
+    const repository = oidc.repository ?? config.repository ?? attestation.repository;
+    const expectedPrefix = `${repository}/${oidc.workflow}@`;
+    const workflowRef = claimString(claims!, 'job_workflow_ref')
+      ?? claimString(claims!, 'workflow_ref');
+    if (!workflowRef?.startsWith(expectedPrefix)) {
+      diagnostics.push(error('ATTESTATION_OIDC_WORKFLOW', 'GitHub OIDC workflow reference does not match the configured workflow.', path));
+    }
+    if (options.expectedWorkflowSha) {
+      const workflowSha = claimString(claims!, 'job_workflow_sha')
+        ?? claimString(claims!, 'workflow_sha');
+      if (workflowSha?.toLowerCase() !== options.expectedWorkflowSha.toLowerCase()) {
+        diagnostics.push(error('ATTESTATION_OIDC_WORKFLOW', 'GitHub OIDC workflow SHA does not match the candidate commit.', path));
+      }
+    }
   }
   if (oidc.ref && claimString(claims!, 'ref') !== oidc.ref) {
     diagnostics.push(error('ATTESTATION_OIDC_REF', 'GitHub OIDC ref claim does not match the configured ref.', path));
+  }
+  return diagnostics;
+}
+
+export async function verifyDetachedEvidenceAttestation(
+  attestation: EvidenceAttestation,
+  config: AttestationConfig,
+  expected: {
+    repository: string;
+    commitSha: string;
+    ci: EvidenceAttestation['ci'];
+    evidenceHeads: Record<string, string>;
+  },
+  options: AttestationVerificationOptions = {},
+  path = 'candidate-gate-attestation',
+): Promise<Diagnostic[]> {
+  const diagnostics: Diagnostic[] = [];
+  if (config.mode !== 'ci-required' || config.githubOidc?.mode !== 'strict') {
+    return [error('ATTESTATION_OIDC_MISSING', 'Candidate gate attestation requires strict CI OIDC policy.', path)];
+  }
+  if (attestation.schemaVersion !== 1
+    || attestation.repository !== expected.repository
+    || attestation.commitSha.toLowerCase() !== expected.commitSha.toLowerCase()
+    || attestation.ci.provider !== expected.ci.provider
+    || attestation.ci.runId !== expected.ci.runId
+    || canonical(attestation.evidenceHeads) !== canonical(expected.evidenceHeads)
+    || !attestation.keyId
+    || !attestation.githubOidc?.publicKey
+    || typeof attestation.signature !== 'string') {
+    diagnostics.push(error('ATTESTATION_SCHEMA', 'Candidate gate attestation identity does not match its artifact.', path));
+    return diagnostics;
+  }
+  const issuedAt = Date.parse(attestation.issuedAt);
+  const now = (options.now ?? (() => new Date()))().getTime();
+  if (!Number.isFinite(issuedAt)) {
+    diagnostics.push(error('ATTESTATION_SCHEMA', 'Candidate gate attestation issuedAt is invalid.', path));
+  } else {
+    if (issuedAt > now + (config.maxFutureSkewSeconds ?? 60) * 1000) {
+      diagnostics.push(error('ATTESTATION_FUTURE', 'Candidate gate attestation is from the future.', path));
+    }
+    if (now - issuedAt > (config.maxAgeSeconds ?? 3600) * 1000) {
+      diagnostics.push(error('ATTESTATION_EXPIRED', 'Candidate gate attestation is too old.', path));
+    }
+  }
+  diagnostics.push(...await verifyGithubOidc(attestation, config, options, path));
+  try {
+    const key = ed25519PublicKey(attestation.githubOidc.publicKey);
+    const { signature, ...unsigned } = attestation;
+    if (!verify(null, Buffer.from(canonical(unsigned)), key, Buffer.from(signature, 'base64'))) {
+      diagnostics.push(error('ATTESTATION_SIGNATURE', 'Candidate gate Ed25519 signature verification failed.', path));
+    }
+  } catch {
+    diagnostics.push(error('ATTESTATION_SIGNATURE', 'Candidate gate Ed25519 signature is malformed or unverifiable.', path));
   }
   return diagnostics;
 }

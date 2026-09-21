@@ -11,7 +11,7 @@ Mandatory entrypoint: every new natural-language development request is a new ch
 Never infer approval; show `approval prepare <stage>` and record only its reviewed hash with `approval record <stage> --approver <name> --artifact-sha256 <hash> --confirm`.
 Whenever an AI deliverable is documentation (requirements, design, ADRs, the CHANGE document, or release/quality evidence), run Copilot's native `rubber-duck` review agent on it before that phase's human approval, fixing every issue and re-reviewing until none remain.
 Follow the user's input language. Use native Copilot planning, editing, research, review, security review and subagents.
-Record exactly one final invocation outcome with `npx musubix3 workflow-record sdd-change complete --status <status>`; `change-record` separately proves phases.
+Record exactly one final invocation outcome with `npx musubix5 workflow-record sdd-change complete --status <status>`; `change-record` separately proves phases.
 Run `workflow-sanitize <copilot.jsonl> <safe.jsonl>` before review, then
 `workflow-verify <safe.jsonl>`; it validates source-order lifecycles without
 assuming globally monotonic clocks unless `maxEventSkewMs` is explicitly set.
@@ -53,7 +53,7 @@ Persisted monotonic order, not wall-clock time, proves these phase boundaries.
    test adapter. For deterministic performance requirements, use a passing
    instrumented `operations` report with command/report/run/exit provenance;
    native adapters cannot emit app counters, and elapsed time is insufficient.
-2. Run `npx musubix3 tdd red <TEST-ID> --requirement <REQ-ID> --command <name>`.
+2. Run `npx musubix5 tdd red <TEST-ID> --requirement <REQ-ID> --command <name>`.
    Do not edit implementation code until this records the expected failing test.
 3. Implement the smallest complete change, preserving the test, then run
    `tdd green` with the same IDs and command. Refactor only after Green and record

@@ -654,6 +654,18 @@ CODEOWNERS, or CI/OIDC controls.
 Local approval evidence records explicit intent but does not cryptographically
 authenticate the approver; protect release authorization with repository review,
 CODEOWNERS/branch protection, or CI/OIDC attestation.
+Candidate release approval additionally requires the closed GitHub Actions
+matrix in `.github/workflows/candidate-gate.yml`. Prepare its bound inputs with
+`musubix5 candidate-gate context`, dispatch the workflow for the exact candidate,
+download all five opaque artifacts, ingest them with
+`musubix5 candidate-gate ingest <artifact...>`, and verify the set with
+`musubix5 candidate-gate validate`. Ingestion rejects unsigned, stale, wrong-candidate, same-batch duplicate-job,
+or reused-run artifacts; validation rejects any accepted record whose gate
+reported a tracked-tree change.
+Dispatch with a branch or tag ref whose tip is exactly the candidate commit;
+the verified `workflow_sha` claim is required to match that commit. Moving the
+ref after candidate selection requires a new candidate or restoring an
+authorized immutable ref before rerunning the workflow.
 Use `tdd.redPreflightCommands` to reference plain configured formatter commands;
 they must pass before Red captures the authoritative test fingerprint.
 Conventional `.venv` and `venv` Python environments containing a regular

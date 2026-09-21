@@ -7,9 +7,9 @@ description: "Use when implementing approved SDD requirements and designs with e
 Follow the user's input language (日本語 / English). Use Copilot's native planning,
 editing and subagents for implementation; do not introduce code generators,
 generic test generators or a second orchestration/task system.
-Run only the repository's exact `musubix3` CLI. Never fall back to similarly
+Run only the repository's exact `musubix5` CLI. Never fall back to similarly
 named npm packages; report a blocker if the executable is unavailable.
-After the work, run `npx musubix3 workflow-record sdd-implementation complete
+After the work, run `npx musubix5 workflow-record sdd-implementation complete
 --status completed` exactly once.
 
 1. Before editing implementation code, verify that approved requirements and
@@ -31,7 +31,7 @@ After the work, run `npx musubix3 workflow-record sdd-implementation complete
    Make the runner emit a fresh
    `musubix-json` report containing only the selected test (plus declared
    deterministic `operations` counters when applicable) and run
-   `npx musubix3 tdd red <TEST-ID> --requirement <REQ-ID> --command <name>`.
+   `npx musubix5 tdd red <TEST-ID> --requirement <REQ-ID> --command <name>`.
 3. Implement only enough code to pass, preserving the test unchanged, then run
    `tdd green`. Refactor only after Green and record `tdd refactor`.
    Use `tdd validate` to inspect persisted order, fingerprints, durations and
@@ -61,11 +61,11 @@ After the work, run `npx musubix3 workflow-record sdd-implementation complete
    mutation mechanism to emit schema-v1 deterministic identities, requirement/
    test linkage, source/test SHA-256, operator/location, and killed status.
    Never fabricate results or add a large mutation dependency. Use
-   `npx musubix3 mutation doctor --json` to inspect locally available engines
+   `npx musubix5 mutation doctor --json` to inspect locally available engines
    and configuration recommendations. Before Python mutation runs, remove
    existing `__pycache__` directories, then use `-B` for mutation and test
    commands so stale bytecode is absent and no new `.pyc` files are created.
-6. Regenerate `npx musubix3 trace build`, check `trace check --strict`, then
-   `npx musubix3 gate --changed`. Configure real command/argument arrays first.
+6. Regenerate `npx musubix5 trace build`, check `trace check --strict`, then
+   `npx musubix5 gate --changed`. Configure real command/argument arrays first.
 7. Use Copilot's native review and security-review capabilities when appropriate.
    Report executed evidence separately from review advice and skipped work.

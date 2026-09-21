@@ -10,7 +10,7 @@ Priority: must
 Type: functional
 Pattern: ubiquitous
 Statement: The system shall provide the inventoried musubix3 v0.1.18 command names, subcommands, options, positional arguments, aliases, and defaults.
-Acceptance: Differential contract tests normalize only executable and package-name tokens from `musubix3` to `musubix5`, preserve `MUSUBIX3_Z3` and `MUSUBIX3_LEAN` literals, report every inventoried help entry, and treat every other help-text difference as an incompatibility.
+Acceptance: Differential contract tests normalize only executable and package-name tokens from `musubix3` to `musubix5`, preserve `MUSUBIX3_Z3` and `MUSUBIX3_LEAN` literals, report every inventoried baseline help entry, allow only help entries and per-entry option or text additions registered in the approved additive-help registry under REQ-M5-COMPAT-013, and treat every other help-text difference as an incompatibility.
 
 ## REQ-M5-COMPAT-002: Preserve exit semantics
 Priority: must
@@ -24,7 +24,7 @@ Priority: must
 Type: functional
 Pattern: event-driven
 Statement: When a compatible command requests JSON output, the system shall return the required musubix3 v0.1.18 fields, value types, and failure envelope.
-Acceptance: Golden tests compare normalized validation, trace, graph, approval, gate, status, and CLI-error results, and any additive field is listed in an approved additive-field registry before implementation.
+Acceptance: Golden tests compare normalized validation, trace, graph, approval, gate, status, and CLI-error results, and any additive field is listed before implementation in a requirements-approved acceptance clause or versioned specification inventory entry, which together form the additive-field registry.
 
 ## REQ-M5-COMPAT-004: Preserve configuration compatibility
 Priority: must
@@ -38,7 +38,7 @@ Priority: must
 Type: functional
 Pattern: event-driven
 Statement: When the package is built and packed, the system shall provide the inventoried domain, analysis, and attestation exports and the required isolated-installation assets.
-Acceptance: On the approved Node.js and CI operating-system matrix, type-level and runtime tests cover every inventoried export, `npm pack --dry-run` verifies the archive, and a temporary project runs `musubix5 --version`, `musubix5 --help`, and an initialized-project command.
+Acceptance: On the musubix5 verification matrix, type-level and runtime tests cover every inventoried export, `npm pack --dry-run` verifies the archive, and a temporary project runs `musubix5 --version`, `musubix5 --help`, and an initialized-project command.
 
 ## REQ-M5-COMPAT-006: Publish only the musubix5 executable
 Priority: must
@@ -80,7 +80,7 @@ Priority: must
 Type: functional
 Pattern: ubiquitous
 Statement: The system shall continue to accept `MUSUBIX3_Z3` and `MUSUBIX3_LEAN` as solver executable environment variables.
-Acceptance: Formal command tests resolve each legacy variable exactly as musubix3 v0.1.18, and any additional `MUSUBIX5_*` alias is documented as additive behavior.
+Acceptance: Formal command tests resolve each legacy variable exactly as musubix3 v0.1.18, and any additional `MUSUBIX5_*` alias is documented as additive behavior and registered in the additive-help registry when it appears in help output.
 
 ## REQ-M5-COMPAT-012: Reproduce the baseline oracle
 Priority: must
@@ -89,12 +89,12 @@ Pattern: event-driven
 Statement: When compatibility fixtures are generated, the system shall build and execute musubix3 from the pinned source commit.
 Acceptance: CI records the source identity, build command, invocation, exit code, stdout digest, stderr digest, JSON payload digest, and filesystem-effect digest for every differential fixture.
 
-## REQ-M5-COMPAT-013: Govern approval manifest extensions
+## REQ-M5-COMPAT-013: Govern intentional compatibility extensions
 Priority: must
 Type: functional
 Pattern: ubiquitous
-Statement: The system shall treat configuration projections, approval-normative-path-set-v1, approval-manifest-schema-v1, release-candidate-tree-v1, every release exclusion predicate and reason, and every `APPROVAL_*` diagnostic defined by REQ-M5-APPROVAL-007, approval-normative-path-set-v1, or release-candidate-tree-v1 as intentional extensions to the musubix3 approval manifest contract.
-Acceptance: An ADR, migration-guide entry, and regression tests register each extension under the compatibility policy, cover projection and schema entries, candidate-tree sourcing, exclusion predicates and reasons, diagnostic codes, displayed output, and changed aggregate hashes before implementation.
+Statement: The system shall register the lifecycle, approval, workflow, and candidate-bound release additions defined by REQ-M5-LIFECYCLE-005, REQ-M5-APPROVAL-007, REQ-M5-EVIDENCE-006, REQ-M5-EVIDENCE-007, and REQ-M5-RELEASE-002 as intentional extensions to the pinned musubix3 contract.
+Acceptance: ADRs, migration-guide entries, additive help and JSON-field registries, and regression tests cover configuration projections, versioned schemas, candidate-tree sourcing, exclusion predicates and reasons, matching semantics, sanitization modes, candidate-bound gate evidence, every added or changed diagnostic and displayed output, and changed aggregate hashes before implementation; unregistered differences remain compatibility failures.
 
 ## REQ-M5-LIFECYCLE-001: Enforce the protected lifecycle
 Priority: must
@@ -123,6 +123,13 @@ Type: functional
 Pattern: event-driven
 Statement: When a process starts a stateful operation for a CHANGE, the system shall acquire a durable exclusive lease for that CHANGE before reserving or consuming state.
 Acceptance: Concurrent-process tests permit one writer, reject or safely wait other writers, recover expired leases with a fencing token, reject writes from an expired holder, and never duplicate attempts, repairs, nonces, budget, or order records.
+
+## REQ-M5-LIFECYCLE-005: Reopen a superseded CHANGE phase cycle
+Priority: must
+Type: functional
+Pattern: event-driven
+Statement: When approved requirements or downstream evidence for an active CHANGE becomes stale, the system shall permit a new versioned lifecycle cycle without altering the completed historical cycle.
+Acceptance: Generation-less historical records are interpreted as generation 1 without rewriting them, while all newly written generations including generation 1 use qualified keys; while holding the REQ-M5-LIFECYCLE-004 CHANGE lease, `change-record <change-id> impact --reopen` atomically creates or idempotently resumes the next positive integer generation when the prior active generation has terminal full-set `quality` or was explicitly abandoned by `change generation abandon <change-id> --reason <text> --approver <name> --confirm`; abandon preserves the incomplete generation as non-current history, leaves the CHANGE with no active generation until reopen, rejects every phase operation other than `change-record <change-id> impact --reopen`, every TDD or evidence operation, and every approval prepare, record, or validate operation with exit code 1 and `CHANGE_GENERATION_PHASE`, and cannot make any check pass; during that interval gate and status report a null active generation plus the abandoned generation, gate exits 1, status exits 0, and `ready` is false; reopen resolves its requirement set from supplied `--requirement <ids...>` or, when omitted, from the current CHANGE document `Requirements:` set, and the resolved set must exactly equal that document; the set is revalidated at every later phase, and `CHANGE_GENERATION_REQUIREMENTS` makes gate exit 1 and status exit 0 with `ready` false; the active generation is otherwise the greatest non-abandoned generation, superseded or abandoned generations never satisfy current evidence, and an active generation without terminal `quality` makes release-stage approval preparation or recording and release readiness non-pass with `CHANGE_GENERATION_INCOMPLETE`, while requirements and design approval for that active generation remain available; generation-qualified monotonic keys are `change:<changeId>:g<N>:<phase>` for full-set phases and `change:<changeId>:g<N>:<phase>:<scopeId>` for requirement batches, and duplicate detection treats legacy unqualified keys as generation 1; every normal approval, release, benchmark, budget, TDD, change-phase, integration, trace, graph, workflow, formal, mutation, model-correspondence, performance, quality, package, waiver, release-review, and candidate-bound gate record binds the active generation, while bootstrap records remain bootstrap-scoped and cannot satisfy normal evidence; generation-N coverage uses only generation-N evidence; superseded requirements or design within an active generation may be reviewed and re-approved through REQ-M5-APPROVAL-008 without changing generation, while any phase record invalidated by that cascade may be re-recorded in protected order and the superseded record remains historical; the generation follows the complete protected lifecycle in REQ-M5-LIFECYCLE-001, while `change-record` phase order remains `impact`, `requirements`, `design`, requirement-scoped `red`, `implementation`, `green`, and full-set `quality`; quality and rejected-manifest fingerprint comparison is scoped to the active generation; reopen `impact` is exempt from cross-generation unchanged-fingerprint rejection, `--allow-unchanged` retains baseline behavior within a generation, supplying `--reopen` outside `impact` is a usage error with exit code 2 and `CLI_ERROR`, missing confirmation or other usage errors for abandon exit 2 with `CLI_ERROR`, and invalid reopen or abandon state, duplicate current evidence, prior-generation reuse, or mixed generations fail with exit code 1 and `CHANGE_GENERATION_PHASE`, `CHANGE_GENERATION_DUPLICATE`, or `CHANGE_GENERATION_MIXED`; `CHANGE_GENERATION_INCOMPLETE` makes gate exit 1 and status exit 0 with `ready` false; crash recovery reuses a pending generation and never increments twice; gate and status report the active generation and all superseded or abandoned generations.
 
 ## REQ-M5-APPROVAL-001: Preserve manual exact-hash approval
 Priority: must
@@ -171,7 +178,7 @@ Priority: must
 Type: functional
 Pattern: event-driven
 Statement: When approval is prepared for a stage, the system shall build the sorted manifest from the stage's declared normative path set and apply only explicitly defined exclusions.
-Acceptance: Native musubix5 approval uses `approval-manifest-schema-v1`; pinned-musubix3 bootstrap approval is validated only against its exact manifest hash and bound projection digest and is not required to emit schema-v1; requirements and design use `approval-normative-path-set-v1`, read every selected path from the `--root` project directory of the invoking workspace, use its NFC-normalized root-relative POSIX path as the `artifacts` key, and hash its raw on-disk bytes, with cross-platform digest identity required only for byte-identical inputs; when `approval.domains` is a nonempty list, `--domain` is required for requirements/design, the supplied value is NFC-normalized, must byte-exactly match one NFC-normalized configured domain name, and narrows the path set through that domain's configured feature list; for requirements/design, two configured names with the same NFC form, supplying `--domain` without configured domains, omitting it when domains are nonempty, or naming an unknown domain fails with `APPROVAL_DOMAIN_MISMATCH`; release does not evaluate domain-name collisions and supplying any domain to release approval fails with `APPROVAL_DOMAIN_MISMATCH`; requirements/design inspect every root-relative ancestor segment before existence checks, so a dangling symlink, a symlink at a selected path, or a symlinked ancestor fails first with `APPROVAL_NORMATIVE_SYMLINK`; another non-regular selected path also fails with `APPROVAL_NORMATIVE_SYMLINK`; requirements/design reject non-UTF-8 paths with `APPROVAL_PATH_ENCODING`, reject NFC path collisions with `APPROVAL_PATH_COLLISION`, and include requirements-stage effective configuration fields `schemaVersion` and `approval` or design-stage effective fields `schemaVersion`, `commands`, `requiredChecks`, `thresholds`, `architecture`, `codeGraph`, `formal`, `mutation`, `tdd`, `workflow`, and `attestation`, after default resolution with every declared field present so making an implicit default explicit does not change the projection; release approval is repository-wide and domain-less, uses `release-candidate-tree-v1`, and then applies rules 1–9 to its surviving blobs; release exclusion uses exactly one first-match reason in this precedence order: (1) a symbolic-link blob outside the four normative release path patterns listed by `release-candidate-tree-v1` as `symlink`, (2) `.musubix/features/*/trace.json` as `generated-trace`, (3) root-relative `**/*.tgz` as `package-archive`, (4) files below a byte-exact lowercase NFC-normalized directory segment named `log`, `logs`, `session-log`, or `session-logs` as `log-directory`, including root-level matching directories but not a regular file with one of those names, (5) `docs/history/**` as `historical`, (6) the fixed `.musubix/runs/**` prefix as `run-local`, (7) both `.musubix/evidence/approvals/release.json` and `.musubix/evidence/approvals/native/release.json` as `release-self-reference`, (8) `.musubix/evidence/formal.json`, `.musubix/evidence/model-correspondence.json`, `.musubix/evidence/mutation.json`, `.musubix/evidence/performance.json`, `.musubix/evidence/quality.json`, and `.musubix/evidence/native/test/**` as `gate-self-reference`; this is the closed gate-self-reference list and any other evidence path, including an unlisted native counterpart, is included unless rule 9 applies, and (9) blobs with a byte-exact lowercase `.json` suffix at or below `.musubix/evidence/`, at any depth, whose effective change ID is a nonempty string byte-exactly different from the active CHANGE as `foreign-change-evidence`; top-level `changeId` wins when it is a nonempty string, otherwise `metadata.changeId` is used; when no active CHANGE is bound, rule 9 never matches; invalid JSON, non-object roots, and missing or empty change IDs remain included; release `artifacts` contains exactly the included blobs and every excluded path appears only in `exclusions`; included blobs are printed with raw SHA-256 only, while excluded blobs are printed with the selected reason and raw SHA-256; re-verification of the same candidate commit under the same active-CHANGE binding, including the unbound case, reproduces the same manifest regardless of worktree-only file creation, deletion, modification, unreadability, or log/run-local activity, while a candidate tree differing in an included blob path or content, a changed active-CHANGE binding, an added or removed excluded blob, or a changed reason produces a different aggregate.
+Acceptance: Native musubix5 approval uses `approval-manifest-schema-v1`; pinned-musubix3 bootstrap approval is validated only against its exact manifest hash and bound projection digest and is not required to emit schema-v1; requirements and design use `approval-normative-path-set-v1`, read every selected path from the `--root` project directory of the invoking workspace, use its NFC-normalized root-relative POSIX path as the `artifacts` key, and hash its raw on-disk bytes, with cross-platform digest identity required only for byte-identical inputs; when a CHANGE is active, requirements and design manifests bind its `changeId` and active generation even when normative bytes are unchanged; when `approval.domains` is a nonempty list, `--domain` is required for requirements/design, the supplied value is NFC-normalized, must byte-exactly match one NFC-normalized configured domain name, and narrows the path set through that domain's configured feature list; for requirements/design, two configured names with the same NFC form, supplying `--domain` without configured domains, omitting it when domains are nonempty, or naming an unknown domain fails with `APPROVAL_DOMAIN_MISMATCH`; release does not evaluate domain-name collisions and supplying any domain to release approval fails with `APPROVAL_DOMAIN_MISMATCH`; requirements/design inspect every root-relative ancestor segment before existence checks, so a dangling symlink, a symlink at a selected path, or a symlinked ancestor fails first with `APPROVAL_NORMATIVE_SYMLINK`; another non-regular selected path also fails with `APPROVAL_NORMATIVE_SYMLINK`; requirements/design reject non-UTF-8 paths with `APPROVAL_PATH_ENCODING`, reject NFC path collisions with `APPROVAL_PATH_COLLISION`, and include requirements-stage effective configuration fields `schemaVersion` and `approval` or design-stage effective fields `schemaVersion`, `commands`, `requiredChecks`, `thresholds`, `architecture`, `codeGraph`, `formal`, `mutation`, `tdd`, `workflow`, and `attestation`, after default resolution with every declared field present so making an implicit default explicit does not change the projection; release approval always has an active CHANGE, is repository-wide and domain-less, uses `release-candidate-tree-v1`, and then applies rules 1–9 to its surviving blobs; release exclusion uses exactly one first-match reason in this precedence order: (1) a symbolic-link blob outside the four normative release path patterns listed by `release-candidate-tree-v1` as `symlink`, (2) `.musubix/features/*/trace.json` as `generated-trace`, (3) root-relative `**/*.tgz` as `package-archive`, (4) files below a byte-exact lowercase NFC-normalized directory segment named `log`, `logs`, `session-log`, or `session-logs` as `log-directory`, including root-level matching directories but not a regular file with one of those names, (5) `docs/history/**` as `historical`, (6) the fixed `.musubix/runs/**` prefix as `run-local`, (7) both `.musubix/evidence/approvals/release.json` and `.musubix/evidence/approvals/native/release.json` as `release-self-reference`, (8) `.musubix/evidence/formal.json`, `.musubix/evidence/model-correspondence.json`, `.musubix/evidence/mutation.json`, `.musubix/evidence/performance.json`, `.musubix/evidence/quality.json`, and `.musubix/evidence/native/**` as `gate-self-reference`; this is the closed gate-self-reference list and any other evidence path is included unless rule 9 applies, and (9) blobs with a byte-exact lowercase `.json` suffix at or below `.musubix/evidence/`, at any depth, whose effective change ID is a nonempty string byte-exactly different from the active CHANGE as `foreign-change-evidence`; top-level `changeId` wins when it is a nonempty string, otherwise `metadata.changeId` is used; invalid JSON, non-object roots, and missing or empty change IDs remain included; release `artifacts` contains exactly the included blobs and every excluded path appears only in `exclusions`; included blobs are printed with raw SHA-256 only, while excluded blobs are printed with the selected reason and raw SHA-256; re-verification of the same candidate commit and candidate-sourced release projection under the same active CHANGE and generation reproduces the same manifest regardless of worktree-only file creation, deletion, modification, unreadability, or log/run-local activity, while a candidate tree differing in an included blob path or content, a changed repository identity, candidate commit, gate input fingerprint, active CHANGE, active generation, added or removed excluded blob, or changed reason produces a different aggregate.
 
 ## REQ-M5-APPROVAL-008: Supersede downstream approval
 Priority: must
@@ -257,6 +264,20 @@ Pattern: ubiquitous
 Statement: The system shall determine evidence currency from canonical input digests, producer identity, ownership, dependency heads, and monotonic order without using wall-clock time as chronology authority.
 Acceptance: Equal bound identities remain current despite clock skew, and any changed bound identity or superseding order makes the dependent record stale.
 
+## REQ-M5-EVIDENCE-006: Reconcile overlapping Skill lifecycles
+Priority: must
+Type: functional
+Pattern: event-driven
+Statement: When workflow declarations are reconciled with Copilot Skill invocations, the system shall bind declarations deterministically without imposing invocation order between different Skills.
+Acceptance: Reconciliation processes declarations in their persisted array order and considers only declarations bound to the active CHANGE and active generation; generation-less and change-less historical declarations are treated as generation 1 of the sole CHANGE whose evidence contains them, and ambiguous ownership is foreign evidence under REQ-M5-EVIDENCE-002; superseded-generation declarations are reported but never block the active generation; each declaration uses Skill identity as the invocation key while phase distinguishes separate declarations, and binds the lowest-positioned unused invocation of that Skill whose completed status and timestamps satisfy the configured freshness and event-skew bounds; each Skill maintains its own strictly increasing invocation-position cursor, while different Skills have independent cursors; transcript timestamps are used only for bounded eligibility and never replace persisted declaration order or transcript source position as chronology authority; non-completed declarations and missing, incomplete, failed, reused, duplicate, or same-Skill out-of-order invocations remain non-pass through `WORKFLOW_DECLARATION_NONPASS`, `WORKFLOW_SKILL_NOT_INVOKED`, `WORKFLOW_INVOCATION_INCOMPLETE`, `WORKFLOW_INVOCATION_FAILED`, `WORKFLOW_INVOCATION_REUSED`, `WORKFLOW_DUPLICATE_EVENT`, or `WORKFLOW_INVOCATION_ORDER`; one invocation cannot bind declarations for different CHANGEs or generations; and repeated evaluation of identical inputs yields the same binding set and diagnostics.
+
+## REQ-M5-EVIDENCE-007: Sanitize compatible workflow sources
+Priority: must
+Type: functional
+Pattern: event-driven
+Statement: When compatible workflow reconciliation is requested, the system shall sanitize incomplete, resumed, or non-strict Copilot transcripts without claiming strict terminal lifecycle proof.
+Acceptance: The intentional additive option `workflow-sanitize --compatible` preserves source order for session lifecycle and Skill invocation/completion events, removes messages and unrelated tool data, and adds no timestamp or value not derived from the input; its JSON command result, not the safe transcript, records raw source SHA-256, safe transcript SHA-256, source bytes, safe bytes, input events, output events, and retained eligible-event count, and the retained count must equal the eligible-event count in the source; malformed UTF-8 or JSON, duplicate event identity, `workflow.maxTranscriptBytes` outside `1..1000000000`, `workflow.maxTranscriptLineBytes` outside `1..10000000`, or either configured limit being exceeded fails closed with `WORKFLOW_SANITIZE_INVALID`, `WORKFLOW_DUPLICATE_EVENT`, or `WORKFLOW_TRANSCRIPT_SIZE`; compatible verification concatenates safe inputs in command-line argument order, rejects duplicate safe-transcript SHA-256 values and duplicate event identities with `WORKFLOW_DUPLICATE_SOURCE` or `WORKFLOW_DUPLICATE_EVENT`, and anchors invocation positions to that total sequence; release workflow evidence records each source's raw source SHA-256, safe transcript SHA-256, and verification mode, and requires at least one default non-`--compatible` strict-sanitized safe transcript whose raw source SHA-256 and session identity equal a successful strict-verification record with terminal proof, otherwise `WORKFLOW_STRICT_SOURCE_MISSING` is non-pass; strict sanitization and strict verification retain all existing terminal, session identity, successful completion, and baseline output requirements.
+
 ## REQ-M5-WAIVER-001: Preserve non-pass waiver status
 Priority: must
 Type: functional
@@ -283,7 +304,7 @@ Priority: must
 Type: functional
 Pattern: state-driven
 Statement: While requirement coverage is evaluated, the system shall select the complete Red, Implementation, and Green cycle with the greatest terminal monotonic order.
-Acceptance: A complete cycle has strict Red order before Implementation order before Green order and binds one requirement, test, command, and candidate lineage; repeated evaluation selects the same latest complete cycle and explains every excluded record.
+Acceptance: A complete cycle has strict Red order before Implementation order before Green order and binds one CHANGE generation, requirement, test, command, and candidate lineage; selection and coverage are restricted to the active generation, prior-generation cycles are reported as superseded and cannot satisfy coverage, and repeated evaluation selects the same latest complete cycle and explains every excluded record.
 
 ## REQ-M5-TDD-004: Preserve optional Refactor evidence
 Priority: must
@@ -395,7 +416,7 @@ Priority: must
 Type: non-functional
 Pattern: ubiquitous
 Statement: The system shall produce identical canonical bytes and SHA-256 digests for identical normalized inputs, producer versions, and repository identities.
-Acceptance: Repeated clean runs on the approved Node.js and CI operating-system matrix produce identical normative manifests and normalized evidence digests after excluding metadata declared as display-only by the approved schema.
+Acceptance: Repeated clean runs on the musubix5 verification matrix produce identical normative manifests and normalized evidence digests after excluding metadata declared as display-only by the approved schema.
 
 ## REQ-M5-QUALITY-004: Reject an empty mandatory command set
 Priority: must
@@ -417,6 +438,13 @@ Type: functional
 Pattern: event-driven
 Statement: When an external release operation is requested, the system shall require explicit human authorization that is separate from release approval.
 Acceptance: Release approval alone cannot publish, create a tag, or push; each requested external operation records its authorizer, exact candidate identity, operation scope, and confirmation before execution.
+
+## REQ-M5-RELEASE-002: Bind release readiness to the immutable candidate
+Priority: must
+Type: functional
+Pattern: event-driven
+Statement: When release approval is prepared or recorded, the system shall require passing mandatory gate evidence produced from an isolated QA workspace whose Git tree is identical to the persisted immutable candidate commit.
+Acceptance: The QA workspace tracked-blob tree is verified against the exact candidate snapshot commit persisted under REQ-M5-WORKTREE-001 immediately before and after gate execution; ignored and untracked cache paths are outside the comparison, post-gate tracked differences are allowed only at the `generated-trace` and `gate-self-reference` paths defined by REQ-M5-APPROVAL-007, and every other difference fails with `RELEASE_CANDIDATE_TREE_MISMATCH`; one external candidate-bound gate record is required for every job in the musubix5 verification matrix, each record binds repository identity, CHANGE ID, candidate commit, producer identity, runtime Node.js and operating-system identity, and `gate-input-fingerprint-v1` under REQ-M5-EVIDENCE-003, and regenerating records does not change the candidate commit; gate evidence contributing to release readiness is taken only from the complete set of external candidate-bound gate records, any missing or non-pass matrix job blocks readiness, and in-tree gate output is informational and cannot substitute for a matrix record; readiness additionally requires every mandatory evidence kind under REQ-M5-EVIDENCE-004 and REQ-M5-QUALITY-001; the release manifest projection binds the same repository identity, candidate commit, and gate input fingerprint; worktree-only or post-candidate inputs cannot satisfy readiness; a different candidate or gate input makes gate evidence, manifest, and release approval stale; and approval preparation and recording fail with `RELEASE_GATE_EVIDENCE_MISSING`, `RELEASE_GATE_EVIDENCE_STALE`, or `RELEASE_GATE_CANDIDATE_MISMATCH` unless every candidate-bound matrix gate passes.
 
 ## Normative musubix3 v0.1.18 compatibility inventory
 
@@ -480,19 +508,44 @@ Baseline identity:
   `.musubix/constitution.md`, `.musubix/features/*/requirements.md`,
   `.musubix/features/*/design.md`, or `.musubix/decisions/ADR-*.md` with
   `APPROVAL_NORMATIVE_SYMLINK`
+- `gate-input-fingerprint-v1`: the projection-canonical digest of exactly
+  `{"candidateCommit":string,"changeId":string,"commands":[{"args":string[],"command":string,"name":string}],"config":object,"producerVersion":string,"repositoryId":string,"requiredChecks":string[]}`;
+  `config` is the complete design-approved effective configuration object;
+  `config`, `requiredChecks`, and `commands` are resolved only from candidate
+  commit blobs, `producerVersion` is resolved from the candidate `package.json`
+  blob, and `repositoryId` is the persisted repository identity; command and
+  required-check arrays preserve their configured order
+- `change-generation-v1`: `changes.json`, gate JSON, and status JSON add
+  positive integer `generation`, active-generation identity, and superseded
+  or abandoned generation summaries and represent no active generation as
+  `null`; normal approval, release, benchmark, budget, TDD, change-phase,
+  integration, trace, graph, workflow, formal, mutation,
+  model-correspondence, performance, quality, package, waiver, release-review,
+  and candidate-bound gate records add their bound generation, while bootstrap
+  records remain generation-less and bootstrap-scoped; `change-record`,
+  `approval prepare`, `approval record`, `approval validate`, `tdd`, `gate`,
+  and `status` JSON envelopes expose that generation; readers interpret missing
+  generation in schema-version-1 historical records and unqualified order keys
+  as generation 1 without rewriting stored bytes
 - `approval-manifest-schema-v1`: canonical UTF-8 JSON using the projection
   canonical encoding above, with exactly `schemaVersion`, `stage`, optional
-  `domain`, optional `changeId`, `artifacts`, `projection`, and `exclusions`;
+  `domain`, optional `changeId`, optional `generation`, `artifacts`,
+  `projection`, and `exclusions`;
   `schemaVersion` is `1`; `stage` is exactly `requirements`, `design`, or
   `release`; `domain` is present exactly for domain-scoped requirements or
   design approval and is omitted for repository-wide stages; `changeId` is
-  present only when a CHANGE is bound and is omitted otherwise; paths are
+  present only when a CHANGE is bound and is omitted otherwise; `generation`
+  is present with the active positive integer generation whenever `changeId`
+  is present and is omitted otherwise; paths are
   ordered by ascending byte-wise comparison of their NFC-normalized UTF-8
   root-relative POSIX representation; this path ordering overrides the generic
   object-key ordering for path-keyed objects; `artifacts` is an object whose keys use
   that order and whose values are 64-character lowercase hexadecimal raw
   SHA-256 strings; `projection` is the stage-specific canonical configuration
-  object for requirements or design and is `null` for release; `exclusions` is
+  object for requirements or design and, for release, contains exactly the
+  three keys `repositoryId`, `candidateCommit`, and `gateInputFingerprint`,
+  serialized in canonical key order;
+  `exclusions` is
   an empty array for requirements and design and an array of
   `{"path":string,"reason":string}` entries using the same path order for
   release; the aggregate SHA-256 hashes the canonical bytes of this complete
@@ -584,6 +637,19 @@ Command inventory:
 - `status`
 - `help [command]`
 
+Musubix5 intentional additive-help registry:
+
+- `workflow-sanitize <log> <output-file>` adds `--compatible`; strict-mode help,
+  defaults, output fields, and behavior remain baseline-compatible
+- `change-record <change-id> <phase>` adds `--reopen`; only `impact` accepts
+  it, other phases reject it with exit code 2 and `CLI_ERROR`, and repeated
+  non-reopen checkpoints retain baseline first-generation behavior
+- `change generation abandon <change-id>` adds `--reason <text>`,
+  `--approver <name>`, and `--confirm`; it never grants readiness
+- the `change` parent help adds the `generation` subcommand line;
+  `change generation` adds a command-group help entry; and
+  `change generation abandon <change-id>` adds its command help entry
+
 Required behavioral contracts:
 
 - exit `0`: success;
@@ -606,7 +672,8 @@ Required behavioral contracts:
   to `12000` milliseconds;
 - approval defaults to required;
 - workflow defaults to compatible with maximum age `3600` seconds and future
-  skew `60` seconds;
+  skew `60` seconds; transcript bytes default to `100000000` and transcript
+  line bytes default to `1000000`;
 - attestation defaults to local with GitHub OIDC off;
 - `formal generate --format` defaults to `both`;
 - `formal check` and `formal doctor` accept `MUSUBIX3_Z3` and

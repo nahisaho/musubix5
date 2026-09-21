@@ -4,7 +4,7 @@ import { loadConfig } from './config.js';
 import { digest, exists, files, readText, snapshot, within, writeJson } from './files.js';
 import type { FormalResult } from './formal.js';
 import type { PerformanceExecution } from './performance.js';
-import { parseMusubixTestReport } from './tdd.js';
+import { parseMusubixTestReport } from './test-report.js';
 import { checkTrace, loadTrace, type TraceGraph } from './trace.js';
 
 export interface CorrespondenceTestEvidence {

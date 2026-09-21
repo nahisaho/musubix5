@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 interface PackageManifest {
@@ -22,5 +22,21 @@ describe('package compatibility contract', () => {
     expect(manifest.bin).toEqual({
       musubix5: 'dist/packages/cli/src/main.js',
     });
+  });
+
+  /**
+   * @id TEST-M5-COMPAT-007
+   * @verifies REQ-M5-COMPAT-005 REQ-M5-COMPAT-006
+   */
+  it('TEST-M5-COMPAT-007 ships musubix5-native skill commands', () => {
+    const skillsRoot = new URL('../.github/skills/', import.meta.url);
+    const skillSources = readdirSync(skillsRoot, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => readFileSync(new URL(`${entry.name}/SKILL.md`, skillsRoot), 'utf8'));
+
+    for (const source of skillSources) {
+      expect(source).not.toContain('npx musubix3');
+      expect(source).not.toContain("repository's exact `musubix3` CLI");
+    }
   });
 });

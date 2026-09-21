@@ -1,4 +1,4 @@
-import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 describe('trace evidence namespace', () => {
@@ -8,7 +8,7 @@ describe('trace evidence namespace', () => {
    */
   it('TEST-M5-EVIDENCE-TRACE-001 excludes inherited musubix3 trace declarations', async () => {
     const { buildTrace, checkTrace } = await import('../packages/analysis/src/index.js');
-    const root = resolve(new URL('..', import.meta.url).pathname);
+    const root = fileURLToPath(new URL('..', import.meta.url));
     const graph = await buildTrace(root, false);
     const checked = await checkTrace(root, graph, true);
 

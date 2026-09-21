@@ -1,15 +1,17 @@
 #!/usr/bin/env node
 import { Command, CommanderError, InvalidArgumentError, Option } from 'commander';
+import { realpathSync } from 'node:fs';
 import { basename, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   c4Diagram, validateConstitution, validateDesign, validateRequirements, type Diagnostic,
 } from '../../domain/src/index.js';
+
 import {
   buildKnowledge, buildTrace, changedFiles, checkTrace, configLint, cycles, exists, files, formalCheck, graphGate,
   graphImpact, indexGraph, loadConfig, loadGraph, loadTrace, portable, projectStatus, queryKnowledge,
   formalDoctor, generateFormalArtifacts, readText, runGate, traceImpact, type Solver,
-  changePhases, recordChangePhase, recordWorkflow, runTddPhase, sanitizeWorkflowLogFile,
+  abandonPersistedChangeGeneration, changePhases, recordChangePhase, recordWorkflow, runTddPhase, sanitizeWorkflowLogFile,
   validateTddEvidence, verifyWorkflowLogFile, migrateTddFingerprint, voidTddCycle, type ChangePhase, type TddPhase,
   attestationSigningPayload, createUnsignedAttestation, githubOidcAudience, verifyEvidenceAttestation,
   mutationDoctor, mutationIdentity, validateMutationEvidence, validateModelCorrespondenceEvidence, within,
@@ -19,7 +21,12 @@ import {
   recordChangeWaiver, recordWorkflowWaiver, recordAllWorkflowWaivers,
   bootstrapRun, bootstrapResume, bootstrapStatus, executeBootstrapFileOperation,
   type BootstrapAuthorityManifest,
+  candidateGateContext, ingestCandidateGateEnvelopes, loadCandidateGateResults,
+  validateCandidateGateSet, type CandidateGateEnvelope,
 } from '../../analysis/src/index.js';
+
+const compatibleWorkflowSanitizationDescription =
+  'Allow incomplete or resumed transcripts without claiming strict terminal proof';
 import { install, pluginInstall, upgradeSkills } from './install.js';
 
 const packageRoot = fileURLToPath(new URL('../../../../', import.meta.url));
@@ -241,8 +248,13 @@ export function createProgram(): Command {
         + `\n  attempted: ${entry.attemptedCommands.join(', ')}`
         + `\n  ${entry.recommendation}`).join('\n'));
     });
-  async function executeGate(options: { root: string; json?: boolean; changed?: boolean; feature?: string }): Promise<void> {
-    const report = await runGate(resolve(options.root), options);
+  async function executeGate(options: {
+    root: string; json?: boolean; changed?: boolean; feature?: string; matrix?: boolean;
+  }): Promise<void> {
+    const report = await runGate(resolve(options.root), {
+      ...options,
+      persistenceMode: options.matrix ? 'matrix' : 'normal',
+    });
     const scopeNote = report.mode === 'feature' ? ` [feature-scoped: ${report.feature}; not the repository-wide gate]` : '';
     output(report, !!options.json, `${report.status.toUpperCase()}${scopeNote}\n${report.checks.map((c) => `${c.status.padEnd(7)} ${c.name}${c.required ? ' [required]' : ' [optional]'}: ${c.summary}`).join('\n')}`);
     if (report.status !== 'pass') process.exitCode = 1;
@@ -250,7 +262,54 @@ export function createProgram(): Command {
   common(program.command('gate').description('Run actual configured commands and deterministic SDD checks'))
     .option('--changed', 'Report changed/impacted files; keep all checks to avoid unsafe skips')
     .option('--feature <name>', 'Restrict requirements/design/trace/tdd/change checks to one feature; diagnostic view only, not a substitute for the repository-wide gate')
+    .addOption(new Option('--matrix').hideHelp())
     .action(executeGate);
+  const candidateGate = program.command('candidate-gate', { hidden: true })
+    .description('Create and ingest candidate-bound GitHub Actions matrix evidence');
+  common(candidateGate.command('context <change-id>'))
+    .requiredOption('--generation <number>', 'Active CHANGE generation')
+    .requiredOption('--commit <sha>', 'Persisted candidate commit')
+    .action(async (changeId: string, options: {
+      root: string; json?: boolean; generation: string; commit: string;
+    }) => {
+      const generation = Number(options.generation);
+      if (!Number.isInteger(generation) || generation < 1) {
+        throw new InvalidArgumentError('--generation must be a positive integer.');
+      }
+      const context = await candidateGateContext(
+        resolve(options.root),
+        changeId,
+        generation,
+        options.commit,
+      );
+      output(context, !!options.json);
+    });
+  common(candidateGate.command('ingest <artifacts...>'))
+    .action(async (artifacts: string[], options: { root: string; json?: boolean }) => {
+      const root = resolve(options.root);
+      const envelopes: CandidateGateEnvelope[] = [];
+      for (const artifact of artifacts) {
+        const value = JSON.parse(await readText(root, pathQuery(root, artifact))) as unknown;
+        if (Array.isArray(value)) envelopes.push(...value as CandidateGateEnvelope[]);
+        else envelopes.push(value as CandidateGateEnvelope);
+      }
+      const records = await ingestCandidateGateEnvelopes(root, envelopes);
+      output({ ingested: records.length, records }, !!options.json, `Ingested ${records.length} candidate gate artifact(s).`);
+    });
+  common(candidateGate.command('validate <change-id>'))
+    .requiredOption('--generation <number>', 'Active CHANGE generation')
+    .requiredOption('--commit <sha>', 'Persisted candidate commit')
+    .action(async (changeId: string, options: {
+      root: string; json?: boolean; generation: string; commit: string;
+    }) => {
+      const generation = Number(options.generation);
+      if (!Number.isInteger(generation) || generation < 1) {
+        throw new InvalidArgumentError('--generation must be a positive integer.');
+      }
+      const root = resolve(options.root);
+      const context = await candidateGateContext(root, changeId, generation, options.commit);
+      result(validateCandidateGateSet(context, await loadCandidateGateResults(root)), !!options.json);
+    });
   const config = program.command('config').description('Inspect and validate .musubix/config.json');
   common(config.command('lint')).description('Report configured commands whose args reference nonexistent repository paths')
     .action(async (options: { root: string; json?: boolean }) => {
@@ -357,8 +416,9 @@ export function createProgram(): Command {
     });
   common(program.command('workflow-sanitize <log> <output-file>').description('Write a privacy-minimized Skill lifecycle transcript'))
     .option('--session-id <uuid>', 'Replace the terminal session ID with a review-safe UUID')
+    .option('--compatible', compatibleWorkflowSanitizationDescription)
     .action(async (log: string, outputFile: string, options: {
-      root: string; json?: boolean; sessionId?: string;
+      root: string; json?: boolean; sessionId?: string; compatible?: boolean;
     }) => {
       const root = resolve(options.root);
       const path = resolve(log);
@@ -373,6 +433,7 @@ export function createProgram(): Command {
         configured.maxEventSkewMs,
         configured.maxTranscriptBytes,
         configured.maxTranscriptLineBytes,
+        options.compatible ? 'compatible' : 'strict',
       );
       output(
         report,
@@ -501,20 +562,46 @@ export function createProgram(): Command {
       + 'Each recorded phase/batch stores both order (the verified, gate-checked logical append sequence from order.json — the only field '
       + 'guaranteed correct and monotonic per change) and recordedAt (an independently captured wall-clock timestamp with no ordering guarantee; '
       + 'gate reports it via CHANGE_RECORDEDAT_OUT_OF_ORDER, a non-blocking warning, when it disagrees with order)'))
-    .requiredOption('--requirement <ids...>', 'Requirement IDs affected by this change')
+    .option('--requirement <ids...>', 'Requirement IDs affected by this change')
     .option('--allow-unchanged', 'Record requirements even if unchanged since impact (defect fixes only)')
+    .option('--reopen', 'Start or resume the next CHANGE generation (impact only)')
     .option('--dry-run', 'Preview the outcome without recording it')
     .action(async (changeId: string, phase: string, options: {
-      root: string; json?: boolean; requirement: string[]; allowUnchanged?: boolean; dryRun?: boolean;
+      root: string; json?: boolean; requirement?: string[]; allowUnchanged?: boolean; reopen?: boolean; dryRun?: boolean;
     }) => {
       if (!changePhases.includes(phase as ChangePhase)) throw new Error(`phase must be one of: ${changePhases.join(', ')}`);
-      const changeOptions: { allowUnchanged?: boolean; dryRun?: boolean } = {};
+      if (!options.reopen && !options.requirement?.length) throw new Error('--requirement is required unless impact uses --reopen.');
+      if (options.reopen && phase !== 'impact') throw new Error('--reopen is accepted only for impact.');
+      const changeOptions: { allowUnchanged?: boolean; reopen?: boolean; dryRun?: boolean } = {};
       if (options.allowUnchanged !== undefined) changeOptions.allowUnchanged = options.allowUnchanged;
+      if (options.reopen !== undefined) changeOptions.reopen = options.reopen;
       if (options.dryRun !== undefined) changeOptions.dryRun = options.dryRun;
-      const evidence = await recordChangePhase(resolve(options.root), changeId, phase as ChangePhase, options.requirement, changeOptions);
+      const evidence = await recordChangePhase(
+        resolve(options.root),
+        changeId,
+        phase as ChangePhase,
+        options.requirement ?? [],
+        changeOptions,
+      );
       output(evidence, !!options.json, options.dryRun ? `Would record ${changeId}:${phase}.` : `Recorded ${changeId}:${phase}.`);
     });
   const change = program.command('change').description('Change chronology and waiver evidence');
+  const generation = change.command('generation').description('Manage versioned CHANGE generations');
+  common(generation.command('abandon <change-id>'))
+    .requiredOption('--reason <text>', 'Reason the incomplete generation is being abandoned')
+    .requiredOption('--approver <name>', 'Human approver authorizing abandonment')
+    .option('--confirm', 'Confirm the abandonment is reviewed and intended', false)
+    .action(async (changeId: string, options: {
+      root: string; json?: boolean; reason: string; approver: string; confirm?: boolean;
+    }) => {
+      if (!options.confirm) throw new Error('Generation abandonment requires --confirm.');
+      const evidence = await abandonPersistedChangeGeneration(resolve(options.root), changeId, {
+        reason: options.reason,
+        approver: options.approver,
+        confirm: true,
+      });
+      output(evidence, !!options.json, `Abandoned the active generation for ${changeId}.`);
+    });
   const waiver = change.command('waiver').description('Record an audited, bounded downgrade of a recording-order-debt diagnostic');
   common(waiver.command('record <change-id> <code>')
     .description('Downgrade one currently-present waivable diagnostic from error to warning, as an appended, hash-chained record'))
@@ -724,6 +811,10 @@ export function createProgram(): Command {
   return program;
 }
 
+/** @id CODE-M5-CLI-ERROR-ENVELOPE-001
+ * @implements REQ-M5-COMPAT-003
+ * @design DES-M5-002
+ */
 async function main(): Promise<void> {
   try {
     await createProgram().parseAsync(process.argv);
@@ -736,7 +827,23 @@ async function main(): Promise<void> {
   }
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+/** @id CODE-M5-CLI-BIN-ENTRY-001
+ * @implements REQ-M5-COMPAT-005 REQ-M5-COMPAT-006
+ * @design DES-M5-006
+ */
+function executableMatchesModule(entry: string, modulePath: string): boolean {
+  let executable: string;
+  try {
+    executable = realpathSync(entry);
+  } catch {
+    executable = resolve(entry);
+  }
+  return process.platform === 'win32'
+    ? executable.toLowerCase() === modulePath.toLowerCase()
+    : executable === modulePath;
+}
+
+if (process.argv[1] && executableMatchesModule(process.argv[1], fileURLToPath(import.meta.url))) {
   await main();
 }
 import { readFile, stat } from 'node:fs/promises';

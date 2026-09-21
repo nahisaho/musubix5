@@ -24,7 +24,7 @@ to both report and fix now, register the issue first, then hand off to
 2. Body must include, as separate sections:
    - **Summary**: what is wrong, one or two sentences.
    - **Reproduction**: exact command(s), input file/config content, and
-     environment (musubix3 version, adapter, OS) needed to reproduce.
+     environment (musubix5 version, adapter, OS) needed to reproduce.
    - **Actual vs Expected**: observed output vs. what should happen.
    - **Impact**: who/what this blocks (false positive, silent failure,
      onboarding confusion, severity estimate).

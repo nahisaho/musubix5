@@ -41,12 +41,32 @@ export interface ChangeTddBatch {
   green?: ChangePhaseEvidence;
 }
 
-export interface ChangeRecord {
-  changeId: string;
+export interface ChangeGenerationAbandonment {
+  reason: string;
+  approver: string;
+  abandonedAt: string;
+}
+
+export interface ChangeGenerationHistory {
+  generation: number;
+  status: 'superseded' | 'abandoned';
   requirementIds: string[];
   phases: Partial<Record<ChangePhase, ChangePhaseEvidence>>;
   qualityHistory?: ChangePhaseEvidence[];
   tddBatches?: ChangeTddBatch[];
+  abandonment?: ChangeGenerationAbandonment;
+}
+
+export interface ChangeRecord {
+  changeId: string;
+  generation?: number;
+  activeGeneration?: number | null;
+  requirementIds: string[];
+  phases: Partial<Record<ChangePhase, ChangePhaseEvidence>>;
+  qualityHistory?: ChangePhaseEvidence[];
+  tddBatches?: ChangeTddBatch[];
+  generationHistory?: ChangeGenerationHistory[];
+  abandonment?: ChangeGenerationAbandonment;
 }
 
 export interface ChangeEvidence {
@@ -61,6 +81,124 @@ export interface ChangeCompleteness {
   requirements: number;
   completeRequirements: number;
   valid: boolean;
+}
+
+export interface ChangeGenerationSummary {
+  changeId: string;
+  activeGeneration: number | null;
+  generations: Array<{
+    generation: number;
+    status: 'active' | 'superseded' | 'abandoned';
+  }>;
+}
+
+/** @id CODE-M5-LIFECYCLE-005
+ * @implements REQ-M5-LIFECYCLE-005
+ * @design DES-M5-004 DES-M5-005
+ */
+export function activeChangeGeneration(change: ChangeRecord): number | null {
+  if (change.activeGeneration === null) return null;
+  return change.activeGeneration ?? change.generation ?? 1;
+}
+
+export function generationOrderPhase(generation: number, phase: string, scopeId?: string): string {
+  if (!Number.isInteger(generation) || generation < 1) {
+    throw new Error('CHANGE_GENERATION_PHASE: generation must be a positive integer.');
+  }
+  if (!phase.trim()) {
+    throw new Error('CHANGE_GENERATION_PHASE: phase must be nonblank.');
+  }
+  return `g${generation}:${phase}${scopeId ? `:${scopeId}` : ''}`;
+}
+
+function normalizedRequirementIds(requirementIds: string[]): string[] {
+  return [...new Set(requirementIds)].sort();
+}
+
+function sameRequirementIds(left: string[], right: string[]): boolean {
+  return JSON.stringify(normalizedRequirementIds(left)) === JSON.stringify(normalizedRequirementIds(right));
+}
+
+function snapshotGeneration(
+  change: ChangeRecord,
+  generation: number,
+  status: ChangeGenerationHistory['status'],
+): ChangeGenerationHistory {
+  return {
+    generation,
+    status,
+    requirementIds: [...change.requirementIds],
+    phases: change.phases,
+    ...(change.qualityHistory ? { qualityHistory: change.qualityHistory } : {}),
+    ...(change.tddBatches ? { tddBatches: change.tddBatches } : {}),
+    ...(change.abandonment ? { abandonment: change.abandonment } : {}),
+  };
+}
+
+export function reopenChangeGeneration(
+  change: ChangeRecord,
+  requirementIds: string[],
+): { generation: number; resumed: boolean } {
+  const active = activeChangeGeneration(change);
+  if (active !== null && !change.phases.quality) {
+    if (!sameRequirementIds(change.requirementIds, requirementIds)) {
+      throw new Error('CHANGE_GENERATION_REQUIREMENTS: requirement IDs must exactly match the CHANGE document.');
+    }
+    const phaseNames = Object.keys(change.phases);
+    if (change.phases.impact && phaseNames.length === 1) {
+      return { generation: active, resumed: true };
+    }
+    throw new Error('CHANGE_GENERATION_PHASE: an incomplete generation must be abandoned before reopen.');
+  }
+  const history = change.generationHistory ??= [];
+  const priorGeneration = active ?? change.generation ?? 1;
+  history.push(snapshotGeneration(change, priorGeneration, active === null ? 'abandoned' : 'superseded'));
+  const generation = Math.max(priorGeneration, ...history.map((entry) => entry.generation)) + 1;
+  change.generation = generation;
+  change.activeGeneration = generation;
+  change.requirementIds = normalizedRequirementIds(requirementIds);
+  change.phases = {};
+  delete change.qualityHistory;
+  delete change.tddBatches;
+  delete change.abandonment;
+  return { generation, resumed: false };
+}
+
+export function abandonChangeGeneration(
+  change: ChangeRecord,
+  authority: { reason: string; approver: string; confirm: boolean },
+): void {
+  if (!authority.confirm || !authority.reason.trim() || !authority.approver.trim()) {
+    throw new Error('CLI_ERROR: generation abandon requires nonblank --reason, --approver, and --confirm.');
+  }
+  if (activeChangeGeneration(change) === null || change.phases.quality) {
+    throw new Error('CHANGE_GENERATION_PHASE: only an incomplete active generation can be abandoned.');
+  }
+  change.abandonment = {
+    reason: authority.reason.trim(),
+    approver: authority.approver.trim(),
+    abandonedAt: new Date().toISOString(),
+  };
+  change.activeGeneration = null;
+}
+
+export function summarizeChangeGeneration(change: ChangeRecord): ChangeGenerationSummary {
+  const active = activeChangeGeneration(change);
+  const generations: ChangeGenerationSummary['generations'] = (change.generationHistory ?? [])
+    .map((entry) => ({ generation: entry.generation, status: entry.status }));
+  const currentGeneration = change.generation ?? 1;
+  if (!generations.some((entry) => entry.generation === currentGeneration)) {
+    generations.push({
+      generation: currentGeneration,
+      status: active === null ? 'abandoned' : 'active',
+    });
+  }
+  generations.sort((left, right) => left.generation - right.generation);
+  return {
+    changeId: change.changeId,
+    activeGeneration: active,
+    generations,
+  };
 }
 
 export async function loadChangeEvidence(root: string): Promise<ChangeEvidence | null> {
@@ -186,6 +324,7 @@ export function requirementsUnchangedCondition(change: ChangeRecord): boolean {
 }
 
 export function designUnchangedCondition(change: ChangeRecord): boolean {
+  if ((change.generation ?? 1) > 1) return false;
   const requirements = change.phases.requirements;
   const design = change.phases.design;
   return !!requirements && !!design && requirements.fingerprints.design === design.fingerprints.design;

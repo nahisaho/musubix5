@@ -5,6 +5,8 @@ export interface WorkflowEvent {
   skill: string;
   version: string;
   provenance?: 'self-reported';
+  changeId?: string;
+  generation?: number;
   phase: string;
   status: 'completed' | 'skipped' | 'failed';
   reason?: string;
@@ -47,10 +49,17 @@ export interface WorkflowVerificationOptions extends WorkflowConfig {
 }
 
 export interface WorkflowSanitizationResult {
+  mode: 'compatible' | 'strict';
+  rawSourceSha256: string;
+  safeTranscriptSha256: string;
+  sourceBytes: number;
+  safeBytes: number;
   inputEvents: number;
   outputEvents: number;
+  eligibleEvents: number;
+  retainedEligibleEvents: number;
   skillInvocations: number;
-  sessionId: string;
+  sessionId?: string;
   sessionReplaced: boolean;
   outputPath: string;
 }

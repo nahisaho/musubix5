@@ -3,7 +3,7 @@ import {
   error, validateConstitution, validateDesign, validateRequirements, type Diagnostic,
 } from '../../domain/src/index.js';
 import type { ApprovalConfig } from './config.js';
-import { loadApprovalProjectionConfig } from './config.js';
+import { loadApprovalProjectionConfig, materializeExecutionPolicy } from './config.js';
 import { canonicalBytes, sha256 } from './canonical.js';
 import { exists, files, readText, snapshot, within } from './files.js';
 import {
@@ -13,9 +13,11 @@ import {
 import {
   buildReleaseCandidateContent, releaseExclusionIdentity, type ReleaseExclusion,
 } from './release-manifest.js';
+import { requireCandidateGateSet } from './candidate-gate.js';
 import {
   resolveNormativeArtifacts, snapshotNormativeArtifacts,
 } from './approval-normative.js';
+import { activeChangeContext } from './change-generation.js';
 
 export {
   domainsConfigured, domainOwning, featureOwningDesignFile, featureOwningRequirement, resolveDomains,
@@ -32,6 +34,7 @@ export interface ApprovalManifest {
   domain?: string;
   features?: string[];
   changeId?: string;
+  generation?: number;
   artifacts: Record<string, string>;
   projection: unknown;
   exclusions: ReleaseExclusion[];
@@ -89,8 +92,10 @@ export async function approvalManifest(
     throw new Error('APPROVAL_DOMAIN_MISMATCH: release approval is repository-wide.');
   }
   let projection: unknown = null;
+  const activeChange = await activeChangeContext(root);
   if (stage !== 'release') {
     const config = await loadApprovalProjectionConfig(root);
+    const projectedConfig = materializeExecutionPolicy(config);
     projection = stage === 'requirements'
       ? { schemaVersion: config.schemaVersion, approval: config.approval }
       : Object.fromEntries([
@@ -105,7 +110,7 @@ export async function approvalManifest(
         'tdd',
         'workflow',
         'attestation',
-      ].map((key) => [key, config[key as keyof typeof config]]));
+      ].map((key) => [key, projectedConfig[key]]));
   }
   if (domain && stage !== 'release') {
     const artifacts = await snapshotNormativeArtifacts(
@@ -116,6 +121,10 @@ export async function approvalManifest(
       schemaVersion: 1 as const,
       stage,
       domain: domain.name,
+      ...(activeChange ? {
+        changeId: activeChange.changeId,
+        generation: activeChange.generation,
+      } : {}),
       artifacts,
       projection,
       exclusions: [],
@@ -128,12 +137,22 @@ export async function approvalManifest(
   }
   if (stage === 'release') {
     const content = await buildReleaseCandidateContent(root, releaseChangeId);
+    const hasChangeEvidence = await exists(within(root, '.musubix/evidence/changes.json'));
+    if (hasChangeEvidence && (!activeChange || activeChange.changeId !== content.changeId)) {
+      throw new Error('CHANGE_GENERATION_INCOMPLETE: release approval requires the matching active CHANGE generation.');
+    }
+    const candidateGate = activeChange
+      ? await requireCandidateGateSet(root, content.changeId, activeChange.generation, content.commit)
+      : null;
     const identity = {
       schemaVersion: 1 as const,
       stage,
       changeId: content.changeId,
+      ...(activeChange?.changeId === content.changeId
+        ? { generation: activeChange.generation }
+        : {}),
       artifacts: content.artifacts,
-      projection: null,
+      projection: candidateGate,
       exclusions: releaseExclusionIdentity(content.exclusions),
     };
     return {
@@ -149,6 +168,10 @@ export async function approvalManifest(
   const identity = {
     schemaVersion: 1 as const,
     stage,
+    ...(activeChange ? {
+      changeId: activeChange.changeId,
+      generation: activeChange.generation,
+    } : {}),
     artifacts,
     projection,
     exclusions: [],
@@ -183,12 +206,19 @@ export async function loadApproval(root: string, stage: ApprovalStage, domain?: 
         || entry.path.includes('\0') || typeof entry.reason !== 'string' || !entry.reason
         || typeof entry.sha256 !== 'string' || !/^[a-f0-9]{64}$/.test(entry.sha256))))
     || (stage === 'release' && (typeof value.changeId !== 'string' || !/^CHANGE-\d+$/.test(value.changeId)))
+    || (value.changeId !== undefined && (!/^CHANGE-\d+$/.test(value.changeId)
+      || !Number.isInteger(value.generation) || Number(value.generation) < 1))
+    || (value.changeId === undefined && value.generation !== undefined)
     || (domain !== undefined && (value.domain !== domain || !Array.isArray(value.features) || value.features.some((f) => typeof f !== 'string')))) {
     throw new Error(`Invalid ${stage} approval evidence.`);
   }
   return value as ApprovalEvidence;
 }
 
+/** @id CODE-M5-APPROVAL-GATE-DIAGNOSTIC-001
+ * @implements REQ-M5-RELEASE-002
+ * @design DES-M5-019
+ */
 export async function validateApprovalStage(
   root: string,
   stage: ApprovalStage,
@@ -212,10 +242,18 @@ export async function validateApprovalStage(
       return { stage, ...(domain ? { domain: domain.name } : {}), required, present, status: 'stale', evidence: null, currentArtifactSha256: current.artifactSha256, diagnostics };
     } catch (manifestCause) {
       const message = manifestCause instanceof Error ? manifestCause.message : String(manifestCause);
-      if (stage !== 'release' || !message.startsWith('APPROVAL_CANDIDATE_UNAVAILABLE:')) {
+      const code = message.split(':', 1)[0]!;
+      const releaseDiagnostic = stage === 'release' && [
+        'APPROVAL_CANDIDATE_UNAVAILABLE',
+        'RELEASE_GATE_EVIDENCE_MISSING',
+        'RELEASE_GATE_EVIDENCE_STALE',
+        'RELEASE_GATE_CANDIDATE_MISMATCH',
+        'RELEASE_CANDIDATE_TREE_MISMATCH',
+      ].includes(code);
+      if (!releaseDiagnostic) {
         throw manifestCause;
       }
-      diagnostics.push(error('APPROVAL_CANDIDATE_UNAVAILABLE', message, path));
+      diagnostics.push(error(code, message, path));
       return {
         stage,
         ...(domain ? { domain: domain.name } : {}),
@@ -226,7 +264,7 @@ export async function validateApprovalStage(
         currentArtifactSha256: sha256(canonicalBytes({
           schemaVersion: 1,
           stage,
-          diagnostic: 'APPROVAL_CANDIDATE_UNAVAILABLE',
+          diagnostic: code,
         })),
         diagnostics,
       };
@@ -238,12 +276,20 @@ export async function validateApprovalStage(
     current = await approvalManifest(root, stage, domain, stage === 'release' ? evidence?.changeId : undefined);
   } catch (cause) {
     const message = cause instanceof Error ? cause.message : String(cause);
-    if (stage !== 'release' || !message.startsWith('APPROVAL_CANDIDATE_UNAVAILABLE:')) throw cause;
-    const diagnostics = [error('APPROVAL_CANDIDATE_UNAVAILABLE', message, path)];
+    const code = message.split(':', 1)[0]!;
+    const releaseDiagnostic = stage === 'release' && [
+      'APPROVAL_CANDIDATE_UNAVAILABLE',
+      'RELEASE_GATE_EVIDENCE_MISSING',
+      'RELEASE_GATE_EVIDENCE_STALE',
+      'RELEASE_GATE_CANDIDATE_MISMATCH',
+      'RELEASE_CANDIDATE_TREE_MISMATCH',
+    ].includes(code);
+    if (!releaseDiagnostic) throw cause;
+    const diagnostics = [error(code, message, path)];
     const diagnosticSha256 = sha256(canonicalBytes({
       schemaVersion: 1,
       stage,
-      diagnostic: 'APPROVAL_CANDIDATE_UNAVAILABLE',
+      diagnostic: code,
     }));
     return {
       stage,

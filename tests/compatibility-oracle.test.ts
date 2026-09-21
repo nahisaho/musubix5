@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it, vi } from 'vitest';
 
 describe('compatibility oracle', () => {
@@ -18,7 +19,7 @@ describe('compatibility oracle', () => {
       validateGovernedDifference,
       verifyExitSemantics,
     } = await import('../packages/analysis/src/compatibility-oracle.js');
-    const repositoryRoot = resolve(new URL('..', import.meta.url).pathname);
+    const repositoryRoot = fileURLToPath(new URL('..', import.meta.url));
     const requirements = readFileSync(
       resolve(repositoryRoot, '.musubix/features/musubix5-clean-foundation/requirements.md'),
       'utf8',

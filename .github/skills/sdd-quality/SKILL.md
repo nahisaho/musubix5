@@ -4,7 +4,7 @@ description: "Use when deciding release readiness from actual checks, measurable
 ---
 # Quality / 品質
 Follow the user's input language. Native review/security review remain separate.
-After the work, run `npx musubix3 workflow-record sdd-quality complete --status
+After the work, run `npx musubix5 workflow-record sdd-quality complete --status
 completed` exactly once.
 1. Inspect config/baseline first. Execute only trusted argument-array commands;
    never edit baseline without independent approval or substitute another CLI.
@@ -18,7 +18,7 @@ completed` exactly once.
    `codeGraph.mode` when unresolved computed module loading must block release,
    and ensure the trusted baseline prevents downgrading it. Configure a
    fresh structured `testReport` for `test-identities`. Do not weaken policy.
-3. Run `npx musubix3 gate --json` or `npx musubix3 gate --changed --json`.
+3. Run `npx musubix5 gate --json` or `npx musubix5 gate --changed --json`.
    `evidence refresh --json` runs the same fail-closed pipeline. If `input-stability` fails,
    inspect its per-path added/modified/deleted diagnostics and stop generators
    or formatters before rerunning. Standard dependency/build directories,

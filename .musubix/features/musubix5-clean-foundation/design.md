@@ -11,6 +11,8 @@ status: approval-pending
 - No `any`, broad catch, silent fallback, or success-shaped failure.
 - Canonical JSON uses sorted object keys, UTF-8, and one trailing LF.
 - Persisted `order`, not wall-clock time, establishes chronology.
+- Every normal record binds an active positive CHANGE generation; legacy
+  generation-less records read as generation 1 without rewriting.
 - Source-of-truth journals are append-only. Mutable JSON files are derived
   projections and never chronology authorities.
 - All stateful operations validate first, acquire the required lease, reserve
@@ -24,15 +26,18 @@ Canonical encoding is UTF-8 JSON with lexicographically sorted object keys, no
 insignificant whitespace, and exactly one trailing LF byte.
 
 ```json
-{"architecture":{"forbidCycles":true,"rules":[]},"attestation":{"githubOidc":{"mode":"off"},"maxAgeSeconds":3600,"maxFutureSkewSeconds":60,"mode":"local","trustedPublicKeys":[]},"codeGraph":{"mode":"compatible"},"commands":[{"args":["run","typecheck"],"command":"npm","name":"typecheck","required":true,"timeoutMs":120000},{"args":["run","build"],"command":"npm","name":"build","required":true,"timeoutMs":120000},{"adapter":"vitest","args":["vitest","run"],"command":"npx","name":"test","required":true,"timeoutMs":180000},{"args":["run","test:compat"],"command":"npm","name":"compatibility","required":true,"timeoutMs":180000},{"args":["run","pack:check"],"command":"npm","name":"pack-check","required":true,"timeoutMs":120000},{"args":["run","pack:smoke"],"command":"npm","name":"pack-smoke","required":true,"timeoutMs":180000}],"formal":{"minModeledFraction":0,"solver":"none","timeoutMs":12000},"mutation":{"mode":"compatible"},"requiredChecks":["requirements","design","constitution","trace","graph","commands"],"schemaVersion":1,"tdd":{"redPreflightCommands":[]},"thresholds":{"design":1,"implementation":1,"tests":1},"workflow":{"maxAgeSeconds":3600,"maxFutureSkewSeconds":60,"mode":"compatible"}}
+{"architecture":{"forbidCycles":true,"rules":[]},"attestation":{"githubOidc":{"mode":"off"},"maxAgeSeconds":3600,"maxFutureSkewSeconds":60,"mode":"local","trustedPublicKeys":[]},"codeGraph":{"mode":"compatible"},"commands":[{"args":["run","typecheck"],"command":"npm","name":"typecheck","required":true,"timeoutMs":120000},{"args":["run","build"],"command":"npm","name":"build","required":true,"timeoutMs":120000},{"adapter":"vitest","args":["vitest","run"],"command":"npx","name":"test","required":true,"timeoutMs":180000},{"args":["run","test:compat"],"command":"npm","name":"compatibility","required":true,"timeoutMs":180000},{"args":["run","pack:check"],"command":"npm","name":"pack-check","required":true,"timeoutMs":120000},{"args":["run","pack:smoke"],"command":"npm","name":"pack-smoke","required":true,"timeoutMs":180000}],"formal":{"minModeledFraction":0,"solver":"none","timeoutMs":12000},"mutation":{"mode":"compatible"},"requiredChecks":["requirements","design","constitution","trace","graph","commands"],"schemaVersion":1,"tdd":{"redPreflightCommands":[]},"thresholds":{"design":1,"implementation":1,"tests":1},"workflow":{"maxAgeSeconds":3600,"maxEventSkewMs":null,"maxFutureSkewSeconds":60,"maxTranscriptBytes":100000000,"maxTranscriptLineBytes":1000000,"mode":"compatible"}}
 ```
 
 SHA-256:
-`a430a78ceb25e57e279ad630ae2a99e6880f164f8a32d0de786b6f4df8a78779`
+`2cfe97816d1cb1681c04136277544aa92f6c6f6bf43a8fffa3b94a28a68400c9`
 
 `qualityProfile` is excluded because the projection contains every effective
 policy field and the profile label has no independent enforcement effect.
-`language` is display-only.
+`language` is display-only. `workflow.maxEventSkewMs: null` canonically means
+that the optional event-skew bound is disabled; the transcript byte limits are
+the fully materialized effective defaults, so explicitly writing those defaults
+does not change this projection.
 
 The musubix5-only orchestration extension is also design-approved. It is
 disabled by default at both repairable boundaries but fixes positive limits
@@ -52,6 +57,36 @@ Enabling verified-auto changes the normative design-controlled digest and
 therefore requires a new design approval before execution; tests exercise
 enabled configurations through explicit approved test manifests.
 
+Candidate-gate artifact transport has a separate design-approved effective
+policy so strengthening remote-runner trust does not alter the existing local
+attestation behavior:
+
+```json
+{"candidateGate":{"attestation":{"githubOidc":{"audience":"https://github.com/nahisaho/musubix5/actions/musubix5-gate","issuer":"https://token.actions.githubusercontent.com","keyBinding":"public-key","mode":"strict","repository":"nahisaho/musubix5","workflow":".github/workflows/candidate-gate.yml"},"maxAgeSeconds":86400,"maxFutureSkewSeconds":60,"mode":"ci-required","repository":"nahisaho/musubix5","trustedPublicKeys":[]}}}
+```
+
+SHA-256:
+`2458362070c8e79d8c776d6e9d53965a41ba5c3a770189562bf2921ef6253ea0`
+
+The GitHub OIDC token binds the repository, workflow, commit, run ID, custom
+audience, and ephemeral Ed25519 public-key digest. The 24-hour matrix-artifact
+freshness window is evaluated independently from the generic one-hour
+attestation window and covers cross-platform execution plus retries; changing
+this policy invalidates the gate fingerprint and requires design reapproval.
+
+The `gate-input-fingerprint-v1.config` value is the following derived canonical
+object. `approval` is the inner `approval` value from the requirements-stage
+projection; `approvalAutomation` and `candidateGate` are the inner values of
+their wrapper blocks; `executionPolicy` is the complete unwrapped execution-
+policy block and carries the single `schemaVersion`.
+
+```json
+{"approval":{"domains":[],"mode":"required"},"approvalAutomation":{"design":{"mode":"manual","producerRepairLimit":3,"repairPlannerBudgetUnits":1000,"reviewerBudgetUnits":1000},"release":{"mode":"manual"},"requirements":{"mode":"manual","producerRepairLimit":3,"repairPlannerBudgetUnits":1000,"reviewerBudgetUnits":1000}},"candidateGate":{"attestation":{"githubOidc":{"audience":"https://github.com/nahisaho/musubix5/actions/musubix5-gate","issuer":"https://token.actions.githubusercontent.com","keyBinding":"public-key","mode":"strict","repository":"nahisaho/musubix5","workflow":".github/workflows/candidate-gate.yml"},"maxAgeSeconds":86400,"maxFutureSkewSeconds":60,"mode":"ci-required","repository":"nahisaho/musubix5","trustedPublicKeys":[]}},"executionPolicy":{"architecture":{"forbidCycles":true,"rules":[]},"attestation":{"githubOidc":{"mode":"off"},"maxAgeSeconds":3600,"maxFutureSkewSeconds":60,"mode":"local","trustedPublicKeys":[]},"codeGraph":{"mode":"compatible"},"commands":[{"args":["run","typecheck"],"command":"npm","name":"typecheck","required":true,"timeoutMs":120000},{"args":["run","build"],"command":"npm","name":"build","required":true,"timeoutMs":120000},{"adapter":"vitest","args":["vitest","run"],"command":"npx","name":"test","required":true,"timeoutMs":180000},{"args":["run","test:compat"],"command":"npm","name":"compatibility","required":true,"timeoutMs":180000},{"args":["run","pack:check"],"command":"npm","name":"pack-check","required":true,"timeoutMs":120000},{"args":["run","pack:smoke"],"command":"npm","name":"pack-smoke","required":true,"timeoutMs":180000}],"formal":{"minModeledFraction":0,"solver":"none","timeoutMs":12000},"mutation":{"mode":"compatible"},"requiredChecks":["requirements","design","constitution","trace","graph","commands"],"schemaVersion":1,"tdd":{"redPreflightCommands":[]},"thresholds":{"design":1,"implementation":1,"tests":1},"workflow":{"maxAgeSeconds":3600,"maxEventSkewMs":null,"maxFutureSkewSeconds":60,"maxTranscriptBytes":100000000,"maxTranscriptLineBytes":1000000,"mode":"compatible"}}}
+```
+
+SHA-256:
+`804c9fa7b32eca979cc44e25f0334effc3abee95f172e6f7d3dbdf1dea9655b6`
+
 ## DES-M5-001: Compatibility oracle adapter
 Responsibilities: Build the pinned musubix3 v0.1.18 source, capture command contracts, execute the approved Node.js and operating-system matrix, normalize only approved package or executable tokens, and compare observable CLI, API, configuration, package, and filesystem behavior.
 Interfaces: `BaselineOracle.acquire()`, `BaselineOracle.capture(invocation)`, `ContractComparator.compare(expected, actual)`.
@@ -64,9 +99,9 @@ Depends-On: DES-M5-003
 Responsibilities: Expose the `musubix5` executable, compatible command hierarchy, public library exports, package assets, and isolated-installation behavior.
 Interfaces: `runCli(argv, environment)`, package exports `./domain`, `./analysis`, `./attestation`.
 Constraints: Only the `musubix5` bin is published; every other intentional difference requires registered governance artifacts; command handlers return typed outcomes mapped centrally to exit codes.
-Requirements: REQ-M5-COMPAT-001 REQ-M5-COMPAT-002 REQ-M5-COMPAT-003 REQ-M5-COMPAT-005 REQ-M5-COMPAT-006 REQ-M5-COMPAT-007 REQ-M5-COMPAT-013
-ADRs: ADR-0002 ADR-0006 ADR-0007
-Depends-On: DES-M5-003 DES-M5-005 DES-M5-006 DES-M5-008 DES-M5-011 DES-M5-013 DES-M5-014 DES-M5-015 DES-M5-016 DES-M5-017
+Requirements: REQ-M5-COMPAT-001 REQ-M5-COMPAT-002 REQ-M5-COMPAT-003 REQ-M5-COMPAT-005 REQ-M5-COMPAT-006 REQ-M5-COMPAT-007 REQ-M5-COMPAT-013 REQ-M5-LIFECYCLE-005
+ADRs: ADR-0002 ADR-0006 ADR-0007 ADR-0010
+Depends-On: DES-M5-003 DES-M5-005 DES-M5-006 DES-M5-008 DES-M5-011 DES-M5-013 DES-M5-014 DES-M5-015 DES-M5-016 DES-M5-017 DES-M5-018 DES-M5-019
 
 ## DES-M5-003: Canonical serialization and identity service
 Responsibilities: Canonicalize typed records, hash bytes, derive repository and candidate identities, verify producer identity, and expose deterministic comparison helpers.
@@ -76,43 +111,43 @@ Requirements: REQ-M5-COMPAT-003 REQ-M5-EVIDENCE-002 REQ-M5-EVIDENCE-003 REQ-M5-E
 ADRs: ADR-0003 ADR-0005
 
 ## DES-M5-004: Ordered journal and lease service
-Responsibilities: Allocate repository-wide order values, serialize stateful writers, maintain fencing tokens, verify journal chains, rebuild projections, diagnose corruption, and recover interrupted writes.
-Interfaces: `withChangeLease(changeId, operation)`, `withOrderLease(operation)`, `allocateOrder()`, `append(record)`, `verifyJournal()`, `rebuildProjection(kind)`, `loadByIdempotencyKey(key)`, `reconcilePending()`.
-Constraints: Authoritative normal and bootstrap journals are tracked under `.musubix/journal`; the repository common Git directory contains only shared leases, scratch files, and the control-worktree locator; stateful writes target the designated control worktree; a fresh clone verifies the tracked chain and seeds the next order from its maximum valid order; duplicate or divergent orders are a non-pass merge diagnostic; atomic directory creation provides lease acquisition; leases use a 30-second TTL and renew every 10 seconds; process-monotonic elapsed time drives renewal while persisted wall-clock deadlines are used only for liveness takeover and never chronology; every commit verifies the latest fencing token; writes use create-new temporary files and platform-safe atomic replacement without assuming directory fsync support on Windows.
-Requirements: REQ-M5-LIFECYCLE-002 REQ-M5-LIFECYCLE-003 REQ-M5-LIFECYCLE-004 REQ-M5-EVIDENCE-005
-ADRs: ADR-0003
+Responsibilities: Allocate repository-wide order values, serialize stateful writers, maintain fencing tokens, verify journal chains, rebuild projections, diagnose corruption, recover interrupted writes, and persist generation-qualified CHANGE records.
+Interfaces: `withChangeLease(changeId, operation)`, `withOrderLease(operation)`, `allocateOrder()`, `append(record)`, `verifyJournal()`, `rebuildProjection(kind)`, `loadByIdempotencyKey(key)`, `reconcilePending()`, `generationOrderKey(changeId, generation, phase, scopeId?)`.
+Constraints: Authoritative normal and bootstrap journals are tracked under `.musubix/journal`; the repository common Git directory contains only shared leases, scratch files, and the control-worktree locator; stateful writes target the designated control worktree; a fresh clone verifies the tracked chain and seeds the next order from its maximum valid order; new CHANGE records use `g<N>` order keys while legacy unqualified keys read as generation 1; duplicate or divergent orders are a non-pass merge diagnostic; atomic directory creation provides lease acquisition; leases use a 30-second TTL and renew every 10 seconds; process-monotonic elapsed time drives renewal while persisted wall-clock deadlines are used only for liveness takeover and never chronology; every commit verifies the latest fencing token; writes use create-new temporary files and platform-safe atomic replacement without assuming directory fsync support on Windows.
+Requirements: REQ-M5-LIFECYCLE-002 REQ-M5-LIFECYCLE-003 REQ-M5-LIFECYCLE-004 REQ-M5-LIFECYCLE-005 REQ-M5-EVIDENCE-005
+ADRs: ADR-0003 ADR-0010
 Depends-On: DES-M5-003
 
 ## DES-M5-005: Lifecycle state machine
-Responsibilities: Enforce predecessor rules, persist phase transitions, reject invalid transitions, and expose resumable CHANGE status.
-Interfaces: `transition(changeId, requestedPhase, evidenceHeads)`, `status(changeId)`, `resume(invocationId)`.
-Constraints: A transition commits only after validation and required evidence checks; optional Refactor occurs only after Green; unsupported formal obligations are classified without proof credit; stale states retain the last completed phase and a stale dependency set until re-entry validation succeeds.
-Requirements: REQ-M5-LIFECYCLE-001 REQ-M5-LIFECYCLE-002 REQ-M5-LIFECYCLE-003 REQ-M5-QUALITY-002
-ADRs: ADR-0003 ADR-0005
+Responsibilities: Enforce predecessor rules, create/resume/abandon versioned CHANGE generations, persist phase transitions, reject cross-generation evidence, and expose resumable CHANGE status.
+Interfaces: `transition(changeId, generation, requestedPhase, evidenceHeads)`, `reopen(changeId, requirementIds?, idempotencyKey): { generation, resumed }`, `abandon(changeId, { reason, approver, confirm })`, `activeGeneration(changeId)`, `status(changeId)`, `resume(invocationId)`.
+Constraints: A transition commits only after validation and required evidence checks; reopen is lease-bound and idempotent, starts only at impact, resolves the exact current CHANGE requirement set, creates qualified order keys, and owns the cross-generation unchanged-fingerprint exemption while preserving `--allow-unchanged` inside a generation; every later transition revalidates the CHANGE requirement set and emits `CHANGE_GENERATION_REQUIREMENTS` on drift; abandoning requires nonblank reason/approver and confirmation, leaves no active generation, and permits only reopen; the greatest non-abandoned generation is active; optional Refactor occurs only after Green; unsupported formal obligations are classified without proof credit; stale states retain superseded history and re-enter only through the approval cascade or a new generation.
+Requirements: REQ-M5-LIFECYCLE-001 REQ-M5-LIFECYCLE-002 REQ-M5-LIFECYCLE-003 REQ-M5-LIFECYCLE-005 REQ-M5-QUALITY-002
+ADRs: ADR-0003 ADR-0005 ADR-0010
 Depends-On: DES-M5-003 DES-M5-004 DES-M5-007
 
 ## DES-M5-006: Approval manifest service
-Responsibilities: Resolve domain-scoped normative paths and effective configuration projections, read release blobs from an immutable candidate commit, classify every included or excluded path, produce canonical schema-v1 manifests, record exact-hash approvals, and propagate supersession.
+Responsibilities: Resolve domain-scoped normative paths and effective configuration projections, bind CHANGE generation, read release blobs from an immutable candidate commit, bind candidate gate projection, classify every included or excluded path, produce canonical schema-v1 manifests, record exact-hash approvals, and propagate supersession.
 Interfaces: `prepareApproval(stage, domain?)`, `recordApproval(input)`, `validateApprovals()`, `supersedeFrom(change)`.
-Constraints: Requirements and design use `approval-normative-path-set-v1` and effective defaulted projections; release is domain-less, resolves the active CHANGE binding internally, and obtains its persisted immutable commit, typed Git entries, and blob bytes from DES-M5-012 under `release-candidate-tree-v1`, never from caller-selected identities or mutable worktree bytes. Blob hashing uses DES-M5-003 `sha256(bytes)`; symbolic-link and Gitlink classification uses only tree-derived mode and object-type data. `approval-manifest-schema-v1` contains exactly `schemaVersion`, `stage`, optional `domain`, optional `changeId`, `artifacts`, `projection`, and `exclusions`; `artifacts` binds only included raw blob hashes, `exclusions` binds only path/reason pairs, displayed excluded hashes remain outside the aggregate, and NFC UTF-8 path byte order overrides generic object-key order for path-keyed data. Canonical serialization, domain rules, exclusion precedence, and all `APPROVAL_*` diagnostics follow REQ-M5-APPROVAL-007 and its three versioned specifications. Both release approval destinations are excluded producer-independently to avoid self-reference; manual confirmation is mandatory; bootstrap approvals authorize development only and native schema-v1 approval is required before release.
-Requirements: REQ-M5-APPROVAL-001 REQ-M5-APPROVAL-002 REQ-M5-APPROVAL-007 REQ-M5-APPROVAL-008 REQ-M5-APPROVAL-009 REQ-M5-COMPAT-013
-ADRs: ADR-0002 ADR-0004 ADR-0008
-Depends-On: DES-M5-003 DES-M5-004 DES-M5-007 DES-M5-012
+Constraints: Requirements and design use `approval-normative-path-set-v1`, active `changeId` plus generation, and effective defaulted projections; no active generation rejects preparation, validation, and recording. An incomplete active generation permits requirements/design approval but release preparation/recording fails with `CHANGE_GENERATION_INCOMPLETE`. Release is domain-less, resolves active CHANGE/generation internally, obtains its persisted immutable commit, typed Git entries, and blob bytes from DES-M5-012, and obtains the candidate-bound `repositoryId`, `candidateCommit`, and `gateInputFingerprint` projection from DES-M5-019, never from caller-selected identities or mutable worktree bytes. Blob hashing uses DES-M5-003 `sha256(bytes)`; symbolic-link and Gitlink classification uses only tree-derived mode and object-type data. `approval-manifest-schema-v1` contains exactly `schemaVersion`, `stage`, optional `domain`, optional `changeId`, optional `generation`, `artifacts`, `projection`, and `exclusions`; `artifacts` binds only included raw blob hashes, `exclusions` binds only path/reason pairs, displayed excluded hashes remain outside the aggregate, and NFC UTF-8 path byte order overrides generic object-key order for path-keyed data. Canonical serialization, generation rules, domain rules, exclusion precedence, and all diagnostics follow REQ-M5-APPROVAL-007. Both release approval destinations are excluded producer-independently; manual confirmation is mandatory; bootstrap approvals authorize development only and generation-bound native approval is required before release.
+Requirements: REQ-M5-APPROVAL-001 REQ-M5-APPROVAL-002 REQ-M5-APPROVAL-007 REQ-M5-APPROVAL-008 REQ-M5-APPROVAL-009 REQ-M5-COMPAT-013 REQ-M5-LIFECYCLE-005 REQ-M5-RELEASE-002
+ADRs: ADR-0002 ADR-0004 ADR-0008 ADR-0010
+Depends-On: DES-M5-003 DES-M5-004 DES-M5-005 DES-M5-007 DES-M5-012 DES-M5-019
 
 ## DES-M5-007: Evidence registry
-Responsibilities: Validate evidence schemas, ownership, producer and input bindings, dependency heads, currency, status taxonomy, and derived projections.
-Interfaces: `appendEvidence(kind, record)`, `currentEvidence(query)`, `classifyCurrency(record, context)`, `project(kind)`.
-Constraints: Normative specifications are never generated evidence; foreign, stale, skipped, unsupported, flaky, waived, failed, or superseded records do not become pass.
-Requirements: REQ-M5-EVIDENCE-001 REQ-M5-EVIDENCE-002 REQ-M5-EVIDENCE-003 REQ-M5-EVIDENCE-004 REQ-M5-EVIDENCE-005 REQ-M5-WAIVER-001
-ADRs: ADR-0003 ADR-0005
+Responsibilities: Validate evidence schemas, CHANGE generation, ownership, producer and input bindings, dependency heads, currency, status taxonomy, and derived projections.
+Interfaces: `appendEvidence(kind, record)`, `currentEvidence(query)`, `classifyCurrency(record, context)`, `project(kind)`, `bindGeneration(record, activeGeneration)`.
+Constraints: Every normal evidence kind binds the active generation; legacy missing generation reads as generation 1; bootstrap remains separate; abandoned or superseded generations never satisfy current evidence; normative specifications are never generated evidence; foreign, stale, skipped, unsupported, flaky, waived, failed, or superseded records do not become pass.
+Requirements: REQ-M5-EVIDENCE-001 REQ-M5-EVIDENCE-002 REQ-M5-EVIDENCE-003 REQ-M5-EVIDENCE-004 REQ-M5-EVIDENCE-005 REQ-M5-LIFECYCLE-005 REQ-M5-WAIVER-001
+ADRs: ADR-0003 ADR-0005 ADR-0010
 Depends-On: DES-M5-003 DES-M5-004
 
 ## DES-M5-008: Approval boundary coordinator
 Responsibilities: Coordinate producer output, Reviewer execution, duplicate-manifest detection, bounded repair, durable attempt, nonce, and repair counters, terminal reasons, and manual-boundary handoff.
-Interfaces: `evaluateBoundary(boundaryKey, manifest)`, `resumeBoundary(pendingId)`, `classifyFinding(finding)`.
-Constraints: Verified-auto is explicit opt-in for requirements or design only; release remains manual; effective `approvalAutomation` configuration must match the separately design-approved extension digest or execution fails closed; repair identity is boundary key plus rejected ordinal; duplicate rejection and repair exhaustion terminate deterministically; counters increment only in the idempotent terminal commit for the bound pending invocation.
-Requirements: REQ-M5-APPROVAL-003 REQ-M5-APPROVAL-004 REQ-M5-APPROVAL-005 REQ-M5-APPROVAL-006
-ADRs: ADR-0004 ADR-0009
+Interfaces: `evaluateBoundary(changeId, generation, boundaryKey, manifest)`, `resumeBoundary(pendingId)`, `classifyFinding(finding)`.
+Constraints: Verified-auto is explicit opt-in for requirements or design only; release remains manual; effective `approvalAutomation` configuration must match the separately design-approved extension digest or execution fails closed; the durable boundary key includes CHANGE and active generation, repair identity adds rejected ordinal, and attempt/repair/nonce counters plus rejected-digest history never cross generations; duplicate rejection and repair exhaustion terminate deterministically; counters increment only in the idempotent terminal commit for the bound pending invocation.
+Requirements: REQ-M5-APPROVAL-003 REQ-M5-APPROVAL-004 REQ-M5-APPROVAL-005 REQ-M5-APPROVAL-006 REQ-M5-LIFECYCLE-005
+ADRs: ADR-0004 ADR-0009 ADR-0010
 Depends-On: DES-M5-004 DES-M5-006 DES-M5-009 DES-M5-010
 
 ## DES-M5-009: Budget ledger
@@ -133,24 +168,24 @@ Depends-On: DES-M5-003 DES-M5-004 DES-M5-009
 
 ## DES-M5-011: TDD cycle ledger
 Responsibilities: Execute configured test adapters, validate authoritative TEST IDs, record Red/Green/Refactor observations, separate batch scopes, and resolve canonical coverage.
-Interfaces: `recordRed(input)`, `recordImplementation(changeRecord)`, `recordGreen(input)`, `recordRefactor(input)`, `selectCurrentCycle(requirementId)`.
-Constraints: Red and Green come from `tdd` commands; Implementation comes from the matching `change-record <change-id> implementation` checkpoint; all three bind one requirement batch and candidate lineage with strictly increasing order; Refactor follows current Green; legacy full-set and requirement batches never merge.
-Requirements: REQ-M5-TDD-001 REQ-M5-TDD-002 REQ-M5-TDD-003 REQ-M5-TDD-004
-ADRs: ADR-0005
+Interfaces: `recordRed(input)`, `recordImplementation(changeRecord)`, `recordGreen(input)`, `recordRefactor(input)`, `selectCurrentCycle(generation, requirementId)`.
+Constraints: Red and Green come from `tdd` commands; Implementation comes from the matching generation-bound `change-record` checkpoint; all three bind one generation, requirement batch, and candidate lineage with strictly increasing order; selection never crosses generations; Refactor follows current Green; legacy full-set and requirement batches never merge.
+Requirements: REQ-M5-TDD-001 REQ-M5-TDD-002 REQ-M5-TDD-003 REQ-M5-TDD-004 REQ-M5-LIFECYCLE-005
+ADRs: ADR-0005 ADR-0010
 Depends-On: DES-M5-003 DES-M5-004 DES-M5-007
 
 ## DES-M5-012: Workspace manager
 Responsibilities: Create and identify baseline, candidate, and QA workspaces; preserve unrelated dirty paths; persist the active CHANGE binding and immutable candidate snapshot commit; enumerate candidate Git entries without reading the worktree; track generated-output ownership; and recover rejected candidates.
-Interfaces: `captureBaseline()`, `createCandidate(changeId)`, `createQa(candidateId)`, `persistCandidateSnapshot(changeId, commit)`, `resolveCandidateCommit(changeId)`, `listCandidateEntries(commit): { rawPath, nfcPath, objectId, gitMode, objectType }[]`, `readCandidateBlob(commit, objectId)`, `collectOwnedChanges(changeId)`, `recover(candidateId)`.
-Constraints: Candidate work requires an immutable baseline commit; one CHANGE owns one branch or worktree; byte, mode, staged, unstaged, deleted, and untracked identities are preserved. The workspace manager accepts a snapshot commit only after verifying repository identity and reachability from that CHANGE's candidate branch head; failure is `APPROVAL_CANDIDATE_UNAVAILABLE`. Snapshot selection is persisted as an ordered journal record, is immutable for its approval attempt, and selecting a different verified snapshot supersedes the prior release manifest and approval. Entry enumeration and blob reads address immutable Git objects and never fall back to worktree paths.
-Requirements: REQ-M5-WORKTREE-001 REQ-M5-WORKTREE-002 REQ-M5-WORKTREE-003 REQ-M5-WORKTREE-004
-ADRs: ADR-0006
+Interfaces: `captureBaseline()`, `createCandidate(changeId)`, `createQa(candidateId, matrixJob)`, `persistCandidateSnapshot(changeId, generation, commit)`, `resolveCandidateCommit(changeId, generation)`, `listCandidateEntries(commit): { rawPath, nfcPath, objectId, gitMode, objectType }[]`, `readCandidateBlob(commit, objectId)`, `compareTrackedTree(workspace, commit, phase: 'pre' | 'post')`, `collectOwnedChanges(changeId)`, `recover(candidateId)`.
+Constraints: Candidate work requires an immutable baseline commit; one CHANGE owns one branch or worktree; byte, mode, staged, unstaged, deleted, and untracked identities are preserved. The workspace manager accepts a snapshot commit only after verifying repository identity and reachability from that CHANGE's candidate branch head; failure is `APPROVAL_CANDIDATE_UNAVAILABLE`. Snapshot selection is generation-bound and persisted as an ordered journal record; selecting a different verified snapshot supersedes the prior release manifest and approval. QA workspaces disable checkout content conversion and smudge/clean filters; tracked comparison refreshes the index and compares Git object IDs rather than worktree byte hashes. Pre-gate comparison permits no tracked differences; post-gate comparison derives its allow-list internally from the closed `generated-trace` and `gate-self-reference` patterns and otherwise emits `RELEASE_CANDIDATE_TREE_MISMATCH`; ignored/untracked caches are outside comparison. Entry enumeration and blob reads address immutable Git objects and never fall back to worktree paths.
+Requirements: REQ-M5-WORKTREE-001 REQ-M5-WORKTREE-002 REQ-M5-WORKTREE-003 REQ-M5-WORKTREE-004 REQ-M5-RELEASE-002
+ADRs: ADR-0006 ADR-0010
 Depends-On: DES-M5-003 DES-M5-004 DES-M5-007
 
 ## DES-M5-013: Bootstrap runner
 Responsibilities: Start independently of normal orchestrator state, validate explicit authority, execute bounded operations in a candidate workspace, and persist bootstrap history in bootstrap-scoped ledgers.
-Interfaces: `bootstrapRun(manifest)`, `bootstrapResume(runId)`, `bootstrapStatus(runId)`, `requestNormalIngestion(runId)`.
-Constraints: Evidence and budget services are parameterized by an explicit store root; bootstrap always receives the bootstrap root; the normal evidence registry rejects bootstrap producer identity; no implicit invocation; no writes to normal approvals or mandatory evidence; no readiness, publish, tag, or push authority.
+Interfaces: Internal `bootstrapRun(manifest)`, `bootstrapResume(runId)`, `bootstrapStatus(runId)`, `requestNormalIngestion(runId)` entry points, invoked by repository-local `scripts/musubix5-bootstrap.mjs`.
+Constraints: The launcher is excluded by the package `files` allow-list, verified absent by `pack:check` and `pack:smoke`, and never routes through `musubix5` argv parsing, completion, root help, command help, `help [command]`, or unknown-command/usage-error handling. Evidence and budget services are parameterized by an explicit store root; bootstrap always receives the bootstrap root; the normal evidence registry rejects bootstrap producer identity; no implicit invocation; no writes to normal approvals or mandatory evidence; no readiness, publish, tag, or push authority.
 Requirements: REQ-M5-BOOTSTRAP-001 REQ-M5-BOOTSTRAP-002 REQ-M5-BOOTSTRAP-003 REQ-M5-BOOTSTRAP-004
 ADRs: ADR-0004 ADR-0006
 Depends-On: DES-M5-003 DES-M5-004 DES-M5-007 DES-M5-009 DES-M5-012
@@ -158,26 +193,26 @@ Depends-On: DES-M5-003 DES-M5-004 DES-M5-007 DES-M5-009 DES-M5-012
 ## DES-M5-014: Analysis adapters
 Responsibilities: Provide compatible requirements/design validation, trace, graph, formal, mutation, correspondence, workflow, attestation, and knowledge operations.
 Interfaces: Compatibility-preserving domain and analysis exports plus CLI handlers for each inventoried command.
-Constraints: Formal results distinguish modeled pass, modeled fail, unsupported, and solver error; generated artifacts use the evidence registry and cannot mutate normative inputs.
-Requirements: REQ-M5-COMPAT-001 REQ-M5-COMPAT-003 REQ-M5-COMPAT-004 REQ-M5-QUALITY-002 REQ-M5-QUALITY-003
-ADRs: ADR-0002 ADR-0005 ADR-0007
-Depends-On: DES-M5-003 DES-M5-007
+Constraints: Formal results distinguish modeled pass, modeled fail, unsupported, and solver error; generated artifacts use the evidence registry and cannot mutate normative inputs; workflow CLI handlers delegate sanitization and reconciliation to DES-M5-018. In DES-M5-015 matrix mode, trace, graph, knowledge, formal, mutation, and correspondence intermediates are redirected to ignored scratch storage and never write tracked `.musubix/evidence/{trace,graph,knowledge}` or other tracked cache paths; only the closed generated-trace/gate-self-reference paths may differ after execution.
+Requirements: REQ-M5-COMPAT-001 REQ-M5-COMPAT-003 REQ-M5-COMPAT-004 REQ-M5-COMPAT-013 REQ-M5-QUALITY-002 REQ-M5-QUALITY-003
+ADRs: ADR-0002 ADR-0005 ADR-0007 ADR-0010
+Depends-On: DES-M5-003 DES-M5-007 DES-M5-018
 
 ## DES-M5-015: Quality and readiness engine
-Responsibilities: Run required commands and deterministic checks, classify every evidence state, aggregate readiness, and expose compatible gate/status JSON.
-Interfaces: `runGate(scope)`, `getStatus(scope)`, `refreshEvidence(scope)`.
-Constraints: Required commands cannot be empty; `gate` returns exit 1 for non-pass while `status` preserves exit 0; configuration cannot remove mandatory evidence kinds.
-Requirements: REQ-M5-EVIDENCE-004 REQ-M5-QUALITY-001 REQ-M5-QUALITY-002 REQ-M5-QUALITY-003 REQ-M5-QUALITY-004 REQ-M5-QUALITY-005
-ADRs: ADR-0005 ADR-0007 ADR-0009
+Responsibilities: Run required commands and deterministic checks, classify every generation-bound evidence state, aggregate readiness, and expose compatible gate/status JSON.
+Interfaces: `runGate(scope, persistenceMode?)`, `getStatus(scope)`, `refreshEvidence(scope)`, `candidateGateStatus(changeId, generation)`.
+Constraints: Required commands cannot be empty; only the active generation contributes; no active generation or an active generation without terminal quality produces `CHANGE_GENERATION_INCOMPLETE`, gate exit 1, status exit 0, and `ready: false`, without blocking requirements/design approval; `CHANGE_GENERATION_REQUIREMENTS` is re-evaluated on every status/gate call; configuration cannot remove mandatory evidence kinds. Normal mode journals under CHANGE/order leases. Matrix mode is explicitly non-journaling, acquires no shared repository lease, writes its authoritative canonical result artifact outside the QA worktree, and keeps any informational caches in ignored scratch storage; only later DES-M5-019 control-worktree ingestion creates normal evidence. Release readiness reads candidate matrix records only through DES-M5-007 projections, preventing an ESM import cycle with DES-M5-019.
+Requirements: REQ-M5-EVIDENCE-004 REQ-M5-LIFECYCLE-005 REQ-M5-QUALITY-001 REQ-M5-QUALITY-002 REQ-M5-QUALITY-003 REQ-M5-QUALITY-004 REQ-M5-QUALITY-005 REQ-M5-RELEASE-002
+ADRs: ADR-0005 ADR-0007 ADR-0009 ADR-0010
 Depends-On: DES-M5-005 DES-M5-007 DES-M5-011 DES-M5-014
 
 ## DES-M5-016: Release operation guard
 Responsibilities: Separate release approval from publish, tag, and push authorization and bind each external operation to an exact candidate.
 Interfaces: `authorizeReleaseOperation(request)`, `executeReleaseOperation(authorization)`.
 Constraints: Release approval alone grants no external side effect; authorization is single-purpose, confirmed, candidate-bound, and auditable.
-Requirements: REQ-M5-RELEASE-001 REQ-M5-BOOTSTRAP-004
-ADRs: ADR-0008
-Depends-On: DES-M5-006 DES-M5-007 DES-M5-015
+Requirements: REQ-M5-RELEASE-001 REQ-M5-RELEASE-002 REQ-M5-BOOTSTRAP-004
+ADRs: ADR-0008 ADR-0010
+Depends-On: DES-M5-006 DES-M5-007 DES-M5-015 DES-M5-019
 
 ## DES-M5-017: Repository migration service
 Responsibilities: Detect an existing musubix3 repository, preserve normative and user-owned files, classify legacy evidence, and orchestrate the documented regeneration sequence.
@@ -187,10 +222,31 @@ Requirements: REQ-M5-COMPAT-010 REQ-M5-EVIDENCE-002 REQ-M5-WORKTREE-002
 ADRs: ADR-0002 ADR-0005 ADR-0006
 Depends-On: DES-M5-003 DES-M5-007 DES-M5-012 DES-M5-014
 
+## DES-M5-018: Workflow transcript evidence service
+Responsibilities: Sanitize strict and compatible Copilot transcripts, retain privacy-minimized source metadata, concatenate safe inputs deterministically, reject duplicate sources/events, and reconcile generation-bound declarations to per-Skill invocation cursors.
+Interfaces: `sanitizeWorkflow(log, mode, limits): { rawSourceSha256, safeTranscriptSha256, sourceBytes, safeBytes, inputEvents, outputEvents, eligibleEvents, retainedEligibleEvents }`, `verifyWorkflow(safeLogs, mode, freshness)`, `bindDeclarations(changeId, generation, declarations, invocations, freshness)`, `validateStrictSource(source, strictVerification)`.
+Constraints: Limits validate total bytes in `1..1000000000` and line bytes in `1..10000000`. Strict mode retains baseline terminal/session proof; compatible mode retains only lifecycle and Skill events, emits no value not derived from input, and never claims terminal proof. The JSON command result, not the safe transcript, carries digests/counts and requires retained eligible count to equal source eligible count; malformed input, size violations, duplicate sources/events, and missing strict proof emit the exact `WORKFLOW_SANITIZE_INVALID`, `WORKFLOW_TRANSCRIPT_SIZE`, `WORKFLOW_DUPLICATE_SOURCE`, `WORKFLOW_DUPLICATE_EVENT`, or `WORKFLOW_STRICT_SOURCE_MISSING` diagnostic. Release evidence requires a strict-sanitized source matched to a successful strict-verification record by raw SHA-256 and session identity. Safe inputs concatenate in CLI argument order. Declarations process in persisted array order; legacy unowned records resolve only to a sole owner or become foreign; each declaration uses Skill identity, phase-distinct declaration identity, and the lowest-positioned unused completed invocation within freshness/future/event-skew bounds; one cursor per Skill enforces same-Skill order, never crosses CHANGE/generation, and emits `WORKFLOW_DECLARATION_NONPASS`, `WORKFLOW_SKILL_NOT_INVOKED`, `WORKFLOW_INVOCATION_INCOMPLETE`, `WORKFLOW_INVOCATION_FAILED`, `WORKFLOW_INVOCATION_REUSED`, or `WORKFLOW_INVOCATION_ORDER`; superseded generations are informational.
+Requirements: REQ-M5-COMPAT-001 REQ-M5-COMPAT-003 REQ-M5-COMPAT-013 REQ-M5-EVIDENCE-003 REQ-M5-EVIDENCE-006 REQ-M5-EVIDENCE-007 REQ-M5-LIFECYCLE-005
+ADRs: ADR-0005 ADR-0010
+Depends-On: DES-M5-003 DES-M5-004 DES-M5-005 DES-M5-007
+
+## DES-M5-019: Candidate-bound matrix gate coordinator
+Responsibilities: Derive `gate-input-fingerprint-v1` from candidate blobs, create isolated QA workspaces, run every musubix5 verification-matrix job, verify pre/post tracked trees, persist external candidate-bound gate records, and project release manifest bindings.
+Interfaces: `fingerprintCandidateGate(changeId, generation, commit)`, `runCandidateMatrix(changeId, generation, commit)`, `emitJobResult(context): CandidateGateJobResult`, `ingestJobResults(changeId, generation, results)`, `validateCandidateGateSet(changeId, generation, commit)`, `releaseProjection(changeId, generation, commit)`.
+Constraints: `matrix-job-identity-v1` is the closed design-approved set `ubuntu-node20`, `ubuntu-node22`, `ubuntu-node24`, `windows-node22`, and `macos-node22`, represented canonically as `{ "nodeMajor": 20|22|24, "os": "ubuntu"|"windows"|"macos" }`. Fingerprint inputs come only from candidate blobs and persisted repository identity; its `config` member is exactly the derived canonical object and SHA-256 specified above, excluding only display fields `language` and `qualityProfile`, and runtime identity is bound job-result data but not fingerprint input. Matrix runners receive the candidate commit through a clean checkout on their native runner, invoke DES-M5-015 matrix mode, emit self-contained canonical artifacts bound to repository, CHANGE, generation, candidate, fingerprint, producer, job identity, command results, and pre/post tree checks, and write no tracked QA path except the closed gate output allow-list. Each artifact is transported as an opaque CI artifact inside a GitHub OIDC strict attestation envelope verified by DES-M5-014 against the candidate-gate transport policy above; ingestion rejects an untrusted producer, altered payload digest, or mismatched repository/candidate/job identity before interpreting self-declared result fields. Envelope identity is repository, candidate, fingerprint, job identity, CI provider/run ID, and payload digest; resubmitting the identical envelope is idempotent and cannot append a new record, while conflicting reuse of the same CI provider/run ID is stale evidence reported as `RELEASE_GATE_EVIDENCE_STALE`. One control-worktree ingestion holds the CHANGE/order leases, validates every artifact, derives its canonical artifact digest, and appends with idempotency key `change:<id>:g<N>:gate:<candidate>:<fingerprint>:<jobId>:<artifactDigest>`; byte-identical retry artifacts are idempotent while a changed terminal result appends history, and the greatest ordered record per job is authoritative only if current and pass. All five jobs must be present and pass. External records are normal generation-bound evidence stored in the control worktree outside the candidate tree; in-tree gate outputs are informational. Candidate-gate schema marks repository/change/generation/candidate/fingerprint/producer/job identity, command digests/status, tree-check results, CI provider/run ID, attestation payload digest, and artifact digest as bound; human-readable timestamps and durations are display-only. Missing, stale, wrong-candidate, wrong-fingerprint, duplicate-job within one ingestion set, or tree-mismatch records fail with the registered `RELEASE_GATE_EVIDENCE_MISSING`, `RELEASE_GATE_EVIDENCE_STALE`, `RELEASE_GATE_CANDIDATE_MISMATCH`, or `RELEASE_CANDIDATE_TREE_MISMATCH`.
+Requirements: REQ-M5-APPROVAL-007 REQ-M5-COMPAT-013 REQ-M5-EVIDENCE-003 REQ-M5-EVIDENCE-004 REQ-M5-LIFECYCLE-005 REQ-M5-QUALITY-001 REQ-M5-QUALITY-003 REQ-M5-RELEASE-002
+ADRs: ADR-0006 ADR-0008 ADR-0010
+Depends-On: DES-M5-003 DES-M5-004 DES-M5-005 DES-M5-007 DES-M5-012 DES-M5-014 DES-M5-015
+
 ## Lifecycle transitions
 
 | Current state | Event | Guard | Next state |
 |---|---|---|---|
+| completed-generation | impact reopen requested | prior generation has terminal quality; exact CHANGE requirement set | next-generation initialized |
+| incomplete-generation | abandon confirmed | human authority; CHANGE lease held | no-active-generation |
+| incomplete-generation | impact reopen requested | generation not abandoned and lacks terminal quality | rejected with `CHANGE_GENERATION_PHASE` |
+| no-active-generation | impact reopen requested | exact CHANGE requirement set | next-generation initialized |
+| no-active-generation | any other phase/evidence/approval operation | none | rejected with `CHANGE_GENERATION_PHASE` |
 | initialized | requirements validated | validator pass | requirements-valid |
 | requirements-valid | review completed | zero findings | requirements-review-clean |
 | requirements-review-clean | exact hash approved | current manifest | requirements-approved |
@@ -204,13 +260,16 @@ Depends-On: DES-M5-003 DES-M5-007 DES-M5-012 DES-M5-014
 | green-recorded or refactored | integration completed | required integration commands pass | integrated |
 | integrated | trace/formal evaluated | trace current; formal classified | trace-formal-complete |
 | trace-formal-complete | quality completed | every mandatory check current and pass | quality-pass |
-| quality-pass | release review completed | zero findings | release-review-clean |
-| release-review-clean | exact hash approved | current release manifest | release-approved |
+| quality-pass | candidate matrix gate completed | all five current candidate/fingerprint-matched jobs pass and pre/post tracked-tree checks are clean | candidate-gate-complete |
+| candidate-gate-complete | release review completed | zero findings | release-review-clean |
+| release-review-clean | exact hash approved | current release manifest; candidate gate remains current and complete | release-approved |
 | any approved-or-later state | upstream head changed | dependency digest differs | stale |
 | stale | revalidation completed | return only to the latest predecessor whose bound evidence remains current under DES-M5-007; a changed normative head invalidates its review-clean state | current predecessor state |
 
 Any changed upstream normative head moves dependent states to stale rather than
-deleting their history.
+deleting their history. State names are evaluated within the active generation;
+superseded and abandoned generations remain reportable history and never
+contribute current evidence.
 
 ## Verified-auto boundary states
 
@@ -242,7 +301,7 @@ deleting their history.
     bootstrap/
     changes.json
     order.json
-    tdd/
+    tdd.json
     workflow.json
     formal.json
     mutation.json
@@ -255,6 +314,7 @@ deleting their history.
     native/
       test/
     release/
+      gates/
     benchmarks/
     waivers/
     budgets/
@@ -278,9 +338,24 @@ and cannot be replaced by a projection.
 DES-M5-006 owns compatibility and native approval projections under
 `.musubix/evidence/approvals/`. DES-M5-010 owns run-local diagnostics under
 `.musubix/runs/`. DES-M5-015 owns gate-regenerated `quality.json`,
-`performance.json`, and `.musubix/evidence/native/test/`; benchmark execution
+`performance.json`, and `.musubix/evidence/native/<command-name>/`; benchmark execution
 records remain separately owned under `.musubix/evidence/benchmarks/`.
 DES-M5-014 owns feature-local `.musubix/features/*/trace.json` projections.
+DES-M5-018 owns privacy-minimized workflow source metadata and the generation-
+bound workflow projection. DES-M5-019 owns candidate-bound matrix gate journal
+records and `.musubix/evidence/release/gates/` projections outside the candidate
+snapshot.
+
+DES-M5-004 owns `order.json` and journal projections, DES-M5-005 owns
+`changes.json`, DES-M5-014 owns trace/graph/formal cache projections, and
+DES-M5-018 owns `workflow.json`. Matrix runners never append the journal or
+write `.musubix/evidence/release/gates/` in a QA workspace; only the designated
+control worktree ingests those artifacts.
+
+DES-M5-011 owns `tdd.json`; DES-M5-014 owns knowledge, mutation, and model-
+correspondence projections; DES-M5-007 owns waivers; DES-M5-009 owns budgets;
+and benchmark execution records under `benchmarks/` are owned jointly by
+DES-M5-009 accounting and DES-M5-015 quality classification.
 
 When any bootstrap run exists for a CHANGE, the normal orchestrator shall
 ingest its summary before readiness evaluation by verifying the bootstrap
@@ -300,8 +375,12 @@ producer identity. Bootstrap never writes that record directly.
 | release manifest source | persisted immutable `release-candidate-tree-v1` commit instead of mutable worktree files | Intentional extension governed by REQ-M5-COMPAT-013 and ADR-0008 |
 | release exclusions | `symlink`, `generated-trace`, `package-archive`, `log-directory`, `historical`, `run-local`, `release-self-reference`, `gate-self-reference`, and `foreign-change-evidence` in closed first-match order | Intentional extension governed by REQ-M5-COMPAT-013 and ADR-0008 |
 | approval diagnostics | `APPROVAL_DOMAIN_MISMATCH`, `APPROVAL_NORMATIVE_MISSING`, `APPROVAL_NORMATIVE_SYMLINK`, `APPROVAL_CANDIDATE_UNAVAILABLE`, `APPROVAL_PATH_ENCODING`, `APPROVAL_PATH_COLLISION`, and `APPROVAL_GITLINK_UNSUPPORTED` | Intentional classified failure surface governed by REQ-M5-COMPAT-013 and ADR-0008 |
+| lifecycle CLI/JSON | `--reopen`, `change generation`, `change generation abandon`, positive `generation`, null active generation, active/superseded/abandoned summaries, `change-generation-v1`, and `CHANGE_GENERATION_PHASE`, `CHANGE_GENERATION_REQUIREMENTS`, `CHANGE_GENERATION_DUPLICATE`, `CHANGE_GENERATION_MIXED`, `CHANGE_GENERATION_INCOMPLETE` | Intentional versioned-cycle extension governed by REQ-M5-LIFECYCLE-005 and ADR-0010 |
+| workflow CLI/JSON | `workflow-sanitize --compatible`, per-source raw/safe digests and modes, per-Skill matching, `WORKFLOW_DECLARATION_NONPASS`, `WORKFLOW_SKILL_NOT_INVOKED`, `WORKFLOW_INVOCATION_INCOMPLETE`, `WORKFLOW_INVOCATION_FAILED`, `WORKFLOW_INVOCATION_REUSED`, `WORKFLOW_INVOCATION_ORDER`, `WORKFLOW_SANITIZE_INVALID`, `WORKFLOW_TRANSCRIPT_SIZE`, `WORKFLOW_DUPLICATE_SOURCE`, `WORKFLOW_DUPLICATE_EVENT`, and `WORKFLOW_STRICT_SOURCE_MISSING` | Intentional workflow extension governed by REQ-M5-EVIDENCE-006, REQ-M5-EVIDENCE-007, and ADR-0010 |
+| release manifest projection | candidate `repositoryId`, `candidateCommit`, `gateInputFingerprint`, `gate-input-fingerprint-v1`, generation, and changed aggregate | Intentional candidate-bound release extension governed by REQ-M5-RELEASE-002 and ADR-0010 |
+| candidate gate JSON | `matrix-job-identity-v1`, runtime identity, generation, candidate, fingerprint, tracked-tree checks, `RELEASE_GATE_EVIDENCE_MISSING`, `RELEASE_GATE_EVIDENCE_STALE`, `RELEASE_GATE_CANDIDATE_MISMATCH`, and `RELEASE_CANDIDATE_TREE_MISMATCH` | Intentional external gate evidence governed by REQ-M5-RELEASE-002 and ADR-0010 |
 | configuration | `approvalAutomation` extension | Additive, design-approved configuration governed by ADR-0009 |
-| CLI | `bootstrap run`, `bootstrap resume`, and `bootstrap status` | musubix5-only explicit mode governed by REQ-M5-BOOTSTRAP-001 and ADR-0006 |
+| configuration | top-level `candidateGate` transport extension and strict-attestation fields | Additive, design-approved key allow-list extension governed by REQ-M5-COMPAT-004, REQ-M5-COMPAT-013, and ADR-0010; generic `attestation` behavior is unchanged |
 
 The empty-command baseline behavior fixture is
 `docs/baseline/musubix3-v0.1.18-empty-commands.json`, SHA-256
@@ -313,6 +392,6 @@ are review aids rather than normative design inputs.
 
 ## C4-like component relationships
 
-The authoritative C4-like diagram is generated by `musubix3 design c4` from
+The authoritative C4-like diagram is generated by `musubix5 design c4` from
 the component `Depends-On` relationships above. A rendered copy may be stored
 for review but is generated evidence, not a normative design input.

@@ -1,4 +1,4 @@
-import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 describe('current change evidence validation', () => {
@@ -11,7 +11,7 @@ describe('current change evidence validation', () => {
       hasMeasurableAcceptance,
       validateChangeEvidence,
     } = await import('../packages/analysis/src/change.js');
-    const root = resolve(new URL('..', import.meta.url).pathname);
+    const root = fileURLToPath(new URL('..', import.meta.url));
     const validation = await validateChangeEvidence(root);
     const staleHistoryCodes = new Set([
       'CHANGE_TEST_CHANGED_AFTER_RED',

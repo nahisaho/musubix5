@@ -31,7 +31,27 @@ describe('CLI help compatibility', () => {
   it('TEST-M5-COMPAT-001 preserves every inventoried help entry', async () => {
     const { createProgram } = await import('../packages/cli/src/main.js');
     for (const snapshot of baseline.snapshots) {
-      const expected = snapshot.stdout.replaceAll('musubix3', 'musubix5');
+      let expected = snapshot.stdout.replaceAll('musubix3', 'musubix5');
+      if (snapshot.command === 'musubix3 workflow-sanitize') {
+        expected = expected.replace(
+          '  -h, --help           display help for command',
+          '  --compatible         Allow incomplete or resumed transcripts without claiming\n'
+            + '                       strict terminal proof\n'
+            + '  -h, --help           display help for command',
+        );
+      } else if (snapshot.command === 'musubix3 change-record') {
+        expected = expected.replace(
+          '  --dry-run               Preview the outcome without recording it',
+          '  --reopen                Start or resume the next CHANGE generation (impact\n'
+            + '                          only)\n'
+            + '  --dry-run               Preview the outcome without recording it',
+        );
+      } else if (snapshot.command === 'musubix3 change') {
+        expected = expected.replace(
+          'Commands:\n',
+          'Commands:\n  generation      Manage versioned CHANGE generations\n',
+        );
+      }
       expect(commandFor(createProgram, snapshot.command).helpInformation(), snapshot.command).toBe(expected);
     }
   });

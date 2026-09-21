@@ -2,6 +2,7 @@ import { execFileSync, spawn } from 'node:child_process';
 import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
 const temporaryDirectories: string[] = [];
@@ -48,7 +49,7 @@ describe('repository-wide journal order', () => {
     const root = mkdtempSync(join(tmpdir(), 'musubix5-journal-order-'));
     temporaryDirectories.push(root);
     execFileSync('git', ['init', '--quiet', root]);
-    const repositoryRoot = resolve(new URL('..', import.meta.url).pathname);
+    const repositoryRoot = fileURLToPath(new URL('..', import.meta.url));
     execFileSync('npm', ['run', 'build'], { cwd: repositoryRoot, stdio: 'pipe' });
 
     await Promise.all(Array.from({ length: 8 }, (_, index) =>

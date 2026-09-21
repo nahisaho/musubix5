@@ -4,6 +4,7 @@ import { mkdir, open, readFile, rename, unlink } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { error, type Diagnostic } from '../../domain/src/index.js';
 import { loadConfig } from './config.js';
+import { activeChangeContext, type ActiveChangeContext } from './change-generation.js';
 import { digest, exists, safePath, writeJson } from './files.js';
 import {
   CURRENT_SNAPSHOT_VERSION, WORKFLOW_WAIVABLE_CODES, WORKFLOW_WAIVER_PATH, authoritativeIndex, buildWorkflowWaiverContext,
@@ -49,11 +50,13 @@ export async function recordWorkflow(
   if (!/^[a-z0-9-]+$/.test(event.skill)) throw new Error('Workflow skill must be a lowercase kebab-case identifier.');
   if (!/^[a-z0-9-]+$/.test(event.phase)) throw new Error('Workflow phase must be a lowercase kebab-case identifier.');
   const current = await loadWorkflow(root) ?? { schemaVersion: 1, events: [] };
+  const change = await activeChangeContext(root);
   delete current.verification;
   current.events.push({
     skill: event.skill,
     version: '0.1.8',
     provenance: 'self-reported',
+    ...(change ?? {}),
     phase: event.phase,
     status: event.status,
     ...(event.reason ? { reason: event.reason } : {}),
@@ -62,6 +65,23 @@ export async function recordWorkflow(
   });
   await writeJson(root, '.musubix/evidence/workflow.json', current);
   return current;
+}
+
+/** @id CODE-M5-WORKFLOW-GENERATION-001
+ * @implements REQ-M5-EVIDENCE-006
+ * @design DES-M5-004 DES-M5-018
+ */
+function activeWorkflowEvents(
+  workflow: WorkflowManifest,
+  change: ActiveChangeContext | null,
+): Array<{ event: WorkflowEvent; index: number }> {
+  if (!change) return workflow.events.map((event, index) => ({ event, index }));
+  return workflow.events.flatMap((event, index) => {
+    const generation = event.generation ?? 1;
+    return event.changeId === change.changeId && generation === change.generation
+      ? [{ event, index }]
+      : [];
+  });
 }
 
 export async function verifyWorkflowLog(
@@ -84,37 +104,37 @@ export async function verifyWorkflowLogFile(
   if (paths.length > 1 && options.mode === 'strict') {
     throw new Error('Strict workflow verification requires exactly one transcript file.');
   }
-  let orderedPaths = paths;
+  const orderedPaths = paths;
   if (paths.length > 1) {
-    // Multiple transcripts are concatenated into one logical stream below; a
-    // toolCallId genuinely belongs to a single Copilot session, so seeing it
-    // start in more than one supplied file indicates the files do not
-    // represent disjoint sessions and must be rejected rather than silently
-    // merged (REQ-WORKFLOW-MULTI-SESSION-001). While scanning for that, also
-    // record each file's earliest event timestamp so files can be
-    // concatenated in chronological session order regardless of how the
-    // caller listed them, while still preserving each file's own internal
-    // (possibly clock-skewed) source order untouched.
+    // Compatible sources form one logical transcript in caller-supplied order.
+    // Reject repeated sources and events before concatenation so source
+    // identity cannot be used to replay an invocation.
     const seenInFile = new Map<string, string>();
-    const earliestTimestamp = new Map<string, number>();
+    const sourceHashes = new Set<string>();
+    const eventIdentities = new Set<string>();
     for (const filePath of paths) {
-      const text = await readFile(filePath, 'utf-8');
+      const bytes = await readFile(filePath);
+      const sourceSha256 = digest(bytes);
+      if (sourceHashes.has(sourceSha256)) {
+        throw new Error(`WORKFLOW_DUPLICATE_SOURCE: workflow transcript ${sourceSha256} was supplied more than once.`);
+      }
+      sourceHashes.add(sourceSha256);
+      const text = bytes.toString('utf-8');
       for (const line of text.split('\n')) {
         if (!line.trim()) continue;
         let event: unknown;
         try { event = JSON.parse(line) as unknown; } catch { continue; }
         if (!event || typeof event !== 'object' || Array.isArray(event)) continue;
         const record = event as Record<string, unknown>;
+        const eventIdentity = digest(canonical(record));
+        if (eventIdentities.has(eventIdentity)) {
+          throw new Error(`WORKFLOW_DUPLICATE_EVENT: workflow event ${eventIdentity} was supplied more than once.`);
+        }
+        eventIdentities.add(eventIdentity);
         const data = record.data && typeof record.data === 'object'
           ? record.data as Record<string, unknown>
           : record;
         const type = String(record.type ?? '');
-        const timestampValue = record.timestamp ?? data.timestamp;
-        const time = typeof timestampValue === 'string' ? Date.parse(timestampValue) : NaN;
-        if (!Number.isNaN(time)) {
-          const current = earliestTimestamp.get(filePath);
-          if (current === undefined || time < current) earliestTimestamp.set(filePath, time);
-        }
         const toolCallId = data.toolCallId ?? data.callId ?? record.toolCallId;
         if (starts.has(type) && typeof toolCallId === 'string') {
           const previousFile = seenInFile.get(toolCallId);
@@ -125,10 +145,6 @@ export async function verifyWorkflowLogFile(
         }
       }
     }
-    orderedPaths = paths
-      .map((filePath, index) => ({ filePath, index, time: earliestTimestamp.get(filePath) ?? Number.POSITIVE_INFINITY }))
-      .sort((a, b) => (a.time - b.time) || (a.index - b.index))
-      .map(({ filePath }) => filePath);
   }
   return verifyWorkflowChunks(root, (async function* () {
     for (let index = 0; index < orderedPaths.length; index += 1) {
@@ -146,6 +162,10 @@ export async function verifyWorkflowLogFile(
   })(), options);
 }
 
+/** @id CODE-M5-WORKFLOW-SANITIZE-001
+ * @implements REQ-M5-EVIDENCE-007
+ * @design DES-M5-018
+ */
 export async function sanitizeWorkflowLogFile(
   root: string,
   inputPath: string,
@@ -154,20 +174,30 @@ export async function sanitizeWorkflowLogFile(
   maxEventSkewMs?: number,
   maxTranscriptBytes?: number,
   maxTranscriptLineBytes?: number,
+  mode: 'compatible' | 'strict' = 'strict',
 ): Promise<WorkflowSanitizationResult> {
   if (replacementSessionId && !uuid.test(replacementSessionId)) {
     throw new Error('Replacement workflow session ID must be a UUID.');
   }
-  // Fail closed on the complete source before removing privacy-sensitive non-Skill events.
-  const validated = await verifyWorkflowLogFile(root, inputPath, {
-    mode: 'strict',
-    ...(maxEventSkewMs === undefined ? {} : { maxEventSkewMs }),
-    ...(maxTranscriptBytes === undefined ? {} : { maxBytes: maxTranscriptBytes }),
-    ...(maxTranscriptLineBytes === undefined ? {} : { maxLineBytes: maxTranscriptLineBytes }),
-  });
-  const expectedSourceSha256 = validated.verification!.sourceSha256;
   const maxBytes = maxTranscriptBytes ?? workflowVerificationLimits.maxBytes;
   const maxLineBytes = maxTranscriptLineBytes ?? workflowVerificationLimits.maxLineBytes;
+  if (!Number.isSafeInteger(maxBytes) || maxBytes < 1 || maxBytes > 1_000_000_000) {
+    throw new Error('WORKFLOW_SANITIZE_INVALID: maxTranscriptBytes must be an integer from 1 through 1000000000.');
+  }
+  if (!Number.isSafeInteger(maxLineBytes) || maxLineBytes < 1 || maxLineBytes > 10_000_000) {
+    throw new Error('WORKFLOW_SANITIZE_INVALID: maxTranscriptLineBytes must be an integer from 1 through 10000000.');
+  }
+  // Strict mode preserves the original complete-transcript validation. Compatible
+  // mode deliberately accepts resumed or incomplete sources without terminal proof.
+  const validated = mode === 'strict'
+    ? await verifyWorkflowLogFile(root, inputPath, {
+        mode: 'strict',
+        ...(maxEventSkewMs === undefined ? {} : { maxEventSkewMs }),
+        ...(maxTranscriptBytes === undefined ? {} : { maxBytes: maxTranscriptBytes }),
+        ...(maxTranscriptLineBytes === undefined ? {} : { maxLineBytes: maxTranscriptLineBytes }),
+      })
+    : null;
+  const expectedSourceSha256 = validated?.verification?.sourceSha256;
   const target = await safePath(root, outputPath);
   await mkdir(dirname(target), { recursive: true });
   const staging = `${target}.${process.pid}.${crypto.randomUUID()}.writing`;
@@ -179,8 +209,15 @@ export async function sanitizeWorkflowLogFile(
   let terminalSessionId = '';
   let sourceBytes = 0;
   const sourceHash = createHash('sha256');
+  const safeHash = createHash('sha256');
+  const emittedIdentities = new Set<string>();
   const emit = async (event: Record<string, unknown>): Promise<void> => {
     const line = JSON.stringify(event);
+    const identity = digest(canonical(event));
+    if (emittedIdentities.has(identity)) {
+      throw new Error(`WORKFLOW_DUPLICATE_EVENT: duplicate eligible event ${identity}.`);
+    }
+    emittedIdentities.add(identity);
     const lineBytes = Buffer.byteLength(line);
     const recordBytes = lineBytes + 1;
     if (lineBytes > maxLineBytes) {
@@ -189,7 +226,9 @@ export async function sanitizeWorkflowLogFile(
     if (outputBytes + recordBytes > maxBytes) {
       throw new Error(`Sanitized workflow transcript exceeds the maximum total size of ${maxBytes} bytes.`);
     }
-    await output.write(`${line}\n`);
+    const record = `${line}\n`;
+    await output.write(record);
+    safeHash.update(record);
     outputBytes += recordBytes;
     outputEvents += 1;
   };
@@ -325,25 +364,34 @@ export async function sanitizeWorkflowLogFile(
       if (remainder.byteLength) lineParts.push(remainder);
     }
     await processSanitizedLine(Buffer.concat(lineParts, lineBytes));
-    if (sourceHash.digest('hex') !== expectedSourceSha256) {
+    const rawSourceSha256 = sourceHash.digest('hex');
+    if (expectedSourceSha256 && rawSourceSha256 !== expectedSourceSha256) {
       throw new Error('Workflow transcript changed after strict validation; retry sanitization with a stable source file.');
     }
     if (!skillCalls.size) throw new Error('No Copilot Skill invocation events were found in the workflow transcript.');
-    if (!terminalSessionId) throw new Error('No workflow session identity was found in the transcript.');
+    if (mode === 'strict' && !terminalSessionId) throw new Error('No workflow session identity was found in the transcript.');
     await output.close();
     await rename(staging, target);
+    return {
+      mode,
+      rawSourceSha256,
+      safeTranscriptSha256: safeHash.digest('hex'),
+      sourceBytes,
+      safeBytes: outputBytes,
+      inputEvents,
+      outputEvents,
+      eligibleEvents: outputEvents,
+      retainedEligibleEvents: outputEvents,
+      skillInvocations: skillCalls.size,
+      ...(terminalSessionId ? { sessionId: terminalSessionId } : {}),
+      sessionReplaced: replacementSessionId !== undefined,
+      outputPath,
+    };
   } finally {
     await output.close().catch(() => undefined);
     if (await exists(staging)) await unlink(staging);
   }
-  return {
-    inputEvents,
-    outputEvents,
-    skillInvocations: skillCalls.size,
-    sessionId: terminalSessionId,
-    sessionReplaced: replacementSessionId !== undefined,
-    outputPath,
-  };
+  throw new Error('WORKFLOW_SANITIZE_INVALID: workflow sanitization did not complete.');
 }
 
 async function verifyWorkflowChunks(
@@ -670,9 +718,11 @@ export async function validateLoadedWorkflow(
   diagnostics: Diagnostic[];
   workflowWaiverContext: WorkflowWaiverContext;
 }> {
-  const present = !!workflow?.events.length;
+  const change = await activeChangeContext(root);
+  const activeEvents = workflow ? activeWorkflowEvents(workflow, change) : [];
+  const present = activeEvents.length > 0;
   const rawDiagnostics: Diagnostic[] = [];
-  if (workflow?.events.length) {
+  if (workflow?.events.length && activeEvents.length) {
     if (!workflow.verification) {
       rawDiagnostics.push(error('WORKFLOW_INVOCATION_UNVERIFIED', 'Workflow declarations have not been reconciled with a Copilot session log.'));
     } else {
@@ -720,11 +770,12 @@ export async function validateLoadedWorkflow(
         rawDiagnostics.push(error('WORKFLOW_INVOCATION_REUSED', `Tool call ${duplicate.toolCallId} appears more than once in invocation evidence.`));
       }
       const used = new Set<string>();
-      let previousIndex = -1;
-      for (const [eventIndex, event] of workflow.events.entries()) {
+      const previousIndexBySkill = new Map<string, number>();
+      for (const { event, index: eventIndex } of activeEvents) {
         if (event.status !== 'completed') continue;
         const scope = declarationScope(workflow, event, eventIndex);
         const recordedAt = timestampMs(event.recordedAt);
+        const previousIndex = previousIndexBySkill.get(event.skill) ?? -1;
         const eligible = workflow.verification.invocations
           .map((invocation, index) => ({ invocation, index }))
           .filter(({ invocation }) => invocation.skill === event.skill && timestampMs(invocation.invokedAt) <= recordedAt);
@@ -763,7 +814,7 @@ export async function validateLoadedWorkflow(
           }
         } else {
           used.add(match.invocation.toolCallId);
-          previousIndex = match.index;
+          previousIndexBySkill.set(event.skill, match.index);
         }
         if (!match) {
           rawDiagnostics.push({
@@ -780,8 +831,8 @@ export async function validateLoadedWorkflow(
   return {
     present,
     verified: !diagnostics.length,
-    events: workflow?.events.length ?? 0,
-    skills: new Set((workflow?.events ?? []).map((event) => event.skill)).size,
+    events: activeEvents.length,
+    skills: new Set(activeEvents.map(({ event }) => event.skill)).size,
     diagnostics,
     workflowWaiverContext,
   };

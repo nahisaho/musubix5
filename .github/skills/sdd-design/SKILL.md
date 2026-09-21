@@ -7,7 +7,7 @@ description: "Use when translating approved requirements into explicit component
 Follow the user's input language (日本語 / English). Use Copilot's native planning,
 editing, research and review to reason about alternatives; musubix3 validates
 explicit artifacts, not generated prose quality.
-After the work, run `npx musubix3 workflow-record sdd-design complete --status
+After the work, run `npx musubix5 workflow-record sdd-design complete --status
 completed` exactly once.
 
 1. Read requirements and constitution; identify requirement IDs before designing.
@@ -19,10 +19,10 @@ completed` exactly once.
    explicit component dependencies. Fields also accept Japanese labels.
 3. Record real trade-offs under `.musubix/decisions/ADR-xxxx.md`: context, decision,
    rejected alternatives and consequences. Do not invent existing decisions.
-4. Run `npx musubix3 design validate <file> --json` and
-   `npx musubix3 design c4 <file>`. The Mermaid output reflects only declared
+4. Run `npx musubix5 design validate <file> --json` and
+   `npx musubix5 design c4 <file>`. The Mermaid output reflects only declared
    components and dependencies; it is C4-like, not a full C4 model.
-5. Run `npx musubix3 trace build` then `npx musubix3 trace check`.
+5. Run `npx musubix5 trace build` then `npx musubix5 trace check`.
    Do not hand-edit `trace.json`. Ask native review to inspect coupling and
    coverage; use `sdd-formal-codegraph` for compiler-based impact checks.
 6. Before requesting human approval, run Copilot's native `rubber-duck`

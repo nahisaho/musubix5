@@ -1,5 +1,5 @@
 import { canonicalBytes, sha256 } from './canonical.js';
-import { loadApprovalProjectionConfig } from './config.js';
+import { loadApprovalProjectionConfig, materializeExecutionPolicy } from './config.js';
 import { appendEvidence } from './evidence-registry.js';
 import { snapshot, writeJson } from './files.js';
 import { error, type Diagnostic } from '../../domain/src/index.js';
@@ -178,10 +178,11 @@ export async function prepareStageApproval(root: string, input: {
       root,
       await resolveNormativeArtifacts(root, 'design'),
     );
+    const projectedConfig = materializeExecutionPolicy(config);
     return nativeManifestFromArtifacts(
       input.stage,
       artifacts,
-      selectProjection(config as unknown as Record<string, unknown>, designProjectionKeys),
+      selectProjection(projectedConfig, designProjectionKeys),
     );
   }
   throw new Error(`APPROVAL_STAGE_INVALID: ${input.stage}`);

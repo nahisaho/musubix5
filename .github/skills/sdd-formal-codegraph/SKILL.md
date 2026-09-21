@@ -7,14 +7,14 @@ description: "Use for optional formal/neurosymbolic consistency checks, compiler
 Follow the user's input language (日本語 / English). Use native Copilot reasoning,
 editing and code navigation to propose and refine artifacts. Deterministic checks
 constrain these proposals; do not create a separate AI/agent runtime.
-After the work, run `npx musubix3 workflow-record sdd-formal-codegraph complete
+After the work, run `npx musubix5 workflow-record sdd-formal-codegraph complete
 --status completed` exactly once.
 
 ## Formal consistency / 形式的整合性
-1. Run `npx musubix3 formal generate <requirements-file> --format both --json`
+1. Run `npx musubix5 formal generate <requirements-file> --format both --json`
    to inspect reproducible SMT-LIB2 and Lean artifacts before execution.
-2. Run `npx musubix3 formal doctor --json`, then
-   `npx musubix3 formal check <requirements-file> --solver none --json`.
+2. Run `npx musubix5 formal doctor --json`, then
+   `npx musubix5 formal check <requirements-file> --solver none --json`.
    Controlled unconditional English/Japanese obligations enter the Boolean
    abstraction. Strict optional `Formal:` JSON adds explicit conditional truth,
    exact integer bounds (`ms`/`s`/`min`, `bytes`/`kib`/`mib`), intersected
@@ -34,7 +34,7 @@ After the work, run `npx musubix3 workflow-record sdd-formal-codegraph complete
    reach an authoritative test passed in a fresh structured command report.
 
 ## Code impact / コード影響
-1. Run `npx musubix3 graph index` (or `graph index --changed`).
+1. Run `npx musubix5 graph index` (or `graph index --changed`).
 2. Run `graph impact <symbol-or-path>`, `graph cycles`, and `graph gate --json`.
    Use `path#symbol` to disambiguate names. Reverse-import paths explain impact.
 3. Rules in config specify source and disallowed target globs; cycles use SCCs.

@@ -3,7 +3,7 @@ import { adapterInvocation, mergeAdapterArgs, normalizeAdapterReport, readAdapte
 import { loadConfig, type CommandConfig } from './config.js';
 import { digest, exists, files, readText, safePath, within, writeJson } from './files.js';
 import type { ProcessResult } from './process.js';
-import { parseMusubixTestReport, type MusubixTestReport } from './tdd.js';
+import { parseMusubixTestReport, type MusubixTestReport } from './test-report.js';
 
 type TestResult = MusubixTestReport['tests'][number];
 export type PerformanceReportSourceKind = 'file' | 'directory' | 'stdout';

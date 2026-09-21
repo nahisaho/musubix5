@@ -6,8 +6,13 @@ import { digest, evidenceInputPaths, exists, files, readText, safePath, snapshot
 import { graphGate, graphImpact, indexGraph } from './graph.js';
 import { formalCheck, type FormalResult } from './formal.js';
 import { validateWorkflow } from './workflow.js';
-import { parseMusubixTestReport, validateTddEvidence, type MusubixTestReport } from './tdd.js';
-import { validateChangeCompleteness, validateChangeEvidence } from './change.js';
+import { validateTddEvidence } from './tdd.js';
+import { parseMusubixTestReport, type MusubixTestReport } from './test-report.js';
+import {
+  activeChangeGeneration, loadChangeEvidence, summarizeChangeGeneration,
+  validateChangeCompleteness, validateChangeEvidence,
+  type ChangeGenerationSummary,
+} from './change.js';
 import { activeWaivers, waiverEvidenceDiagnostics } from './change-waiver.js';
 import { deriveWorkflowWaiverAudit } from './workflow-waiver.js';
 import { changedFiles, runProcess, type Runner } from './process.js';
@@ -37,7 +42,7 @@ export interface GateReport {
   status: 'pass' | 'fail';
   checks: Evidence[];
   metrics: Record<string, number>;
-  mode: 'full' | 'changed' | 'feature';
+  mode: 'full' | 'changed' | 'feature' | 'matrix';
   feature: string | null;
   changed: string[] | null;
   impacted: string[];
@@ -96,10 +101,12 @@ export async function runGate(root: string, options: {
   config?: Config;
   environment?: NodeJS.ProcessEnv;
   attestationOptions?: AttestationVerificationOptions;
+  persistenceMode?: 'normal' | 'matrix';
 } = {}): Promise<GateReport> {
   const config = options.config ?? await loadConfig(root);
   const runner = options.runner ?? runProcess;
   const gateRunId = randomUUID();
+  const matrixMode = options.persistenceMode === 'matrix';
   const changed = options.changed ? await changedFiles(root, runner) : null;
   const evidencePath = '.musubix/evidence/quality.json';
   const previous = await exists(within(root, evidencePath))
@@ -159,10 +166,10 @@ export async function runGate(root: string, options: {
   const constitutionPath = '.musubix/constitution.md';
   const constitution = await exists(within(root, constitutionPath)) ? validateConstitution(await readText(root, constitutionPath), constitutionPath) : null;
   add('constitution', constitution !== null, constitution?.diagnostics ?? []);
-  const trace = await buildTrace(root);
+  const trace = await buildTrace(root, !matrixMode);
   const traceResult = await checkTrace(root, trace, true, config.thresholds);
   add('trace', requirementPaths.length > 0, traceResult.diagnostics.filter(scopedToFeature));
-  const graph = await indexGraph(root);
+  const graph = await indexGraph(root, !matrixMode);
   const graphResult = graphGate(graph, config.architecture, config.codeGraph);
   add('graph', graph.files.length > 0, graphResult.diagnostics);
   const formalText = (await Promise.all(requirementPaths.map(async (path) =>
@@ -248,7 +255,7 @@ export async function runGate(root: string, options: {
     result: formalResult,
     fingerprints: await snapshot(root, requirementPaths),
   };
-  await writeJson(root, '.musubix/evidence/formal.json', formalEvidence);
+  if (!matrixMode) await writeJson(root, '.musubix/evidence/formal.json', formalEvidence);
   const commandChecks: Evidence[] = [];
   const structuredTests = new Map<string, MusubixTestReport['tests'][number][]>();
   const performanceExecutions: PerformanceExecution[] = [];
@@ -262,18 +269,28 @@ export async function runGate(root: string, options: {
     let adapterArgs: string[] = [];
     if (command.testReport) {
       configuredTestReports++;
-      reportPath = command.testReport.path;
+      reportPath = matrixMode
+        ? `.musubix/cache/matrix-native/${command.name}/aggregate.json`
+        : command.testReport.path;
       const absolute = await safePath(root, reportPath);
       if (await exists(absolute)) await unlink(absolute);
     } else if (command.adapter) {
       configuredTestReports++;
-      const invocation = adapterInvocation(command.adapter, command.name);
+      const invocation = adapterInvocation(
+        command.adapter,
+        command.name,
+        undefined,
+        undefined,
+        matrixMode ? '.musubix/cache/matrix-native' : undefined,
+      );
       adapterOutput = invocation;
       reportPath = invocation.reportPath;
       adapterArgs = invocation.args;
       await clearAdapterOutput(invocation, await safePath(root, reportPath));
     } else if (command.mutationReport) {
-      reportPath = command.mutationReport.path;
+      reportPath = matrixMode
+        ? `.musubix/cache/matrix-native/${command.name}/aggregate.json`
+        : command.mutationReport.path;
       const absolute = await safePath(root, reportPath);
       if (await exists(absolute)) await unlink(absolute);
     }
@@ -435,7 +452,7 @@ export async function runGate(root: string, options: {
         : `${executedTestIds.length}/${annotatedTestIds.length} annotated test IDs passed in structured command reports.`,
     diagnostics: identityDiagnostics,
   });
-  await writePerformanceEvidence(root, performanceExecutions, gateRunId);
+  if (!matrixMode) await writePerformanceEvidence(root, performanceExecutions, gateRunId);
   const performance = await validatePerformanceEvidence(root);
   checks.push({
     name: 'performance',
@@ -446,7 +463,7 @@ export async function runGate(root: string, options: {
       : `${performance.budgets} deterministic operation budget(s) checked.`,
     diagnostics: performance.diagnostics,
   });
-  if (config.commands.some((command) => command.mutationReport)) {
+  if (!matrixMode && config.commands.some((command) => command.mutationReport)) {
     await writeMutationEvidence(root, mutationExecutions, gateRunId);
   }
   const mutation = await validateMutationEvidence(root);
@@ -461,7 +478,9 @@ export async function runGate(root: string, options: {
       : `${mutation.coveredRequirements.length}/${mutation.requirements} must functional requirement(s) have current linked killed mutants.`,
     diagnostics: mutation.diagnostics,
   });
-  await writeModelCorrespondenceEvidence(root, trace, formalEvidence, performanceExecutions, gateRunId);
+  if (!matrixMode) {
+    await writeModelCorrespondenceEvidence(root, trace, formalEvidence, performanceExecutions, gateRunId);
+  }
   const correspondence = await validateModelCorrespondenceEvidence(root);
   checks.push({
     name: 'model-correspondence',
@@ -636,10 +655,14 @@ export async function runGate(root: string, options: {
   const report: GateReport = {
     schemaVersion: 1,
     generatedAt,
-    status: aggregateStatus(featureDir ? checks.filter((c) => featureScopedCheckNames.has(c.name)) : checks),
+    status: aggregateStatus(featureDir
+      ? checks.filter((c) => featureScopedCheckNames.has(c.name))
+      : matrixMode
+        ? checks.filter((check) => check.name !== 'approval')
+        : checks),
     checks,
     metrics,
-    mode: featureDir ? 'feature' : options.changed ? 'changed' : 'full',
+    mode: featureDir ? 'feature' : matrixMode ? 'matrix' : options.changed ? 'changed' : 'full',
     feature: options.feature ?? null,
     changed: options.changed ? changed : lastChangeAnalysis?.changed ?? null,
     impacted: options.changed ? currentImpacted : lastChangeAnalysis?.impacted ?? [],
@@ -649,7 +672,7 @@ export async function runGate(root: string, options: {
     workflowWaivers,
     waiverDiagnostics,
   };
-  if (!featureDir) await writeJson(root, evidencePath, report);
+  if (!featureDir && !matrixMode) await writeJson(root, evidencePath, report);
   return report;
 }
 
@@ -662,6 +685,7 @@ export async function projectStatus(root: string): Promise<{
   artifacts: { requirements: number; designs: number; decisions: number };
   codeGraph: Config['codeGraph'] | null;
   approvals: ApprovalValidation | null;
+  change: ChangeGenerationSummary | null;
   gate: { status: 'pass' | 'fail' | 'skipped' | 'stale'; generatedAt: string | null; ready: boolean };
   next: string[];
   waivers: Array<{ changeId: string; code: string; requirementId?: string; detail?: string; approver: string; reason: string; recordedAt: string }>;
@@ -673,6 +697,12 @@ export async function projectStatus(root: string): Promise<{
   const config = initialized ? await loadConfig(root) : null;
   const codeGraph = config?.codeGraph ?? null;
   const approvals = config ? await validateApprovals(root, config.approval) : null;
+  const changeEvidence = await loadChangeEvidence(root);
+  const changeRecord = changeEvidence?.changes.find((entry) => activeChangeGeneration(entry) !== null)
+    ?? changeEvidence?.changes.at(-1);
+  const change = changeRecord ? summarizeChangeGeneration(changeRecord) : null;
+  const generationReady = !changeRecord
+    || (activeChangeGeneration(changeRecord) !== null && changeRecord.phases.quality !== undefined);
   const artifacts = {
     requirements: paths.filter((p) => /^\.musubix\/features\/[^/]+\/requirements\.md$/.test(p)).length,
     designs: paths.filter((p) => /^\.musubix\/features\/[^/]+\/design\.md$/.test(p)).length,
@@ -708,7 +738,12 @@ export async function projectStatus(root: string): Promise<{
     artifacts,
     codeGraph,
     approvals,
-    gate: { status, generatedAt, ready: initialized && status === 'pass' && approvals?.valid === true },
+    change,
+    gate: {
+      status,
+      generatedAt,
+      ready: initialized && status === 'pass' && approvals?.valid === true && generationReady,
+    },
     waivers,
     workflowWaivers,
     waiverDiagnostics,

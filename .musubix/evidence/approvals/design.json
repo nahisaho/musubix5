@@ -1,18 +1,21 @@
 {
   "schemaVersion": 1,
   "stage": "design",
+  "changeId": "CHANGE-0002",
+  "generation": 2,
   "artifacts": {
     ".musubix/constitution.md": "f8b47fdc486f395bab05223a94821b145cf8df70ffde2c838a28f8d71fe0fa92",
     ".musubix/decisions/ADR-0002.md": "9f41d752530613cf6cc3ab6798709567e85650e5b97426dfca4147840eb35684",
     ".musubix/decisions/ADR-0003.md": "342a6a8e30c367684b02ee907f0f6bc3aef3b8ff6a08005148f43411f3885b7d",
     ".musubix/decisions/ADR-0004.md": "837623189c1605b24040bcf40db42de65f06fb1f3f47911068a8b4558ca5856f",
-    ".musubix/decisions/ADR-0005.md": "f94c20196f66891cb0fc640a1bb8ea485d1315a35b5f4aa7d166571d2335a964",
-    ".musubix/decisions/ADR-0006.md": "5649e9d4ae9c4c4756bd872ac023d588acd90d32fc2e2c149ab3f29cf2b67ac1",
+    ".musubix/decisions/ADR-0005.md": "d90fe9072f0f41e88ecf4df4e11f1c653d74ba4d9bff262fb7e3e405a57b2e1e",
+    ".musubix/decisions/ADR-0006.md": "177062671723869629b64680cb3deabce7c0160531679819b1f908139c6697b7",
     ".musubix/decisions/ADR-0007.md": "d931c13da6a9baa087a763542bac502a6cd217359e72a1a1cbe422668418b949",
-    ".musubix/decisions/ADR-0008.md": "fded9131107049bdf25d03e4bc09ae843a9810618d01915895fc19340b1c0ce9",
+    ".musubix/decisions/ADR-0008.md": "b1b46fec0d081bd2385cae4ba919ecf6458d86d77025a527c31106f0d188d291",
     ".musubix/decisions/ADR-0009.md": "5e38a2e75f754b89ad51bcb242ad6994e36393c41c53630f2d6dd76e67d8294e",
-    ".musubix/features/musubix5-clean-foundation/design.md": "65faf7a058b8d77e0b9679fa8dcf5fe811c1ec20ebbb3ebd16b96917f40d7be2",
-    ".musubix/features/musubix5-clean-foundation/requirements.md": "9cabf55ef6d730f98d6ca895925821df6c89ed449fe988e07cc93c1042030f12"
+    ".musubix/decisions/ADR-0010.md": "4a0be8e73fd25c873e1eb917ec8a060efedcd5222170aaf08e34818c61097a4e",
+    ".musubix/features/musubix5-clean-foundation/design.md": "eee5d2685c0589ccad4cfbe048f54f2dc6b9113406e78b62095e053bb9d6e94a",
+    ".musubix/features/musubix5-clean-foundation/requirements.md": "bac50a27a7b26d37079129faccb8645f937cb2c06d9c381a677b4000fede2caa"
   },
   "projection": {
     "schemaVersion": 1,
@@ -113,7 +116,10 @@
     "workflow": {
       "mode": "compatible",
       "maxAgeSeconds": 3600,
-      "maxFutureSkewSeconds": 60
+      "maxFutureSkewSeconds": 60,
+      "maxTranscriptBytes": 100000000,
+      "maxTranscriptLineBytes": 1000000,
+      "maxEventSkewMs": null
     },
     "attestation": {
       "mode": "local",
@@ -126,7 +132,7 @@
     }
   },
   "exclusions": [],
-  "artifactSha256": "8a7b323e583a9365b001b7a75a45b542b25d18989a0c3472bf6ccec49dcc4442",
+  "artifactSha256": "75b6e720e8eb6d97e6bde9ad5c7ecdec14f231c0eea849f9162f760fbe078dac",
   "approver": "@nahisaho",
-  "approvedAt": "2026-09-21T10:29:53.303Z"
+  "approvedAt": "2026-09-21T22:38:25.544Z"
 }

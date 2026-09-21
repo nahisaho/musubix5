@@ -2,11 +2,11 @@
 schemaVersion: 1
 id: CHANGE-0002
 summary: Implement the clean musubix5 compatibility and architecture foundation
-status: quality-blocked
+status: approval-pending
 ---
 # CHANGE-0002: musubix5-clean-foundation
 
-Requirements: REQ-M5-COMPAT-001 REQ-M5-COMPAT-002 REQ-M5-COMPAT-003 REQ-M5-COMPAT-004 REQ-M5-COMPAT-005 REQ-M5-COMPAT-006 REQ-M5-COMPAT-007 REQ-M5-COMPAT-008 REQ-M5-COMPAT-009 REQ-M5-COMPAT-010 REQ-M5-COMPAT-011 REQ-M5-COMPAT-012 REQ-M5-COMPAT-013 REQ-M5-LIFECYCLE-001 REQ-M5-LIFECYCLE-002 REQ-M5-LIFECYCLE-003 REQ-M5-LIFECYCLE-004 REQ-M5-APPROVAL-001 REQ-M5-APPROVAL-002 REQ-M5-APPROVAL-003 REQ-M5-APPROVAL-004 REQ-M5-APPROVAL-005 REQ-M5-APPROVAL-006 REQ-M5-APPROVAL-007 REQ-M5-APPROVAL-008 REQ-M5-APPROVAL-009 REQ-M5-BUDGET-001 REQ-M5-BUDGET-002 REQ-M5-BUDGET-003 REQ-M5-BUDGET-004 REQ-M5-BUDGET-005 REQ-M5-EVIDENCE-001 REQ-M5-EVIDENCE-002 REQ-M5-EVIDENCE-003 REQ-M5-EVIDENCE-004 REQ-M5-EVIDENCE-005 REQ-M5-WAIVER-001 REQ-M5-TDD-001 REQ-M5-TDD-002 REQ-M5-TDD-003 REQ-M5-TDD-004 REQ-M5-WORKTREE-001 REQ-M5-WORKTREE-002 REQ-M5-WORKTREE-003 REQ-M5-WORKTREE-004 REQ-M5-PLANNER-001 REQ-M5-PLANNER-002 REQ-M5-PLANNER-003 REQ-M5-PLANNER-004 REQ-M5-BOOTSTRAP-001 REQ-M5-BOOTSTRAP-002 REQ-M5-BOOTSTRAP-003 REQ-M5-BOOTSTRAP-004 REQ-M5-QUALITY-001 REQ-M5-QUALITY-002 REQ-M5-QUALITY-003 REQ-M5-QUALITY-004 REQ-M5-QUALITY-005 REQ-M5-RELEASE-001
+Requirements: REQ-M5-COMPAT-001 REQ-M5-COMPAT-002 REQ-M5-COMPAT-003 REQ-M5-COMPAT-004 REQ-M5-COMPAT-005 REQ-M5-COMPAT-006 REQ-M5-COMPAT-007 REQ-M5-COMPAT-008 REQ-M5-COMPAT-009 REQ-M5-COMPAT-010 REQ-M5-COMPAT-011 REQ-M5-COMPAT-012 REQ-M5-COMPAT-013 REQ-M5-LIFECYCLE-001 REQ-M5-LIFECYCLE-002 REQ-M5-LIFECYCLE-003 REQ-M5-LIFECYCLE-004 REQ-M5-LIFECYCLE-005 REQ-M5-APPROVAL-001 REQ-M5-APPROVAL-002 REQ-M5-APPROVAL-003 REQ-M5-APPROVAL-004 REQ-M5-APPROVAL-005 REQ-M5-APPROVAL-006 REQ-M5-APPROVAL-007 REQ-M5-APPROVAL-008 REQ-M5-APPROVAL-009 REQ-M5-BUDGET-001 REQ-M5-BUDGET-002 REQ-M5-BUDGET-003 REQ-M5-BUDGET-004 REQ-M5-BUDGET-005 REQ-M5-EVIDENCE-001 REQ-M5-EVIDENCE-002 REQ-M5-EVIDENCE-003 REQ-M5-EVIDENCE-004 REQ-M5-EVIDENCE-005 REQ-M5-EVIDENCE-006 REQ-M5-EVIDENCE-007 REQ-M5-WAIVER-001 REQ-M5-TDD-001 REQ-M5-TDD-002 REQ-M5-TDD-003 REQ-M5-TDD-004 REQ-M5-WORKTREE-001 REQ-M5-WORKTREE-002 REQ-M5-WORKTREE-003 REQ-M5-WORKTREE-004 REQ-M5-PLANNER-001 REQ-M5-PLANNER-002 REQ-M5-PLANNER-003 REQ-M5-PLANNER-004 REQ-M5-BOOTSTRAP-001 REQ-M5-BOOTSTRAP-002 REQ-M5-BOOTSTRAP-003 REQ-M5-BOOTSTRAP-004 REQ-M5-QUALITY-001 REQ-M5-QUALITY-002 REQ-M5-QUALITY-003 REQ-M5-QUALITY-004 REQ-M5-QUALITY-005 REQ-M5-RELEASE-001 REQ-M5-RELEASE-002
 
 ## Classification
 
@@ -35,8 +35,8 @@ input only.
 
 - New normative requirements for compatibility, lifecycle, approval repair,
   budgets, evidence, TDD, worktrees, Planner output, bootstrap, and quality.
-- Future design will define architecture, ADRs, schemas, transitions, and C4
-  diagrams after requirements approval.
+- The approved design defines architecture, ADRs, schemas, lifecycle
+  transitions, C4 diagrams, and candidate-bound release evidence.
 - The human selected a single `musubix5` executable with no `musubix3` alias.
   This is an intentional compatibility break requiring an ADR, migration guide,
   and regression tests.
@@ -51,47 +51,69 @@ input only.
 - musubix3 tag `v0.1.18`
 - musubix4 tag `v0.1.3` and its dirty state as non-release design evidence
 
-## Implemented outcome
+## Generation 2 implementation
 
-- Preserved the pinned musubix3 CLI, JSON, exit-code, configuration, trace,
+- Preserves the pinned musubix3 CLI, JSON, exit-code, configuration, trace,
   graph, TDD, approval, gate, status, installation, and startup contracts.
-- Added repository-wide monotonic order, durable leases, resumable lifecycle
+- Adds repository-wide monotonic order, durable leases, resumable lifecycle
   transitions, separated evidence registries, native exact-hash approvals,
   budget reservations, repairable verified-auto boundaries, run-local
   specification isolation, deterministic current TDD-cycle selection, and
   isolated candidate/QA workspaces.
-- Added an explicit, bounded Bootstrap Runner that cannot write normal
+- Adds an explicit, bounded Bootstrap Runner that cannot write normal
   approval, TDD, trace, graph, workflow, quality, release, package, or waiver
   evidence and cannot authorize a release.
-- Added deterministic quality/readiness classification and a separate,
+- Adds deterministic quality/readiness classification and a separate,
   candidate-bound, single-purpose authorization guard for publish, tag, and
   push operations.
-- Removed inherited musubix3 trace declarations so all authoritative trace
+- Removes inherited musubix3 trace declarations so all authoritative trace
   links and generated evidence belong to musubix5.
+- Materializes the approved workflow, approval-automation, and candidate-gate
+  policy defaults into deterministic approval and gate projections.
+- Adds the closed five-job GitHub Actions candidate matrix, strict GitHub OIDC
+  plus ephemeral Ed25519 artifact verification, journal-backed idempotent
+  ingestion, CI run-reuse rejection, and per-job release projections.
 
-## Quality evidence
+## Generation 2 quality evidence
 
-- TypeScript typecheck and build pass.
-- The complete Vitest suite and pinned compatibility suite pass.
-- Package contents and isolated installation/startup smoke checks pass.
-- Strict trace coverage and graph gate pass.
-- The current quality checkpoint follows the latest complete Red,
-  Implementation, and Green evidence for every requirement.
-- The optional formal check reports `fail` because all 59 prose requirements
+- All 63 normative requirements have generation-2 Red, Implementation, and
+  Green evidence; `tdd validate` reports no uncovered or invalid cycles.
+- The latest complete validation passed 53 test files and 66 tests,
+  TypeScript typecheck/build, the pinned compatibility suite,
+  package-content checks, isolated tarball installation/startup smoke checks,
+  strict trace, and graph validation.
+- Candidate-gate trust has an additional fresh Red-to-Green cycle and focused
+  candidate-gate/CLI compatibility tests, typecheck, and build pass after the
+  trust implementation.
+- The read-only matrix gate executes all six configured commands successfully
+  and preserves the tracked tree. After reconciling the privacy-sanitized
+  transcripts from both implementation sessions, the matrix gate passes
+  locally and workflow verification reconciles 13 declarations across two
+  Skills.
+- The optional formal check reports `fail` because the prose requirements
   are `FORMAL_UNSUPPORTED` by the current Boolean abstraction; it grants no
   proof credit.
-- The required overall gate remains `fail` until
-  `WORKFLOW_INVOCATION_UNVERIFIED` is reconciled from the completed Copilot
-  transcript and the exact release manifest receives human approval.
 - `CHANGE_RECORDEDAT_OUT_OF_ORDER` remains a non-blocking historical warning:
-  monotonic order 216 precedes 217 even though their wall-clock `recordedAt`
-  values are reversed. Persisted order, not wall-clock time, is authoritative.
+  one waiver-related wall-clock `recordedAt` value does not follow journal
+  sequence. Persisted monotonic order, not wall-clock time, is authoritative.
+- Release readiness is still blocked by five externally produced
+  candidate-matrix attestations and explicit human release approval. These
+  records must not be fabricated.
 
 ## Release boundary
 
-The candidate is version `0.1.0` on branch `change/CHANGE-0002`; its immutable
-commit and exact release manifest SHA-256 will be established only after these
-changes are committed and workflow evidence is reconciled. Release approval
-remains pending. No package publication, Git tag, or remote push has been
-performed. Each external operation additionally requires a separate explicit
-human authorization bound to the approved candidate.
+The target remains version `0.1.0` on branch `change/CHANGE-0002`. The prior
+candidate and release manifest are superseded and cannot receive release
+approval. A new immutable candidate and exact manifest can be established only
+after the current approved requirements/design and complete local validation
+are committed as an immutable candidate, followed by ingestion of all five
+candidate-bound CI attestations. No package publication, Git tag, remote push,
+or release operation has been performed. Each external operation additionally
+requires a separate explicit human authorization bound to the approved
+candidate.
+
+The candidate workflow can run only after `.github/workflows/candidate-gate.yml`
+is available on the repository default branch and the exact candidate commit is
+available to GitHub Actions. Those pushes are prerequisites for external matrix
+evidence, are outside this local continuation, and require their own explicit
+human authorization.

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-21T10:33:27.020Z",
+  "generatedAt": "2026-09-21T23:15:23.827Z",
   "nodes": [
     {
       "id": "ADR-0002",
@@ -51,106 +51,124 @@
       "line": 1
     },
     {
+      "id": "ADR-0010",
+      "kind": "adr",
+      "path": ".musubix/decisions/ADR-0010.md",
+      "line": 1
+    },
+    {
       "id": "DES-M5-001",
       "kind": "design",
       "path": ".musubix/features/musubix5-clean-foundation/design.md",
-      "line": 55
+      "line": 90
     },
     {
       "id": "DES-M5-002",
       "kind": "design",
       "path": ".musubix/features/musubix5-clean-foundation/design.md",
-      "line": 63
+      "line": 98
     },
     {
       "id": "DES-M5-003",
       "kind": "design",
       "path": ".musubix/features/musubix5-clean-foundation/design.md",
-      "line": 71
+      "line": 106
     },
     {
       "id": "DES-M5-004",
       "kind": "design",
       "path": ".musubix/features/musubix5-clean-foundation/design.md",
-      "line": 78
+      "line": 113
     },
     {
       "id": "DES-M5-005",
       "kind": "design",
       "path": ".musubix/features/musubix5-clean-foundation/design.md",
-      "line": 86
+      "line": 121
     },
     {
       "id": "DES-M5-006",
       "kind": "design",
       "path": ".musubix/features/musubix5-clean-foundation/design.md",
-      "line": 94
+      "line": 129
     },
     {
       "id": "DES-M5-007",
       "kind": "design",
       "path": ".musubix/features/musubix5-clean-foundation/design.md",
-      "line": 102
+      "line": 137
     },
     {
       "id": "DES-M5-008",
       "kind": "design",
       "path": ".musubix/features/musubix5-clean-foundation/design.md",
-      "line": 110
+      "line": 145
     },
     {
       "id": "DES-M5-009",
       "kind": "design",
       "path": ".musubix/features/musubix5-clean-foundation/design.md",
-      "line": 118
+      "line": 153
     },
     {
       "id": "DES-M5-010",
       "kind": "design",
       "path": ".musubix/features/musubix5-clean-foundation/design.md",
-      "line": 126
+      "line": 161
     },
     {
       "id": "DES-M5-011",
       "kind": "design",
       "path": ".musubix/features/musubix5-clean-foundation/design.md",
-      "line": 134
+      "line": 169
     },
     {
       "id": "DES-M5-012",
       "kind": "design",
       "path": ".musubix/features/musubix5-clean-foundation/design.md",
-      "line": 142
+      "line": 177
     },
     {
       "id": "DES-M5-013",
       "kind": "design",
       "path": ".musubix/features/musubix5-clean-foundation/design.md",
-      "line": 150
+      "line": 185
     },
     {
       "id": "DES-M5-014",
       "kind": "design",
       "path": ".musubix/features/musubix5-clean-foundation/design.md",
-      "line": 158
+      "line": 193
     },
     {
       "id": "DES-M5-015",
       "kind": "design",
       "path": ".musubix/features/musubix5-clean-foundation/design.md",
-      "line": 166
+      "line": 201
     },
     {
       "id": "DES-M5-016",
       "kind": "design",
       "path": ".musubix/features/musubix5-clean-foundation/design.md",
-      "line": 174
+      "line": 209
     },
     {
       "id": "DES-M5-017",
       "kind": "design",
       "path": ".musubix/features/musubix5-clean-foundation/design.md",
-      "line": 182
+      "line": 217
+    },
+    {
+      "id": "DES-M5-018",
+      "kind": "design",
+      "path": ".musubix/features/musubix5-clean-foundation/design.md",
+      "line": 225
+    },
+    {
+      "id": "DES-M5-019",
+      "kind": "design",
+      "path": ".musubix/features/musubix5-clean-foundation/design.md",
+      "line": 233
     },
     {
       "id": "REQ-M5-COMPAT-001",
@@ -272,297 +290,325 @@
       "mandatory": true
     },
     {
-      "id": "REQ-M5-APPROVAL-001",
+      "id": "REQ-M5-LIFECYCLE-005",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 127,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-APPROVAL-002",
+      "id": "REQ-M5-APPROVAL-001",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 134,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-APPROVAL-003",
+      "id": "REQ-M5-APPROVAL-002",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 141,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-APPROVAL-004",
+      "id": "REQ-M5-APPROVAL-003",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 148,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-APPROVAL-005",
+      "id": "REQ-M5-APPROVAL-004",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 155,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-APPROVAL-006",
+      "id": "REQ-M5-APPROVAL-005",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 162,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-APPROVAL-007",
+      "id": "REQ-M5-APPROVAL-006",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 169,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-APPROVAL-008",
+      "id": "REQ-M5-APPROVAL-007",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 176,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-APPROVAL-009",
+      "id": "REQ-M5-APPROVAL-008",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 183,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-BUDGET-001",
+      "id": "REQ-M5-APPROVAL-009",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 190,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-BUDGET-002",
+      "id": "REQ-M5-BUDGET-001",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 197,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-BUDGET-003",
+      "id": "REQ-M5-BUDGET-002",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 204,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-BUDGET-004",
+      "id": "REQ-M5-BUDGET-003",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 211,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-BUDGET-005",
+      "id": "REQ-M5-BUDGET-004",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 218,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-EVIDENCE-001",
+      "id": "REQ-M5-BUDGET-005",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 225,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-EVIDENCE-002",
+      "id": "REQ-M5-EVIDENCE-001",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 232,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-EVIDENCE-003",
+      "id": "REQ-M5-EVIDENCE-002",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 239,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-EVIDENCE-004",
+      "id": "REQ-M5-EVIDENCE-003",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 246,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-EVIDENCE-005",
+      "id": "REQ-M5-EVIDENCE-004",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 253,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-WAIVER-001",
+      "id": "REQ-M5-EVIDENCE-005",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 260,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-TDD-001",
+      "id": "REQ-M5-EVIDENCE-006",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 267,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-TDD-002",
+      "id": "REQ-M5-EVIDENCE-007",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 274,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-TDD-003",
+      "id": "REQ-M5-WAIVER-001",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 281,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-TDD-004",
+      "id": "REQ-M5-TDD-001",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 288,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-WORKTREE-001",
+      "id": "REQ-M5-TDD-002",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 295,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-WORKTREE-002",
+      "id": "REQ-M5-TDD-003",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 302,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-WORKTREE-003",
+      "id": "REQ-M5-TDD-004",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 309,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-WORKTREE-004",
+      "id": "REQ-M5-WORKTREE-001",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 316,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-PLANNER-001",
+      "id": "REQ-M5-WORKTREE-002",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 323,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-PLANNER-002",
+      "id": "REQ-M5-WORKTREE-003",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 330,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-PLANNER-003",
+      "id": "REQ-M5-WORKTREE-004",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 337,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-PLANNER-004",
+      "id": "REQ-M5-PLANNER-001",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 344,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-BOOTSTRAP-001",
+      "id": "REQ-M5-PLANNER-002",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 351,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-BOOTSTRAP-002",
+      "id": "REQ-M5-PLANNER-003",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 358,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-BOOTSTRAP-003",
+      "id": "REQ-M5-PLANNER-004",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 365,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-BOOTSTRAP-004",
+      "id": "REQ-M5-BOOTSTRAP-001",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 372,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-QUALITY-001",
+      "id": "REQ-M5-BOOTSTRAP-002",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 379,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-QUALITY-002",
+      "id": "REQ-M5-BOOTSTRAP-003",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 386,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-QUALITY-003",
+      "id": "REQ-M5-BOOTSTRAP-004",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 393,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-QUALITY-004",
+      "id": "REQ-M5-QUALITY-001",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 400,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-QUALITY-005",
+      "id": "REQ-M5-QUALITY-002",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 407,
       "mandatory": true
     },
     {
-      "id": "REQ-M5-RELEASE-001",
+      "id": "REQ-M5-QUALITY-003",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 414,
+      "mandatory": true
+    },
+    {
+      "id": "REQ-M5-QUALITY-004",
+      "kind": "requirement",
+      "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
+      "line": 421,
+      "mandatory": true
+    },
+    {
+      "id": "REQ-M5-QUALITY-005",
+      "kind": "requirement",
+      "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
+      "line": 428,
+      "mandatory": true
+    },
+    {
+      "id": "REQ-M5-RELEASE-001",
+      "kind": "requirement",
+      "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
+      "line": 435,
+      "mandatory": true
+    },
+    {
+      "id": "REQ-M5-RELEASE-002",
+      "kind": "requirement",
+      "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
+      "line": 442,
       "mandatory": true
     },
     {
@@ -576,6 +622,12 @@
       "kind": "code",
       "path": "packages/analysis/src/approval-normative.ts",
       "line": 96
+    },
+    {
+      "id": "CODE-M5-APPROVAL-GATE-DIAGNOSTIC-001",
+      "kind": "code",
+      "path": "packages/analysis/src/approval.ts",
+      "line": 218
     },
     {
       "id": "CODE-M5-BOOTSTRAP-002",
@@ -614,22 +666,40 @@
       "line": 160
     },
     {
+      "id": "CODE-M5-CANDIDATE-GATE-001",
+      "kind": "code",
+      "path": "packages/analysis/src/candidate-gate.ts",
+      "line": 296
+    },
+    {
+      "id": "CODE-M5-LIFECYCLE-005",
+      "kind": "code",
+      "path": "packages/analysis/src/change-evidence.ts",
+      "line": 95
+    },
+    {
       "id": "CODE-M5-QUALITY-SUPERSESSION-001",
       "kind": "code",
       "path": "packages/analysis/src/change-evidence.ts",
-      "line": 94
+      "line": 232
+    },
+    {
+      "id": "CODE-M5-GENERATION-CONTEXT-001",
+      "kind": "code",
+      "path": "packages/analysis/src/change-generation.ts",
+      "line": 19
     },
     {
       "id": "CODE-M5-CHANGE-CURRENT-001",
       "kind": "code",
       "path": "packages/analysis/src/change.ts",
-      "line": 337
+      "line": 453
     },
     {
       "id": "CODE-M5-QUALITY-COMPLETENESS-001",
       "kind": "code",
       "path": "packages/analysis/src/change.ts",
-      "line": 548
+      "line": 677
     },
     {
       "id": "CODE-M5-COMPAT-ORACLE-001",
@@ -683,7 +753,7 @@
       "id": "CODE-M5-COMPAT-003",
       "kind": "code",
       "path": "packages/analysis/src/config.ts",
-      "line": 583
+      "line": 603
     },
     {
       "id": "CODE-M5-EVIDENCE-001",
@@ -713,7 +783,7 @@
       "id": "CODE-M5-STATUS-GUIDANCE-001",
       "kind": "code",
       "path": "packages/analysis/src/gate.ts",
-      "line": 656
+      "line": 679
     },
     {
       "id": "CODE-M5-LIFECYCLE-004",
@@ -743,19 +813,19 @@
       "id": "CODE-M5-APPROVAL-001",
       "kind": "code",
       "path": "packages/analysis/src/native-approval.ts",
-      "line": 190
+      "line": 191
     },
     {
       "id": "CODE-M5-APPROVAL-008",
       "kind": "code",
       "path": "packages/analysis/src/native-approval.ts",
-      "line": 273
+      "line": 274
     },
     {
       "id": "CODE-M5-APPROVAL-009",
       "kind": "code",
       "path": "packages/analysis/src/native-approval.ts",
-      "line": 317
+      "line": 318
     },
     {
       "id": "CODE-M5-PLANNER-001",
@@ -815,7 +885,19 @@
       "id": "CODE-M5-TDD-001",
       "kind": "code",
       "path": "packages/analysis/src/tdd-cycle-resolver.ts",
-      "line": 92
+      "line": 95
+    },
+    {
+      "id": "CODE-M5-WORKFLOW-GENERATION-001",
+      "kind": "code",
+      "path": "packages/analysis/src/workflow.ts",
+      "line": 70
+    },
+    {
+      "id": "CODE-M5-WORKFLOW-SANITIZE-001",
+      "kind": "code",
+      "path": "packages/analysis/src/workflow.ts",
+      "line": 165
     },
     {
       "id": "CODE-M5-WORKTREE-002",
@@ -851,13 +933,25 @@
       "id": "CODE-M5-COMPAT-001",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 45
+      "line": 52
     },
     {
       "id": "CODE-M5-BOOTSTRAP-CLI-001",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 672
+      "line": 759
+    },
+    {
+      "id": "CODE-M5-CLI-ERROR-ENVELOPE-001",
+      "kind": "code",
+      "path": "packages/cli/src/main.ts",
+      "line": 814
+    },
+    {
+      "id": "CODE-M5-CLI-BIN-ENTRY-001",
+      "kind": "code",
+      "path": "packages/cli/src/main.ts",
+      "line": 830
     },
     {
       "id": "CODE-M5-COMPAT-006",
@@ -992,6 +1086,30 @@
       "line": 16
     },
     {
+      "id": "TEST-M5-RELEASE-002-TRUST-001",
+      "kind": "test",
+      "path": "tests/candidate-gate-trust.test.ts",
+      "line": 17
+    },
+    {
+      "id": "TEST-M5-RELEASE-002",
+      "kind": "test",
+      "path": "tests/candidate-gate.test.ts",
+      "line": 15
+    },
+    {
+      "id": "TEST-M5-RELEASE-002-APPROVAL-001",
+      "kind": "test",
+      "path": "tests/candidate-gate.test.ts",
+      "line": 54
+    },
+    {
+      "id": "TEST-M5-RELEASE-002-GATE-DIAGNOSTIC-001",
+      "kind": "test",
+      "path": "tests/candidate-gate.test.ts",
+      "line": 85
+    },
+    {
       "id": "TEST-M5-CANDIDATE-SNAPSHOT-REPOSITORY-001",
       "kind": "test",
       "path": "tests/candidate-snapshot-repository-binding.test.ts",
@@ -1010,6 +1128,24 @@
       "line": 5
     },
     {
+      "id": "TEST-M5-LIFECYCLE-GENERATION-BINDING-001",
+      "kind": "test",
+      "path": "tests/change-generation-binding.test.ts",
+      "line": 24
+    },
+    {
+      "id": "TEST-M5-LIFECYCLE-REOPEN-RESUME-001",
+      "kind": "test",
+      "path": "tests/change-generation-resume.test.ts",
+      "line": 24
+    },
+    {
+      "id": "TEST-M5-LIFECYCLE-005",
+      "kind": "test",
+      "path": "tests/change-generation.test.ts",
+      "line": 5
+    },
+    {
       "id": "TEST-M5-LIFECYCLE-004",
       "kind": "test",
       "path": "tests/change-lease.test.ts",
@@ -1025,13 +1161,13 @@
       "id": "TEST-M5-COMPAT-003",
       "kind": "test",
       "path": "tests/cli-json-error-contract.test.ts",
-      "line": 16
+      "line": 17
     },
     {
       "id": "TEST-M5-COMPAT-ORACLE-001",
       "kind": "test",
       "path": "tests/compatibility-oracle.test.ts",
-      "line": 6
+      "line": 7
     },
     {
       "id": "TEST-M5-WORKTREE-CROSS-CHANGE-BRANCH-001",
@@ -1067,7 +1203,7 @@
       "id": "TEST-M5-LIFECYCLE-002",
       "kind": "test",
       "path": "tests/journal-order.test.ts",
-      "line": 43
+      "line": 44
     },
     {
       "id": "TEST-M5-LIFECYCLE-003",
@@ -1104,6 +1240,12 @@
       "kind": "test",
       "path": "tests/package-contract.test.ts",
       "line": 14
+    },
+    {
+      "id": "TEST-M5-COMPAT-007",
+      "kind": "test",
+      "path": "tests/package-contract.test.ts",
+      "line": 27
     },
     {
       "id": "TEST-M5-PLANNER-002",
@@ -1182,6 +1324,24 @@
       "kind": "test",
       "path": "tests/trace-namespace.test.ts",
       "line": 5
+    },
+    {
+      "id": "TEST-M5-EVIDENCE-006",
+      "kind": "test",
+      "path": "tests/workflow-generation-reconciliation.test.ts",
+      "line": 15
+    },
+    {
+      "id": "TEST-M5-EVIDENCE-007",
+      "kind": "test",
+      "path": "tests/workflow-generation-reconciliation.test.ts",
+      "line": 98
+    },
+    {
+      "id": "TEST-M5-EVIDENCE-007-MULTI-001",
+      "kind": "test",
+      "path": "tests/workflow-generation-reconciliation.test.ts",
+      "line": 156
     },
     {
       "id": "TEST-M5-WORKTREE-001",
@@ -1293,6 +1453,11 @@
       "relation": "satisfies"
     },
     {
+      "from": "DES-M5-002",
+      "to": "REQ-M5-LIFECYCLE-005",
+      "relation": "satisfies"
+    },
+    {
       "from": "ADR-0002",
       "to": "DES-M5-002",
       "relation": "decides"
@@ -1304,6 +1469,11 @@
     },
     {
       "from": "ADR-0007",
+      "to": "DES-M5-002",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0010",
       "to": "DES-M5-002",
       "relation": "decides"
     },
@@ -1358,6 +1528,16 @@
       "relation": "depends-on"
     },
     {
+      "from": "DES-M5-002",
+      "to": "DES-M5-018",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-002",
+      "to": "DES-M5-019",
+      "relation": "depends-on"
+    },
+    {
       "from": "DES-M5-003",
       "to": "REQ-M5-COMPAT-003",
       "relation": "satisfies"
@@ -1409,11 +1589,21 @@
     },
     {
       "from": "DES-M5-004",
+      "to": "REQ-M5-LIFECYCLE-005",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-004",
       "to": "REQ-M5-EVIDENCE-005",
       "relation": "satisfies"
     },
     {
       "from": "ADR-0003",
+      "to": "DES-M5-004",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0010",
       "to": "DES-M5-004",
       "relation": "decides"
     },
@@ -1439,6 +1629,11 @@
     },
     {
       "from": "DES-M5-005",
+      "to": "REQ-M5-LIFECYCLE-005",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-005",
       "to": "REQ-M5-QUALITY-002",
       "relation": "satisfies"
     },
@@ -1449,6 +1644,11 @@
     },
     {
       "from": "ADR-0005",
+      "to": "DES-M5-005",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0010",
       "to": "DES-M5-005",
       "relation": "decides"
     },
@@ -1498,6 +1698,16 @@
       "relation": "satisfies"
     },
     {
+      "from": "DES-M5-006",
+      "to": "REQ-M5-LIFECYCLE-005",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-006",
+      "to": "REQ-M5-RELEASE-002",
+      "relation": "satisfies"
+    },
+    {
       "from": "ADR-0002",
       "to": "DES-M5-006",
       "relation": "decides"
@@ -1513,6 +1723,11 @@
       "relation": "decides"
     },
     {
+      "from": "ADR-0010",
+      "to": "DES-M5-006",
+      "relation": "decides"
+    },
+    {
       "from": "DES-M5-006",
       "to": "DES-M5-003",
       "relation": "depends-on"
@@ -1524,12 +1739,22 @@
     },
     {
       "from": "DES-M5-006",
+      "to": "DES-M5-005",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-006",
       "to": "DES-M5-007",
       "relation": "depends-on"
     },
     {
       "from": "DES-M5-006",
       "to": "DES-M5-012",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-006",
+      "to": "DES-M5-019",
       "relation": "depends-on"
     },
     {
@@ -1559,6 +1784,11 @@
     },
     {
       "from": "DES-M5-007",
+      "to": "REQ-M5-LIFECYCLE-005",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-007",
       "to": "REQ-M5-WAIVER-001",
       "relation": "satisfies"
     },
@@ -1569,6 +1799,11 @@
     },
     {
       "from": "ADR-0005",
+      "to": "DES-M5-007",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0010",
       "to": "DES-M5-007",
       "relation": "decides"
     },
@@ -1603,12 +1838,22 @@
       "relation": "satisfies"
     },
     {
+      "from": "DES-M5-008",
+      "to": "REQ-M5-LIFECYCLE-005",
+      "relation": "satisfies"
+    },
+    {
       "from": "ADR-0004",
       "to": "DES-M5-008",
       "relation": "decides"
     },
     {
       "from": "ADR-0009",
+      "to": "DES-M5-008",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0010",
       "to": "DES-M5-008",
       "relation": "decides"
     },
@@ -1743,7 +1988,17 @@
       "relation": "satisfies"
     },
     {
+      "from": "DES-M5-011",
+      "to": "REQ-M5-LIFECYCLE-005",
+      "relation": "satisfies"
+    },
+    {
       "from": "ADR-0005",
+      "to": "DES-M5-011",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0010",
       "to": "DES-M5-011",
       "relation": "decides"
     },
@@ -1783,7 +2038,17 @@
       "relation": "satisfies"
     },
     {
+      "from": "DES-M5-012",
+      "to": "REQ-M5-RELEASE-002",
+      "relation": "satisfies"
+    },
+    {
       "from": "ADR-0006",
+      "to": "DES-M5-012",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0010",
       "to": "DES-M5-012",
       "relation": "decides"
     },
@@ -1874,6 +2139,11 @@
     },
     {
       "from": "DES-M5-014",
+      "to": "REQ-M5-COMPAT-013",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-014",
       "to": "REQ-M5-QUALITY-002",
       "relation": "satisfies"
     },
@@ -1898,6 +2168,11 @@
       "relation": "decides"
     },
     {
+      "from": "ADR-0010",
+      "to": "DES-M5-014",
+      "relation": "decides"
+    },
+    {
       "from": "DES-M5-014",
       "to": "DES-M5-003",
       "relation": "depends-on"
@@ -1908,8 +2183,18 @@
       "relation": "depends-on"
     },
     {
+      "from": "DES-M5-014",
+      "to": "DES-M5-018",
+      "relation": "depends-on"
+    },
+    {
       "from": "DES-M5-015",
       "to": "REQ-M5-EVIDENCE-004",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-015",
+      "to": "REQ-M5-LIFECYCLE-005",
       "relation": "satisfies"
     },
     {
@@ -1938,6 +2223,11 @@
       "relation": "satisfies"
     },
     {
+      "from": "DES-M5-015",
+      "to": "REQ-M5-RELEASE-002",
+      "relation": "satisfies"
+    },
+    {
       "from": "ADR-0005",
       "to": "DES-M5-015",
       "relation": "decides"
@@ -1949,6 +2239,11 @@
     },
     {
       "from": "ADR-0009",
+      "to": "DES-M5-015",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0010",
       "to": "DES-M5-015",
       "relation": "decides"
     },
@@ -1979,11 +2274,21 @@
     },
     {
       "from": "DES-M5-016",
+      "to": "REQ-M5-RELEASE-002",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-016",
       "to": "REQ-M5-BOOTSTRAP-004",
       "relation": "satisfies"
     },
     {
       "from": "ADR-0008",
+      "to": "DES-M5-016",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0010",
       "to": "DES-M5-016",
       "relation": "decides"
     },
@@ -2000,6 +2305,11 @@
     {
       "from": "DES-M5-016",
       "to": "DES-M5-015",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-016",
+      "to": "DES-M5-019",
       "relation": "depends-on"
     },
     {
@@ -2053,6 +2363,161 @@
       "relation": "depends-on"
     },
     {
+      "from": "DES-M5-018",
+      "to": "REQ-M5-COMPAT-001",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-018",
+      "to": "REQ-M5-COMPAT-003",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-018",
+      "to": "REQ-M5-COMPAT-013",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-018",
+      "to": "REQ-M5-EVIDENCE-003",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-018",
+      "to": "REQ-M5-EVIDENCE-006",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-018",
+      "to": "REQ-M5-EVIDENCE-007",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-018",
+      "to": "REQ-M5-LIFECYCLE-005",
+      "relation": "satisfies"
+    },
+    {
+      "from": "ADR-0005",
+      "to": "DES-M5-018",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0010",
+      "to": "DES-M5-018",
+      "relation": "decides"
+    },
+    {
+      "from": "DES-M5-018",
+      "to": "DES-M5-003",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-018",
+      "to": "DES-M5-004",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-018",
+      "to": "DES-M5-005",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-018",
+      "to": "DES-M5-007",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-019",
+      "to": "REQ-M5-APPROVAL-007",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-019",
+      "to": "REQ-M5-COMPAT-013",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-019",
+      "to": "REQ-M5-EVIDENCE-003",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-019",
+      "to": "REQ-M5-EVIDENCE-004",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-019",
+      "to": "REQ-M5-LIFECYCLE-005",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-019",
+      "to": "REQ-M5-QUALITY-001",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-019",
+      "to": "REQ-M5-QUALITY-003",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-019",
+      "to": "REQ-M5-RELEASE-002",
+      "relation": "satisfies"
+    },
+    {
+      "from": "ADR-0006",
+      "to": "DES-M5-019",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0008",
+      "to": "DES-M5-019",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0010",
+      "to": "DES-M5-019",
+      "relation": "decides"
+    },
+    {
+      "from": "DES-M5-019",
+      "to": "DES-M5-003",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-019",
+      "to": "DES-M5-004",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-019",
+      "to": "DES-M5-005",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-019",
+      "to": "DES-M5-007",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-019",
+      "to": "DES-M5-012",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-019",
+      "to": "DES-M5-014",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-019",
+      "to": "DES-M5-015",
+      "relation": "depends-on"
+    },
+    {
       "from": "CODE-M5-APPROVAL-003",
       "to": "REQ-M5-APPROVAL-003",
       "relation": "implements"
@@ -2095,6 +2560,16 @@
     {
       "from": "CODE-M5-APPROVAL-NORMATIVE-PATHS-001",
       "to": "DES-M5-006",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-APPROVAL-GATE-DIAGNOSTIC-001",
+      "to": "REQ-M5-RELEASE-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-APPROVAL-GATE-DIAGNOSTIC-001",
+      "to": "DES-M5-019",
       "relation": "implements"
     },
     {
@@ -2183,6 +2658,31 @@
       "relation": "implements"
     },
     {
+      "from": "CODE-M5-CANDIDATE-GATE-001",
+      "to": "REQ-M5-RELEASE-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-CANDIDATE-GATE-001",
+      "to": "DES-M5-019",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-LIFECYCLE-005",
+      "to": "REQ-M5-LIFECYCLE-005",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-LIFECYCLE-005",
+      "to": "DES-M5-004",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-LIFECYCLE-005",
+      "to": "DES-M5-005",
+      "relation": "implements"
+    },
+    {
       "from": "CODE-M5-QUALITY-SUPERSESSION-001",
       "to": "REQ-M5-LIFECYCLE-003",
       "relation": "implements"
@@ -2215,6 +2715,36 @@
     {
       "from": "CODE-M5-QUALITY-SUPERSESSION-001",
       "to": "DES-M5-015",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-GENERATION-CONTEXT-001",
+      "to": "REQ-M5-LIFECYCLE-005",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-GENERATION-CONTEXT-001",
+      "to": "REQ-M5-APPROVAL-007",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-GENERATION-CONTEXT-001",
+      "to": "REQ-M5-TDD-003",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-GENERATION-CONTEXT-001",
+      "to": "DES-M5-005",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-GENERATION-CONTEXT-001",
+      "to": "DES-M5-006",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-GENERATION-CONTEXT-001",
+      "to": "DES-M5-011",
       "relation": "implements"
     },
     {
@@ -2350,6 +2880,11 @@
     {
       "from": "CODE-M5-COMPAT-BIN-001",
       "to": "REQ-M5-COMPAT-006",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-COMPAT-BIN-001",
+      "to": "REQ-M5-COMPAT-007",
       "relation": "implements"
     },
     {
@@ -2748,6 +3283,31 @@
       "relation": "implements"
     },
     {
+      "from": "CODE-M5-WORKFLOW-GENERATION-001",
+      "to": "REQ-M5-EVIDENCE-006",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-WORKFLOW-GENERATION-001",
+      "to": "DES-M5-004",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-WORKFLOW-GENERATION-001",
+      "to": "DES-M5-018",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-WORKFLOW-SANITIZE-001",
+      "to": "REQ-M5-EVIDENCE-007",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-WORKFLOW-SANITIZE-001",
+      "to": "DES-M5-018",
+      "relation": "implements"
+    },
+    {
       "from": "CODE-M5-WORKTREE-002",
       "to": "REQ-M5-WORKTREE-002",
       "relation": "implements"
@@ -2830,6 +3390,31 @@
     {
       "from": "CODE-M5-BOOTSTRAP-CLI-001",
       "to": "DES-M5-013",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-CLI-ERROR-ENVELOPE-001",
+      "to": "REQ-M5-COMPAT-003",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-CLI-ERROR-ENVELOPE-001",
+      "to": "DES-M5-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-CLI-BIN-ENTRY-001",
+      "to": "REQ-M5-COMPAT-005",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-CLI-BIN-ENTRY-001",
+      "to": "REQ-M5-COMPAT-006",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-CLI-BIN-ENTRY-001",
+      "to": "DES-M5-006",
       "relation": "implements"
     },
     {
@@ -3013,6 +3598,36 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-RELEASE-002-TRUST-001",
+      "to": "REQ-M5-APPROVAL-007",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-RELEASE-002-TRUST-001",
+      "to": "REQ-M5-EVIDENCE-003",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-RELEASE-002-TRUST-001",
+      "to": "REQ-M5-RELEASE-002",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-RELEASE-002",
+      "to": "REQ-M5-RELEASE-002",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-RELEASE-002-APPROVAL-001",
+      "to": "REQ-M5-RELEASE-002",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-RELEASE-002-GATE-DIAGNOSTIC-001",
+      "to": "REQ-M5-RELEASE-002",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-CANDIDATE-SNAPSHOT-REPOSITORY-001",
       "to": "REQ-M5-APPROVAL-007",
       "relation": "verifies"
@@ -3095,6 +3710,26 @@
     {
       "from": "TEST-M5-EVIDENCE-CURRENT-001",
       "to": "REQ-M5-COMPAT-013",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-LIFECYCLE-GENERATION-BINDING-001",
+      "to": "REQ-M5-LIFECYCLE-005",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-LIFECYCLE-GENERATION-BINDING-001",
+      "to": "REQ-M5-APPROVAL-007",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-LIFECYCLE-REOPEN-RESUME-001",
+      "to": "REQ-M5-LIFECYCLE-005",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-LIFECYCLE-005",
+      "to": "REQ-M5-LIFECYCLE-005",
       "relation": "verifies"
     },
     {
@@ -3219,6 +3854,16 @@
     },
     {
       "from": "TEST-M5-COMPAT-006",
+      "to": "REQ-M5-COMPAT-006",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-COMPAT-007",
+      "to": "REQ-M5-COMPAT-005",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-COMPAT-007",
       "to": "REQ-M5-COMPAT-006",
       "relation": "verifies"
     },
@@ -3393,6 +4038,21 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-EVIDENCE-006",
+      "to": "REQ-M5-EVIDENCE-006",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-EVIDENCE-007",
+      "to": "REQ-M5-EVIDENCE-007",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-EVIDENCE-007-MULTI-001",
+      "to": "REQ-M5-EVIDENCE-007",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-WORKTREE-001",
       "to": "REQ-M5-WORKTREE-001",
       "relation": "verifies"
@@ -3418,42 +4078,45 @@
     ".musubix/decisions/ADR-0002.md": "9f41d752530613cf6cc3ab6798709567e85650e5b97426dfca4147840eb35684",
     ".musubix/decisions/ADR-0003.md": "342a6a8e30c367684b02ee907f0f6bc3aef3b8ff6a08005148f43411f3885b7d",
     ".musubix/decisions/ADR-0004.md": "837623189c1605b24040bcf40db42de65f06fb1f3f47911068a8b4558ca5856f",
-    ".musubix/decisions/ADR-0005.md": "f94c20196f66891cb0fc640a1bb8ea485d1315a35b5f4aa7d166571d2335a964",
-    ".musubix/decisions/ADR-0006.md": "5649e9d4ae9c4c4756bd872ac023d588acd90d32fc2e2c149ab3f29cf2b67ac1",
+    ".musubix/decisions/ADR-0005.md": "d90fe9072f0f41e88ecf4df4e11f1c653d74ba4d9bff262fb7e3e405a57b2e1e",
+    ".musubix/decisions/ADR-0006.md": "177062671723869629b64680cb3deabce7c0160531679819b1f908139c6697b7",
     ".musubix/decisions/ADR-0007.md": "d931c13da6a9baa087a763542bac502a6cd217359e72a1a1cbe422668418b949",
-    ".musubix/decisions/ADR-0008.md": "fded9131107049bdf25d03e4bc09ae843a9810618d01915895fc19340b1c0ce9",
+    ".musubix/decisions/ADR-0008.md": "b1b46fec0d081bd2385cae4ba919ecf6458d86d77025a527c31106f0d188d291",
     ".musubix/decisions/ADR-0009.md": "5e38a2e75f754b89ad51bcb242ad6994e36393c41c53630f2d6dd76e67d8294e",
-    ".musubix/features/musubix5-clean-foundation/design.md": "65faf7a058b8d77e0b9679fa8dcf5fe811c1ec20ebbb3ebd16b96917f40d7be2",
-    ".musubix/features/musubix5-clean-foundation/requirements.md": "9cabf55ef6d730f98d6ca895925821df6c89ed449fe988e07cc93c1042030f12",
-    "packages/analysis/src/adapters.ts": "1bc8f13aff8b1f0c2e47364f4f71779b393f4311a32e820bf6b90d174694d379",
+    ".musubix/decisions/ADR-0010.md": "4a0be8e73fd25c873e1eb917ec8a060efedcd5222170aaf08e34818c61097a4e",
+    ".musubix/features/musubix5-clean-foundation/design.md": "eee5d2685c0589ccad4cfbe048f54f2dc6b9113406e78b62095e053bb9d6e94a",
+    ".musubix/features/musubix5-clean-foundation/requirements.md": "bac50a27a7b26d37079129faccb8645f937cb2c06d9c381a677b4000fede2caa",
+    "packages/analysis/src/adapters.ts": "4db9916f432a92d27520a7aa9af575db67897a729fbbed623331ddc00c020b95",
     "packages/analysis/src/approval-boundary.ts": "ec0c2da68cff776388126e4d34db112d529462bd7dfcfe4691d2bc5701a81090",
     "packages/analysis/src/approval-domains.ts": "56363d8d7fe0158df596a09abf2688f439815c38dd582fd5970c1bb30e6c5994",
     "packages/analysis/src/approval-normative.ts": "18fea120444b05d5ef507985e221f4e6a739e1a7d65e468b992e8c6467979904",
     "packages/analysis/src/approval-record.ts": "4cbf3b904c71f54c860b774a8946fa92b92b695f0fd348e55e9bdaaae8a6a761",
-    "packages/analysis/src/approval.ts": "4f72707453f42d9449db0117487006d07280b44671d01405e1f6fab74dff5871",
-    "packages/analysis/src/attestation.ts": "1a0c503113fadaace6c75cbb9c5068890f0692d2246013e1dc1a5a792d0fa4aa",
+    "packages/analysis/src/approval.ts": "13eb8e0529e0abb17f305a36ab54befd346325a7f7fcf01cc18baf06b3aaedf8",
+    "packages/analysis/src/attestation.ts": "c1875e4a1e2082c851ea422da460e1e853d4d5d0935a7e120af6ea78b2866095",
     "packages/analysis/src/bootstrap-runner.ts": "4167b10f413af1cdc39858f16f94110e407b7778ca8c09d8c0179e497f52550e",
     "packages/analysis/src/budget-ledger.ts": "c7e4fa74032e066491708685359ca7115ab34c44a0d2af18337bd15a4da25590",
+    "packages/analysis/src/candidate-gate.ts": "b4196f64c2b0a31d71218849a792a8d0686d12bc3514e44382ca8b461c534974",
     "packages/analysis/src/canonical.ts": "3390f72470ce266de5f0e3b5800b1674420b648f9e28c4507a33a015bbe0dec1",
-    "packages/analysis/src/change-evidence.ts": "f4631858d9e966a840845cc66dd57cbafea241d6d5411b8c15b7c5b6e871f9a5",
+    "packages/analysis/src/change-evidence.ts": "f94dec07f075e91e3425ef83cb2c23424be43db0e55ca33598d10a5c257417a6",
+    "packages/analysis/src/change-generation.ts": "62d6ff9bca2b9c05fc746a4c01833cf9d3d786d55645249ea666534b088b10b3",
     "packages/analysis/src/change-waiver.ts": "1b880c29a16080445f324265e0da067dd8537e64cb42f360369fd2a1eda0f9c3",
-    "packages/analysis/src/change.ts": "2f4c26c187b9f053325dbbb7e44a901201e20c3184a1b6dd43912edd4994aaa9",
-    "packages/analysis/src/compatibility-oracle.ts": "e3fcb1c704c83e7d46900c146586f3522840b4afcee47d232397f49676aba844",
-    "packages/analysis/src/config.ts": "4e49957b6d363822fac9d85e2bd3b2623b35dfd01f3bf30f4d58a24c221e07d9",
+    "packages/analysis/src/change.ts": "2a7baddf94376de9f05c495e9b2c6c76412f9e8b3e4bcf154e7bbe39c1e44229",
+    "packages/analysis/src/compatibility-oracle.ts": "83aac1ddcf29d0ff7d76a8e05c9be9dfa1911f94c1ec960145578c43f2b32d98",
+    "packages/analysis/src/config.ts": "b75dacf7bce0e58eaa465a32a6181e75d3492a1dafb4cbb5e09cc9220f9ffcba",
     "packages/analysis/src/evidence-registry.ts": "41bdd3f05c91734baf22cccf5289a9906eae30bfd1356236bc98c96be47da660",
     "packages/analysis/src/files.ts": "b17b428843bce47672fcbd3d08e5953b4612ee307bcddcf59c538243fc2fc434",
     "packages/analysis/src/formal.ts": "9f5622983fed80c1e7c141cc7c7dcd217447e5c2edd39e64877db052a57b730b",
-    "packages/analysis/src/gate.ts": "319e125312d5082302a9e836b2945f8f4c3c3cc521144207c2c1be30ebbac66a",
+    "packages/analysis/src/gate.ts": "661e066d5749b2220901f98df98aad5218bc38e692b071b2d290b2975a6f7eb6",
     "packages/analysis/src/graph.ts": "448a2ebb4aa9f8b5a3b8a3ca7fbe06b51dd0a38f8c69830f6717947bda050a23",
-    "packages/analysis/src/index.ts": "f72a8e7f33354bba32d12fcbcfdc99278d48f74c817f4e909be78ec04fc788f8",
+    "packages/analysis/src/index.ts": "6fc873132cedd17a25220648978d981fa65452f5f92a40e11484362919c3a53a",
     "packages/analysis/src/journal.ts": "e197eedb49e6182381a600d6c2eb17a95efade935b64c2c8203a5ea368e9d523",
     "packages/analysis/src/knowledge.ts": "31313a4519c711ac98648313059359daf69959403e39deb1509dea90840182b4",
     "packages/analysis/src/lifecycle.ts": "6dfcd2fd1915ea8edbc8d611da3d35aadd8a09581796c029e83d41a2a6fc7fc2",
-    "packages/analysis/src/model-correspondence.ts": "6b05701cb66b95b2d46b8ff74f4d09ce54a1a2bbb6b8868b532e0f3e7f1cf87a",
+    "packages/analysis/src/model-correspondence.ts": "30d993a8198f8b5aaad2e69e5711c47410195ce16dd3de1813df363a32a253ff",
     "packages/analysis/src/mutation.ts": "87fcc7a0ef44b43a093c941319d7d6d600314d3ca2c4d94abddcb6c247c1dd9b",
-    "packages/analysis/src/native-approval.ts": "e0e6b9fea2b5b1e4ed40c67b293329efd277ca259dbe857f9c2f78dab75be4f3",
+    "packages/analysis/src/native-approval.ts": "bd6bba0231389ada6758213a90be9a6cfde96e45e89dc9776d9d4e46e2951c53",
     "packages/analysis/src/order.ts": "712ef698e5136da577602a9e603cbd59fe84f237ccda712cdcc9d2c6dd2335aa",
-    "packages/analysis/src/performance.ts": "1145c285582ff188e90263b4d9d9f28ca49104e79b8299b2ecd3e278d8ef80ac",
+    "packages/analysis/src/performance.ts": "a51c388499c57f177ebc4a6d5a160d7fb07550626b24a9c987b6b0d17e96ebe7",
     "packages/analysis/src/planner-output.ts": "c649e484d064c2fc5078bcbc21a08e49746feae179e26de99d92bae17ffe9a5c",
     "packages/analysis/src/process.ts": "8184c7f7c4c58cdc6987fd9d2ec2c02ce8557f94b6aa30853a0c6056ba79cf4a",
     "packages/analysis/src/quality-policy.ts": "0ba33ac06b4762e0f398e04fd6c8975c7db6380f20080fc3dc89a701759fcd89",
@@ -3461,23 +4124,23 @@
     "packages/analysis/src/release-operation-guard.ts": "99bd1f95ad21b49b5d79c449230ca05e81f7d3707ccec77b7891ee7d3151645c",
     "packages/analysis/src/run-local-workspace.ts": "351ae9df02dfab13b58ae86f7619d68885457093a7a4b33c4070807d52324007",
     "packages/analysis/src/scaffold-artifact.ts": "8734de778f121421b3fcfbf5263611bfcffc94cf63248ef3f127459bdfa4f692",
-    "packages/analysis/src/tdd-cycle-resolver.ts": "a1b24f5a03d134ae788a961b644240e4ffa9fb828512f9df349437067bfc4f74",
-    "packages/analysis/src/tdd.ts": "10eaed09b05b0e1f9d94a180207aa89ea598d8af8174a0becd048daf550b5913",
-    "packages/analysis/src/test-report.ts": "41c76811bfcb5e286bf097bf2f6aaf6cd5a414202efe8108f28219ecca063a01",
+    "packages/analysis/src/tdd-cycle-resolver.ts": "7d38cfb73227acb507d830bf85ecb87ac7cb2274ba432ba964fe17d99fef30dc",
+    "packages/analysis/src/tdd.ts": "554e541f8284b2b816c5812aa5d12a2fee5259edfb96ec99b6392cc79ea3215b",
+    "packages/analysis/src/test-report.ts": "c4389c1a73b8ff61beae2061c1eaaeeadc4c5cc529befc059111ea5430d602c4",
     "packages/analysis/src/trace.ts": "270f0348e850d2eb8de81802bc0206f32acdc9b86556bf6cad76dc481799bfa2",
-    "packages/analysis/src/workflow-types.ts": "427c3450352eb7799e2b49933e267f9888e87d51dc5c6482b5b1378620205309",
+    "packages/analysis/src/workflow-types.ts": "725625b0ebb1fc9a727d5947d16f239eb3e9b7306021e13aa4d8a2c3b4773f75",
     "packages/analysis/src/workflow-waiver.ts": "77a93cc41b1a917bf08f8a26eacafc0ce32edcf3b3d90a2b5ccca5d792d014ac",
-    "packages/analysis/src/workflow.ts": "c7e083cc816201eda4c1ffcadba623e620e0bc948a091f207834284094e53320",
+    "packages/analysis/src/workflow.ts": "61f981ac17f57fb4d3d80977da7105ac3c0c2cd93e706f41f4f879aaf0f0235a",
     "packages/analysis/src/workspace-manager.ts": "482f6d2273a2a83de67bce90b05fe57668807ccffcf35eebe3d778ef6da75fab",
     "packages/cli/src/install.ts": "a9a632f460500bd54c562f252e147f2a1d9e2520efb23f9fa76602141b076a20",
-    "packages/cli/src/main.ts": "093799bc0024f36a0a67427737988cc5f021e5a13b5286fe72308448323ab5d2",
+    "packages/cli/src/main.ts": "3c6373e4cdeb030ee8b18e6104bad8e5a439521261f1671351d2124b4cf8dc89",
     "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
     "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
     "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
     "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
     "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
     "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34",
-    "scripts/check-package.mjs": "78bc796ed48fdf8033e6adde803f32e50f5de0cc69abc9db6132b6d4140b13c6",
+    "scripts/check-package.mjs": "0d908465e4245e9985e0554df701f9e84fda6483381c27f60671d92f351fd29a",
     "scripts/smoke-package.mjs": "b1e8ef2bbf213a4927c357fff53f683f3be552f3cb3e79d48c1ddc1b46c6fc7d",
     "tests/approval-boundary-resume.test.ts": "7bf02bd5b510b0e3d47c1830dfbb03434bcec3bf8778ea9bd5788edd2e097379",
     "tests/approval-boundary.test.ts": "ec0a7eb3e0a6c7cb0b9d0b63e50275318c72aa7b972865e1affdf04aa592e3d1",
@@ -3492,25 +4155,30 @@
     "tests/budget-limits.test.ts": "190f30d101797850227644e32cfffefba0b5f2606de21bfb606d6fbd4daa8742",
     "tests/budget-reservation.test.ts": "f7ee772c7546cba05001013d89cfce0fd692096fc9062e4e7e7c7ad1732def7c",
     "tests/budget-usage.test.ts": "45bf344f884740b91adfaf18a41830a72a3095a314aa71193a8750186752689f",
+    "tests/candidate-gate-trust.test.ts": "790c226c4b4c3a435e044a63f2740d1321796b55f1ea2b8bbbe6fee224e1eded",
+    "tests/candidate-gate.test.ts": "cbba3d51e70b9d39806b039914426ceb142016b5ed37a702df29b2fef216a90b",
     "tests/candidate-snapshot-repository-binding.test.ts": "17b1d63cacfb98061293bae8c4fb1218cc27f5576b1c67e73d529b511a936b28",
-    "tests/change-completeness-current.test.ts": "f96e3c114d8c5be2d086d594613b6c5e4d705c2651c40f755711ccddf74cbd2d",
-    "tests/change-current-evidence.test.ts": "a165e06186191eea70478f423a5c7e8ba3219c7bd62d640e8bcde62adadc1f01",
+    "tests/change-completeness-current.test.ts": "0c57842880dd7f10cabdae01c8f9f5a5cbdf19f1ce19c3fd0d39deddd35c3ca6",
+    "tests/change-current-evidence.test.ts": "5f2fcad4c6b9181159fb5eb5576991fe5987e02897779463b1fe0b7186321c13",
+    "tests/change-generation-binding.test.ts": "8ee76fba7e222d5c1d109d4ba333d7c9007461ac1cb5caea80ec068bb8ad1d56",
+    "tests/change-generation-resume.test.ts": "e760d9c55ed2fe3a67d21151df509da479a0487c9ffd0934b98b99956491a06d",
+    "tests/change-generation.test.ts": "acad6bc9e438dd793a0018f8ccd66b7580850d081a4f032c23960df7912a7284",
     "tests/change-lease.test.ts": "90f359b766b40a5a70854148cc20115915fb127514c27bd13dcff9f03eaa256b",
-    "tests/cli-help-contract.test.ts": "a6aa4e340bcbc36710aa9c74041385d48e5397f9d779a5d2979946050c144ac7",
-    "tests/cli-json-error-contract.test.ts": "5c4fe89aa41b51ad50fa46aba16b29ffdeec7c70691f1e5db9d3cfd99c60e712",
-    "tests/compatibility-oracle.test.ts": "269253c3fded2e730e81901c05ea8f533fdbaf9ae7a1324cdaa085cb7d5a6555",
+    "tests/cli-help-contract.test.ts": "e89e70f2af90c98e632687895dd29aace3817ca63ad5e92d881cbea93dba37fb",
+    "tests/cli-json-error-contract.test.ts": "d9c96618b8b09c03423b30f40e4ae5ac8abb22c6a8c050122ccb448e306ed2df",
+    "tests/compatibility-oracle.test.ts": "246a1fb3090c0377d72feece8e578b9608bbb86cf75cdca3ae316956860adc90",
     "tests/cross-change-candidate-branch.test.ts": "cb340d1c22862a88654df138166f9d880b49d77aef6ba7efec607cbc61588740",
     "tests/evidence-binding.test.ts": "17e118ccc2ae168913c6af833ac40deedeac84668522573c64286848c1207248",
     "tests/evidence-identity.test.ts": "3467588120ed4b23c73dd5f0aff0be4b3ff83d38867ff18beda6bcceae98a899",
     "tests/evidence-kinds.test.ts": "b1a624757dcaaaf9431a0dfa245e358139d6566b07de2566477a2dd81ae0be65",
     "tests/evidence-supersession.test.ts": "aa73654e0e5bc737b9ed6725b4091648e9b9d7978a4d466a01506612c2d58bc7",
-    "tests/journal-order.test.ts": "aed6eb3454f81a5d1a83b2f9a00f329f5371039d3f40dfdd395a10e86acd7755",
+    "tests/journal-order.test.ts": "ad0d6d3af105bd9d3775372dcbb130b3436b8ca32d22e8b0b2ac363ec0e5db56",
     "tests/lifecycle-resume.test.ts": "05f7a3f30acf4b0b628e1c068d17c28cb248508fa2e9523c51e6455c4bd2e6ed",
     "tests/lifecycle-state-machine.test.ts": "5cbae549161c93fb5943575d9e0ba974d716f53ca2600ef8e6e07586622a0d33",
     "tests/native-approval.test.ts": "d0525f378f3fb655b6716c0847ddfba37f6e1dc3d3fd42e5d97ce0c1e218a9f0",
     "tests/native-release-candidate-tree.test.ts": "a2504f00976508c54e51e3b09c39aa8113adcd32a42f2bc0fc5325f938fdc649",
     "tests/package-archive.test.ts": "78e461d23036373cdd73740eda64ddc2b4e83bfa5b3cc20917c194d17a882713",
-    "tests/package-contract.test.ts": "62cf33cd27860b58d47ba55f51c93efafe8f691b44c4b6c9c161fae286eb0f21",
+    "tests/package-contract.test.ts": "3536d366dd871d09d1e6633b14f54354aed82349f3269de119cfcba40354dd1c",
     "tests/planner-retry-identity.test.ts": "ee672f87e7528154f1842e7d0acdc70bfed742378119bb26be9e526bf6819b91",
     "tests/planner-validation.test.ts": "2af23c90768dfa6e74ac05922ec28c4eb9a0d674e730682e472ff14040387169",
     "tests/published-bin-contract.test.ts": "1d493ba16d76cba71fe9f148e62fff0fa55f068dd28cf5391c2f18200ae56745",
@@ -3523,7 +4191,8 @@
     "tests/run-local-workspace.test.ts": "b0071c5905412c1f846d854155fbd37b0f72c08db40a20405be71cbfc2f10561",
     "tests/tdd-batch-recording.test.ts": "e254e04461665d42877b747d038bf977f680a0c72255a03b5dfc471cca2f8ef8",
     "tests/tdd-cycle-resolver.test.ts": "71baa72ea3d6648436f98f16fc57fda03a0c95ebc9d428ed8c0425349fc125ac",
-    "tests/trace-namespace.test.ts": "2f260f4e130d9dd0b84c5da1fde88071d1f272a6d2b975dfb60fc8ceb38b4719",
+    "tests/trace-namespace.test.ts": "ace3b8880a0dbc1b143108986c63f292a7e19acff1a72055cbb5015204488a6c",
+    "tests/workflow-generation-reconciliation.test.ts": "897e85fd1cdb51b09310b14ba038e6b46cd0ef9230239de0d23f95fd17e30152",
     "tests/workspace-isolation.test.ts": "2b2fb7376f1834916cc56b244fea870efa6ae40b78164a5c35b5ccb3db9ab923",
     "tests/workspace-ownership.test.ts": "29a82dab0567a09e186c127b8f25fe33a73d7a4943154acb01566382ac66744c",
     "vitest.config.ts": "2338c9c1fc7792c2c04fb596d182829c7259f1c60617f86751169d35c914ae54"
