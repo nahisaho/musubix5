@@ -10,6 +10,8 @@ export * from './lifecycle.js';
 export * from './evidence-registry.js';
 export * from './native-approval.js';
 export * from './budget-ledger.js';
+export * from './planner-output.js';
+export * from './approval-boundary.js';
 export * from './formal.js';
 export * from './workflow.js';
 export * from './test-report.js';

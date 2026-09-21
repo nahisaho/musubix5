@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-21T05:30:24.464Z",
+  "generatedAt": "2026-09-21T05:37:52.118Z",
   "nodes": [
     {
       "id": "ADR-0002",
@@ -578,6 +578,12 @@
       "line": 330
     },
     {
+      "id": "CODE-M5-APPROVAL-003",
+      "kind": "code",
+      "path": "packages/analysis/src/approval-boundary.ts",
+      "line": 74
+    },
+    {
       "id": "CODE-APPROVAL-DOMAIN-SCOPING-002",
       "kind": "code",
       "path": "packages/analysis/src/approval-domains.ts",
@@ -977,7 +983,7 @@
       "id": "CODE-WORKFLOW-EVIDENCE-WAIVER-024",
       "kind": "code",
       "path": "packages/analysis/src/index.ts",
-      "line": 25
+      "line": 27
     },
     {
       "id": "CODE-M5-LIFECYCLE-004",
@@ -1044,6 +1050,18 @@
       "kind": "code",
       "path": "packages/analysis/src/order.ts",
       "line": 75
+    },
+    {
+      "id": "CODE-M5-PLANNER-001",
+      "kind": "code",
+      "path": "packages/analysis/src/planner-output.ts",
+      "line": 79
+    },
+    {
+      "id": "CODE-M5-PLANNER-002",
+      "kind": "code",
+      "path": "packages/analysis/src/planner-output.ts",
+      "line": 138
     },
     {
       "id": "CODE-REQUIREMENTS-DESIGN-SCAFFOLD-001",
@@ -1334,6 +1352,18 @@
       "line": 5
     },
     {
+      "id": "TEST-M5-APPROVAL-004",
+      "kind": "test",
+      "path": "tests/approval-boundary-resume.test.ts",
+      "line": 16
+    },
+    {
+      "id": "TEST-M5-APPROVAL-003",
+      "kind": "test",
+      "path": "tests/approval-boundary.test.ts",
+      "line": 16
+    },
+    {
       "id": "TEST-M5-APPROVAL-007",
       "kind": "test",
       "path": "tests/approval-scope.test.ts",
@@ -1440,6 +1470,18 @@
       "kind": "test",
       "path": "tests/package-contract.test.ts",
       "line": 14
+    },
+    {
+      "id": "TEST-M5-PLANNER-002",
+      "kind": "test",
+      "path": "tests/planner-retry-identity.test.ts",
+      "line": 4
+    },
+    {
+      "id": "TEST-M5-PLANNER-001",
+      "kind": "test",
+      "path": "tests/planner-validation.test.ts",
+      "line": 4
     },
     {
       "id": "TEST-M5-EVIDENCE-004",
@@ -2317,6 +2359,36 @@
     {
       "from": "CODE-TDD-RED-COLLECTION-GUIDANCE-001",
       "to": "DES-TDD-RED-COLLECTION-GUIDANCE-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-APPROVAL-003",
+      "to": "REQ-M5-APPROVAL-003",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-APPROVAL-003",
+      "to": "REQ-M5-APPROVAL-004",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-APPROVAL-003",
+      "to": "REQ-M5-APPROVAL-005",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-APPROVAL-003",
+      "to": "REQ-M5-APPROVAL-006",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-APPROVAL-003",
+      "to": "REQ-M5-BUDGET-005",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-APPROVAL-003",
+      "to": "DES-M5-008",
       "relation": "implements"
     },
     {
@@ -3545,6 +3617,36 @@
       "relation": "implements"
     },
     {
+      "from": "CODE-M5-PLANNER-001",
+      "to": "REQ-M5-PLANNER-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-PLANNER-001",
+      "to": "REQ-M5-PLANNER-003",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-PLANNER-001",
+      "to": "DES-M5-010",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-PLANNER-002",
+      "to": "REQ-M5-PLANNER-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-PLANNER-002",
+      "to": "REQ-M5-PLANNER-004",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-PLANNER-002",
+      "to": "DES-M5-010",
+      "relation": "implements"
+    },
+    {
       "from": "CODE-REQUIREMENTS-DESIGN-SCAFFOLD-001",
       "to": "REQ-REQUIREMENTS-DESIGN-SCAFFOLD-001",
       "relation": "implements"
@@ -4375,6 +4477,46 @@
       "relation": "implements"
     },
     {
+      "from": "TEST-M5-APPROVAL-004",
+      "to": "REQ-M5-APPROVAL-003",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-APPROVAL-004",
+      "to": "REQ-M5-APPROVAL-004",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-APPROVAL-004",
+      "to": "REQ-M5-APPROVAL-006",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-APPROVAL-004",
+      "to": "REQ-M5-BUDGET-005",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-APPROVAL-003",
+      "to": "REQ-M5-APPROVAL-003",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-APPROVAL-003",
+      "to": "REQ-M5-APPROVAL-004",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-APPROVAL-003",
+      "to": "REQ-M5-APPROVAL-005",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-APPROVAL-003",
+      "to": "REQ-M5-APPROVAL-006",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-APPROVAL-007",
       "to": "REQ-M5-APPROVAL-007",
       "relation": "verifies"
@@ -4480,6 +4622,26 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-PLANNER-002",
+      "to": "REQ-M5-PLANNER-002",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-PLANNER-002",
+      "to": "REQ-M5-PLANNER-004",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-PLANNER-001",
+      "to": "REQ-M5-PLANNER-001",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-PLANNER-001",
+      "to": "REQ-M5-PLANNER-003",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-EVIDENCE-004",
       "to": "REQ-M5-EVIDENCE-004",
       "relation": "verifies"
@@ -4498,6 +4660,7 @@
     ".musubix/features/musubix5-clean-foundation/design.md": "684e3d3d258245bb9725e121c9074a8e6ac3c530cb29242a41df1cb9f95ee705",
     ".musubix/features/musubix5-clean-foundation/requirements.md": "619c823a061212934b26705fd9c88935f71e490f78d73cf58bd897a8f359dc41",
     "packages/analysis/src/adapters.ts": "a3c516b7c06dee11bc9786da53cf97b087543e0304d0bce8d678aa01670f53e2",
+    "packages/analysis/src/approval-boundary.ts": "ec0c2da68cff776388126e4d34db112d529462bd7dfcfe4691d2bc5701a81090",
     "packages/analysis/src/approval-domains.ts": "bc45836374021f86c4c2085184185546cc4291880aea32b9084188545b9394b4",
     "packages/analysis/src/approval-record.ts": "838294de204a006daf5a7048a69153b573d5b61e5c9d8f3d66332b27a5b577bf",
     "packages/analysis/src/approval.ts": "d9f57165ca455a0b49acdda7096e0df98a06cd5be33c3d20b2f06cf40917c69f",
@@ -4513,7 +4676,7 @@
     "packages/analysis/src/formal.ts": "9f5622983fed80c1e7c141cc7c7dcd217447e5c2edd39e64877db052a57b730b",
     "packages/analysis/src/gate.ts": "d5045b5d9de832fb7714d200f8274c8a2eedbda9f8841f9eac24cf4f3fbbc72d",
     "packages/analysis/src/graph.ts": "8978a47c311ddef684de5e4c5ab032eed9bc87ad94a739351de6e2d6b2ae2aba",
-    "packages/analysis/src/index.ts": "c69fac0555e47ca63886901ae72a3e9975b56eef82d7c15d6246085db4ffef0b",
+    "packages/analysis/src/index.ts": "11141b2adf28a73de3c84d2426a4051ba197185161400639ae52ff3811fb5f14",
     "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c",
     "packages/analysis/src/knowledge.ts": "48b68e9785f411327e10e1bd1f086fdaf4393d2951dcbd4e6fdec84e8008d7da",
     "packages/analysis/src/lifecycle.ts": "6dfcd2fd1915ea8edbc8d611da3d35aadd8a09581796c029e83d41a2a6fc7fc2",
@@ -4522,6 +4685,7 @@
     "packages/analysis/src/native-approval.ts": "2f34c4af9a89e75f5fb33220e4d7b73018b264723fac655c2e62cadd8c3c14c6",
     "packages/analysis/src/order.ts": "361eff6435f7eb81ac15b9a005f8f676f499c56d3dc82abb242e2307b8af628d",
     "packages/analysis/src/performance.ts": "1145c285582ff188e90263b4d9d9f28ca49104e79b8299b2ecd3e278d8ef80ac",
+    "packages/analysis/src/planner-output.ts": "c649e484d064c2fc5078bcbc21a08e49746feae179e26de99d92bae17ffe9a5c",
     "packages/analysis/src/process.ts": "8184c7f7c4c58cdc6987fd9d2ec2c02ce8557f94b6aa30853a0c6056ba79cf4a",
     "packages/analysis/src/scaffold-artifact.ts": "e5e6fa31fbd97ce4dcc294ab26966eb0a4a2507eb4025a7a8a522831e7fb886d",
     "packages/analysis/src/tdd.ts": "96a9eef2bf0b1fbd034679be854e1a86994e6c0c0fd7ea4569e3f895ac115f80",
@@ -4540,6 +4704,8 @@
     "packages/domain/src/types.ts": "0f0cbd43bdee4db03b83e4869e9791531a63e9b63aa7a09661f62ad1bbc75cb3",
     "scripts/check-package.mjs": "78bc796ed48fdf8033e6adde803f32e50f5de0cc69abc9db6132b6d4140b13c6",
     "scripts/smoke-package.mjs": "b1e8ef2bbf213a4927c357fff53f683f3be552f3cb3e79d48c1ddc1b46c6fc7d",
+    "tests/approval-boundary-resume.test.ts": "7bf02bd5b510b0e3d47c1830dfbb03434bcec3bf8778ea9bd5788edd2e097379",
+    "tests/approval-boundary.test.ts": "ec0a7eb3e0a6c7cb0b9d0b63e50275318c72aa7b972865e1affdf04aa592e3d1",
     "tests/approval-scope.test.ts": "50c87584dde5154286b617e541bcd3acd2f55d1afef849688b84dd6df15b3a45",
     "tests/bootstrap-approval-transition.test.ts": "d741eff7c19651cc4d47e97468e0d90a520ebb559003cc40faeac744cc3cd1ac",
     "tests/budget-limits.test.ts": "190f30d101797850227644e32cfffefba0b5f2606de21bfb606d6fbd4daa8742",
@@ -4558,6 +4724,8 @@
     "tests/native-approval.test.ts": "d0525f378f3fb655b6716c0847ddfba37f6e1dc3d3fd42e5d97ce0c1e218a9f0",
     "tests/package-archive.test.ts": "78e461d23036373cdd73740eda64ddc2b4e83bfa5b3cc20917c194d17a882713",
     "tests/package-contract.test.ts": "62cf33cd27860b58d47ba55f51c93efafe8f691b44c4b6c9c161fae286eb0f21",
+    "tests/planner-retry-identity.test.ts": "ee672f87e7528154f1842e7d0acdc70bfed742378119bb26be9e526bf6819b91",
+    "tests/planner-validation.test.ts": "2af23c90768dfa6e74ac05922ec28c4eb9a0d674e730682e472ff14040387169",
     "tests/release-evidence-policy.test.ts": "4cc0d16219dfb98f580a4453b6584173381dd50a3124204587db26b2f65aeafa",
     "vitest.config.ts": "2338c9c1fc7792c2c04fb596d182829c7259f1c60617f86751169d35c914ae54"
   }
