@@ -13,6 +13,7 @@ export * from './budget-ledger.js';
 export * from './planner-output.js';
 export * from './approval-boundary.js';
 export * from './run-local-workspace.js';
+export * from './tdd-cycle-resolver.js';
 export * from './formal.js';
 export * from './workflow.js';
 export * from './test-report.js';

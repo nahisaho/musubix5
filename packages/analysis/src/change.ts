@@ -7,10 +7,12 @@ import { validatePerformanceEvidence } from './performance.js';
 import { appendEvidenceOrder, evidenceOrderRecord, inspectEvidenceOrder } from './order.js';
 import { loadChangeWaiverEvidence, buildWaiverContext, diagnosticDetail, errorFor, reportWaiverEvidenceDiagnostics, waivedDiagnostic } from './change-waiver.js';
 import {
-  batchFor, batchKey, changePhases, effectiveBatches, loadChangeEvidence,
+  batchFor, batchForRecording, batchKey, changePhases, effectiveBatches,
+  loadChangeEvidence, nextBatchScopeId,
   type ChangeCompleteness, type ChangeEvidence, type ChangeFingerprints, type ChangePhase,
   type ChangePhaseEvidence, type ChangeRecord, type ChangeTddBatch,
 } from './change-evidence.js';
+import { selectCurrentTddCycle } from './tdd-cycle-resolver.js';
 
 export * from './change-evidence.js';
 
@@ -215,14 +217,15 @@ export async function recordChangePhase(
     const batchPhase = phase as TddBatchPhase;
     change.tddBatches ??= [];
     const key = batchKey(normalizedRequirementIds);
-    let batch = change.tddBatches.find((entry) => batchKey(entry.requirementIds) === key);
+    let batch = batchForRecording(change.tddBatches, normalizedRequirementIds, batchPhase);
     if (batchPhase === 'red') {
-      if (batch?.red) throw new Error(`${changeId}:red is already recorded for requirement batch ${normalizedRequirementIds.join(', ')}.`);
+      if (batch?.red) throw new Error(`${changeId}:red is already recorded for the pending requirement batch ${normalizedRequirementIds.join(', ')}.`);
       if (!change.phases.design) throw new Error('red requires the preceding design phase.');
-      if (!batch) {
-        batch = { requirementIds: normalizedRequirementIds };
-        change.tddBatches.push(batch);
-      }
+      batch = {
+        scopeId: nextBatchScopeId(change.tddBatches, normalizedRequirementIds),
+        requirementIds: normalizedRequirementIds,
+      };
+      change.tddBatches.push(batch);
     } else if (batchPhase === 'implementation') {
       if (!batch?.red) throw new Error(`implementation requires the preceding red phase for requirement batch ${normalizedRequirementIds.join(', ')}.`);
       if (batch.implementation) throw new Error(`${changeId}:implementation is already recorded for requirement batch ${normalizedRequirementIds.join(', ')}.`);
@@ -243,13 +246,17 @@ export async function recordChangePhase(
     };
     if (options.dryRun) {
       const previewBatch: ChangeTddBatch = { ...(batch ?? { requirementIds: normalizedRequirementIds }), [batchPhase]: candidate };
-      const previewBatches = (change.tddBatches ?? []).some((entry) => batchKey(entry.requirementIds) === key)
-        ? (change.tddBatches ?? []).map((entry) => (batchKey(entry.requirementIds) === key ? previewBatch : entry))
+      const previewBatches = (change.tddBatches ?? []).includes(batch)
+        ? (change.tddBatches ?? []).map((entry) => (entry === batch ? previewBatch : entry))
         : [...(change.tddBatches ?? []), previewBatch];
       return { schemaVersion: evidence.schemaVersion, changes: evidence.changes.map((entry) =>
         entry.changeId === changeId ? { ...entry, tddBatches: previewBatches } : entry) };
     }
-    const order = await appendEvidenceOrder(root, { kind: 'change', entityId: changeId, phase: `${phase}:${key}` });
+    const order = await appendEvidenceOrder(root, {
+      kind: 'change',
+      entityId: changeId,
+      phase: `${phase}:${batch.scopeId ?? key}`,
+    });
     candidate.order = order.sequence;
     batch[batchPhase] = candidate;
   }
@@ -411,7 +418,7 @@ export async function validateChangeEvidence(root: string): Promise<{
             change.changeId, undefined, diagnosticDetail('CHANGE_ORDER_MIGRATION_REQUIRED', { batchPhaseName: batchPhase, batch })));
           continue;
         }
-        const orderPhaseKey = isFullSet ? batchPhase : `${batchPhase}:${key}`;
+        const orderPhaseKey = isFullSet ? batchPhase : `${batchPhase}:${batch.scopeId ?? key}`;
         const record = evidenceOrderRecord(order.records, 'change', change.changeId, orderPhaseKey);
         if (!record || record.sequence !== item.order) {
           diagnostics.push(error('CHANGE_ORDER_MISMATCH', `${change.changeId}:${batchPhase} does not match the monotonic evidence order log.`));
@@ -481,28 +488,14 @@ export async function validateChangeEvidence(root: string): Promise<{
     }
     diagnostics.push(...recordedAtOutOfOrderDiagnostics(change));
     for (const requirementId of change.requirementIds) {
-      const batch = batchFor(batches, requirementId);
+      const resolution = tdd
+        ? selectCurrentTddCycle(change, requirementId, tdd)
+        : { selected: null };
+      const batch = resolution.selected?.batch ?? batchFor(batches, requirementId);
       const red = batch?.red;
-      const implementation = batch?.implementation;
       const green = batch?.green;
       const cycles = tdd?.cycles.filter((cycle) => cycle.requirementId === requirementId) ?? [];
-      const validCycle = cycles.find((cycle) =>
-        requirements
-        && red
-        && implementation
-        && green
-        && Number.isInteger(requirements.order)
-        && Number.isInteger(red.order)
-        && Number.isInteger(implementation.order)
-        && Number.isInteger(green.order)
-        && Number.isInteger(cycle.red.order)
-        && Number.isInteger(cycle.green?.order)
-        && cycle.red.valid
-        && cycle.green?.valid
-        && cycle.red.order! > requirements.order!
-        && cycle.red.order! <= red.order!
-        && cycle.green.order! > implementation.order!
-        && cycle.green.order! <= green.order!);
+      const validCycle = resolution.selected?.cycle;
       if (red && cycles.some((cycle) => !Number.isInteger(cycle.red.order) || !Number.isInteger(cycle.green?.order))) {
         diagnostics.push(waivedDiagnostic(waiverContext, 'CHANGE_ORDER_MIGRATION_REQUIRED',
           `${change.changeId}:${requirementId} references TDD evidence without monotonic order; regenerate the cycle.`,

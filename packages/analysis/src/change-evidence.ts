@@ -1,5 +1,6 @@
 import { exists, readText, within } from './files.js';
 import type { TddEvidence } from './tdd.js';
+import { selectCurrentTddCycle } from './tdd-cycle-resolver.js';
 
 // Shared change-chronology data model and pure accessors used by both
 // change.ts (recording/validation) and change-waiver.ts (waiver evidence).
@@ -31,6 +32,7 @@ export interface ChangePhaseEvidence {
 }
 
 export interface ChangeTddBatch {
+  scopeId?: string;
   requirementIds: string[];
   red?: ChangePhaseEvidence;
   implementation?: ChangePhaseEvidence;
@@ -97,12 +99,41 @@ export function batchKey(requirementIds: string[]): string {
   return [...new Set(requirementIds)].sort().join(',');
 }
 
+export function nextBatchScopeId(batches: ChangeTddBatch[], requirementIds: string[]): string {
+  const key = batchKey(requirementIds);
+  const count = batches.filter((batch) => batchKey(batch.requirementIds) === key).length;
+  return count === 0 ? key : `${key}#${count + 1}`;
+}
+
+export function batchForRecording(
+  batches: ChangeTddBatch[],
+  requirementIds: string[],
+  phase: 'red' | 'implementation' | 'green',
+): ChangeTddBatch | undefined {
+  const key = batchKey(requirementIds);
+  const matching = batches.filter((batch) => batchKey(batch.requirementIds) === key);
+  if (phase === 'red') {
+    const latest = matching.at(-1);
+    return latest && !latest.green ? latest : undefined;
+  }
+  for (let index = matching.length - 1; index >= 0; index -= 1) {
+    const batch = matching[index]!;
+    if (phase === 'implementation' && batch.red && !batch.implementation) return batch;
+    if (phase === 'green' && batch.implementation && !batch.green) return batch;
+  }
+  return undefined;
+}
+
 /** @id CODE-CHANGE-EVIDENCE-WAIVER-015
  * @implements REQ-CHANGE-EVIDENCE-WAIVER-016
  * @design DES-CHANGE-EVIDENCE-WAIVER-001
  */
 export function batchForKey(batches: ChangeTddBatch[], key: string): ChangeTddBatch | undefined {
-  return batches.find((batch) => batchKey(batch.requirementIds) === key);
+  for (let index = batches.length - 1; index >= 0; index -= 1) {
+    const batch = batches[index]!;
+    if (batch.scopeId === key || batchKey(batch.requirementIds) === key) return batch;
+  }
+  return undefined;
 }
 
 // Pure, side-effect-free re-derivations of the exact "would this diagnostic
@@ -125,29 +156,7 @@ export function designUnchangedCondition(change: ChangeRecord): boolean {
 }
 
 export function hasValidTddCycle(change: ChangeRecord, requirementId: string, tdd: TddEvidence | null): boolean {
-  const requirements = change.phases.requirements;
-  const batch = batchFor(effectiveBatches(change), requirementId);
-  const red = batch?.red;
-  const implementation = batch?.implementation;
-  const green = batch?.green;
-  const cycles = tdd?.cycles.filter((cycle) => cycle.requirementId === requirementId) ?? [];
-  return cycles.some((cycle) =>
-    requirements
-    && red
-    && implementation
-    && green
-    && Number.isInteger(requirements.order)
-    && Number.isInteger(red.order)
-    && Number.isInteger(implementation.order)
-    && Number.isInteger(green.order)
-    && Number.isInteger(cycle.red.order)
-    && Number.isInteger(cycle.green?.order)
-    && cycle.red.valid
-    && cycle.green?.valid
-    && cycle.red.order! > requirements.order!
-    && cycle.red.order! <= red.order!
-    && cycle.green.order! > implementation.order!
-    && cycle.green.order! <= green.order!);
+  return tdd !== null && selectCurrentTddCycle(change, requirementId, tdd).selected !== null;
 }
 
 export function redUnprovenCondition(change: ChangeRecord, requirementId: string, tdd: TddEvidence | null): boolean {

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-21T05:40:04.304Z",
+  "generatedAt": "2026-09-21T05:52:13.084Z",
   "nodes": [
     {
       "id": "ADR-0002",
@@ -719,25 +719,25 @@
       "id": "CODE-CHANGE-REQUIREMENT-BATCHES-001",
       "kind": "code",
       "path": "packages/analysis/src/change-evidence.ts",
-      "line": 69
+      "line": 71
     },
     {
       "id": "CODE-CHANGE-EVIDENCE-WAIVER-014",
       "kind": "code",
       "path": "packages/analysis/src/change-evidence.ts",
-      "line": 89
+      "line": 91
     },
     {
       "id": "CODE-CHANGE-EVIDENCE-WAIVER-015",
       "kind": "code",
       "path": "packages/analysis/src/change-evidence.ts",
-      "line": 100
+      "line": 127
     },
     {
       "id": "CODE-CHANGE-EVIDENCE-WAIVER-016",
       "kind": "code",
       "path": "packages/analysis/src/change-evidence.ts",
-      "line": 170
+      "line": 179
     },
     {
       "id": "CODE-CHANGE-EVIDENCE-WAIVER-001",
@@ -839,49 +839,49 @@
       "id": "CODE-CHANGE-ACCEPTANCE-HEURISTIC-001",
       "kind": "code",
       "path": "packages/analysis/src/change.ts",
-      "line": 17
+      "line": 19
     },
     {
       "id": "CODE-CHANGE-ACCEPTANCE-HEURISTIC-002",
       "kind": "code",
       "path": "packages/analysis/src/change.ts",
-      "line": 23
+      "line": 25
     },
     {
       "id": "CODE-CHANGE-RECORD-FAIL-FAST-001",
       "kind": "code",
       "path": "packages/analysis/src/change.ts",
-      "line": 89
+      "line": 91
     },
     {
       "id": "CODE-CHANGE-RECORD-FAIL-FAST-003",
       "kind": "code",
       "path": "packages/analysis/src/change.ts",
-      "line": 128
+      "line": 130
     },
     {
       "id": "CODE-CHANGE-RECORD-RECORDEDAT-ORDER-001",
       "kind": "code",
       "path": "packages/analysis/src/change.ts",
-      "line": 260
+      "line": 267
     },
     {
       "id": "CODE-CHANGE-RECORD-RECORDEDAT-ORDER-002",
       "kind": "code",
       "path": "packages/analysis/src/change.ts",
-      "line": 268
+      "line": 275
     },
     {
       "id": "CODE-CHANGE-RECORD-RECORDEDAT-ORDER-003",
       "kind": "code",
       "path": "packages/analysis/src/change.ts",
-      "line": 299
+      "line": 306
     },
     {
       "id": "CODE-CHANGE-REQUIREMENT-BATCHES-002",
       "kind": "code",
       "path": "packages/analysis/src/change.ts",
-      "line": 321
+      "line": 328
     },
     {
       "id": "CODE-APPROVAL-DOMAIN-SCOPING-001",
@@ -983,7 +983,7 @@
       "id": "CODE-WORKFLOW-EVIDENCE-WAIVER-024",
       "kind": "code",
       "path": "packages/analysis/src/index.ts",
-      "line": 28
+      "line": 29
     },
     {
       "id": "CODE-M5-LIFECYCLE-004",
@@ -1080,6 +1080,12 @@
       "kind": "code",
       "path": "packages/analysis/src/scaffold-artifact.ts",
       "line": 57
+    },
+    {
+      "id": "CODE-M5-TDD-001",
+      "kind": "code",
+      "path": "packages/analysis/src/tdd-cycle-resolver.ts",
+      "line": 92
     },
     {
       "id": "CODE-TDD-FINGERPRINT-SCOPING-001",
@@ -1500,6 +1506,18 @@
       "kind": "test",
       "path": "tests/run-local-workspace.test.ts",
       "line": 16
+    },
+    {
+      "id": "TEST-M5-TDD-002",
+      "kind": "test",
+      "path": "tests/tdd-batch-recording.test.ts",
+      "line": 18
+    },
+    {
+      "id": "TEST-M5-TDD-001",
+      "kind": "test",
+      "path": "tests/tdd-cycle-resolver.test.ts",
+      "line": 71
     }
   ],
   "edges": [
@@ -3714,6 +3732,31 @@
       "relation": "implements"
     },
     {
+      "from": "CODE-M5-TDD-001",
+      "to": "REQ-M5-TDD-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-TDD-001",
+      "to": "REQ-M5-TDD-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-TDD-001",
+      "to": "REQ-M5-TDD-003",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-TDD-001",
+      "to": "REQ-M5-TDD-004",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-TDD-001",
+      "to": "DES-M5-011",
+      "relation": "implements"
+    },
+    {
       "from": "CODE-TDD-FINGERPRINT-SCOPING-001",
       "to": "REQ-TDD-FINGERPRINT-SCOPING-001",
       "relation": "implements"
@@ -4672,6 +4715,36 @@
       "from": "TEST-M5-APPROVAL-002",
       "to": "REQ-M5-APPROVAL-002",
       "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-TDD-002",
+      "to": "REQ-M5-TDD-002",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-TDD-002",
+      "to": "REQ-M5-TDD-003",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-TDD-001",
+      "to": "REQ-M5-TDD-001",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-TDD-001",
+      "to": "REQ-M5-TDD-002",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-TDD-001",
+      "to": "REQ-M5-TDD-003",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-TDD-001",
+      "to": "REQ-M5-TDD-004",
+      "relation": "verifies"
     }
   ],
   "diagnostics": [],
@@ -4694,16 +4767,16 @@
     "packages/analysis/src/attestation.ts": "c353b5d93f151665e1f5f0531b763db164cb54e5305a837efd47b2742eb3b949",
     "packages/analysis/src/budget-ledger.ts": "c7e4fa74032e066491708685359ca7115ab34c44a0d2af18337bd15a4da25590",
     "packages/analysis/src/canonical.ts": "1c4dcfda94bc2b93d3d1e4bbb03205f2441d6025b172e8fe24812b366e363ecf",
-    "packages/analysis/src/change-evidence.ts": "8bff2cb709de3834e078bf8bf30f2ddef36b37fa03bec5446e27711cae14709b",
+    "packages/analysis/src/change-evidence.ts": "25251d5d877f795c181b8a2c69022e1a066600e7ff76ebf4806862a5262ce6b1",
     "packages/analysis/src/change-waiver.ts": "edabb578fe2d968bf98fe068ee240a32b67dcf7b50724a265e83ebc2a88c1ccd",
-    "packages/analysis/src/change.ts": "85647ae006e4255d10d10c6172e88b556bb0a2b9d96895dd4b12fc272fba3458",
+    "packages/analysis/src/change.ts": "2ac3f0381237fceceb794ab9684ead44b3acaa77bf4c786c5899b8ad263d6ac7",
     "packages/analysis/src/config.ts": "a46214d1271124a0ccfef15e7a6b268236fd9a57d408028e61cf511816667580",
     "packages/analysis/src/evidence-registry.ts": "41bdd3f05c91734baf22cccf5289a9906eae30bfd1356236bc98c96be47da660",
     "packages/analysis/src/files.ts": "6cd39d15d19c594438aa364c19bc6e7f2888b8371c13c61fc8e472dca0cc3454",
     "packages/analysis/src/formal.ts": "9f5622983fed80c1e7c141cc7c7dcd217447e5c2edd39e64877db052a57b730b",
     "packages/analysis/src/gate.ts": "d5045b5d9de832fb7714d200f8274c8a2eedbda9f8841f9eac24cf4f3fbbc72d",
     "packages/analysis/src/graph.ts": "8978a47c311ddef684de5e4c5ab032eed9bc87ad94a739351de6e2d6b2ae2aba",
-    "packages/analysis/src/index.ts": "747595feee429f2fa41c325033dce64acc376e6f2e53ae7bcc59e1fb4c9ef580",
+    "packages/analysis/src/index.ts": "3cb49516efdd2546a9470967878e7f1a07c380980ccfed699369367cbedf000d",
     "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c",
     "packages/analysis/src/knowledge.ts": "48b68e9785f411327e10e1bd1f086fdaf4393d2951dcbd4e6fdec84e8008d7da",
     "packages/analysis/src/lifecycle.ts": "6dfcd2fd1915ea8edbc8d611da3d35aadd8a09581796c029e83d41a2a6fc7fc2",
@@ -4716,6 +4789,7 @@
     "packages/analysis/src/process.ts": "8184c7f7c4c58cdc6987fd9d2ec2c02ce8557f94b6aa30853a0c6056ba79cf4a",
     "packages/analysis/src/run-local-workspace.ts": "a62651f947cee6955901337b4b425393855395ca199d06c7003b7e157dcbf477",
     "packages/analysis/src/scaffold-artifact.ts": "e5e6fa31fbd97ce4dcc294ab26966eb0a4a2507eb4025a7a8a522831e7fb886d",
+    "packages/analysis/src/tdd-cycle-resolver.ts": "a1b24f5a03d134ae788a961b644240e4ffa9fb828512f9df349437067bfc4f74",
     "packages/analysis/src/tdd.ts": "96a9eef2bf0b1fbd034679be854e1a86994e6c0c0fd7ea4569e3f895ac115f80",
     "packages/analysis/src/test-report.ts": "41c76811bfcb5e286bf097bf2f6aaf6cd5a414202efe8108f28219ecca063a01",
     "packages/analysis/src/trace.ts": "efede75c79c7dc4828a0259c46ca870a7e15042c35edd94a107349a83eb56ec9",
@@ -4756,6 +4830,8 @@
     "tests/planner-validation.test.ts": "2af23c90768dfa6e74ac05922ec28c4eb9a0d674e730682e472ff14040387169",
     "tests/release-evidence-policy.test.ts": "4cc0d16219dfb98f580a4453b6584173381dd50a3124204587db26b2f65aeafa",
     "tests/run-local-workspace.test.ts": "b0071c5905412c1f846d854155fbd37b0f72c08db40a20405be71cbfc2f10561",
+    "tests/tdd-batch-recording.test.ts": "e254e04461665d42877b747d038bf977f680a0c72255a03b5dfc471cca2f8ef8",
+    "tests/tdd-cycle-resolver.test.ts": "71baa72ea3d6648436f98f16fc57fda03a0c95ebc9d428ed8c0425349fc125ac",
     "vitest.config.ts": "2338c9c1fc7792c2c04fb596d182829c7259f1c60617f86751169d35c914ae54"
   }
 }
