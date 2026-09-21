@@ -1,0 +1,573 @@
+{
+  "schemaVersion": 1,
+  "changes": [
+    {
+      "changeId": "CHANGE-0002",
+      "requirementIds": [
+        "REQ-M5-APPROVAL-001",
+        "REQ-M5-APPROVAL-002",
+        "REQ-M5-APPROVAL-003",
+        "REQ-M5-APPROVAL-004",
+        "REQ-M5-APPROVAL-005",
+        "REQ-M5-APPROVAL-006",
+        "REQ-M5-APPROVAL-007",
+        "REQ-M5-APPROVAL-008",
+        "REQ-M5-APPROVAL-009",
+        "REQ-M5-BOOTSTRAP-001",
+        "REQ-M5-BOOTSTRAP-002",
+        "REQ-M5-BOOTSTRAP-003",
+        "REQ-M5-BOOTSTRAP-004",
+        "REQ-M5-BUDGET-001",
+        "REQ-M5-BUDGET-002",
+        "REQ-M5-BUDGET-003",
+        "REQ-M5-BUDGET-004",
+        "REQ-M5-BUDGET-005",
+        "REQ-M5-COMPAT-001",
+        "REQ-M5-COMPAT-002",
+        "REQ-M5-COMPAT-003",
+        "REQ-M5-COMPAT-004",
+        "REQ-M5-COMPAT-005",
+        "REQ-M5-COMPAT-006",
+        "REQ-M5-COMPAT-007",
+        "REQ-M5-COMPAT-008",
+        "REQ-M5-COMPAT-009",
+        "REQ-M5-COMPAT-010",
+        "REQ-M5-COMPAT-011",
+        "REQ-M5-COMPAT-012",
+        "REQ-M5-COMPAT-013",
+        "REQ-M5-EVIDENCE-001",
+        "REQ-M5-EVIDENCE-002",
+        "REQ-M5-EVIDENCE-003",
+        "REQ-M5-EVIDENCE-004",
+        "REQ-M5-EVIDENCE-005",
+        "REQ-M5-LIFECYCLE-001",
+        "REQ-M5-LIFECYCLE-002",
+        "REQ-M5-LIFECYCLE-003",
+        "REQ-M5-LIFECYCLE-004",
+        "REQ-M5-PLANNER-001",
+        "REQ-M5-PLANNER-002",
+        "REQ-M5-PLANNER-003",
+        "REQ-M5-PLANNER-004",
+        "REQ-M5-QUALITY-001",
+        "REQ-M5-QUALITY-002",
+        "REQ-M5-QUALITY-003",
+        "REQ-M5-QUALITY-004",
+        "REQ-M5-QUALITY-005",
+        "REQ-M5-RELEASE-001",
+        "REQ-M5-TDD-001",
+        "REQ-M5-TDD-002",
+        "REQ-M5-TDD-003",
+        "REQ-M5-TDD-004",
+        "REQ-M5-WAIVER-001",
+        "REQ-M5-WORKTREE-001",
+        "REQ-M5-WORKTREE-002",
+        "REQ-M5-WORKTREE-003",
+        "REQ-M5-WORKTREE-004"
+      ],
+      "phases": {
+        "impact": {
+          "phase": "impact",
+          "recordedAt": "2026-09-21T03:52:07.076Z",
+          "fingerprints": {
+            "impact": "8d70b2cdb49720e294be9fb3fc2f2435a7e3a47825b371da672631ee7d73bae3",
+            "requirements": "44b8a8f886166a9a0e494c33fceddd66329ef5dd237bc4efdc47fdc79ae5b264",
+            "design": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "implementation": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "tests": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "tdd": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "requirementImplementations": {
+              "REQ-M5-APPROVAL-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-APPROVAL-002": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-APPROVAL-003": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-APPROVAL-004": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-APPROVAL-005": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-APPROVAL-006": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-APPROVAL-007": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-APPROVAL-008": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-APPROVAL-009": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-BOOTSTRAP-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-BOOTSTRAP-002": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-BOOTSTRAP-003": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-BOOTSTRAP-004": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-BUDGET-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-BUDGET-002": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-BUDGET-003": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-BUDGET-004": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-BUDGET-005": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-COMPAT-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-COMPAT-002": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-COMPAT-003": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-COMPAT-004": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-COMPAT-005": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-COMPAT-006": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-COMPAT-007": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-COMPAT-008": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-COMPAT-009": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-COMPAT-010": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-COMPAT-011": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-COMPAT-012": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-COMPAT-013": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-EVIDENCE-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-EVIDENCE-002": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-EVIDENCE-003": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-EVIDENCE-004": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-EVIDENCE-005": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-LIFECYCLE-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-LIFECYCLE-002": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-LIFECYCLE-003": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-LIFECYCLE-004": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-PLANNER-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-PLANNER-002": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-PLANNER-003": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-PLANNER-004": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-QUALITY-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-QUALITY-002": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-QUALITY-003": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-QUALITY-004": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-QUALITY-005": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-RELEASE-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-TDD-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-TDD-002": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-TDD-003": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-TDD-004": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-WAIVER-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-WORKTREE-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-WORKTREE-002": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-WORKTREE-003": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-WORKTREE-004": {
+                "paths": [],
+                "fingerprints": {}
+              }
+            }
+          },
+          "order": 1
+        },
+        "requirements": {
+          "phase": "requirements",
+          "recordedAt": "2026-09-21T03:52:48.283Z",
+          "fingerprints": {
+            "impact": "8d70b2cdb49720e294be9fb3fc2f2435a7e3a47825b371da672631ee7d73bae3",
+            "requirements": "0c42fb565effcc67258122c06507dcf5d43cd265a14f943cfb40f68e8ce7597a",
+            "design": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "implementation": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "tests": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "tdd": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "requirementImplementations": {
+              "REQ-M5-APPROVAL-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-APPROVAL-002": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-APPROVAL-003": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-APPROVAL-004": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-APPROVAL-005": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-APPROVAL-006": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-APPROVAL-007": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-APPROVAL-008": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-APPROVAL-009": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-BOOTSTRAP-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-BOOTSTRAP-002": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-BOOTSTRAP-003": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-BOOTSTRAP-004": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-BUDGET-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-BUDGET-002": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-BUDGET-003": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-BUDGET-004": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-BUDGET-005": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-COMPAT-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-COMPAT-002": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-COMPAT-003": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-COMPAT-004": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-COMPAT-005": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-COMPAT-006": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-COMPAT-007": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-COMPAT-008": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-COMPAT-009": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-COMPAT-010": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-COMPAT-011": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-COMPAT-012": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-COMPAT-013": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-EVIDENCE-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-EVIDENCE-002": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-EVIDENCE-003": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-EVIDENCE-004": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-EVIDENCE-005": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-LIFECYCLE-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-LIFECYCLE-002": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-LIFECYCLE-003": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-LIFECYCLE-004": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-PLANNER-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-PLANNER-002": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-PLANNER-003": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-PLANNER-004": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-QUALITY-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-QUALITY-002": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-QUALITY-003": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-QUALITY-004": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-QUALITY-005": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-RELEASE-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-TDD-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-TDD-002": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-TDD-003": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-TDD-004": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-WAIVER-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-WORKTREE-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-WORKTREE-002": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-WORKTREE-003": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-WORKTREE-004": {
+                "paths": [],
+                "fingerprints": {}
+              }
+            }
+          },
+          "order": 2
+        }
+      }
+    }
+  ]
+}

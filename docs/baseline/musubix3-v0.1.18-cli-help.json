@@ -1,0 +1,287 @@
+{
+  "schemaVersion": 1,
+  "baseline": {
+    "package": "musubix3",
+    "version": "0.1.18",
+    "tag": "v0.1.18",
+    "commit": "c0b20f06727bceb04eeec181d95af9047b1981de"
+  },
+  "snapshots": [
+    {
+      "command": "musubix3",
+      "stdout": "Usage: musubix3 [options] [command]\n\nEvidence-driven SDD for GitHub Copilot CLI / 根拠に基づく仕様駆動開発\n\nOptions:\n  -V, --version                                    output the version number\n  -h, --help                                       display help for command\n\nCommands:\n  init|install [options]                           Install repository skills and SDD artifacts (preserves existing files)\n  upgrade [options]                                Refresh bundled skill files to match the installed musubix3 version; never touches config, constitution, or feature artifacts\n  plugin-install [options]                         Delegate plugin installation to native copilot plugin install\n  requirements                                     EARS requirement validation\n  constitution                                     Versioned measurable policy validation\n  design                                           Explicit design component validation and diagrams\n  trace                                            Generated requirement/design/code/test traceability\n  graph                                            Compiler-based imports, symbols, calls and architecture\n  knowledge                                        Local artifact and Git evidence retrieval (TF-IDF, not GraphRAG)\n  formal                                           Honest consistency checking of an explicit abstraction\n  gate [options]                                   Run actual configured commands and deterministic SDD checks\n  config                                           Inspect and validate .musubix/config.json\n  evidence                                         Refresh derived evidence in deterministic gate order\n  mutation                                         Inspect and validate requirement-scoped mutation evidence\n  model-correspondence                             Validate formal-model to authoritative passing-test correspondence\n  workflow-record [options] <skill> <phase>        Record a self-reported workflow declaration\n  workflow-verify [options] <log...>               Reconcile workflow declarations with Copilot JSONL Skill events\n  workflow-sanitize [options] <log> <output-file>  Write a privacy-minimized Skill lifecycle transcript\n  workflow                                         Workflow reconciliation waiver evidence\n  attestation                                      Create and verify static-key or GitHub OIDC-authorized Ed25519 attestations\n  change-record [options] <change-id> <phase>      Record an ordered staged-change fingerprint checkpoint; rejects an unchanged fingerprint since the preceding phase. Each recorded phase/batch stores both order (the verified, gate-checked logical append sequence from order.json — the only field guaranteed correct and monotonic per change) and recordedAt (an independently captured wall-clock timestamp with no ordering guarantee; gate reports it via CHANGE_RECORDEDAT_OUT_OF_ORDER, a non-blocking warning, when it disagrees with order)\n  change                                           Change chronology and waiver evidence\n  approval                                         Prepare, record and validate explicit artifact-bound human approvals\n  tdd                                              Verified Red-Green-Refactor execution evidence. <test-id> requires two independent things: a trace-graph @id/@verifies doc comment above the test (for requirement linking), and a matching native adapter report entry (adapter-specific: title substring for vitest/jest/pytest, name suffix for go-test/cargo, an additional @Tag for junit, DisplayName for dotnet). See README.md \"Adapter test-ID declaration reference\" for the full table and worked examples.\n  status [options]                                 One-shot artifact and gate readiness summary\n  help [command]                                   display help for command\n"
+    },
+    {
+      "command": "musubix3 init",
+      "stdout": "Usage: musubix3 init|install [options]\n\nInstall repository skills and SDD artifacts (preserves existing files)\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  --dry-run           Preview without writing\n  --force             Replace bundled, managed paths only\n  --feature <slug>    Starter feature directory (default: \"example\")\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 upgrade",
+      "stdout": "Usage: musubix3 upgrade [options]\n\nRefresh bundled skill files to match the installed musubix3 version; never\ntouches config, constitution, or feature artifacts\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  --dry-run           Preview without writing\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 plugin-install",
+      "stdout": "Usage: musubix3 plugin-install [options]\n\nDelegate plugin installation to native copilot plugin install\n\nOptions:\n  --json\n  -h, --help  display help for command\n"
+    },
+    {
+      "command": "musubix3 requirements",
+      "stdout": "Usage: musubix3 requirements [options] [command]\n\nEARS requirement validation\n\nOptions:\n  -h, --help                 display help for command\n\nCommands:\n  validate [options] <file>\n  scaffold [options] <slug>\n  help [command]             display help for command\n"
+    },
+    {
+      "command": "musubix3 requirements validate",
+      "stdout": "Usage: musubix3 requirements validate [options] <file>\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 requirements scaffold",
+      "stdout": "Usage: musubix3 requirements scaffold [options] <slug>\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  --title <text>      Placeholder entry heading title\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 constitution",
+      "stdout": "Usage: musubix3 constitution [options] [command]\n\nVersioned measurable policy validation\n\nOptions:\n  -h, --help                 display help for command\n\nCommands:\n  validate [options] [file]\n  help [command]             display help for command\n"
+    },
+    {
+      "command": "musubix3 constitution validate",
+      "stdout": "Usage: musubix3 constitution validate [options] [file]\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 design",
+      "stdout": "Usage: musubix3 design [options] [command]\n\nExplicit design component validation and diagrams\n\nOptions:\n  -h, --help                 display help for command\n\nCommands:\n  validate [options] <file>\n  c4 [options] <file>\n  scaffold [options] <slug>\n  help [command]             display help for command\n"
+    },
+    {
+      "command": "musubix3 design validate",
+      "stdout": "Usage: musubix3 design validate [options] <file>\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 design c4",
+      "stdout": "Usage: musubix3 design c4 [options] <file>\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 design scaffold",
+      "stdout": "Usage: musubix3 design scaffold [options] <slug>\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 trace",
+      "stdout": "Usage: musubix3 trace [options] [command]\n\nGenerated requirement/design/code/test traceability\n\nOptions:\n  -h, --help                     display help for command\n\nCommands:\n  build [options]\n  check [options]\n  impact [options] <id-or-path>\n  help [command]                 display help for command\n"
+    },
+    {
+      "command": "musubix3 trace build",
+      "stdout": "Usage: musubix3 trace build [options]\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 trace check",
+      "stdout": "Usage: musubix3 trace check [options]\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  --strict            Fail missing mandatory coverage\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 trace impact",
+      "stdout": "Usage: musubix3 trace impact [options] <id-or-path>\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 graph",
+      "stdout": "Usage: musubix3 graph [options] [command]\n\nCompiler-based imports, symbols, calls and architecture\n\nOptions:\n  -h, --help                         display help for command\n\nCommands:\n  index [options]\n  impact [options] <symbol-or-path>\n  cycles [options]\n  gate [options]\n  help [command]                     display help for command\n"
+    },
+    {
+      "command": "musubix3 graph index",
+      "stdout": "Usage: musubix3 graph index [options]\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  --changed           Report changed files; conservatively refresh full graph\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 graph impact",
+      "stdout": "Usage: musubix3 graph impact [options] <symbol-or-path>\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 graph cycles",
+      "stdout": "Usage: musubix3 graph cycles [options]\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 graph gate",
+      "stdout": "Usage: musubix3 graph gate [options]\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 knowledge",
+      "stdout": "Usage: musubix3 knowledge [options] [command]\n\nLocal artifact and Git evidence retrieval (TF-IDF, not GraphRAG)\n\nOptions:\n  -h, --help                 display help for command\n\nCommands:\n  build [options]\n  query [options] <text...>\n  help [command]             display help for command\n"
+    },
+    {
+      "command": "musubix3 knowledge build",
+      "stdout": "Usage: musubix3 knowledge build [options]\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 knowledge query",
+      "stdout": "Usage: musubix3 knowledge query [options] <text...>\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  --limit <count>     Maximum results (default: \"10\")\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 formal",
+      "stdout": "Usage: musubix3 formal [options] [command]\n\nHonest consistency checking of an explicit abstraction\n\nOptions:\n  -h, --help                 display help for command\n\nCommands:\n  check [options] <file>\n  generate [options] <file>\n  doctor [options]\n  help [command]             display help for command\n"
+    },
+    {
+      "command": "musubix3 formal check",
+      "stdout": "Usage: musubix3 formal check [options] <file>\n\nOptions:\n  --root <directory>        Project root / プロジェクトルート (default: \".\")\n  --json                    Machine-readable JSON\n  --solver <solver>         auto | none | z3 | lean (default: \"auto\")\n  --timeout <milliseconds>  Solver timeout (default: \"12000\")\n  --z3-command <path>       Z3 executable path (or MUSUBIX3_Z3)\n  --lean-command <path>     Lean executable path (or MUSUBIX3_LEAN)\n  -h, --help                display help for command\n"
+    },
+    {
+      "command": "musubix3 formal generate",
+      "stdout": "Usage: musubix3 formal generate [options] <file>\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  --format <format>   both | smt2 | lean (default: \"both\")\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 formal doctor",
+      "stdout": "Usage: musubix3 formal doctor [options]\n\nOptions:\n  --root <directory>        Project root / プロジェクトルート (default: \".\")\n  --json                    Machine-readable JSON\n  --timeout <milliseconds>  Probe timeout (default: \"5000\")\n  --z3-command <path>       Z3 executable path (or MUSUBIX3_Z3)\n  --lean-command <path>     Lean executable path (or MUSUBIX3_LEAN)\n  -h, --help                display help for command\n"
+    },
+    {
+      "command": "musubix3 gate",
+      "stdout": "Usage: musubix3 gate [options]\n\nRun actual configured commands and deterministic SDD checks\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  --changed           Report changed/impacted files; keep all checks to avoid\n                      unsafe skips\n  --feature <name>    Restrict requirements/design/trace/tdd/change checks to\n                      one feature; diagnostic view only, not a substitute for\n                      the repository-wide gate\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 config",
+      "stdout": "Usage: musubix3 config [options] [command]\n\nInspect and validate .musubix/config.json\n\nOptions:\n  -h, --help          display help for command\n\nCommands:\n  lint [options]      Report configured commands whose args reference\n                      nonexistent repository paths\n  scaffold [options]  Propose native test-command entries for detected\n                      toolchains; never writes config.json\n  help [command]      display help for command\n"
+    },
+    {
+      "command": "musubix3 config lint",
+      "stdout": "Usage: musubix3 config lint [options]\n\nReport configured commands whose args reference nonexistent repository paths\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 config scaffold",
+      "stdout": "Usage: musubix3 config scaffold [options]\n\nPropose native test-command entries for detected toolchains; never writes\nconfig.json\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 evidence",
+      "stdout": "Usage: musubix3 evidence [options] [command]\n\nRefresh derived evidence in deterministic gate order\n\nOptions:\n  -h, --help         display help for command\n\nCommands:\n  refresh [options]\n  help [command]     display help for command\n"
+    },
+    {
+      "command": "musubix3 evidence refresh",
+      "stdout": "Usage: musubix3 evidence refresh [options]\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  --changed           Preserve changed-file impact context while refreshing all\n                      checks\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 mutation",
+      "stdout": "Usage: musubix3 mutation [options] [command]\n\nInspect and validate requirement-scoped mutation evidence\n\nOptions:\n  -h, --help                                                                           display help for command\n\nCommands:\n  doctor [options]\n  validate [options]\n  identity [options] <requirementId> <testId> <sourcePath> <operator> <line> <column>  Compute the deterministic MUT-* identity a mutation report must declare\n  help [command]                                                                       display help for command\n"
+    },
+    {
+      "command": "musubix3 mutation doctor",
+      "stdout": "Usage: musubix3 mutation doctor [options]\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 mutation validate",
+      "stdout": "Usage: musubix3 mutation validate [options]\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 mutation identity",
+      "stdout": "Usage: musubix3 mutation identity [options] <requirementId> <testId> <sourcePath> <operator> <line> <column>\n\nCompute the deterministic MUT-* identity a mutation report must declare\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 model-correspondence",
+      "stdout": "Usage: musubix3 model-correspondence [options] [command]\n\nValidate formal-model to authoritative passing-test correspondence\n\nOptions:\n  -h, --help          display help for command\n\nCommands:\n  validate [options]  Validate model correspondence evidence (run `npx musubix3\n                      evidence refresh` first to generate\n                      .musubix/evidence/model-correspondence.json)\n  help [command]      display help for command\n"
+    },
+    {
+      "command": "musubix3 model-correspondence validate",
+      "stdout": "Usage: musubix3 model-correspondence validate [options]\n\nValidate model correspondence evidence (run `npx musubix3 evidence refresh`\nfirst to generate .musubix/evidence/model-correspondence.json)\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 workflow-record",
+      "stdout": "Usage: musubix3 workflow-record [options] <skill> <phase>\n\nRecord a self-reported workflow declaration\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  --status <status>   completed | skipped | failed\n  --reason <text>     Reason for skipped or failed phases\n  --command <text>    Command to hash without storing its contents\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 workflow-verify",
+      "stdout": "Usage: musubix3 workflow-verify [options] <log...>\n\nReconcile workflow declarations with Copilot JSONL Skill events\n\nOptions:\n  --root <directory>   Project root / プロジェクトルート (default: \".\")\n  --json               Machine-readable JSON\n  --strict             Require a complete Copilot JSONL transcript and\n                       successful terminal result\n  --session-id <uuid>  Require the terminal result to identify this Copilot\n                       session\n  -h, --help           display help for command\n"
+    },
+    {
+      "command": "musubix3 workflow-sanitize",
+      "stdout": "Usage: musubix3 workflow-sanitize [options] <log> <output-file>\n\nWrite a privacy-minimized Skill lifecycle transcript\n\nOptions:\n  --root <directory>   Project root / プロジェクトルート (default: \".\")\n  --json               Machine-readable JSON\n  --session-id <uuid>  Replace the terminal session ID with a review-safe UUID\n  -h, --help           display help for command\n"
+    },
+    {
+      "command": "musubix3 workflow",
+      "stdout": "Usage: musubix3 workflow [options] [command]\n\nWorkflow reconciliation waiver evidence\n\nOptions:\n  -h, --help      display help for command\n\nCommands:\n  waiver          Record an audited, bounded downgrade of one declaration-scoped\n                  workflow reconciliation diagnostic\n  help [command]  display help for command\n"
+    },
+    {
+      "command": "musubix3 workflow waiver",
+      "stdout": "Usage: musubix3 workflow waiver [options] [command]\n\nRecord an audited, bounded downgrade of one declaration-scoped workflow\nreconciliation diagnostic\n\nOptions:\n  -h, --help               display help for command\n\nCommands:\n  record [options] <code>\n  record-all [options]\n  help [command]           display help for command\n"
+    },
+    {
+      "command": "musubix3 workflow waiver record",
+      "stdout": "Usage: musubix3 workflow waiver record [options] <code>\n\nOptions:\n  --root <directory>         Project root / プロジェクトルート (default: \".\")\n  --json                     Machine-readable JSON\n  --skill <skill>            Skill name of the declaration being waived\n  --phase <phase>            Phase name of the declaration being waived\n  --recorded-at <timestamp>  Exact declaration recordedAt timestamp to waive\n  --index <n>                disambiguating event index\n  --approver <name>          Human approver recording this waiver\n  --reason <text>            Reason this diagnostic is being waived\n  --confirm                  Confirm the waiver is reviewed and intended\n                             (default: false)\n  -h, --help                 display help for command\n"
+    },
+    {
+      "command": "musubix3 workflow waiver record-all",
+      "stdout": "Usage: musubix3 workflow waiver record-all [options]\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  --approver <name>   Human approver recording these waivers\n  --reason <text>     Reason these diagnostics are being waived\n  --confirm           Confirm the waivers are reviewed and intended (default:\n                      false)\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 attestation",
+      "stdout": "Usage: musubix3 attestation [options] [command]\n\nCreate and verify static-key or GitHub OIDC-authorized Ed25519 attestations\n\nOptions:\n  -h, --help               display help for command\n\nCommands:\n  oidc-audience [options]\n  payload [options]\n  verify [options]\n  help [command]           display help for command\n"
+    },
+    {
+      "command": "musubix3 attestation oidc-audience",
+      "stdout": "Usage: musubix3 attestation oidc-audience [options]\n\nOptions:\n  --root <directory>        Project root / プロジェクトルート (default: \".\")\n  --json                    Machine-readable JSON\n  --key-id <id>             Attestation signing-key identity\n  --public-key-file <file>  Ephemeral Ed25519 public key PEM for public-key\n                            binding\n  -h, --help                display help for command\n"
+    },
+    {
+      "command": "musubix3 attestation payload",
+      "stdout": "Usage: musubix3 attestation payload [options]\n\nOptions:\n  --root <directory>               Project root / プロジェクトルート (default: \".\")\n  --json                           Machine-readable JSON\n  --provider <provider>            github | azure-pipelines | generic\n  --run-id <id>                    CI run identity\n  --key-id <id>                    Attestation signing-key identity\n  --public-key-file <file>         Ephemeral Ed25519 public key PEM (never a\n                                   private key)\n  --github-oidc-token-file <file>  GitHub Actions OIDC JWT file\n  -h, --help                       display help for command\n"
+    },
+    {
+      "command": "musubix3 attestation verify",
+      "stdout": "Usage: musubix3 attestation verify [options]\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 change-record",
+      "stdout": "Usage: musubix3 change-record [options] <change-id> <phase>\n\nRecord an ordered staged-change fingerprint checkpoint; rejects an unchanged\nfingerprint since the preceding phase. Each recorded phase/batch stores both\norder (the verified, gate-checked logical append sequence from order.json — the\nonly field guaranteed correct and monotonic per change) and recordedAt (an\nindependently captured wall-clock timestamp with no ordering guarantee; gate\nreports it via CHANGE_RECORDEDAT_OUT_OF_ORDER, a non-blocking warning, when it\ndisagrees with order)\n\nOptions:\n  --root <directory>      Project root / プロジェクトルート (default: \".\")\n  --json                  Machine-readable JSON\n  --requirement <ids...>  Requirement IDs affected by this change\n  --allow-unchanged       Record requirements even if unchanged since impact\n                          (defect fixes only)\n  --dry-run               Preview the outcome without recording it\n  -h, --help              display help for command\n"
+    },
+    {
+      "command": "musubix3 change",
+      "stdout": "Usage: musubix3 change [options] [command]\n\nChange chronology and waiver evidence\n\nOptions:\n  -h, --help      display help for command\n\nCommands:\n  waiver          Record an audited, bounded downgrade of a recording-order-debt\n                  diagnostic\n  help [command]  display help for command\n"
+    },
+    {
+      "command": "musubix3 change waiver",
+      "stdout": "Usage: musubix3 change waiver [options] [command]\n\nRecord an audited, bounded downgrade of a recording-order-debt diagnostic\n\nOptions:\n  -h, --help                           display help for command\n\nCommands:\n  record [options] <change-id> <code>  Downgrade one currently-present waivable\n                                       diagnostic from error to warning, as an\n                                       appended, hash-chained record\n  help [command]                       display help for command\n"
+    },
+    {
+      "command": "musubix3 change waiver record",
+      "stdout": "Usage: musubix3 change waiver record [options] <change-id> <code>\n\nDowngrade one currently-present waivable diagnostic from error to warning, as an\nappended, hash-chained record\n\nOptions:\n  --root <directory>      Project root / プロジェクトルート (default: \".\")\n  --json                  Machine-readable JSON\n  --requirement <req-id>  Requirement ID this waiver applies to (required for\n                          requirement-scoped codes)\n  --detail <value>        Structured detail scope this waiver applies to\n                          (required for detail-scoped codes)\n  --approver <name>       Human approver recording this waiver\n  --reason <text>         Reason this diagnostic is being waived\n  --confirm               Confirm the waiver is reviewed and intended (default:\n                          false)\n  -h, --help              display help for command\n"
+    },
+    {
+      "command": "musubix3 approval",
+      "stdout": "Usage: musubix3 approval [options] [command]\n\nPrepare, record and validate explicit artifact-bound human approvals\n\nOptions:\n  -h, --help                 display help for command\n\nCommands:\n  prepare [options] <stage>  Show the exact artifact manifest a human must\n                             review\n  record [options] <stage>\n  validate [options]\n  help [command]             display help for command\n"
+    },
+    {
+      "command": "musubix3 approval prepare",
+      "stdout": "Usage: musubix3 approval prepare [options] <stage>\n\nShow the exact artifact manifest a human must review\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  --domain <name>     Approval domain (required when approval.domains is\n                      configured, except for release)\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 approval record",
+      "stdout": "Usage: musubix3 approval record [options] <stage>\n\nOptions:\n  --root <directory>        Project root / プロジェクトルート (default: \".\")\n  --json                    Machine-readable JSON\n  --approver <name>         Human approver name\n  --artifact-sha256 <hash>  Exact manifest SHA-256 shown to and approved by the\n                            human\n  --confirm                 Explicitly confirm this human approval\n  --domain <name>           Approval domain (required when approval.domains is\n                            configured, except for release)\n  -h, --help                display help for command\n"
+    },
+    {
+      "command": "musubix3 approval validate",
+      "stdout": "Usage: musubix3 approval validate [options]\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  --domain <name>     Limit the report to one approval domain\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 tdd",
+      "stdout": "Usage: musubix3 tdd [options] [command]\n\nVerified Red-Green-Refactor execution evidence. <test-id> requires two\nindependent things: a trace-graph @id/@verifies doc comment above the test (for\nrequirement linking), and a matching native adapter report entry\n(adapter-specific: title substring for vitest/jest/pytest, name suffix for\ngo-test/cargo, an additional @Tag for junit, DisplayName for dotnet). See\nREADME.md \"Adapter test-ID declaration reference\" for the full table and worked\nexamples.\n\nOptions:\n  -h, --help                    display help for command\n\nCommands:\n  validate [options]\n  red [options] <test-id>       Record a failing (Red) test as TDD evidence for\n                                a requirement. Persisting the project's first\n                                cycle here makes gate's tdd check required\n                                project-wide for every mandatory requirement\n                                (each uncovered one surfaced as\n                                TDD_REQUIREMENT_UNCOVERED); \"approval record\n                                release\" always runs the full (non-'--changed')\n                                gate, so it is blocked by any resulting\n                                TDD_REQUIREMENT_UNCOVERED diagnostics. \"tdd\n                                migrate\" cannot bulk-onboard\n                                previously-uncovered requirements: it only\n                                re-fingerprints a requirement that already has a\n                                valid Green cycle.\n  green [options] <test-id>\n  refactor [options] <test-id>\n  migrate [options] <test-id>\n  void [options] <test-id>\n  help [command]                display help for command\n"
+    },
+    {
+      "command": "musubix3 tdd validate",
+      "stdout": "Usage: musubix3 tdd validate [options]\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 tdd red",
+      "stdout": "Usage: musubix3 tdd red [options] <test-id>\n\nRecord a failing (Red) test as TDD evidence for a requirement. Persisting the\nproject's first cycle here makes gate's tdd check required project-wide for\nevery mandatory requirement (each uncovered one surfaced as\nTDD_REQUIREMENT_UNCOVERED); \"approval record release\" always runs the full\n(non-'--changed') gate, so it is blocked by any resulting\nTDD_REQUIREMENT_UNCOVERED diagnostics. \"tdd migrate\" cannot bulk-onboard\npreviously-uncovered requirements: it only re-fingerprints a requirement that\nalready has a valid Green cycle.\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  --requirement <id>  Requirement ID verified by the test\n  --command <name>    Configured command name to execute\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 tdd green",
+      "stdout": "Usage: musubix3 tdd green [options] <test-id>\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  --requirement <id>  Requirement ID verified by the test\n  --command <name>    Configured command name to execute\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 tdd refactor",
+      "stdout": "Usage: musubix3 tdd refactor [options] <test-id>\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  --requirement <id>  Requirement ID verified by the test\n  --command <name>    Configured command name to execute\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 tdd migrate",
+      "stdout": "Usage: musubix3 tdd migrate [options] <test-id>\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  --approver <name>   Human approver recording this fingerprint migration\n  --confirm           Confirm the migration is reviewed and intended (default:\n                      false)\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 tdd void",
+      "stdout": "Usage: musubix3 tdd void [options] <test-id>\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  --approver <name>   Human approver recording this void\n  --reason <text>     Reason this dangling TDD cycle is being voided\n  --confirm           Confirm the void is reviewed and intended (default: false)\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 status",
+      "stdout": "Usage: musubix3 status [options]\n\nOne-shot artifact and gate readiness summary\n\nOptions:\n  --root <directory>  Project root / プロジェクトルート (default: \".\")\n  --json              Machine-readable JSON\n  -h, --help          display help for command\n"
+    },
+    {
+      "command": "musubix3 help",
+      "stdout": "Usage: musubix3 [options] [command]\n\nEvidence-driven SDD for GitHub Copilot CLI / 根拠に基づく仕様駆動開発\n\nOptions:\n  -V, --version                                    output the version number\n  -h, --help                                       display help for command\n\nCommands:\n  init|install [options]                           Install repository skills and SDD artifacts (preserves existing files)\n  upgrade [options]                                Refresh bundled skill files to match the installed musubix3 version; never touches config, constitution, or feature artifacts\n  plugin-install [options]                         Delegate plugin installation to native copilot plugin install\n  requirements                                     EARS requirement validation\n  constitution                                     Versioned measurable policy validation\n  design                                           Explicit design component validation and diagrams\n  trace                                            Generated requirement/design/code/test traceability\n  graph                                            Compiler-based imports, symbols, calls and architecture\n  knowledge                                        Local artifact and Git evidence retrieval (TF-IDF, not GraphRAG)\n  formal                                           Honest consistency checking of an explicit abstraction\n  gate [options]                                   Run actual configured commands and deterministic SDD checks\n  config                                           Inspect and validate .musubix/config.json\n  evidence                                         Refresh derived evidence in deterministic gate order\n  mutation                                         Inspect and validate requirement-scoped mutation evidence\n  model-correspondence                             Validate formal-model to authoritative passing-test correspondence\n  workflow-record [options] <skill> <phase>        Record a self-reported workflow declaration\n  workflow-verify [options] <log...>               Reconcile workflow declarations with Copilot JSONL Skill events\n  workflow-sanitize [options] <log> <output-file>  Write a privacy-minimized Skill lifecycle transcript\n  workflow                                         Workflow reconciliation waiver evidence\n  attestation                                      Create and verify static-key or GitHub OIDC-authorized Ed25519 attestations\n  change-record [options] <change-id> <phase>      Record an ordered staged-change fingerprint checkpoint; rejects an unchanged fingerprint since the preceding phase. Each recorded phase/batch stores both order (the verified, gate-checked logical append sequence from order.json — the only field guaranteed correct and monotonic per change) and recordedAt (an independently captured wall-clock timestamp with no ordering guarantee; gate reports it via CHANGE_RECORDEDAT_OUT_OF_ORDER, a non-blocking warning, when it disagrees with order)\n  change                                           Change chronology and waiver evidence\n  approval                                         Prepare, record and validate explicit artifact-bound human approvals\n  tdd                                              Verified Red-Green-Refactor execution evidence. <test-id> requires two independent things: a trace-graph @id/@verifies doc comment above the test (for requirement linking), and a matching native adapter report entry (adapter-specific: title substring for vitest/jest/pytest, name suffix for go-test/cargo, an additional @Tag for junit, DisplayName for dotnet). See README.md \"Adapter test-ID declaration reference\" for the full table and worked examples.\n  status [options]                                 One-shot artifact and gate readiness summary\n  help [command]                                   display help for command\n"
+    }
+  ]
+}
