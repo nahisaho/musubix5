@@ -17,6 +17,8 @@ import {
   validateApprovals, validateApprovalsForDomain, type ApprovalStage,
   scaffoldCommands, scaffoldRequirements, scaffoldDesign,
   recordChangeWaiver, recordWorkflowWaiver, recordAllWorkflowWaivers,
+  bootstrapRun, bootstrapResume, bootstrapStatus, executeBootstrapFileOperation,
+  type BootstrapAuthorityManifest,
 } from '../../analysis/src/index.js';
 import { install, pluginInstall, upgradeSkills } from './install.js';
 
@@ -679,6 +681,41 @@ export function createProgram(): Command {
           : `VOID: FAIL (${testId}) ${voidResult.reason}`,
       );
       if (!voidResult.voided) process.exitCode = 1;
+    });
+  /** @id CODE-M5-BOOTSTRAP-CLI-001
+   * @implements REQ-M5-BOOTSTRAP-001 REQ-M5-COMPAT-013
+   * @design DES-M5-002 DES-M5-013
+   */
+  const bootstrap = new Command('bootstrap')
+    .description('Explicit bounded bootstrap execution independent from normal approval state');
+  program.addCommand(bootstrap, { hidden: true });
+  common(bootstrap.command('run <manifest>').description('Start an explicitly authorized bootstrap run'))
+    .action(async (manifestPath: string, options: { root: string; json?: boolean }) => {
+      const root = resolve(options.root);
+      const manifest = JSON.parse(await readText(root, manifestPath)) as BootstrapAuthorityManifest;
+      const state = await bootstrapRun(
+        root,
+        manifest,
+        (operation, context) => executeBootstrapFileOperation(root, operation, context),
+      );
+      output(state, !!options.json, `Bootstrap ${state.runId}: ${state.status}`);
+      if (state.status !== 'completed') process.exitCode = 1;
+    });
+  common(bootstrap.command('resume <run-id>').description('Resume a persisted bootstrap invocation'))
+    .action(async (runId: string, options: { root: string; json?: boolean }) => {
+      const root = resolve(options.root);
+      const state = await bootstrapResume(
+        root,
+        runId,
+        (operation, context) => executeBootstrapFileOperation(root, operation, context),
+      );
+      output(state, !!options.json, `Bootstrap ${state.runId}: ${state.status}`);
+      if (state.status !== 'completed') process.exitCode = 1;
+    });
+  common(bootstrap.command('status <run-id>').description('Show bootstrap state without entering normal readiness'))
+    .action(async (runId: string, options: { root: string; json?: boolean }) => {
+      const state = await bootstrapStatus(resolve(options.root), runId);
+      output(state, !!options.json, `Bootstrap ${state.runId}: ${state.status}`);
     });
   common(program.command('status').description('One-shot artifact and gate readiness summary'))
     .action(async (options: { root: string; json?: boolean }) => {

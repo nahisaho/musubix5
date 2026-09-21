@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-21T05:57:16.662Z",
+  "generatedAt": "2026-09-21T06:09:35.869Z",
   "nodes": [
     {
       "id": "ADR-0002",
@@ -698,6 +698,24 @@
       "line": 67
     },
     {
+      "id": "CODE-M5-BOOTSTRAP-002",
+      "kind": "code",
+      "path": "packages/analysis/src/bootstrap-runner.ts",
+      "line": 119
+    },
+    {
+      "id": "CODE-M5-BOOTSTRAP-001",
+      "kind": "code",
+      "path": "packages/analysis/src/bootstrap-runner.ts",
+      "line": 297
+    },
+    {
+      "id": "CODE-M5-BOOTSTRAP-003",
+      "kind": "code",
+      "path": "packages/analysis/src/bootstrap-runner.ts",
+      "line": 350
+    },
+    {
       "id": "CODE-M5-BUDGET-005",
       "kind": "code",
       "path": "packages/analysis/src/budget-ledger.ts",
@@ -983,7 +1001,7 @@
       "id": "CODE-WORKFLOW-EVIDENCE-WAIVER-024",
       "kind": "code",
       "path": "packages/analysis/src/index.ts",
-      "line": 30
+      "line": 31
     },
     {
       "id": "CODE-M5-LIFECYCLE-004",
@@ -1325,43 +1343,49 @@
       "id": "CODE-M5-COMPAT-001",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 43
+      "line": 45
     },
     {
       "id": "CODE-CLI-WORKFLOW-UX-002",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 149
+      "line": 151
     },
     {
       "id": "CODE-WORKFLOW-EVIDENCE-WAIVER-023",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 386
+      "line": 388
     },
     {
       "id": "CODE-WORKFLOW-WAIVER-BULK-002",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 422
+      "line": 424
     },
     {
       "id": "CODE-CHANGE-RECORD-RECORDEDAT-ORDER-004",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 510
+      "line": 512
     },
     {
       "id": "CODE-CHANGE-RECORD-FAIL-FAST-002",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 526
+      "line": 528
     },
     {
       "id": "CODE-TDD-ADOPTION-WARNING-003",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 611
+      "line": 613
+    },
+    {
+      "id": "CODE-M5-BOOTSTRAP-CLI-001",
+      "kind": "code",
+      "path": "packages/cli/src/main.ts",
+      "line": 685
     },
     {
       "id": "CODE-DESIGN-ADR-NONE-EXEMPTION-001",
@@ -1410,6 +1434,18 @@
       "kind": "test",
       "path": "tests/bootstrap-approval-transition.test.ts",
       "line": 4
+    },
+    {
+      "id": "TEST-M5-BOOTSTRAP-002",
+      "kind": "test",
+      "path": "tests/bootstrap-cli.test.ts",
+      "line": 4
+    },
+    {
+      "id": "TEST-M5-BOOTSTRAP-001",
+      "kind": "test",
+      "path": "tests/bootstrap-runner.test.ts",
+      "line": 16
     },
     {
       "id": "TEST-M5-BUDGET-005",
@@ -2830,6 +2866,51 @@
     {
       "from": "CODE-ATTESTATION-EVIDENCE-STABILITY-002",
       "to": "DES-ATTESTATION-EVIDENCE-STABILITY-003",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-BOOTSTRAP-002",
+      "to": "REQ-M5-BOOTSTRAP-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-BOOTSTRAP-002",
+      "to": "REQ-M5-BOOTSTRAP-004",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-BOOTSTRAP-002",
+      "to": "DES-M5-013",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-BOOTSTRAP-001",
+      "to": "REQ-M5-BOOTSTRAP-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-BOOTSTRAP-001",
+      "to": "REQ-M5-BOOTSTRAP-003",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-BOOTSTRAP-001",
+      "to": "DES-M5-013",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-BOOTSTRAP-003",
+      "to": "REQ-M5-BOOTSTRAP-003",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-BOOTSTRAP-003",
+      "to": "REQ-M5-BOOTSTRAP-004",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-BOOTSTRAP-003",
+      "to": "DES-M5-013",
       "relation": "implements"
     },
     {
@@ -4548,6 +4629,26 @@
       "relation": "implements"
     },
     {
+      "from": "CODE-M5-BOOTSTRAP-CLI-001",
+      "to": "REQ-M5-BOOTSTRAP-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-BOOTSTRAP-CLI-001",
+      "to": "REQ-M5-COMPAT-013",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-BOOTSTRAP-CLI-001",
+      "to": "DES-M5-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-BOOTSTRAP-CLI-001",
+      "to": "DES-M5-013",
+      "relation": "implements"
+    },
+    {
       "from": "CODE-DESIGN-ADR-NONE-EXEMPTION-001",
       "to": "REQ-DESIGN-ADR-NONE-EXEMPTION-001",
       "relation": "implements"
@@ -4665,6 +4766,36 @@
     {
       "from": "TEST-M5-APPROVAL-009",
       "to": "REQ-M5-APPROVAL-009",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-BOOTSTRAP-002",
+      "to": "REQ-M5-BOOTSTRAP-001",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-BOOTSTRAP-002",
+      "to": "REQ-M5-COMPAT-013",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-BOOTSTRAP-001",
+      "to": "REQ-M5-BOOTSTRAP-001",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-BOOTSTRAP-001",
+      "to": "REQ-M5-BOOTSTRAP-002",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-BOOTSTRAP-001",
+      "to": "REQ-M5-BOOTSTRAP-003",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-BOOTSTRAP-001",
+      "to": "REQ-M5-BOOTSTRAP-004",
       "relation": "verifies"
     },
     {
@@ -4861,6 +4992,7 @@
     "packages/analysis/src/approval-record.ts": "838294de204a006daf5a7048a69153b573d5b61e5c9d8f3d66332b27a5b577bf",
     "packages/analysis/src/approval.ts": "d9f57165ca455a0b49acdda7096e0df98a06cd5be33c3d20b2f06cf40917c69f",
     "packages/analysis/src/attestation.ts": "c353b5d93f151665e1f5f0531b763db164cb54e5305a837efd47b2742eb3b949",
+    "packages/analysis/src/bootstrap-runner.ts": "4167b10f413af1cdc39858f16f94110e407b7778ca8c09d8c0179e497f52550e",
     "packages/analysis/src/budget-ledger.ts": "c7e4fa74032e066491708685359ca7115ab34c44a0d2af18337bd15a4da25590",
     "packages/analysis/src/canonical.ts": "1c4dcfda94bc2b93d3d1e4bbb03205f2441d6025b172e8fe24812b366e363ecf",
     "packages/analysis/src/change-evidence.ts": "25251d5d877f795c181b8a2c69022e1a066600e7ff76ebf4806862a5262ce6b1",
@@ -4872,7 +5004,7 @@
     "packages/analysis/src/formal.ts": "9f5622983fed80c1e7c141cc7c7dcd217447e5c2edd39e64877db052a57b730b",
     "packages/analysis/src/gate.ts": "d5045b5d9de832fb7714d200f8274c8a2eedbda9f8841f9eac24cf4f3fbbc72d",
     "packages/analysis/src/graph.ts": "8978a47c311ddef684de5e4c5ab032eed9bc87ad94a739351de6e2d6b2ae2aba",
-    "packages/analysis/src/index.ts": "522e2a61a4cb07600335781e4bd4d7f4cb3f90c0aced896a57ce989b5210f861",
+    "packages/analysis/src/index.ts": "4bbca1c7ba8c90b7fde8097d43be7d4efa660b4504da1bff60f3f112efbc0e4a",
     "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c",
     "packages/analysis/src/knowledge.ts": "48b68e9785f411327e10e1bd1f086fdaf4393d2951dcbd4e6fdec84e8008d7da",
     "packages/analysis/src/lifecycle.ts": "6dfcd2fd1915ea8edbc8d611da3d35aadd8a09581796c029e83d41a2a6fc7fc2",
@@ -4894,7 +5026,7 @@
     "packages/analysis/src/workflow.ts": "ec8bec0cdc08941f97a3a5bd26b1c3fc58240b59f45ca23ad08e1f4639150ce4",
     "packages/analysis/src/workspace-manager.ts": "5dd4bc9bc320b5f4c821362697c045cc2fff68205179f777becc5eca536aa2c2",
     "packages/cli/src/install.ts": "3b7d03d1864493ea9caee34855e4fd82ec970d321a205ee3378c8f13a4a34e17",
-    "packages/cli/src/main.ts": "966c3ea86b35d5d5b2fb53f98e7c6b9c6b977abf579da1960a64364c63aee5ab",
+    "packages/cli/src/main.ts": "0a3c1e08a30d06b5b08f5dc9f0154e209b7c20003851ddcfc3b699496aa8b5a1",
     "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
     "packages/domain/src/design.ts": "fc1ca4d3249abc9705ba4b6f296e0f4fa3b3d6ff6d5d82e51c99f49fc7a93ac9",
     "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
@@ -4907,6 +5039,8 @@
     "tests/approval-boundary.test.ts": "ec0a7eb3e0a6c7cb0b9d0b63e50275318c72aa7b972865e1affdf04aa592e3d1",
     "tests/approval-scope.test.ts": "50c87584dde5154286b617e541bcd3acd2f55d1afef849688b84dd6df15b3a45",
     "tests/bootstrap-approval-transition.test.ts": "d741eff7c19651cc4d47e97468e0d90a520ebb559003cc40faeac744cc3cd1ac",
+    "tests/bootstrap-cli.test.ts": "1241ea7b8affd79ea99a380f071a8aa32e33e533003d52840dbf0b90f0778a3d",
+    "tests/bootstrap-runner.test.ts": "d984aa264dfdd7753cceb5c2a8fae7076a88e7a492f8dbf91a81fb556a5974c0",
     "tests/budget-limits.test.ts": "190f30d101797850227644e32cfffefba0b5f2606de21bfb606d6fbd4daa8742",
     "tests/budget-reservation.test.ts": "f7ee772c7546cba05001013d89cfce0fd692096fc9062e4e7e7c7ad1732def7c",
     "tests/budget-usage.test.ts": "45bf344f884740b91adfaf18a41830a72a3095a314aa71193a8750186752689f",

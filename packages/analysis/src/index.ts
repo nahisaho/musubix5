@@ -15,6 +15,7 @@ export * from './approval-boundary.js';
 export * from './run-local-workspace.js';
 export * from './tdd-cycle-resolver.js';
 export * from './workspace-manager.js';
+export * from './bootstrap-runner.js';
 export * from './formal.js';
 export * from './workflow.js';
 export * from './test-report.js';
