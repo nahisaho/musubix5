@@ -3036,6 +3036,298 @@
             },
             "order": 88
           }
+        },
+        {
+          "requirementIds": [
+            "REQ-M5-BUDGET-001",
+            "REQ-M5-BUDGET-002",
+            "REQ-M5-BUDGET-004"
+          ],
+          "red": {
+            "phase": "red",
+            "recordedAt": "2026-09-21T05:29:15.952Z",
+            "fingerprints": {
+              "impact": "8d70b2cdb49720e294be9fb3fc2f2435a7e3a47825b371da672631ee7d73bae3",
+              "requirements": "0c42fb565effcc67258122c06507dcf5d43cd265a14f943cfb40f68e8ce7597a",
+              "design": "2e33ea84723c815804633fc499f69ef2699f158c41f365509dfa0b3be0c30894",
+              "implementation": "c80725b29f631a37aa01332fb86d5eb9f1458a59e79cb600af8fa38c315c133f",
+              "tests": "a091814858186b6a9a3fc2a40272a01a15b960976553cc1e899fc3c4bdb05873",
+              "tdd": "8ea174a8a3c3df8cac103567dc88635d91b922117dcc9ebeae04734b52310e76",
+              "requirementImplementations": {
+                "REQ-M5-BUDGET-001": {
+                  "paths": [],
+                  "fingerprints": {}
+                },
+                "REQ-M5-BUDGET-002": {
+                  "paths": [],
+                  "fingerprints": {}
+                },
+                "REQ-M5-BUDGET-004": {
+                  "paths": [],
+                  "fingerprints": {}
+                }
+              }
+            },
+            "order": 92
+          },
+          "implementation": {
+            "phase": "implementation",
+            "recordedAt": "2026-09-21T05:30:08.521Z",
+            "fingerprints": {
+              "impact": "8d70b2cdb49720e294be9fb3fc2f2435a7e3a47825b371da672631ee7d73bae3",
+              "requirements": "0c42fb565effcc67258122c06507dcf5d43cd265a14f943cfb40f68e8ce7597a",
+              "design": "2e33ea84723c815804633fc499f69ef2699f158c41f365509dfa0b3be0c30894",
+              "implementation": "e548446aa55bb88e1390745797281e4bfed807602e1d6a87122dcf8e77ba2409",
+              "tests": "a091814858186b6a9a3fc2a40272a01a15b960976553cc1e899fc3c4bdb05873",
+              "tdd": "df1199aa15bce14400b8814d6f2715be1d1e05a0cfcb61c8ff460e92db9489a9",
+              "requirementImplementations": {
+                "REQ-M5-BUDGET-001": {
+                  "paths": [
+                    "packages/analysis/src/budget-ledger.ts",
+                    "packages/analysis/src/canonical.ts",
+                    "packages/analysis/src/journal.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/budget-ledger.ts": "c7e4fa74032e066491708685359ca7115ab34c44a0d2af18337bd15a4da25590",
+                    "packages/analysis/src/canonical.ts": "1c4dcfda94bc2b93d3d1e4bbb03205f2441d6025b172e8fe24812b366e363ecf",
+                    "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c"
+                  }
+                },
+                "REQ-M5-BUDGET-002": {
+                  "paths": [
+                    "packages/analysis/src/budget-ledger.ts",
+                    "packages/analysis/src/canonical.ts",
+                    "packages/analysis/src/journal.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/budget-ledger.ts": "c7e4fa74032e066491708685359ca7115ab34c44a0d2af18337bd15a4da25590",
+                    "packages/analysis/src/canonical.ts": "1c4dcfda94bc2b93d3d1e4bbb03205f2441d6025b172e8fe24812b366e363ecf",
+                    "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c"
+                  }
+                },
+                "REQ-M5-BUDGET-004": {
+                  "paths": [
+                    "packages/analysis/src/budget-ledger.ts",
+                    "packages/analysis/src/canonical.ts",
+                    "packages/analysis/src/journal.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/budget-ledger.ts": "c7e4fa74032e066491708685359ca7115ab34c44a0d2af18337bd15a4da25590",
+                    "packages/analysis/src/canonical.ts": "1c4dcfda94bc2b93d3d1e4bbb03205f2441d6025b172e8fe24812b366e363ecf",
+                    "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c"
+                  }
+                }
+              }
+            },
+            "order": 97
+          },
+          "green": {
+            "phase": "green",
+            "recordedAt": "2026-09-21T05:30:13.090Z",
+            "fingerprints": {
+              "impact": "8d70b2cdb49720e294be9fb3fc2f2435a7e3a47825b371da672631ee7d73bae3",
+              "requirements": "0c42fb565effcc67258122c06507dcf5d43cd265a14f943cfb40f68e8ce7597a",
+              "design": "2e33ea84723c815804633fc499f69ef2699f158c41f365509dfa0b3be0c30894",
+              "implementation": "e548446aa55bb88e1390745797281e4bfed807602e1d6a87122dcf8e77ba2409",
+              "tests": "a091814858186b6a9a3fc2a40272a01a15b960976553cc1e899fc3c4bdb05873",
+              "tdd": "d19a17f5c7a0e319fc480b90845d78cedac93984e1156aa8b8e13ecbb5a8d2dd",
+              "requirementImplementations": {
+                "REQ-M5-BUDGET-001": {
+                  "paths": [
+                    "packages/analysis/src/budget-ledger.ts",
+                    "packages/analysis/src/canonical.ts",
+                    "packages/analysis/src/journal.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/budget-ledger.ts": "c7e4fa74032e066491708685359ca7115ab34c44a0d2af18337bd15a4da25590",
+                    "packages/analysis/src/canonical.ts": "1c4dcfda94bc2b93d3d1e4bbb03205f2441d6025b172e8fe24812b366e363ecf",
+                    "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c"
+                  }
+                },
+                "REQ-M5-BUDGET-002": {
+                  "paths": [
+                    "packages/analysis/src/budget-ledger.ts",
+                    "packages/analysis/src/canonical.ts",
+                    "packages/analysis/src/journal.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/budget-ledger.ts": "c7e4fa74032e066491708685359ca7115ab34c44a0d2af18337bd15a4da25590",
+                    "packages/analysis/src/canonical.ts": "1c4dcfda94bc2b93d3d1e4bbb03205f2441d6025b172e8fe24812b366e363ecf",
+                    "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c"
+                  }
+                },
+                "REQ-M5-BUDGET-004": {
+                  "paths": [
+                    "packages/analysis/src/budget-ledger.ts",
+                    "packages/analysis/src/canonical.ts",
+                    "packages/analysis/src/journal.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/budget-ledger.ts": "c7e4fa74032e066491708685359ca7115ab34c44a0d2af18337bd15a4da25590",
+                    "packages/analysis/src/canonical.ts": "1c4dcfda94bc2b93d3d1e4bbb03205f2441d6025b172e8fe24812b366e363ecf",
+                    "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c"
+                  }
+                }
+              }
+            },
+            "order": 101
+          }
+        },
+        {
+          "requirementIds": [
+            "REQ-M5-BUDGET-003"
+          ],
+          "red": {
+            "phase": "red",
+            "recordedAt": "2026-09-21T05:29:20.043Z",
+            "fingerprints": {
+              "impact": "8d70b2cdb49720e294be9fb3fc2f2435a7e3a47825b371da672631ee7d73bae3",
+              "requirements": "0c42fb565effcc67258122c06507dcf5d43cd265a14f943cfb40f68e8ce7597a",
+              "design": "2e33ea84723c815804633fc499f69ef2699f158c41f365509dfa0b3be0c30894",
+              "implementation": "c80725b29f631a37aa01332fb86d5eb9f1458a59e79cb600af8fa38c315c133f",
+              "tests": "a091814858186b6a9a3fc2a40272a01a15b960976553cc1e899fc3c4bdb05873",
+              "tdd": "37a2510329cf3a7980fcc370d56c83b26c32aca4481b55476956cde80f6e84cb",
+              "requirementImplementations": {
+                "REQ-M5-BUDGET-003": {
+                  "paths": [],
+                  "fingerprints": {}
+                }
+              }
+            },
+            "order": 94
+          },
+          "implementation": {
+            "phase": "implementation",
+            "recordedAt": "2026-09-21T05:30:15.329Z",
+            "fingerprints": {
+              "impact": "8d70b2cdb49720e294be9fb3fc2f2435a7e3a47825b371da672631ee7d73bae3",
+              "requirements": "0c42fb565effcc67258122c06507dcf5d43cd265a14f943cfb40f68e8ce7597a",
+              "design": "2e33ea84723c815804633fc499f69ef2699f158c41f365509dfa0b3be0c30894",
+              "implementation": "e548446aa55bb88e1390745797281e4bfed807602e1d6a87122dcf8e77ba2409",
+              "tests": "a091814858186b6a9a3fc2a40272a01a15b960976553cc1e899fc3c4bdb05873",
+              "tdd": "d19a17f5c7a0e319fc480b90845d78cedac93984e1156aa8b8e13ecbb5a8d2dd",
+              "requirementImplementations": {
+                "REQ-M5-BUDGET-003": {
+                  "paths": [
+                    "packages/analysis/src/budget-ledger.ts",
+                    "packages/analysis/src/canonical.ts",
+                    "packages/analysis/src/journal.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/budget-ledger.ts": "c7e4fa74032e066491708685359ca7115ab34c44a0d2af18337bd15a4da25590",
+                    "packages/analysis/src/canonical.ts": "1c4dcfda94bc2b93d3d1e4bbb03205f2441d6025b172e8fe24812b366e363ecf",
+                    "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c"
+                  }
+                }
+              }
+            },
+            "order": 102
+          },
+          "green": {
+            "phase": "green",
+            "recordedAt": "2026-09-21T05:30:19.211Z",
+            "fingerprints": {
+              "impact": "8d70b2cdb49720e294be9fb3fc2f2435a7e3a47825b371da672631ee7d73bae3",
+              "requirements": "0c42fb565effcc67258122c06507dcf5d43cd265a14f943cfb40f68e8ce7597a",
+              "design": "2e33ea84723c815804633fc499f69ef2699f158c41f365509dfa0b3be0c30894",
+              "implementation": "e548446aa55bb88e1390745797281e4bfed807602e1d6a87122dcf8e77ba2409",
+              "tests": "a091814858186b6a9a3fc2a40272a01a15b960976553cc1e899fc3c4bdb05873",
+              "tdd": "9f2a8dc9ac83b495f2775c686fda7371d685e2195695ffb70380d90f3e1f14f4",
+              "requirementImplementations": {
+                "REQ-M5-BUDGET-003": {
+                  "paths": [
+                    "packages/analysis/src/budget-ledger.ts",
+                    "packages/analysis/src/canonical.ts",
+                    "packages/analysis/src/journal.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/budget-ledger.ts": "c7e4fa74032e066491708685359ca7115ab34c44a0d2af18337bd15a4da25590",
+                    "packages/analysis/src/canonical.ts": "1c4dcfda94bc2b93d3d1e4bbb03205f2441d6025b172e8fe24812b366e363ecf",
+                    "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c"
+                  }
+                }
+              }
+            },
+            "order": 104
+          }
+        },
+        {
+          "requirementIds": [
+            "REQ-M5-BUDGET-005"
+          ],
+          "red": {
+            "phase": "red",
+            "recordedAt": "2026-09-21T05:29:23.877Z",
+            "fingerprints": {
+              "impact": "8d70b2cdb49720e294be9fb3fc2f2435a7e3a47825b371da672631ee7d73bae3",
+              "requirements": "0c42fb565effcc67258122c06507dcf5d43cd265a14f943cfb40f68e8ce7597a",
+              "design": "2e33ea84723c815804633fc499f69ef2699f158c41f365509dfa0b3be0c30894",
+              "implementation": "c80725b29f631a37aa01332fb86d5eb9f1458a59e79cb600af8fa38c315c133f",
+              "tests": "a091814858186b6a9a3fc2a40272a01a15b960976553cc1e899fc3c4bdb05873",
+              "tdd": "df1199aa15bce14400b8814d6f2715be1d1e05a0cfcb61c8ff460e92db9489a9",
+              "requirementImplementations": {
+                "REQ-M5-BUDGET-005": {
+                  "paths": [],
+                  "fingerprints": {}
+                }
+              }
+            },
+            "order": 96
+          },
+          "implementation": {
+            "phase": "implementation",
+            "recordedAt": "2026-09-21T05:30:21.693Z",
+            "fingerprints": {
+              "impact": "8d70b2cdb49720e294be9fb3fc2f2435a7e3a47825b371da672631ee7d73bae3",
+              "requirements": "0c42fb565effcc67258122c06507dcf5d43cd265a14f943cfb40f68e8ce7597a",
+              "design": "2e33ea84723c815804633fc499f69ef2699f158c41f365509dfa0b3be0c30894",
+              "implementation": "e548446aa55bb88e1390745797281e4bfed807602e1d6a87122dcf8e77ba2409",
+              "tests": "a091814858186b6a9a3fc2a40272a01a15b960976553cc1e899fc3c4bdb05873",
+              "tdd": "9f2a8dc9ac83b495f2775c686fda7371d685e2195695ffb70380d90f3e1f14f4",
+              "requirementImplementations": {
+                "REQ-M5-BUDGET-005": {
+                  "paths": [
+                    "packages/analysis/src/budget-ledger.ts",
+                    "packages/analysis/src/canonical.ts",
+                    "packages/analysis/src/journal.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/budget-ledger.ts": "c7e4fa74032e066491708685359ca7115ab34c44a0d2af18337bd15a4da25590",
+                    "packages/analysis/src/canonical.ts": "1c4dcfda94bc2b93d3d1e4bbb03205f2441d6025b172e8fe24812b366e363ecf",
+                    "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c"
+                  }
+                }
+              }
+            },
+            "order": 105
+          },
+          "green": {
+            "phase": "green",
+            "recordedAt": "2026-09-21T05:30:26.643Z",
+            "fingerprints": {
+              "impact": "8d70b2cdb49720e294be9fb3fc2f2435a7e3a47825b371da672631ee7d73bae3",
+              "requirements": "0c42fb565effcc67258122c06507dcf5d43cd265a14f943cfb40f68e8ce7597a",
+              "design": "2e33ea84723c815804633fc499f69ef2699f158c41f365509dfa0b3be0c30894",
+              "implementation": "e548446aa55bb88e1390745797281e4bfed807602e1d6a87122dcf8e77ba2409",
+              "tests": "a091814858186b6a9a3fc2a40272a01a15b960976553cc1e899fc3c4bdb05873",
+              "tdd": "5e3f87af3c969b98a10fecae88b2796757f99622bec096d27bf25c2ccc5bfa7b",
+              "requirementImplementations": {
+                "REQ-M5-BUDGET-005": {
+                  "paths": [
+                    "packages/analysis/src/budget-ledger.ts",
+                    "packages/analysis/src/canonical.ts",
+                    "packages/analysis/src/journal.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/budget-ledger.ts": "c7e4fa74032e066491708685359ca7115ab34c44a0d2af18337bd15a4da25590",
+                    "packages/analysis/src/canonical.ts": "1c4dcfda94bc2b93d3d1e4bbb03205f2441d6025b172e8fe24812b366e363ecf",
+                    "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c"
+                  }
+                }
+              }
+            },
+            "order": 107
+          }
         }
       ]
     }

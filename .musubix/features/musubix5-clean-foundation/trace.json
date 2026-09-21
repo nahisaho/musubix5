@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-21T05:25:23.310Z",
+  "generatedAt": "2026-09-21T05:30:24.464Z",
   "nodes": [
     {
       "id": "ADR-0002",
@@ -692,6 +692,24 @@
       "line": 67
     },
     {
+      "id": "CODE-M5-BUDGET-005",
+      "kind": "code",
+      "path": "packages/analysis/src/budget-ledger.ts",
+      "line": 80
+    },
+    {
+      "id": "CODE-M5-BUDGET-001",
+      "kind": "code",
+      "path": "packages/analysis/src/budget-ledger.ts",
+      "line": 98
+    },
+    {
+      "id": "CODE-M5-BUDGET-003",
+      "kind": "code",
+      "path": "packages/analysis/src/budget-ledger.ts",
+      "line": 160
+    },
+    {
       "id": "CODE-CHANGE-REQUIREMENT-BATCHES-001",
       "kind": "code",
       "path": "packages/analysis/src/change-evidence.ts",
@@ -959,7 +977,7 @@
       "id": "CODE-WORKFLOW-EVIDENCE-WAIVER-024",
       "kind": "code",
       "path": "packages/analysis/src/index.ts",
-      "line": 24
+      "line": 25
     },
     {
       "id": "CODE-M5-LIFECYCLE-004",
@@ -1326,6 +1344,24 @@
       "kind": "test",
       "path": "tests/bootstrap-approval-transition.test.ts",
       "line": 4
+    },
+    {
+      "id": "TEST-M5-BUDGET-005",
+      "kind": "test",
+      "path": "tests/budget-limits.test.ts",
+      "line": 4
+    },
+    {
+      "id": "TEST-M5-BUDGET-001",
+      "kind": "test",
+      "path": "tests/budget-reservation.test.ts",
+      "line": 16
+    },
+    {
+      "id": "TEST-M5-BUDGET-003",
+      "kind": "test",
+      "path": "tests/budget-usage.test.ts",
+      "line": 16
     },
     {
       "id": "TEST-M5-LIFECYCLE-004",
@@ -2656,6 +2692,46 @@
     {
       "from": "CODE-ATTESTATION-EVIDENCE-STABILITY-002",
       "to": "DES-ATTESTATION-EVIDENCE-STABILITY-003",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-BUDGET-005",
+      "to": "REQ-M5-BUDGET-005",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-BUDGET-005",
+      "to": "DES-M5-009",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-BUDGET-001",
+      "to": "REQ-M5-BUDGET-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-BUDGET-001",
+      "to": "REQ-M5-BUDGET-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-BUDGET-001",
+      "to": "REQ-M5-BUDGET-004",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-BUDGET-001",
+      "to": "DES-M5-009",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-BUDGET-003",
+      "to": "REQ-M5-BUDGET-003",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-BUDGET-003",
+      "to": "DES-M5-009",
       "relation": "implements"
     },
     {
@@ -4309,6 +4385,31 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-BUDGET-005",
+      "to": "REQ-M5-BUDGET-005",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-BUDGET-001",
+      "to": "REQ-M5-BUDGET-001",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-BUDGET-001",
+      "to": "REQ-M5-BUDGET-002",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-BUDGET-001",
+      "to": "REQ-M5-BUDGET-004",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-BUDGET-003",
+      "to": "REQ-M5-BUDGET-003",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-LIFECYCLE-004",
       "to": "REQ-M5-LIFECYCLE-004",
       "relation": "verifies"
@@ -4401,6 +4502,7 @@
     "packages/analysis/src/approval-record.ts": "838294de204a006daf5a7048a69153b573d5b61e5c9d8f3d66332b27a5b577bf",
     "packages/analysis/src/approval.ts": "d9f57165ca455a0b49acdda7096e0df98a06cd5be33c3d20b2f06cf40917c69f",
     "packages/analysis/src/attestation.ts": "c353b5d93f151665e1f5f0531b763db164cb54e5305a837efd47b2742eb3b949",
+    "packages/analysis/src/budget-ledger.ts": "c7e4fa74032e066491708685359ca7115ab34c44a0d2af18337bd15a4da25590",
     "packages/analysis/src/canonical.ts": "1c4dcfda94bc2b93d3d1e4bbb03205f2441d6025b172e8fe24812b366e363ecf",
     "packages/analysis/src/change-evidence.ts": "8bff2cb709de3834e078bf8bf30f2ddef36b37fa03bec5446e27711cae14709b",
     "packages/analysis/src/change-waiver.ts": "edabb578fe2d968bf98fe068ee240a32b67dcf7b50724a265e83ebc2a88c1ccd",
@@ -4411,7 +4513,7 @@
     "packages/analysis/src/formal.ts": "9f5622983fed80c1e7c141cc7c7dcd217447e5c2edd39e64877db052a57b730b",
     "packages/analysis/src/gate.ts": "d5045b5d9de832fb7714d200f8274c8a2eedbda9f8841f9eac24cf4f3fbbc72d",
     "packages/analysis/src/graph.ts": "8978a47c311ddef684de5e4c5ab032eed9bc87ad94a739351de6e2d6b2ae2aba",
-    "packages/analysis/src/index.ts": "7b7cbe13787c4adc53590a0945eb5b25e49834929c968cada9b808c1bda32ec6",
+    "packages/analysis/src/index.ts": "c69fac0555e47ca63886901ae72a3e9975b56eef82d7c15d6246085db4ffef0b",
     "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c",
     "packages/analysis/src/knowledge.ts": "48b68e9785f411327e10e1bd1f086fdaf4393d2951dcbd4e6fdec84e8008d7da",
     "packages/analysis/src/lifecycle.ts": "6dfcd2fd1915ea8edbc8d611da3d35aadd8a09581796c029e83d41a2a6fc7fc2",
@@ -4440,6 +4542,9 @@
     "scripts/smoke-package.mjs": "b1e8ef2bbf213a4927c357fff53f683f3be552f3cb3e79d48c1ddc1b46c6fc7d",
     "tests/approval-scope.test.ts": "50c87584dde5154286b617e541bcd3acd2f55d1afef849688b84dd6df15b3a45",
     "tests/bootstrap-approval-transition.test.ts": "d741eff7c19651cc4d47e97468e0d90a520ebb559003cc40faeac744cc3cd1ac",
+    "tests/budget-limits.test.ts": "190f30d101797850227644e32cfffefba0b5f2606de21bfb606d6fbd4daa8742",
+    "tests/budget-reservation.test.ts": "f7ee772c7546cba05001013d89cfce0fd692096fc9062e4e7e7c7ad1732def7c",
+    "tests/budget-usage.test.ts": "45bf344f884740b91adfaf18a41830a72a3095a314aa71193a8750186752689f",
     "tests/change-lease.test.ts": "90f359b766b40a5a70854148cc20115915fb127514c27bd13dcff9f03eaa256b",
     "tests/cli-help-contract.test.ts": "a6aa4e340bcbc36710aa9c74041385d48e5397f9d779a5d2979946050c144ac7",
     "tests/cli-json-error-contract.test.ts": "5c4fe89aa41b51ad50fa46aba16b29ffdeec7c70691f1e5db9d3cfd99c60e712",
