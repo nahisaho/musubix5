@@ -219,7 +219,15 @@ export async function appendJournalRecord(root: string, input: JournalRecordInpu
   try {
     const records = await journalRecords(root);
     const existing = records.find((record) => record.idempotencyKey === input.idempotencyKey);
-    if (existing) return existing;
+    if (existing) {
+      if (existing.stream !== input.stream
+        || existing.changeId !== input.changeId
+        || existing.kind !== input.kind
+        || !canonicalBytes(existing.payload).equals(canonicalBytes(input.payload))) {
+        throw new Error(`JOURNAL_IDEMPOTENCY_CONFLICT: ${input.idempotencyKey} is bound to different input.`);
+      }
+      return existing;
+    }
     const previous = records.at(-1);
     const payload = {
       schemaVersion: 1 as const,
