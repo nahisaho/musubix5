@@ -65,6 +65,15 @@ async function readLeaseOwner(path: string): Promise<LeaseOwner | null> {
   }
 }
 
+async function leaseModifiedAt(path: string): Promise<number | null> {
+  try {
+    return (await stat(path)).mtimeMs;
+  } catch (cause) {
+    if (errorCode(cause) === 'ENOENT') return null;
+    throw cause;
+  }
+}
+
 async function writeCanonicalFile(path: string, value: unknown): Promise<void> {
   const temporary = `${path}.${randomUUID()}.tmp`;
   const handle = await open(temporary, 'wx');
@@ -116,7 +125,8 @@ async function acquireNamedLease(root: string, name: string, wait: boolean): Pro
     } catch (cause) {
       if (errorCode(cause) !== 'EEXIST') throw cause;
       const owner = await readLeaseOwner(path);
-      const ownerlessCreatedAt = owner === null ? (await stat(path)).mtimeMs : null;
+      const ownerlessCreatedAt = owner === null ? await leaseModifiedAt(path) : null;
+      if (owner === null && ownerlessCreatedAt === null) continue;
       if ((owner && owner.expiresAt > Date.now())
         || (ownerlessCreatedAt !== null && ownerlessCreatedAt + leaseTtlMs > Date.now())) {
         if (!wait) return null;
@@ -246,4 +256,12 @@ export async function appendJournalRecord(root: string, input: JournalRecordInpu
 
 export async function verifyJournal(root: string): Promise<JournalRecord[]> {
   return journalRecords(root);
+}
+
+export async function loadJournalRecordByIdempotencyKey(
+  root: string,
+  idempotencyKey: string,
+): Promise<JournalRecord | null> {
+  return (await journalRecords(root))
+    .find((record) => record.idempotencyKey === idempotencyKey) ?? null;
 }

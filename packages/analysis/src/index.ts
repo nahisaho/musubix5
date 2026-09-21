@@ -6,6 +6,7 @@ export * from './graph.js';
 export * from './knowledge.js';
 export * from './canonical.js';
 export * from './journal.js';
+export * from './lifecycle.js';
 export * from './formal.js';
 export * from './workflow.js';
 export * from './test-report.js';

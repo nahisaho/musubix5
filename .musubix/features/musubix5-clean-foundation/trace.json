@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-21T05:03:37.315Z",
+  "generatedAt": "2026-09-21T05:07:01.878Z",
   "nodes": [
     {
       "id": "ADR-0002",
@@ -935,25 +935,31 @@
       "id": "CODE-WORKFLOW-EVIDENCE-WAIVER-024",
       "kind": "code",
       "path": "packages/analysis/src/index.ts",
-      "line": 21
+      "line": 22
     },
     {
       "id": "CODE-M5-LIFECYCLE-004",
       "kind": "code",
       "path": "packages/analysis/src/journal.ts",
-      "line": 150
+      "line": 160
     },
     {
       "id": "CODE-M5-LIFECYCLE-002",
       "kind": "code",
       "path": "packages/analysis/src/journal.ts",
-      "line": 203
+      "line": 213
     },
     {
       "id": "CODE-BOUNDED-FILE-READ-CONCURRENCY-003",
       "kind": "code",
       "path": "packages/analysis/src/knowledge.ts",
       "line": 58
+    },
+    {
+      "id": "CODE-M5-LIFECYCLE-001",
+      "kind": "code",
+      "path": "packages/analysis/src/lifecycle.ts",
+      "line": 124
     },
     {
       "id": "CODE-ATTESTATION-EVIDENCE-STABILITY-001",
@@ -1284,6 +1290,18 @@
       "kind": "test",
       "path": "tests/journal-order.test.ts",
       "line": 43
+    },
+    {
+      "id": "TEST-M5-LIFECYCLE-003",
+      "kind": "test",
+      "path": "tests/lifecycle-resume.test.ts",
+      "line": 16
+    },
+    {
+      "id": "TEST-M5-LIFECYCLE-001",
+      "kind": "test",
+      "path": "tests/lifecycle-state-machine.test.ts",
+      "line": 16
     },
     {
       "id": "TEST-M5-COMPAT-005",
@@ -3210,6 +3228,21 @@
       "relation": "implements"
     },
     {
+      "from": "CODE-M5-LIFECYCLE-001",
+      "to": "REQ-M5-LIFECYCLE-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-LIFECYCLE-001",
+      "to": "REQ-M5-LIFECYCLE-003",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-LIFECYCLE-001",
+      "to": "DES-M5-005",
+      "relation": "implements"
+    },
+    {
       "from": "CODE-ATTESTATION-EVIDENCE-STABILITY-001",
       "to": "REQ-ATTESTATION-EVIDENCE-STABILITY-002",
       "relation": "implements"
@@ -4095,6 +4128,16 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-LIFECYCLE-003",
+      "to": "REQ-M5-LIFECYCLE-003",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-LIFECYCLE-001",
+      "to": "REQ-M5-LIFECYCLE-001",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-COMPAT-005",
       "to": "REQ-M5-COMPAT-005",
       "relation": "verifies"
@@ -4131,9 +4174,10 @@
     "packages/analysis/src/formal.ts": "9f5622983fed80c1e7c141cc7c7dcd217447e5c2edd39e64877db052a57b730b",
     "packages/analysis/src/gate.ts": "d5045b5d9de832fb7714d200f8274c8a2eedbda9f8841f9eac24cf4f3fbbc72d",
     "packages/analysis/src/graph.ts": "8978a47c311ddef684de5e4c5ab032eed9bc87ad94a739351de6e2d6b2ae2aba",
-    "packages/analysis/src/index.ts": "84b41d1d9bc1b6f6433f336e170c9bd49212f36d0a554e114dac2c0b06d458fd",
-    "packages/analysis/src/journal.ts": "74d24090ccb222addfc6cdec07dccbbf8ab3b3b3eace2eedb5bd102c57fe44ec",
+    "packages/analysis/src/index.ts": "e15a8c4be86e8fb7567f25eaa52005ac000bda5f222e2ea2a66644a227b5e261",
+    "packages/analysis/src/journal.ts": "c2474ba0e8f44ee62aed6acfe02375cfa8b1eb823dbc8f2036868cff8bc25a48",
     "packages/analysis/src/knowledge.ts": "48b68e9785f411327e10e1bd1f086fdaf4393d2951dcbd4e6fdec84e8008d7da",
+    "packages/analysis/src/lifecycle.ts": "6dfcd2fd1915ea8edbc8d611da3d35aadd8a09581796c029e83d41a2a6fc7fc2",
     "packages/analysis/src/model-correspondence.ts": "fb19dbbdf461b8e2a2429b6107f60e7ea523e4033e4677ed7dd09ea03740659c",
     "packages/analysis/src/mutation.ts": "8e68ed8491317dca183afa8c556d3f242628f20388f33b1b6fe997a98b459740",
     "packages/analysis/src/order.ts": "361eff6435f7eb81ac15b9a005f8f676f499c56d3dc82abb242e2307b8af628d",
@@ -4160,6 +4204,8 @@
     "tests/cli-help-contract.test.ts": "a6aa4e340bcbc36710aa9c74041385d48e5397f9d779a5d2979946050c144ac7",
     "tests/cli-json-error-contract.test.ts": "5c4fe89aa41b51ad50fa46aba16b29ffdeec7c70691f1e5db9d3cfd99c60e712",
     "tests/journal-order.test.ts": "aed6eb3454f81a5d1a83b2f9a00f329f5371039d3f40dfdd395a10e86acd7755",
+    "tests/lifecycle-resume.test.ts": "05f7a3f30acf4b0b628e1c068d17c28cb248508fa2e9523c51e6455c4bd2e6ed",
+    "tests/lifecycle-state-machine.test.ts": "5cbae549161c93fb5943575d9e0ba974d716f53ca2600ef8e6e07586622a0d33",
     "tests/package-archive.test.ts": "78e461d23036373cdd73740eda64ddc2b4e83bfa5b3cc20917c194d17a882713",
     "tests/package-contract.test.ts": "62cf33cd27860b58d47ba55f51c93efafe8f691b44c4b6c9c161fae286eb0f21",
     "vitest.config.ts": "2338c9c1fc7792c2c04fb596d182829c7259f1c60617f86751169d35c914ae54"

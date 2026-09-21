@@ -288,6 +288,86 @@
       "phase": "green:REQ-M5-LIFECYCLE-004",
       "previousSha256": "877863e8ce004b9f0ec58c24c396987f5199909d60dfb9cb763fc9eb77ad1a67",
       "recordSha256": "b5c329e89c4cd7841e52e0b099c0f5ee693d70d41b21de767102f4b6eac2af5c"
+    },
+    {
+      "sequence": 37,
+      "kind": "tdd",
+      "entityId": "c3f0ec7a-deec-4c8a-a4f5-70dc156967b1",
+      "phase": "red",
+      "previousSha256": "b5c329e89c4cd7841e52e0b099c0f5ee693d70d41b21de767102f4b6eac2af5c",
+      "recordSha256": "4db9118b2271b1f6eb0b2b86ca20e1f027745b823630114214b5ff28c50b6a34"
+    },
+    {
+      "sequence": 38,
+      "kind": "change",
+      "entityId": "CHANGE-0002",
+      "phase": "red:REQ-M5-LIFECYCLE-001",
+      "previousSha256": "4db9118b2271b1f6eb0b2b86ca20e1f027745b823630114214b5ff28c50b6a34",
+      "recordSha256": "e8f12a7ddaa0cfe5a6824ab46831c13bd8b423f71816f465ea292cfc360fcba5"
+    },
+    {
+      "sequence": 39,
+      "kind": "change",
+      "entityId": "CHANGE-0002",
+      "phase": "implementation:REQ-M5-LIFECYCLE-001",
+      "previousSha256": "e8f12a7ddaa0cfe5a6824ab46831c13bd8b423f71816f465ea292cfc360fcba5",
+      "recordSha256": "b00b52c2216d1e3e7e72e38104a2c5ccd519e989665dbe698a9c4079c0dcc9c1"
+    },
+    {
+      "sequence": 40,
+      "kind": "tdd",
+      "entityId": "c3f0ec7a-deec-4c8a-a4f5-70dc156967b1",
+      "phase": "green",
+      "previousSha256": "b00b52c2216d1e3e7e72e38104a2c5ccd519e989665dbe698a9c4079c0dcc9c1",
+      "recordSha256": "d982fb0d4884c7cb90b2b9a297e1728b1f1ac71a4a62376173ec3194b54d65e1"
+    },
+    {
+      "sequence": 41,
+      "kind": "change",
+      "entityId": "CHANGE-0002",
+      "phase": "green:REQ-M5-LIFECYCLE-001",
+      "previousSha256": "d982fb0d4884c7cb90b2b9a297e1728b1f1ac71a4a62376173ec3194b54d65e1",
+      "recordSha256": "9b1793d7b01661825378573cbbc351c78ebfd5230ae425ec83cb209b4e169082"
+    },
+    {
+      "sequence": 42,
+      "kind": "tdd",
+      "entityId": "7e624001-1cb0-4e8a-8811-0b85d1ae8d7c",
+      "phase": "red",
+      "previousSha256": "9b1793d7b01661825378573cbbc351c78ebfd5230ae425ec83cb209b4e169082",
+      "recordSha256": "8f65c358c4c3b8539ccd576f243a420982e241884a8081d40ee777446f3d6a25"
+    },
+    {
+      "sequence": 43,
+      "kind": "change",
+      "entityId": "CHANGE-0002",
+      "phase": "red:REQ-M5-LIFECYCLE-003",
+      "previousSha256": "8f65c358c4c3b8539ccd576f243a420982e241884a8081d40ee777446f3d6a25",
+      "recordSha256": "fb8b846d8e9c334751e9202c8f3b54afd1eefd990d82b803aef04fef4b1daad0"
+    },
+    {
+      "sequence": 44,
+      "kind": "change",
+      "entityId": "CHANGE-0002",
+      "phase": "implementation:REQ-M5-LIFECYCLE-003",
+      "previousSha256": "fb8b846d8e9c334751e9202c8f3b54afd1eefd990d82b803aef04fef4b1daad0",
+      "recordSha256": "0662ce0e33125f0da86a17575cf0a222fd703f2bb10ee1518e6a1ead7bc68b65"
+    },
+    {
+      "sequence": 45,
+      "kind": "tdd",
+      "entityId": "7e624001-1cb0-4e8a-8811-0b85d1ae8d7c",
+      "phase": "green",
+      "previousSha256": "0662ce0e33125f0da86a17575cf0a222fd703f2bb10ee1518e6a1ead7bc68b65",
+      "recordSha256": "315bd20b1230db47647d53f9f91f93635b7eca36593cb9f3e2f39f56851edf23"
+    },
+    {
+      "sequence": 46,
+      "kind": "change",
+      "entityId": "CHANGE-0002",
+      "phase": "green:REQ-M5-LIFECYCLE-003",
+      "previousSha256": "315bd20b1230db47647d53f9f91f93635b7eca36593cb9f3e2f39f56851edf23",
+      "recordSha256": "d5854bd1800b655412e859e5539c672af008b683f514f5291b186a2beb0a4e23"
     }
   ]
 }

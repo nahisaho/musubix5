@@ -331,6 +331,92 @@
         "diagnostics": [],
         "order": 35
       }
+    },
+    {
+      "cycleId": "c3f0ec7a-deec-4c8a-a4f5-70dc156967b1",
+      "requirementId": "REQ-M5-LIFECYCLE-001",
+      "testId": "TEST-M5-LIFECYCLE-001",
+      "testPath": "tests/lifecycle-state-machine.test.ts",
+      "commandName": "test",
+      "red": {
+        "phase": "red",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "failed",
+        "reportSha256": "269cc02d4bb184a236c19edbeae70c119cf105fc57695cc9cfb92d8656901f9b",
+        "commandSha256": "37f42103df2f0cfa8e805747da1aab34e5e2df02170674d5b82cb9796982863f",
+        "outputSha256": "f9ef336e987b4da2c38eb4d2dadcecd3f0b6dc4691df804d4a437e1521ca31a8",
+        "exitCode": 1,
+        "durationMs": 774,
+        "testFingerprint": "4b997e27e4608874a14107c457a1a003ec9c7ae1910ac08ad88c5b7ccd842e3d",
+        "sourceFingerprint": "077488e2463d137815a05d5f7cb90c1f96686aa10a26f76d6ad673596a20b897",
+        "executionId": "b9df7d42-8445-4eb6-9c00-1ac09eea3410",
+        "recordedAt": "2026-09-21T05:04:43.344Z",
+        "diagnostics": [],
+        "order": 37
+      },
+      "green": {
+        "phase": "green",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "passed",
+        "reportSha256": "aacb7c980ab5b325a850a4f6fb7e1393437dbdac2429868e79741fda4ccbbe8c",
+        "commandSha256": "37f42103df2f0cfa8e805747da1aab34e5e2df02170674d5b82cb9796982863f",
+        "outputSha256": "f9ef336e987b4da2c38eb4d2dadcecd3f0b6dc4691df804d4a437e1521ca31a8",
+        "exitCode": 0,
+        "durationMs": 1631,
+        "testFingerprint": "4b997e27e4608874a14107c457a1a003ec9c7ae1910ac08ad88c5b7ccd842e3d",
+        "sourceFingerprint": "34fd03af649a39aec037b349d20f1b5689611b7b26e009204e728f43e772af71",
+        "executionId": "3bec96b4-e411-4375-9110-44c7e6d54bd9",
+        "recordedAt": "2026-09-21T05:05:38.816Z",
+        "diagnostics": [],
+        "order": 40
+      }
+    },
+    {
+      "cycleId": "7e624001-1cb0-4e8a-8811-0b85d1ae8d7c",
+      "requirementId": "REQ-M5-LIFECYCLE-003",
+      "testId": "TEST-M5-LIFECYCLE-003",
+      "testPath": "tests/lifecycle-resume.test.ts",
+      "commandName": "test",
+      "red": {
+        "phase": "red",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "failed",
+        "reportSha256": "bdeb20cf11338c9d61c866400b1d80218a15e29ca8d54297e0f28e64eb0a7fc4",
+        "commandSha256": "7473df4f88097e151da9b6407274357269a3b0f1e54f1050c3f25a5bf3620ec8",
+        "outputSha256": "0afeb8917da2a73a828a80b075d5063fe3fd8a72290631b1bcca02380285d955",
+        "exitCode": 1,
+        "durationMs": 997,
+        "testFingerprint": "17102809a091bab0a8ba2f835edb07026db470a4f5d00cef2c248a6bfd1c747d",
+        "sourceFingerprint": "658c85019b4f629d30631e7ad5db0fb49e90a9af448d8c1e559d020a202beea9",
+        "executionId": "d314c0d7-ba11-4ec7-9e94-681d4f0a5e85",
+        "recordedAt": "2026-09-21T05:06:06.841Z",
+        "diagnostics": [],
+        "order": 42
+      },
+      "green": {
+        "phase": "green",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "passed",
+        "reportSha256": "1f4cac13ef5152adf20f0335c97d594152e7817553505c2a21312c61d274cd91",
+        "commandSha256": "7473df4f88097e151da9b6407274357269a3b0f1e54f1050c3f25a5bf3620ec8",
+        "outputSha256": "0afeb8917da2a73a828a80b075d5063fe3fd8a72290631b1bcca02380285d955",
+        "exitCode": 0,
+        "durationMs": 1547,
+        "testFingerprint": "17102809a091bab0a8ba2f835edb07026db470a4f5d00cef2c248a6bfd1c747d",
+        "sourceFingerprint": "ccb76181f5a1f58e9ff8b020a23b764809a136aaf25cef468fd9b2c9022b1d7c",
+        "executionId": "10e7893c-54ca-41c7-80b6-5f4cfae32c0c",
+        "recordedAt": "2026-09-21T05:07:01.358Z",
+        "diagnostics": [],
+        "order": 45
+      }
     }
   ],
   "chain": [
@@ -513,6 +599,54 @@
       "phaseEvidenceSha256": "ea0be3cfff19c4ba11d2519c36565f106aec62e93bf06c36343153c75fd74793",
       "previousSha256": "dd13baabb312fa03c7b14c84b0f763aa3ae83985121bcfc78f6d15d880e85b47",
       "recordSha256": "c9bd39e8067b3c016dfeb754542bec12a143b4c5f01b446e6beb7329503da5df"
+    },
+    {
+      "sequence": 16,
+      "cycleId": "c3f0ec7a-deec-4c8a-a4f5-70dc156967b1",
+      "requirementId": "REQ-M5-LIFECYCLE-001",
+      "testId": "TEST-M5-LIFECYCLE-001",
+      "testPath": "tests/lifecycle-state-machine.test.ts",
+      "commandName": "test",
+      "phase": "red",
+      "phaseEvidenceSha256": "44bb85c7400462794d8a5bf1e04330822400e1d41558fdcc0cba1329d861ee27",
+      "previousSha256": "c9bd39e8067b3c016dfeb754542bec12a143b4c5f01b446e6beb7329503da5df",
+      "recordSha256": "0d51f9b3198858afc0ee63f5ff369a5dbafa04fbd96cbb92284e8597bee6a429"
+    },
+    {
+      "sequence": 17,
+      "cycleId": "c3f0ec7a-deec-4c8a-a4f5-70dc156967b1",
+      "requirementId": "REQ-M5-LIFECYCLE-001",
+      "testId": "TEST-M5-LIFECYCLE-001",
+      "testPath": "tests/lifecycle-state-machine.test.ts",
+      "commandName": "test",
+      "phase": "green",
+      "phaseEvidenceSha256": "6a55254031948b4c5ca97fc4475c28b5daaf67035ed3b71e605ef79d5ef3acdc",
+      "previousSha256": "0d51f9b3198858afc0ee63f5ff369a5dbafa04fbd96cbb92284e8597bee6a429",
+      "recordSha256": "23ce755521d71a98f47b321e532931f941f45200f85656b8415a8a6de9769c3e"
+    },
+    {
+      "sequence": 18,
+      "cycleId": "7e624001-1cb0-4e8a-8811-0b85d1ae8d7c",
+      "requirementId": "REQ-M5-LIFECYCLE-003",
+      "testId": "TEST-M5-LIFECYCLE-003",
+      "testPath": "tests/lifecycle-resume.test.ts",
+      "commandName": "test",
+      "phase": "red",
+      "phaseEvidenceSha256": "4ec45978caad5e238bfa6b8b42403e0161d9970b9ad6bdb5ec0cde15f9ed050a",
+      "previousSha256": "23ce755521d71a98f47b321e532931f941f45200f85656b8415a8a6de9769c3e",
+      "recordSha256": "491f7a4bf499b4f6139f8616023f3a61f5a9b9b0a4dff51c565df7463aee2991"
+    },
+    {
+      "sequence": 19,
+      "cycleId": "7e624001-1cb0-4e8a-8811-0b85d1ae8d7c",
+      "requirementId": "REQ-M5-LIFECYCLE-003",
+      "testId": "TEST-M5-LIFECYCLE-003",
+      "testPath": "tests/lifecycle-resume.test.ts",
+      "commandName": "test",
+      "phase": "green",
+      "phaseEvidenceSha256": "981f6dab71cf685905657b2d0f441e51f05ae62b1893ae7282557b976f7ae9e5",
+      "previousSha256": "491f7a4bf499b4f6139f8616023f3a61f5a9b9b0a4dff51c565df7463aee2991",
+      "recordSha256": "4e0809d88b4b4a5cfc8ef94e420754c6318abeeb0986c8c0bb9c4bf50da74813"
     }
   ]
 }
