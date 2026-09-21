@@ -25,9 +25,10 @@
     },
     {
       "name": "test",
-      "command": "npm",
+      "command": "npx",
       "args": [
-        "test"
+        "vitest",
+        "run"
       ],
       "adapter": "vitest",
       "required": true,
