@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-21T04:53:20.378Z",
+  "generatedAt": "2026-09-21T05:03:37.315Z",
   "nodes": [
     {
       "id": "ADR-0002",
@@ -866,28 +866,34 @@
       "line": 245
     },
     {
+      "id": "CODE-M5-COMPAT-003",
+      "kind": "code",
+      "path": "packages/analysis/src/config.ts",
+      "line": 587
+    },
+    {
       "id": "CODE-CLI-WORKFLOW-UX-006",
       "kind": "code",
       "path": "packages/analysis/src/config.ts",
-      "line": 617
+      "line": 621
     },
     {
       "id": "CODE-COMMAND-WORKING-DIRECTORY-001",
       "kind": "code",
       "path": "packages/analysis/src/config.ts",
-      "line": 643
+      "line": 647
     },
     {
       "id": "CODE-ADAPTER-PATTERN-RECOGNITION-002",
       "kind": "code",
       "path": "packages/analysis/src/config.ts",
-      "line": 662
+      "line": 666
     },
     {
       "id": "CODE-CLI-WORKFLOW-UX-004",
       "kind": "code",
       "path": "packages/analysis/src/config.ts",
-      "line": 682
+      "line": 686
     },
     {
       "id": "CODE-CLI-WORKFLOW-UX-001",
@@ -929,7 +935,19 @@
       "id": "CODE-WORKFLOW-EVIDENCE-WAIVER-024",
       "kind": "code",
       "path": "packages/analysis/src/index.ts",
-      "line": 19
+      "line": 21
+    },
+    {
+      "id": "CODE-M5-LIFECYCLE-004",
+      "kind": "code",
+      "path": "packages/analysis/src/journal.ts",
+      "line": 150
+    },
+    {
+      "id": "CODE-M5-LIFECYCLE-002",
+      "kind": "code",
+      "path": "packages/analysis/src/journal.ts",
+      "line": 203
     },
     {
       "id": "CODE-BOUNDED-FILE-READ-CONCURRENCY-003",
@@ -1244,10 +1262,28 @@
       "line": 5
     },
     {
+      "id": "TEST-M5-LIFECYCLE-004",
+      "kind": "test",
+      "path": "tests/change-lease.test.ts",
+      "line": 16
+    },
+    {
       "id": "TEST-M5-COMPAT-001",
       "kind": "test",
       "path": "tests/cli-help-contract.test.ts",
       "line": 27
+    },
+    {
+      "id": "TEST-M5-COMPAT-003",
+      "kind": "test",
+      "path": "tests/cli-json-error-contract.test.ts",
+      "line": 16
+    },
+    {
+      "id": "TEST-M5-LIFECYCLE-002",
+      "kind": "test",
+      "path": "tests/journal-order.test.ts",
+      "line": 43
     },
     {
       "id": "TEST-M5-COMPAT-005",
@@ -2989,6 +3025,16 @@
       "relation": "implements"
     },
     {
+      "from": "CODE-M5-COMPAT-003",
+      "to": "REQ-M5-COMPAT-003",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-COMPAT-003",
+      "to": "DES-M5-002",
+      "relation": "implements"
+    },
+    {
       "from": "CODE-CLI-WORKFLOW-UX-006",
       "to": "REQ-CLI-WORKFLOW-UX-006",
       "relation": "implements"
@@ -3131,6 +3177,26 @@
     {
       "from": "CODE-WORKFLOW-EVIDENCE-WAIVER-024",
       "to": "DES-WORKFLOW-EVIDENCE-WAIVER-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-LIFECYCLE-004",
+      "to": "REQ-M5-LIFECYCLE-004",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-LIFECYCLE-004",
+      "to": "DES-M5-004",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-LIFECYCLE-002",
+      "to": "REQ-M5-LIFECYCLE-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-LIFECYCLE-002",
+      "to": "DES-M5-004",
       "relation": "implements"
     },
     {
@@ -4009,8 +4075,23 @@
       "relation": "implements"
     },
     {
+      "from": "TEST-M5-LIFECYCLE-004",
+      "to": "REQ-M5-LIFECYCLE-004",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-COMPAT-001",
       "to": "REQ-M5-COMPAT-001",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-COMPAT-003",
+      "to": "REQ-M5-COMPAT-003",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-LIFECYCLE-002",
+      "to": "REQ-M5-LIFECYCLE-002",
       "relation": "verifies"
     },
     {
@@ -4041,15 +4122,17 @@
     "packages/analysis/src/approval-record.ts": "838294de204a006daf5a7048a69153b573d5b61e5c9d8f3d66332b27a5b577bf",
     "packages/analysis/src/approval.ts": "d9f57165ca455a0b49acdda7096e0df98a06cd5be33c3d20b2f06cf40917c69f",
     "packages/analysis/src/attestation.ts": "c353b5d93f151665e1f5f0531b763db164cb54e5305a837efd47b2742eb3b949",
+    "packages/analysis/src/canonical.ts": "1c4dcfda94bc2b93d3d1e4bbb03205f2441d6025b172e8fe24812b366e363ecf",
     "packages/analysis/src/change-evidence.ts": "8bff2cb709de3834e078bf8bf30f2ddef36b37fa03bec5446e27711cae14709b",
     "packages/analysis/src/change-waiver.ts": "edabb578fe2d968bf98fe068ee240a32b67dcf7b50724a265e83ebc2a88c1ccd",
     "packages/analysis/src/change.ts": "85647ae006e4255d10d10c6172e88b556bb0a2b9d96895dd4b12fc272fba3458",
-    "packages/analysis/src/config.ts": "52d5212f4057df9ed5caac0a0025ce744864909abceea3c64d259479ddffb998",
+    "packages/analysis/src/config.ts": "a46214d1271124a0ccfef15e7a6b268236fd9a57d408028e61cf511816667580",
     "packages/analysis/src/files.ts": "6186177faea34f7b2f6dd865b4f911d3b8fbfe6786e2cd19bc7dffee2a058ba2",
     "packages/analysis/src/formal.ts": "9f5622983fed80c1e7c141cc7c7dcd217447e5c2edd39e64877db052a57b730b",
     "packages/analysis/src/gate.ts": "d5045b5d9de832fb7714d200f8274c8a2eedbda9f8841f9eac24cf4f3fbbc72d",
     "packages/analysis/src/graph.ts": "8978a47c311ddef684de5e4c5ab032eed9bc87ad94a739351de6e2d6b2ae2aba",
-    "packages/analysis/src/index.ts": "01cf9d6d2e56c4fca3ee0b7268acdefbf15838991b6781112154f103d01d3fbf",
+    "packages/analysis/src/index.ts": "84b41d1d9bc1b6f6433f336e170c9bd49212f36d0a554e114dac2c0b06d458fd",
+    "packages/analysis/src/journal.ts": "74d24090ccb222addfc6cdec07dccbbf8ab3b3b3eace2eedb5bd102c57fe44ec",
     "packages/analysis/src/knowledge.ts": "48b68e9785f411327e10e1bd1f086fdaf4393d2951dcbd4e6fdec84e8008d7da",
     "packages/analysis/src/model-correspondence.ts": "fb19dbbdf461b8e2a2429b6107f60e7ea523e4033e4677ed7dd09ea03740659c",
     "packages/analysis/src/mutation.ts": "8e68ed8491317dca183afa8c556d3f242628f20388f33b1b6fe997a98b459740",
@@ -4073,7 +4156,10 @@
     "packages/domain/src/types.ts": "0f0cbd43bdee4db03b83e4869e9791531a63e9b63aa7a09661f62ad1bbc75cb3",
     "scripts/check-package.mjs": "78bc796ed48fdf8033e6adde803f32e50f5de0cc69abc9db6132b6d4140b13c6",
     "scripts/smoke-package.mjs": "b1e8ef2bbf213a4927c357fff53f683f3be552f3cb3e79d48c1ddc1b46c6fc7d",
+    "tests/change-lease.test.ts": "90f359b766b40a5a70854148cc20115915fb127514c27bd13dcff9f03eaa256b",
     "tests/cli-help-contract.test.ts": "a6aa4e340bcbc36710aa9c74041385d48e5397f9d779a5d2979946050c144ac7",
+    "tests/cli-json-error-contract.test.ts": "5c4fe89aa41b51ad50fa46aba16b29ffdeec7c70691f1e5db9d3cfd99c60e712",
+    "tests/journal-order.test.ts": "aed6eb3454f81a5d1a83b2f9a00f329f5371039d3f40dfdd395a10e86acd7755",
     "tests/package-archive.test.ts": "78e461d23036373cdd73740eda64ddc2b4e83bfa5b3cc20917c194d17a882713",
     "tests/package-contract.test.ts": "62cf33cd27860b58d47ba55f51c93efafe8f691b44c4b6c9c161fae286eb0f21",
     "vitest.config.ts": "2338c9c1fc7792c2c04fb596d182829c7259f1c60617f86751169d35c914ae54"

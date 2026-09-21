@@ -4,6 +4,8 @@ export * from './process.js';
 export * from './trace.js';
 export * from './graph.js';
 export * from './knowledge.js';
+export * from './canonical.js';
+export * from './journal.js';
 export * from './formal.js';
 export * from './workflow.js';
 export * from './test-report.js';

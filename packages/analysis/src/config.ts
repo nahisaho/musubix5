@@ -584,9 +584,13 @@ export function parseConfig(input: unknown): Config {
   return config;
 }
 
+/** @id CODE-M5-COMPAT-003
+ * @implements REQ-M5-COMPAT-003
+ * @design DES-M5-002
+ */
 export async function loadConfig(root: string): Promise<Config> {
   const path = '.musubix/config.json';
-  if (!await exists(within(root, path))) throw new Error('Missing .musubix/config.json; run musubix3 init.');
+  if (!await exists(within(root, path))) throw new Error('Missing .musubix/config.json; run musubix5 init.');
   return parseConfig(JSON.parse(await readText(root, path)) as unknown);
 }
 
