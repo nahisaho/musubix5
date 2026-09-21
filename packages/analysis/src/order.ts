@@ -29,14 +29,6 @@ export interface EvidenceOrderRecord {
    * and every other kind/phase.
    */
   requirementId?: string;
-  /** @id CODE-CHANGE-EVIDENCE-WAIVER-021
-   * @implements REQ-CHANGE-EVIDENCE-WAIVER-016
-   * @design DES-CHANGE-EVIDENCE-WAIVER-001
-   * Only ever set on `kind: 'change'` records for the `waiver` phase, for a
-   * `detail`-scoped or both-scoped waivable code (CHANGE-0012's generalized
-   * scope key). Absent for `neither`/`requirement`-only regime codes and
-   * every other kind/phase.
-   */
   detail?: string;
   previousSha256: string | null;
   recordSha256: string;
@@ -72,19 +64,6 @@ function recordSha256(record: Omit<EvidenceOrderRecord, 'recordSha256'>): string
   return digest(JSON.stringify(record));
 }
 
-/** @id CODE-CHANGE-EVIDENCE-WAIVER-013
- * @implements REQ-CHANGE-EVIDENCE-WAIVER-016
- * @design DES-CHANGE-EVIDENCE-WAIVER-001
- * Appends `scope.detail` after `scope.code`/`scope.requirementId` (only when
- * present), then, only when `phase === 'waiver'`, `scope.sequence` (only when
- * present). Every existing call site omits `scope.detail`/`scope.sequence`
- * (or the whole `scope` argument), so pre-existing keys are byte-identical.
- * `scope.sequence` lets multiple waiver-phase records share every other
- * scope field (REQ-CHANGE-EVIDENCE-WAIVER-006/010's supersession) without
- * ever colliding, since a record's `sequence` is strictly monotonic and
- * unique; it is never appended for any non-`waiver` phase, so
- * `EVIDENCE_ORDER_DUPLICATE` detection for every other phase is unchanged.
- */
 function recordKey(kind: EvidenceOrderKind, entityId: string, phase: string, scope?: EvidenceOrderScope): string {
   const key: unknown[] = [kind, entityId, phase];
   if (scope?.code !== undefined) key.push(scope.code);

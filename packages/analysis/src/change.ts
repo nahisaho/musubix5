@@ -16,16 +16,8 @@ import { selectCurrentTddCycle } from './tdd-cycle-resolver.js';
 
 export * from './change-evidence.js';
 
-/** @id CODE-CHANGE-ACCEPTANCE-HEURISTIC-001
- * @implements REQ-CHANGE-ACCEPTANCE-HEURISTIC-001
- * @design DES-CHANGE-ACCEPTANCE-HEURISTIC-001
- */
 const MEASURABLE_KEYWORD_RE = /(?:\d|test|check|verif|assert|given|when|then|return|status|pass|fail|report|error|reject|contain|unaffected|unchanged|invalid|missing|stale|silently|substring|naming|configur|exit|omit|affect|raise|テスト|確認|検証|以下|以上)/i;
 
-/** @id CODE-CHANGE-ACCEPTANCE-HEURISTIC-002
- * @implements REQ-CHANGE-ACCEPTANCE-HEURISTIC-002
- * @design DES-CHANGE-ACCEPTANCE-HEURISTIC-001
- */
 const PLACEHOLDER_PREFIX_RE = /^(?:TODO|TBD|N\/A|none|未定)(?:\s*[:\-—].*)?$/i;
 
 async function fingerprint(root: string, paths: string[]): Promise<string> {
@@ -88,10 +80,6 @@ const tddBatchPhases = ['red', 'implementation', 'green'] as const;
 type TddBatchPhase = typeof tddBatchPhases[number];
 const singularPhases = ['impact', 'requirements', 'design', 'quality'] as const;
 
-/** @id CODE-CHANGE-RECORD-FAIL-FAST-001
- * @implements REQ-CHANGE-RECORD-FAIL-FAST-001 REQ-CHANGE-RECORD-FAIL-FAST-002 REQ-CHANGE-RECORD-FAIL-FAST-003 REQ-CHANGE-RECORD-FAIL-FAST-004 REQ-CHANGE-RECORD-FAIL-FAST-005
- * @design DES-CHANGE-RECORD-FAIL-FAST-001 DES-CHANGE-RECORD-FAIL-FAST-002
- */
 // Returns null when nothing is unchanged, or a rejection message embedding
 // one of the five stable *_AT_RECORD codes otherwise.
 function unchangedRejection(
@@ -127,10 +115,6 @@ function unchangedRejection(
   return null;
 }
 
-/** @id CODE-CHANGE-RECORD-FAIL-FAST-003
- * @implements REQ-CHANGE-RECORD-FAIL-FAST-006 REQ-CHANGE-RECORD-FAIL-FAST-007 REQ-CHANGE-RECORD-FAIL-FAST-009
- * @design DES-CHANGE-RECORD-FAIL-FAST-001 DES-CHANGE-RECORD-FAIL-FAST-003 DES-CHANGE-RECORD-FAIL-FAST-004
- */
 export async function recordChangePhase(
   root: string,
   changeId: string,
@@ -264,18 +248,10 @@ export async function recordChangePhase(
   return evidence;
 }
 
-/** @id CODE-CHANGE-RECORD-RECORDEDAT-ORDER-001
- * @implements REQ-CHANGE-RECORD-RECORDEDAT-ORDER-002
- * @design DES-CHANGE-RECORD-RECORDEDAT-ORDER-002
- */
 function isCanonicalIsoRecordedAt(value: string): boolean {
   return typeof value === 'string' && !Number.isNaN(Date.parse(value)) && new Date(value).toISOString() === value;
 }
 
-/** @id CODE-CHANGE-RECORD-RECORDEDAT-ORDER-002
- * @implements REQ-CHANGE-RECORD-RECORDEDAT-ORDER-002
- * @design DES-CHANGE-RECORD-RECORDEDAT-ORDER-002
- */
 function collectRecordedAtEntries(change: ChangeRecord): { label: string; order: number; recordedAt: string }[] {
   const candidates: { label: string; order: number | undefined; recordedAt: string }[] = [];
   for (const singularPhase of singularPhases) {
@@ -303,10 +279,6 @@ function collectRecordedAtEntries(change: ChangeRecord): { label: string; order:
     .sort((a, b) => a.order - b.order);
 }
 
-/** @id CODE-CHANGE-RECORD-RECORDEDAT-ORDER-003
- * @implements REQ-CHANGE-RECORD-RECORDEDAT-ORDER-002
- * @design DES-CHANGE-RECORD-RECORDEDAT-ORDER-002
- */
 function recordedAtOutOfOrderDiagnostics(change: ChangeRecord): Diagnostic[] {
   const entries = collectRecordedAtEntries(change);
   const diagnostics: Diagnostic[] = [];
@@ -325,10 +297,6 @@ function recordedAtOutOfOrderDiagnostics(change: ChangeRecord): Diagnostic[] {
   return diagnostics;
 }
 
-/** @id CODE-CHANGE-REQUIREMENT-BATCHES-002
- * @implements REQ-CHANGE-REQUIREMENT-BATCHES-005 REQ-CHANGE-RECORD-FAIL-FAST-008
- * @design DES-CHANGE-REQUIREMENT-BATCHES-002 DES-CHANGE-RECORD-FAIL-FAST-003
- */
 export async function validateChangeEvidence(root: string): Promise<{
   present: boolean;
   valid: boolean;

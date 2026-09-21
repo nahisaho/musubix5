@@ -242,10 +242,6 @@ function validateQualityProfile(config: Config, approvalDeclared: boolean): void
   }
 }
 
-/** @id CODE-APPROVAL-DOMAIN-SCOPING-001
- * @implements REQ-APPROVAL-DOMAIN-SCOPING-001 REQ-APPROVAL-DOMAIN-SCOPING-024
- * @design DES-APPROVAL-DOMAIN-SCOPING-001
- */
 function parseApprovalDomains(rawDomains: unknown[]): DomainConfig[] {
   const domainNamePattern = /^[a-z0-9]+(-[a-z0-9]+)*$/;
   const reservedDomainNames = new Set(['requirements', 'design', 'release']);
@@ -618,10 +614,6 @@ const scaffoldRules: Array<{ manifest: string; toolchain: CommandScaffoldProposa
  * propose one illustrative native test-command entry per detection.
  * Read-only; never writes `.musubix/config.json`.
  */
-/** @id CODE-CLI-WORKFLOW-UX-006
- * @implements REQ-CLI-WORKFLOW-UX-006
- * @design DES-CLI-WORKFLOW-UX-006
- */
 export async function scaffoldCommands(root: string): Promise<CommandScaffoldProposal[]> {
   const paths = await files(root);
   const proposals: CommandScaffoldProposal[] = [];
@@ -644,10 +636,6 @@ export async function scaffoldCommands(root: string): Promise<CommandScaffoldPro
   return proposals;
 }
 
-/* @id CODE-COMMAND-WORKING-DIRECTORY-001
- * @implements REQ-COMMAND-WORKING-DIRECTORY-001
- * @design DES-COMMAND-WORKING-DIRECTORY-001
- */
 // Resolve a command's own working directory, defaulting to the project root
 // when it declares no `cwd`. Reuses `within()` so an escaping `cwd` throws
 // the same error every other path-containment check in this project throws;
@@ -663,10 +651,6 @@ function looksLikeRepoRelativePath(arg: string): boolean {
   return arg.includes('/');
 }
 
-/* @id CODE-ADAPTER-PATTERN-RECOGNITION-002
- * @implements REQ-ADAPTER-PATTERN-RECOGNITION-002
- * @design DES-ADAPTER-PATTERN-RECOGNITION-001
- */
 // Go's package-pattern syntax ("./...", "pkg/...") is not a filesystem path;
 // it is a recursive package wildcard understood only by the `go` toolchain.
 // Scoped to the go-test adapter so the orphaned-path check is not weakened
@@ -682,10 +666,6 @@ function isGoPackagePattern(arg: string): boolean {
  * REQ-COMMAND-WORKING-DIRECTORY-002/003: a command's own `cwd` (when set) is
  * validated first, and its `args` are checked against that directory rather
  * than always the project root.
- */
-/** @id CODE-CLI-WORKFLOW-UX-004
- * @implements REQ-CLI-WORKFLOW-UX-004 REQ-COMMAND-WORKING-DIRECTORY-002 REQ-COMMAND-WORKING-DIRECTORY-003
- * @design DES-CLI-WORKFLOW-UX-004 DES-COMMAND-WORKING-DIRECTORY-002
  */
 export async function configLint(root: string): Promise<{ valid: boolean; diagnostics: Diagnostic[] }> {
   const config = await loadConfig(root);

@@ -212,10 +212,6 @@ export async function readAdapterOutput(invocation: AdapterInvocation, absoluteP
   return (await Promise.all(entries.map((entry) => readFile(entry, 'utf8')))).join('\n');
 }
 
-/* @id CODE-ADAPTER-PATTERN-RECOGNITION-001
- * @implements REQ-ADAPTER-PATTERN-RECOGNITION-001
- * @design DES-ADAPTER-PATTERN-RECOGNITION-001
- */
 // Anchor the ID's trailing boundary on "not immediately followed by another
 // digit" rather than a word-boundary: Go/Rust identifiers cannot contain any
 // non-word character, so a word-boundary immediately after the digits can
@@ -327,10 +323,6 @@ function dotnetResults(text: string): MusubixTestReport['tests'] {
 }
 
 export function normalizeAdapterReport(adapter: TestAdapter, text: string, targetTestId?: string): MusubixTestReport {
-  /* @id CODE-TDD-RED-COLLECTION-GUIDANCE-001
-   * @implements REQ-TDD-RED-COLLECTION-GUIDANCE-001
-   * @design DES-TDD-RED-COLLECTION-GUIDANCE-001
-   */
   const tests: MusubixTestReport['tests'] = [];
   const suiteFailureMessages: string[] = [];
   if (adapter === 'vitest' || adapter === 'jest') {

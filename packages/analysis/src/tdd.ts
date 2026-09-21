@@ -145,10 +145,6 @@ async function sourceFingerprint(root: string, testPath: string, excludedPaths: 
 // `source.statements` — finds that statement even when it is nested inside a
 // shared `describe(...)` block, without ever matching a sibling test's
 // statement (each sibling's own leading comment differs).
-/** @id CODE-TDD-FINGERPRINT-SCOPING-001
- * @implements REQ-TDD-FINGERPRINT-SCOPING-001
- * @design DES-TDD-FINGERPRINT-SCOPING-001
- */
 function collectStatements(node: ts.Node, out: ts.Statement[]): void {
   if (ts.isStatement(node)) out.push(node);
   ts.forEachChild(node, (child) => collectStatements(child, out));
@@ -176,10 +172,6 @@ async function testFingerprint(root: string, test: TraceNode): Promise<string> {
 // fingerprint still matches what this superseded algorithm computes from
 // current source text, before moving a cycle onto the corrected algorithm
 // above. Must never be used for any other (live) fingerprint computation.
-/** @id CODE-TDD-FINGERPRINT-MIGRATION-001
- * @implements REQ-TDD-FINGERPRINT-MIGRATION-001
- * @design DES-TDD-FINGERPRINT-MIGRATION-001
- */
 export async function legacyTestFingerprint(root: string, test: TraceNode): Promise<string> {
   const text = await readText(root, test.path);
   const lines = text.split(/\r?\n/);
@@ -210,10 +202,6 @@ export async function migrateTddFingerprint(root: string, testId: string, approv
   let cycle = evidence.cycles.filter((entry) => entry.testId === testId).at(-1);
   if (!cycle) throw new Error(`No TDD cycle found for ${testId}.`);
   const order = await inspectEvidenceOrder(root);
-  /** @id CODE-TDD-CYCLE-VOID-006
-   * @implements REQ-TDD-CYCLE-VOID-012
-   * @design DES-TDD-CYCLE-VOID-006
-   */
   if (voidLinkage(evidence, order, cycle).valid) {
     const validlyVoided = new Set(evidence.cycles.filter((entry) => voidLinkage(evidence, order, entry).valid));
     const effective = effectiveLatestCycle(evidence, order, validlyVoided, testId, cycle);
@@ -287,10 +275,6 @@ function phaseLinkageValid(
     && record.phaseEvidenceSha256 === digest(JSON.stringify(phaseEvidence));
 }
 
-/** @id CODE-TDD-CYCLE-VOID-002
- * @implements REQ-TDD-CYCLE-VOID-005, REQ-TDD-CYCLE-VOID-006, REQ-TDD-CYCLE-VOID-007
- * @design DES-TDD-CYCLE-VOID-002
- */
 function voidLinkage(
   evidence: TddEvidence,
   order: ReturnType<typeof validateEvidenceOrderLog>,
@@ -326,10 +310,6 @@ function voidLinkage(
  * eligible, non-voided candidate with the greatest verified Green order
  * sequence strictly before the void's own order sequence.
  */
-/** @id CODE-TDD-CYCLE-VOID-004
- * @implements REQ-TDD-CYCLE-VOID-010
- * @design DES-TDD-CYCLE-VOID-004
- */
 function effectiveLatestCycle(
   evidence: TddEvidence,
   order: ReturnType<typeof validateEvidenceOrderLog>,
@@ -361,10 +341,6 @@ export interface TddVoidResult {
   reason?: string;
 }
 
-/** @id CODE-TDD-CYCLE-VOID-001
- * @implements REQ-TDD-CYCLE-VOID-001, REQ-TDD-CYCLE-VOID-002, REQ-TDD-CYCLE-VOID-003, REQ-TDD-CYCLE-VOID-004, REQ-TDD-CYCLE-VOID-011
- * @design DES-TDD-CYCLE-VOID-001, DES-TDD-CYCLE-VOID-005
- */
 export async function voidTddCycle(root: string, testId: string, approver: string, reason: string): Promise<TddVoidResult> {
   if (!approver?.trim()) throw new Error('An approver is required to void a TDD cycle.');
   if (!reason?.trim()) throw new Error('A reason is required to void a TDD cycle.');
@@ -439,10 +415,6 @@ export async function runTddPhase(
     [cycle.red, cycle.green, cycle.refactor].some((item) => item && !Number.isInteger(item.order)))) {
     throw new Error('Existing TDD evidence lacks monotonic order; regenerate it before recording new phases.');
   }
-  /* @id CODE-TDD-GREEN-REQUIREMENT-SCOPING-001
-   * @implements REQ-TDD-GREEN-REQUIREMENT-SCOPING-001 REQ-TDD-GREEN-REQUIREMENT-SCOPING-002
-   * @design DES-TDD-GREEN-REQUIREMENT-SCOPING-001
-   */
   // Match a non-Red phase to the pending cycle for this exact (testId,
   // requirementId) pair, not merely the latest cycle for testId: one test ID
   // can have more than one independently pending cycle for different
@@ -517,10 +489,6 @@ export async function runTddPhase(
   }
   const cycleId = phase === 'red' ? crypto.randomUUID() : previous?.cycleId;
   if (!cycleId) throw new Error(`A cycle ID is required before recording ${phase}.`);
-  /* @id CODE-TDD-ADOPTION-WARNING-001
-   * @implements REQ-TDD-ADOPTION-WARNING-001
-   * @design DES-TDD-ADOPTION-WARNING-001
-   */
   // Fires only on the call that persists the project's very first cycle
   // (evidence.cycles.length === 0 immediately before this call's push, and
   // only on 'red'), regardless of whether that Red is itself valid. The
@@ -649,9 +617,6 @@ export async function validateTddEvidence(root: string): Promise<{
   }
   const latestCycles = new Map<string, TddCycle>();
   for (const cycle of evidence.cycles) latestCycles.set(cycle.testId, cycle);
-  /** @id CODE-TDD-SUPERSEDED-CYCLE-SCOPING-001
-   * @implements REQ-TDD-SUPERSEDED-CYCLE-SCOPING-001
-   */
   const supersededCycles = new Set<TddCycle>();
   {
     const cyclesByTest = new Map<string, TddCycle[]>();
@@ -667,10 +632,6 @@ export async function validateTddEvidence(root: string): Promise<{
       }
     }
   }
-  /** @id CODE-TDD-CYCLE-VOID-003
-   * @implements REQ-TDD-CYCLE-VOID-008, REQ-TDD-CYCLE-VOID-009
-   * @design DES-TDD-CYCLE-VOID-003
-   */
   const validlyVoidedCycles = new Set<TddCycle>();
   const voided: Array<{ testId: string; cycleId: string; void: { approver: string; reason: string; recordedAt: string } }> = [];
   for (const cycle of evidence.cycles) {
@@ -678,12 +639,6 @@ export async function validateTddEvidence(root: string): Promise<{
     const linkage = voidLinkage(evidence, order, cycle);
     if (linkage.valid) {
       validlyVoidedCycles.add(cycle);
-      /** @id CODE-TDD-CYCLE-VOID-005
-       * @implements REQ-TDD-CYCLE-VOID-013
-       * @design DES-TDD-CYCLE-VOID-007
-       * One `voided` entry per validly-voided cycle, keyed by that cycle's
-       * own `cycleId`/`testId`, carrying its own `void` payload verbatim.
-       */
       voided.push({
         testId: cycle.testId,
         cycleId: cycle.cycleId!,

@@ -158,10 +158,6 @@ export async function writeMutationEvidence(
   return evidence;
 }
 
-/* @id CODE-ATTESTATION-EVIDENCE-STABILITY-001
- * @implements REQ-ATTESTATION-EVIDENCE-STABILITY-002 REQ-ATTESTATION-EVIDENCE-STABILITY-003
- * @design DES-ATTESTATION-EVIDENCE-STABILITY-001
- */
 export function mutationEvidenceHead(evidence: Record<string, unknown>): string {
   const executions = Array.isArray(evidence.executions) ? evidence.executions : [];
   const compareCanonical = (a: unknown, b: unknown): number => {

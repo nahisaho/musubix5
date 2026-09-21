@@ -83,10 +83,6 @@ function stagePaths(paths: string[], stage: ApprovalStage): string[] {
     && !/(?:^|\/)(?:logs?|session-logs)\//.test(path)).sort();
 }
 
-/** @id CODE-APPROVAL-DOMAIN-SCOPING-003
- * @implements REQ-APPROVAL-DOMAIN-SCOPING-011 REQ-APPROVAL-DOMAIN-SCOPING-012
- * @design DES-APPROVAL-DOMAIN-SCOPING-003
- */
 async function domainStagePaths(root: string, stage: 'requirements' | 'design', domain: ResolvedDomain): Promise<string[]> {
   const allPaths = await files(root);
   const owns = (slug: string): boolean => domain.features.includes(slug);
@@ -110,17 +106,6 @@ async function domainStagePaths(root: string, stage: 'requirements' | 'design', 
   return [...base, ...designPaths, ...adrPaths].sort();
 }
 
-/** @id CODE-HUMAN-APPROVAL-GATES-001
- * @implements REQ-HUMAN-APPROVAL-GATES-001 REQ-HUMAN-APPROVAL-GATES-002 REQ-HUMAN-APPROVAL-GATES-003
- * @implements REQ-HUMAN-APPROVAL-GATES-004 REQ-HUMAN-APPROVAL-GATES-005 REQ-HUMAN-APPROVAL-GATES-006
- * @implements REQ-HUMAN-APPROVAL-GATES-007 REQ-HUMAN-APPROVAL-GATES-008
- * @design DES-APPROVAL-001 DES-APPROVAL-002 DES-APPROVAL-003
- */
-/** @id CODE-APPROVAL-DOMAIN-SCOPING-007
- * @implements REQ-APPROVAL-DOMAIN-SCOPING-011 REQ-APPROVAL-DOMAIN-SCOPING-012 REQ-APPROVAL-DOMAIN-SCOPING-013
- * @implements REQ-APPROVAL-DOMAIN-SCOPING-014 REQ-APPROVAL-DOMAIN-SCOPING-023 REQ-APPROVAL-DOMAIN-SCOPING-024
- * @design DES-APPROVAL-DOMAIN-SCOPING-003
- */
 export async function approvalManifest(root: string, stage: ApprovalStage, domain?: ResolvedDomain): Promise<ApprovalManifest> {
   if (domain && stage !== 'release') {
     const artifacts = await snapshot(root, await domainStagePaths(root, stage, domain));
@@ -198,10 +183,6 @@ export async function validateApprovalStage(
   };
 }
 
-/** @id CODE-APPROVAL-DOMAIN-SCOPING-004
- * @implements REQ-APPROVAL-DOMAIN-SCOPING-008 REQ-APPROVAL-DOMAIN-SCOPING-021 REQ-APPROVAL-DOMAIN-SCOPING-022
- * @design DES-APPROVAL-DOMAIN-SCOPING-004
- */
 export async function validateApprovals(root: string, config: ApprovalConfig): Promise<ApprovalValidation> {
   if (!domainsConfigured(config)) {
     const stages = await Promise.all(approvalStages.map((stage) => validateApprovalStage(root, stage, config)));
@@ -234,10 +215,6 @@ export async function validateApprovals(root: string, config: ApprovalConfig): P
   };
 }
 
-/** @id CODE-APPROVAL-DOMAIN-SCOPING-008
- * @implements REQ-APPROVAL-DOMAIN-SCOPING-009 REQ-APPROVAL-DOMAIN-SCOPING-010
- * @design DES-APPROVAL-DOMAIN-SCOPING-004
- */
 export async function validateApprovalsForDomain(root: string, config: ApprovalConfig, domainName: string): Promise<ApprovalValidation> {
   const resolved = await resolveDomains(root, config);
   const domain = resolved.find((d) => d.name === domainName);
@@ -258,10 +235,6 @@ export async function validateApprovalsForDomain(root: string, config: ApprovalC
   };
 }
 
-/** @id CODE-APPROVAL-DOMAIN-SCOPING-006
- * @implements REQ-APPROVAL-DOMAIN-SCOPING-019 REQ-APPROVAL-DOMAIN-SCOPING-020
- * @design DES-APPROVAL-DOMAIN-SCOPING-006
- */
 export async function validateApprovalsForFeatureGate(root: string, config: ApprovalConfig, domainName: string): Promise<ApprovalValidation> {
   const base = await validateApprovalsForDomain(root, config, domainName);
   const release = await validateApprovalStage(root, 'release', config);
@@ -269,10 +242,6 @@ export async function validateApprovalsForFeatureGate(root: string, config: Appr
   return { ...base, release, diagnostics, valid: diagnostics.length === 0 };
 }
 
-/** @id CODE-APPROVAL-DOMAIN-SCOPING-009
- * @implements REQ-APPROVAL-DOMAIN-SCOPING-005 REQ-APPROVAL-DOMAIN-SCOPING-006 REQ-APPROVAL-DOMAIN-SCOPING-007
- * @design DES-APPROVAL-DOMAIN-SCOPING-004
- */
 export function requireDomainOption(config: ApprovalConfig, stage: ApprovalStage, domain: string | undefined): void {
   if (stage === 'release') {
     if (domain !== undefined) throw new Error('The release stage is always repository-wide; --domain is not accepted for release.');
@@ -300,14 +269,6 @@ export function requireValidateDomainOption(config: ApprovalConfig, domain: stri
   }
 }
 
-/** @id CODE-CLI-WORKFLOW-UX-003
- * @implements REQ-CLI-WORKFLOW-UX-003
- * @design DES-CLI-WORKFLOW-UX-003
- */
-/** @id CODE-APPROVAL-DOMAIN-SCOPING-005
- * @implements REQ-APPROVAL-DOMAIN-SCOPING-016 REQ-APPROVAL-DOMAIN-SCOPING-017 REQ-APPROVAL-DOMAIN-SCOPING-018
- * @design DES-APPROVAL-DOMAIN-SCOPING-005
- */
 export async function requireApproval(root: string, stage: ApprovalStage, config: ApprovalConfig, domain?: ResolvedDomain): Promise<void> {
   if (config.mode !== 'required') return;
   const result = await validateApprovalStage(root, stage, config, domain);
@@ -317,10 +278,6 @@ export async function requireApproval(root: string, stage: ApprovalStage, config
   }
 }
 
-/** @id CODE-APPROVAL-DOMAIN-SCOPING-010
- * @implements REQ-APPROVAL-DOMAIN-SCOPING-016 REQ-APPROVAL-DOMAIN-SCOPING-017 REQ-APPROVAL-DOMAIN-SCOPING-018
- * @design DES-APPROVAL-DOMAIN-SCOPING-005
- */
 export async function resolveOwningDomainOrThrow(root: string, config: ApprovalConfig, slug: string): Promise<ResolvedDomain | undefined> {
   if (!domainsConfigured(config)) return undefined;
   const resolved = await resolveDomains(root, config);
@@ -331,10 +288,6 @@ export async function resolveOwningDomainOrThrow(root: string, config: ApprovalC
   return resolved.find((d) => d.name === name);
 }
 
-/** @id CODE-APPROVAL-DOMAIN-SCOPING-011
- * @implements REQ-APPROVAL-DOMAIN-SCOPING-005 REQ-APPROVAL-DOMAIN-SCOPING-013
- * @design DES-APPROVAL-DOMAIN-SCOPING-004
- */
 export async function resolveNamedDomain(root: string, config: ApprovalConfig, domainName: string): Promise<ResolvedDomain> {
   const resolved = await resolveDomains(root, config);
   const domain = resolved.find((d) => d.name === domainName);
@@ -344,10 +297,6 @@ export async function resolveNamedDomain(root: string, config: ApprovalConfig, d
   return domain;
 }
 
-/** @id CODE-APPROVAL-DOMAIN-SCOPING-012
- * @implements REQ-APPROVAL-DOMAIN-SCOPING-017
- * @design DES-APPROVAL-DOMAIN-SCOPING-005
- */
 export async function resolveDesignFileDomain(root: string, config: ApprovalConfig, file: string): Promise<ResolvedDomain | undefined> {
   if (!domainsConfigured(config)) return undefined;
   const slug = featureOwningDesignFile(file);
@@ -355,10 +304,6 @@ export async function resolveDesignFileDomain(root: string, config: ApprovalConf
   return resolveOwningDomainOrThrow(root, config, slug);
 }
 
-/** @id CODE-APPROVAL-DOMAIN-SCOPING-013
- * @implements REQ-APPROVAL-DOMAIN-SCOPING-016
- * @design DES-APPROVAL-DOMAIN-SCOPING-005
- */
 export async function resolveRequirementDomain(root: string, config: ApprovalConfig, requirementId: string): Promise<ResolvedDomain | undefined> {
   if (!domainsConfigured(config)) return undefined;
   const slug = await featureOwningRequirement(root, requirementId);

@@ -74,10 +74,6 @@ export async function verifyWorkflowLog(
   })(), options);
 }
 
-/* @id CODE-WORKFLOW-MULTI-SESSION-001
- * @implements REQ-WORKFLOW-MULTI-SESSION-001
- * @design DES-WORKFLOW-MULTI-SESSION-001
- */
 export async function verifyWorkflowLogFile(
   root: string,
   path: string | string[],
@@ -350,9 +346,6 @@ export async function sanitizeWorkflowLogFile(
   };
 }
 
-/* @id CODE-WORKFLOW-SHUTDOWN-001
- * @implements REQ-WORKFLOW-SHUTDOWN-001
- */
 async function verifyWorkflowChunks(
   root: string,
   chunks: AsyncIterable<Uint8Array>,
@@ -664,10 +657,6 @@ function declarationScope(workflow: WorkflowManifest, event: WorkflowEvent, even
   };
 }
 
-/** @id CODE-WORKFLOW-EVIDENCE-WAIVER-018
- * @implements REQ-WORKFLOW-EVIDENCE-WAIVER-001 REQ-WORKFLOW-EVIDENCE-WAIVER-009 REQ-WORKFLOW-EVIDENCE-WAIVER-010 REQ-WORKFLOW-EVIDENCE-WAIVER-016
- * @design DES-WORKFLOW-EVIDENCE-WAIVER-005
- */
 export async function validateLoadedWorkflow(
   root: string,
   workflow: WorkflowManifest | null,
@@ -798,10 +787,6 @@ export async function validateLoadedWorkflow(
   };
 }
 
-/** @id CODE-WORKFLOW-EVIDENCE-WAIVER-019
- * @implements REQ-WORKFLOW-EVIDENCE-WAIVER-009 REQ-WORKFLOW-EVIDENCE-WAIVER-010 REQ-WORKFLOW-EVIDENCE-WAIVER-016
- * @design DES-WORKFLOW-EVIDENCE-WAIVER-005
- */
 export async function validateWorkflow(
   root: string,
   options: WorkflowVerificationOptions = { mode: 'compatible' },
@@ -817,28 +802,16 @@ export async function validateWorkflow(
   return validateLoadedWorkflow(root, workflow, options);
 }
 
-/** @id CODE-WORKFLOW-EVIDENCE-WAIVER-015
- * @implements REQ-WORKFLOW-EVIDENCE-WAIVER-014
- * @design DES-WORKFLOW-EVIDENCE-WAIVER-007
- */
 export async function activeWorkflowWaivers(root: string): Promise<ReturnType<typeof deriveWorkflowWaiverAudit>['workflowWaivers']> {
   const workflow = await validateWorkflow(root);
   return deriveWorkflowWaiverAudit(workflow.workflowWaiverContext).workflowWaivers;
 }
 
-/** @id CODE-WORKFLOW-EVIDENCE-WAIVER-016
- * @implements REQ-WORKFLOW-EVIDENCE-WAIVER-008 REQ-WORKFLOW-EVIDENCE-WAIVER-012
- * @design DES-WORKFLOW-EVIDENCE-WAIVER-007
- */
 export async function workflowWaiverEvidenceDiagnostics(root: string): Promise<Diagnostic[]> {
   const workflow = await validateWorkflow(root);
   return deriveWorkflowWaiverAudit(workflow.workflowWaiverContext).workflowWaiverDiagnostics;
 }
 
-/** @id CODE-WORKFLOW-EVIDENCE-WAIVER-017
- * @implements REQ-WORKFLOW-EVIDENCE-WAIVER-001 REQ-WORKFLOW-EVIDENCE-WAIVER-002 REQ-WORKFLOW-EVIDENCE-WAIVER-003 REQ-WORKFLOW-EVIDENCE-WAIVER-004 REQ-WORKFLOW-EVIDENCE-WAIVER-005 REQ-WORKFLOW-EVIDENCE-WAIVER-006 REQ-WORKFLOW-EVIDENCE-WAIVER-011 REQ-WORKFLOW-EVIDENCE-WAIVER-013 REQ-WORKFLOW-EVIDENCE-WAIVER-017
- * @design DES-WORKFLOW-EVIDENCE-WAIVER-006
- */
 export async function recordWorkflowWaiver(
   root: string,
   code: string,
@@ -938,10 +911,6 @@ export async function recordWorkflowWaiver(
   };
 }
 
-/** @id CODE-WORKFLOW-WAIVER-BULK-001
- * @implements REQ-WORKFLOW-WAIVER-BULK-001 REQ-WORKFLOW-WAIVER-BULK-002 REQ-WORKFLOW-WAIVER-BULK-003
- * @design DES-WORKFLOW-WAIVER-BULK-001
- */
 export async function recordAllWorkflowWaivers(
   root: string,
   approver: string,

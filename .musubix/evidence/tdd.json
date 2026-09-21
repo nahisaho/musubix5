@@ -3139,6 +3139,92 @@
         "diagnostics": [],
         "order": 247
       }
+    },
+    {
+      "cycleId": "c825f742-ce9f-45f6-9ab5-77c945b00715",
+      "requirementId": "REQ-M5-EVIDENCE-001",
+      "testId": "TEST-M5-EVIDENCE-TRACE-001",
+      "testPath": "tests/trace-namespace.test.ts",
+      "commandName": "test",
+      "red": {
+        "phase": "red",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "failed",
+        "reportSha256": "41b9a1244e17efcac2a26a2b7f459683af2a7c5ec2d52f5374d0fcb3fe7ab1de",
+        "commandSha256": "e0f18bf386e4f077a788de25a75c810b00e593c922c475de6f1cef368c955692",
+        "outputSha256": "eac548122c1fdb3653e46cfc089da7a479a426dad506068ec2e8627d67a223be",
+        "exitCode": 1,
+        "durationMs": 2465,
+        "testFingerprint": "f03c7a0703c25f58c98aecf42be7e9755c4391f5a8bf2d356c22247bd9f7a669",
+        "sourceFingerprint": "14ceb9a46e1a87a3257bb9f9fdee721968a50f20d4f4afda7e15fd2b0cc87a38",
+        "executionId": "34807627-4a28-4b54-912e-2b2bec05f7ec",
+        "recordedAt": "2026-09-21T06:17:24.811Z",
+        "diagnostics": [],
+        "order": 249
+      },
+      "green": {
+        "phase": "green",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "passed",
+        "reportSha256": "9ec5180d654999e25151eac8a0d38debf49058e6d0fa6c12947c6ed7babbe043",
+        "commandSha256": "e0f18bf386e4f077a788de25a75c810b00e593c922c475de6f1cef368c955692",
+        "outputSha256": "eac548122c1fdb3653e46cfc089da7a479a426dad506068ec2e8627d67a223be",
+        "exitCode": 0,
+        "durationMs": 1934,
+        "testFingerprint": "f03c7a0703c25f58c98aecf42be7e9755c4391f5a8bf2d356c22247bd9f7a669",
+        "sourceFingerprint": "1f523c4af1e77f81fa5e428965a559682514fbbf9715db8b8f61782016c4060e",
+        "executionId": "6ddac11c-78ea-4b58-b4d5-5829f1b361e8",
+        "recordedAt": "2026-09-21T06:18:00.836Z",
+        "diagnostics": [],
+        "order": 253
+      }
+    },
+    {
+      "cycleId": "99492850-a665-4d94-9e00-7cc1fe5500f9",
+      "requirementId": "REQ-M5-EVIDENCE-002",
+      "testId": "TEST-M5-EVIDENCE-TRACE-001",
+      "testPath": "tests/trace-namespace.test.ts",
+      "commandName": "test",
+      "red": {
+        "phase": "red",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "failed",
+        "reportSha256": "13bc0d29d7b1d9843aa04c6df537fab87d0fc91ce0edde28b08c16328f90223d",
+        "commandSha256": "e0f18bf386e4f077a788de25a75c810b00e593c922c475de6f1cef368c955692",
+        "outputSha256": "eac548122c1fdb3653e46cfc089da7a479a426dad506068ec2e8627d67a223be",
+        "exitCode": 1,
+        "durationMs": 2023,
+        "testFingerprint": "f03c7a0703c25f58c98aecf42be7e9755c4391f5a8bf2d356c22247bd9f7a669",
+        "sourceFingerprint": "14ceb9a46e1a87a3257bb9f9fdee721968a50f20d4f4afda7e15fd2b0cc87a38",
+        "executionId": "7400f964-fd92-433c-919e-b814409376f6",
+        "recordedAt": "2026-09-21T06:17:27.627Z",
+        "diagnostics": [],
+        "order": 250
+      },
+      "green": {
+        "phase": "green",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "passed",
+        "reportSha256": "29eaeca0ec09d36edd428bd24d81c8dbc368e2c909cd36bc7601f3a92daef1cf",
+        "commandSha256": "e0f18bf386e4f077a788de25a75c810b00e593c922c475de6f1cef368c955692",
+        "outputSha256": "eac548122c1fdb3653e46cfc089da7a479a426dad506068ec2e8627d67a223be",
+        "exitCode": 0,
+        "durationMs": 1976,
+        "testFingerprint": "f03c7a0703c25f58c98aecf42be7e9755c4391f5a8bf2d356c22247bd9f7a669",
+        "sourceFingerprint": "1f523c4af1e77f81fa5e428965a559682514fbbf9715db8b8f61782016c4060e",
+        "executionId": "3f7ce958-fa86-41dc-9f0b-1262e78488a8",
+        "recordedAt": "2026-09-21T06:18:03.569Z",
+        "diagnostics": [],
+        "order": 254
+      }
     }
   ],
   "chain": [
@@ -4869,6 +4955,54 @@
       "phaseEvidenceSha256": "006c9b4c0ac11401cb876385f32a4342e5d5fdbb026f141cbc4e4ee253d28961",
       "previousSha256": "b9abb933220fa5bea20ac9325f93f87ef9717a74f9b0621ec223108fdb4f5f43",
       "recordSha256": "18eecef16bbdbcec3a9c63407767db892920c3b5616ec27f056b06549823e8c6"
+    },
+    {
+      "sequence": 145,
+      "cycleId": "c825f742-ce9f-45f6-9ab5-77c945b00715",
+      "requirementId": "REQ-M5-EVIDENCE-001",
+      "testId": "TEST-M5-EVIDENCE-TRACE-001",
+      "testPath": "tests/trace-namespace.test.ts",
+      "commandName": "test",
+      "phase": "red",
+      "phaseEvidenceSha256": "8d70360879eecfe6e4989feb5d8eea34cccd7c46920cafc33a9d5b9626844c46",
+      "previousSha256": "18eecef16bbdbcec3a9c63407767db892920c3b5616ec27f056b06549823e8c6",
+      "recordSha256": "3b5b5811d32c2c72df7bb0a1be3abe146bec8b2292c90f414959c8ef3bc9ae83"
+    },
+    {
+      "sequence": 146,
+      "cycleId": "99492850-a665-4d94-9e00-7cc1fe5500f9",
+      "requirementId": "REQ-M5-EVIDENCE-002",
+      "testId": "TEST-M5-EVIDENCE-TRACE-001",
+      "testPath": "tests/trace-namespace.test.ts",
+      "commandName": "test",
+      "phase": "red",
+      "phaseEvidenceSha256": "297286551c3a53eb839a316288e299b698d25359a8513152aae5e363dd18f85f",
+      "previousSha256": "3b5b5811d32c2c72df7bb0a1be3abe146bec8b2292c90f414959c8ef3bc9ae83",
+      "recordSha256": "bc3d77182344c0ac8e978045b077ef2b1d56c726127a384d002dfa4c4e096703"
+    },
+    {
+      "sequence": 147,
+      "cycleId": "c825f742-ce9f-45f6-9ab5-77c945b00715",
+      "requirementId": "REQ-M5-EVIDENCE-001",
+      "testId": "TEST-M5-EVIDENCE-TRACE-001",
+      "testPath": "tests/trace-namespace.test.ts",
+      "commandName": "test",
+      "phase": "green",
+      "phaseEvidenceSha256": "f4c67e43af23dc99b1d849bb56238eba7d24039532449c0a04e52003f258c24b",
+      "previousSha256": "bc3d77182344c0ac8e978045b077ef2b1d56c726127a384d002dfa4c4e096703",
+      "recordSha256": "6d0edb6f4d17bfee38d62441f7a9fb1f4b91edc049d827a5cad2e6c7196b77b1"
+    },
+    {
+      "sequence": 148,
+      "cycleId": "99492850-a665-4d94-9e00-7cc1fe5500f9",
+      "requirementId": "REQ-M5-EVIDENCE-002",
+      "testId": "TEST-M5-EVIDENCE-TRACE-001",
+      "testPath": "tests/trace-namespace.test.ts",
+      "commandName": "test",
+      "phase": "green",
+      "phaseEvidenceSha256": "19eada7c555265f1c716c83c8dc6967f2f4492831e93ebad0b89b34c5e3617c7",
+      "previousSha256": "6d0edb6f4d17bfee38d62441f7a9fb1f4b91edc049d827a5cad2e6c7196b77b1",
+      "recordSha256": "b9e71e493458da55c0be4eb548cec76e3f6a1ad7a8a3632a2b79bb638a6ae4a0"
     }
   ]
 }

@@ -16,10 +16,6 @@ const GENESIS_SHA256 = '0'.repeat(64);
 const SHA256_RE = /^[a-f0-9]{64}$/i;
 const tddBatchPhaseNames = ['red', 'implementation', 'green'] as const;
 
-/** @id CODE-CHANGE-EVIDENCE-WAIVER-001
- * @implements REQ-CHANGE-EVIDENCE-WAIVER-001 REQ-CHANGE-EVIDENCE-WAIVER-004
- * @design DES-CHANGE-EVIDENCE-WAIVER-001
- */
 export const WAIVABLE_CODES = [
   'CHANGE_REQUIREMENTS_UNCHANGED',
   'CHANGE_DESIGN_UNCHANGED',
@@ -36,13 +32,6 @@ export const WAIVABLE_CODES = [
 ] as const;
 export type WaivableCode = typeof WAIVABLE_CODES[number];
 
-/** @id CODE-CHANGE-EVIDENCE-WAIVER-017
- * @implements REQ-CHANGE-EVIDENCE-WAIVER-004 REQ-CHANGE-EVIDENCE-WAIVER-016
- * @design DES-CHANGE-EVIDENCE-WAIVER-001
- * Four disjoint, exhaustive scope-key regime sets, replacing the original
- * single `CHANGE_LEVEL_CODES` set, so REQ-004's regime matrix is data, never
- * scattered per-code `if` branches.
- */
 export const NEITHER_KEY_CODES = new Set<WaivableCode>(['CHANGE_REQUIREMENTS_UNCHANGED', 'CHANGE_DESIGN_UNCHANGED', 'CHANGE_RECORD_MISSING']);
 export const REQUIREMENT_ONLY_CODES = new Set<WaivableCode>(['CHANGE_RED_UNPROVEN', 'CHANGE_GREEN_UNPROVEN', 'CHANGE_COMPLETENESS_TDD']);
 export const DETAIL_ONLY_CODES = new Set<WaivableCode>([
@@ -104,10 +93,6 @@ export function canonicalJson(value: unknown): string {
   return JSON.stringify(value) ?? 'null';
 }
 
-/** @id CODE-CHANGE-EVIDENCE-WAIVER-002
- * @implements REQ-CHANGE-EVIDENCE-WAIVER-007
- * @design DES-CHANGE-EVIDENCE-WAIVER-001
- */
 export async function loadChangeWaiverEvidence(root: string): Promise<LoadedChangeWaiverEvidence | null> {
   if (!await exists(within(root, WAIVER_PATH))) return null;
   try {
@@ -121,21 +106,10 @@ export async function loadChangeWaiverEvidence(root: string): Promise<LoadedChan
   }
 }
 
-/** @id CODE-CHANGE-EVIDENCE-WAIVER-003
- * @implements REQ-CHANGE-EVIDENCE-WAIVER-013 REQ-CHANGE-EVIDENCE-WAIVER-016
- * @design DES-CHANGE-EVIDENCE-WAIVER-003
- */
 export function errorFor(code: WaivableCode, message: string, target: { changeId: string; requirementId?: string; detail?: string }): Diagnostic {
   return { ...error(code, message), ...target };
 }
 
-/** @id CODE-CHANGE-EVIDENCE-WAIVER-018
- * @implements REQ-CHANGE-EVIDENCE-WAIVER-016
- * @design DES-CHANGE-EVIDENCE-WAIVER-002
- * The single function computing the canonical `detail` grammar, used both
- * at emission time (`change.ts`) and at matching/snapshot time (below and
- * `recordChangeWaiver`), so the two call sites never diverge.
- */
 export function diagnosticDetail(code: WaivableCode, context: {
   phaseName?: string;
   batchPhaseName?: string;
@@ -166,12 +140,6 @@ export type ParsedDetail =
   | { kind: 'requirement'; requirementId: string }
   | { kind: 'batchKey'; batchKey: string };
 
-/** @id CODE-CHANGE-EVIDENCE-WAIVER-019
- * @implements REQ-CHANGE-EVIDENCE-WAIVER-016
- * @design DES-CHANGE-EVIDENCE-WAIVER-002
- * The inverse parser of `diagnosticDetail`, used to recover structured
- * fields from a stored or supplied `detail` string.
- */
 export function parseDetail(code: WaivableCode, detail: string | undefined): ParsedDetail | null {
   if (detail === undefined) return null;
   if (detail.startsWith('phase:')) return { kind: 'phase', phaseName: detail.slice('phase:'.length) };
@@ -189,10 +157,6 @@ export function parseDetail(code: WaivableCode, detail: string | undefined): Par
   return null;
 }
 
-/** @id CODE-CHANGE-EVIDENCE-WAIVER-004
- * @implements REQ-CHANGE-EVIDENCE-WAIVER-011 REQ-CHANGE-EVIDENCE-WAIVER-016
- * @design DES-CHANGE-EVIDENCE-WAIVER-002
- */
 export async function snapshotPayload(
   root: string,
   evidence: ChangeEvidence | null,
@@ -336,10 +300,6 @@ export async function snapshotPayload(
   return null;
 }
 
-/** @id CODE-CHANGE-EVIDENCE-WAIVER-005
- * @implements REQ-CHANGE-EVIDENCE-WAIVER-015 REQ-CHANGE-EVIDENCE-WAIVER-016
- * @design DES-CHANGE-EVIDENCE-WAIVER-002
- */
 export function waiverRecordShapeValid(record: unknown): record is ChangeWaiverRecord {
   if (typeof record !== 'object' || record === null) return false;
   const candidate = record as Partial<ChangeWaiverRecord>;
@@ -362,10 +322,6 @@ function payloadShaOf(record: ChangeWaiverRecord): string {
   return digest(canonicalJson(rest));
 }
 
-/** @id CODE-CHANGE-EVIDENCE-WAIVER-006
- * @implements REQ-CHANGE-EVIDENCE-WAIVER-015
- * @design DES-CHANGE-EVIDENCE-WAIVER-002
- */
 export function waiverChainValid(waivers: ChangeWaiverRecord[], index: number): boolean {
   const record = waivers[index];
   if (!record) return false;
@@ -374,10 +330,6 @@ export function waiverChainValid(waivers: ChangeWaiverRecord[], index: number): 
   return record.payloadSha256 === payloadShaOf(record);
 }
 
-/** @id CODE-CHANGE-EVIDENCE-WAIVER-007
- * @implements REQ-CHANGE-EVIDENCE-WAIVER-006 REQ-CHANGE-EVIDENCE-WAIVER-016
- * @design DES-CHANGE-EVIDENCE-WAIVER-002
- */
 export async function waiverLinkage(
   root: string,
   evidence: ChangeEvidence | null,
@@ -433,13 +385,6 @@ export interface WaiverContext {
   currentHash: Array<string | undefined>;
 }
 
-/** @id CODE-CHANGE-EVIDENCE-WAIVER-020
- * @implements REQ-CHANGE-EVIDENCE-WAIVER-006 REQ-CHANGE-EVIDENCE-WAIVER-007 REQ-CHANGE-EVIDENCE-WAIVER-010 REQ-CHANGE-EVIDENCE-WAIVER-011
- * @design DES-CHANGE-EVIDENCE-WAIVER-004
- * The sole async precomputation: every downstream function in this module
- * consults only this fully resolved value, so no diagnostic-emission call
- * site or final malformed/stale pass needs to itself `await` anything.
- */
 export async function buildWaiverContext(
   root: string,
   evidence: ChangeEvidence | null,
@@ -498,10 +443,6 @@ function authoritativeIndex(
   return best;
 }
 
-/** @id CODE-CHANGE-EVIDENCE-WAIVER-008
- * @implements REQ-CHANGE-EVIDENCE-WAIVER-006 REQ-CHANGE-EVIDENCE-WAIVER-008 REQ-CHANGE-EVIDENCE-WAIVER-009 REQ-CHANGE-EVIDENCE-WAIVER-016
- * @design DES-CHANGE-EVIDENCE-WAIVER-004
- */
 export function waivedDiagnostic(
   waiverContext: WaiverContext,
   code: WaivableCode,
@@ -524,10 +465,6 @@ export function waivedDiagnostic(
   };
 }
 
-/** @id CODE-CHANGE-EVIDENCE-WAIVER-009
- * @implements REQ-CHANGE-EVIDENCE-WAIVER-006 REQ-CHANGE-EVIDENCE-WAIVER-007 REQ-CHANGE-EVIDENCE-WAIVER-011
- * @design DES-CHANGE-EVIDENCE-WAIVER-004
- */
 export function reportWaiverEvidenceDiagnostics(
   waiverContext: WaiverContext,
   _evidence: ChangeEvidence | null,
@@ -566,10 +503,6 @@ export function reportWaiverEvidenceDiagnostics(
   return diagnostics;
 }
 
-/** @id CODE-CHANGE-EVIDENCE-WAIVER-010
- * @implements REQ-CHANGE-EVIDENCE-WAIVER-001 REQ-CHANGE-EVIDENCE-WAIVER-002 REQ-CHANGE-EVIDENCE-WAIVER-003 REQ-CHANGE-EVIDENCE-WAIVER-004 REQ-CHANGE-EVIDENCE-WAIVER-005 REQ-CHANGE-EVIDENCE-WAIVER-010 REQ-CHANGE-EVIDENCE-WAIVER-015 REQ-CHANGE-EVIDENCE-WAIVER-016
- * @design DES-CHANGE-EVIDENCE-WAIVER-001
- */
 export async function recordChangeWaiver(
   root: string,
   changeId: string,
@@ -714,10 +647,6 @@ export async function recordChangeWaiver(
   };
 }
 
-/** @id CODE-CHANGE-EVIDENCE-WAIVER-011
- * @implements REQ-CHANGE-EVIDENCE-WAIVER-006 REQ-CHANGE-EVIDENCE-WAIVER-012 REQ-CHANGE-EVIDENCE-WAIVER-016
- * @design DES-CHANGE-EVIDENCE-WAIVER-005
- */
 export async function activeWaivers(root: string): Promise<Array<{
   changeId: string; code: string; requirementId?: string; detail?: string; approver: string; reason: string; recordedAt: string;
 }>> {
@@ -751,10 +680,6 @@ export async function activeWaivers(root: string): Promise<Array<{
   return results;
 }
 
-/** @id CODE-CHANGE-EVIDENCE-WAIVER-012
- * @implements REQ-CHANGE-EVIDENCE-WAIVER-007 REQ-CHANGE-EVIDENCE-WAIVER-011
- * @design DES-CHANGE-EVIDENCE-WAIVER-005
- */
 export async function waiverEvidenceDiagnostics(root: string): Promise<Diagnostic[]> {
   const loaded = await loadChangeWaiverEvidence(root);
   const evidence = await loadChangeEvidence(root);

@@ -67,10 +67,6 @@ export async function install(root: string, packageRoot: string, options: { dryR
   return { dryRun: options.dryRun ?? false, actions };
 }
 
-/* @id CODE-UPGRADE-WORKFLOW-001
- * @implements REQ-UPGRADE-WORKFLOW-001 REQ-UPGRADE-WORKFLOW-002
- * @design DES-UPGRADE-WORKFLOW-001
- */
 export async function upgradeSkills(root: string, packageRoot: string, options: { dryRun?: boolean } = {}): Promise<{ dryRun: boolean; actions: InstallAction[] }> {
   root = resolve(root);
   const planned = new Map<string, string>();

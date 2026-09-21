@@ -7,15 +7,6 @@ import {
 import { writeJson } from './files.js';
 import { runGate } from './gate.js';
 
-/** @id CODE-HUMAN-APPROVAL-GATES-002
- * @implements REQ-HUMAN-APPROVAL-GATES-001 REQ-HUMAN-APPROVAL-GATES-006
- * @design DES-APPROVAL-002 DES-APPROVAL-003
- */
-/** @id CODE-APPROVAL-DOMAIN-SCOPING-016
- * @implements REQ-APPROVAL-DOMAIN-SCOPING-005 REQ-APPROVAL-DOMAIN-SCOPING-006 REQ-APPROVAL-DOMAIN-SCOPING-007
- * @implements REQ-APPROVAL-DOMAIN-SCOPING-013 REQ-APPROVAL-DOMAIN-SCOPING-014 REQ-APPROVAL-DOMAIN-SCOPING-015
- * @design DES-APPROVAL-DOMAIN-SCOPING-004
- */
 export async function recordApproval(
   root: string,
   stage: ApprovalStage,

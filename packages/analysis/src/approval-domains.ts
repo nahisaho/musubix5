@@ -15,10 +15,6 @@ export function domainsConfigured(config: ApprovalConfig): boolean {
   return config.domains.length > 0;
 }
 
-/** @id CODE-APPROVAL-DOMAIN-SCOPING-002
- * @implements REQ-APPROVAL-DOMAIN-SCOPING-002 REQ-APPROVAL-DOMAIN-SCOPING-003 REQ-APPROVAL-DOMAIN-SCOPING-004
- * @design DES-APPROVAL-DOMAIN-SCOPING-002
- */
 export async function resolveDomains(root: string, config: ApprovalConfig): Promise<ResolvedDomain[]> {
   const domains = config.domains;
   if (domains.length === 0) return [];
@@ -60,10 +56,6 @@ export function domainOwning(resolved: ResolvedDomain[], slug: string): string |
   return resolved.find((domain) => domain.features.includes(slug))?.name ?? null;
 }
 
-/** @id CODE-APPROVAL-DOMAIN-SCOPING-014
- * @implements REQ-APPROVAL-DOMAIN-SCOPING-016
- * @design DES-APPROVAL-DOMAIN-SCOPING-005
- */
 export async function featureOwningRequirement(root: string, requirementId: string): Promise<string> {
   const paths = (await files(root)).filter((path) => featureRequirementsPattern.test(path));
   const owners: string[] = [];
@@ -77,10 +69,6 @@ export async function featureOwningRequirement(root: string, requirementId: stri
   return owners[0]!;
 }
 
-/** @id CODE-APPROVAL-DOMAIN-SCOPING-015
- * @implements REQ-APPROVAL-DOMAIN-SCOPING-017
- * @design DES-APPROVAL-DOMAIN-SCOPING-005
- */
 export function featureOwningDesignFile(file: string): string | null {
   const match = featureDesignPattern.exec(file);
   return match ? match[1]! : null;

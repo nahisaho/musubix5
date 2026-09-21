@@ -26,10 +26,6 @@ export interface TraceGraph {
   fingerprints: Record<string, string>;
 }
 
-/** @id CODE-SESSION-SCOPED-DEVELOPMENT-003
- * @implements REQ-SESSION-SCOPED-DEVELOPMENT-001 REQ-SESSION-SCOPED-DEVELOPMENT-002
- * @design DES-SESSION-SCOPED-DEVELOPMENT-002
- */
 export async function traceInputs(root: string): Promise<string[]> {
   const projectFiles = await files(root);
   let isMusubixRepository = false;

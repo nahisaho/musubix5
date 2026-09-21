@@ -148,10 +148,6 @@ export function createProgram(): Command {
     if (stale) throw new Error('Trace graph is stale; run trace build before impact analysis.');
     const resolvedQuery = graph.nodes.some((n) => n.id === query) ? query : pathQuery(root, query);
     const impact = traceImpact(graph, resolvedQuery);
-    /** @id CODE-CLI-WORKFLOW-UX-002
-     * @implements REQ-CLI-WORKFLOW-UX-002
-     * @design DES-CLI-WORKFLOW-UX-002
-     */
     const summary = `bidirectional candidate-review range from ${resolvedQuery} (${impact.length} node(s)); not a list of required changes:\n`
       + impact.map((i) => `${i.id}`).join('\n');
     output(impact, !!options.json, summary);
@@ -306,7 +302,6 @@ export function createProgram(): Command {
     .description('Validate formal-model to authoritative passing-test correspondence');
   common(
     correspondence.command('validate')
-      /* @id CODE-MODEL-CORRESPONDENCE-EVIDENCE-GUIDANCE-002 */
       .description('Validate model correspondence evidence (run `npx musubix5 evidence refresh` first to generate .musubix/evidence/model-correspondence.json)'),
   ).action(async (options: { root: string; json?: boolean }) => {
     const report = await validateModelCorrespondenceEvidence(resolve(options.root));
@@ -385,10 +380,6 @@ export function createProgram(): Command {
         `Sanitized ${report.inputEvents} event(s) to ${report.outputEvents}; retained ${report.skillInvocations} Skill invocation(s).`,
       );
     });
-  /** @id CODE-WORKFLOW-EVIDENCE-WAIVER-023
-   * @implements REQ-WORKFLOW-EVIDENCE-WAIVER-001 REQ-WORKFLOW-EVIDENCE-WAIVER-002 REQ-WORKFLOW-EVIDENCE-WAIVER-003 REQ-WORKFLOW-EVIDENCE-WAIVER-005
-   * @design DES-WORKFLOW-EVIDENCE-WAIVER-006
-   */
   const workflow = program.command('workflow').description('Workflow reconciliation waiver evidence');
   const workflowWaiver = workflow.command('waiver').description('Record an audited, bounded downgrade of one declaration-scoped workflow reconciliation diagnostic');
   common(workflowWaiver.command('record <code>'))
@@ -421,10 +412,6 @@ export function createProgram(): Command {
       );
       output(result, !!options.json, `WAIVER: PASS (${code}:${options.skill}:${options.phase}:${options.recordedAt}${options.index === undefined ? '' : `:${options.index}`})`);
     });
-  /** @id CODE-WORKFLOW-WAIVER-BULK-002
-   * @implements REQ-WORKFLOW-WAIVER-BULK-001 REQ-WORKFLOW-WAIVER-BULK-002 REQ-WORKFLOW-WAIVER-BULK-003 REQ-WORKFLOW-WAIVER-BULK-004
-   * @design DES-WORKFLOW-WAIVER-BULK-002 DES-WORKFLOW-WAIVER-BULK-003
-   */
   common(workflowWaiver.command('record-all'))
     .requiredOption('--approver <name>', 'Human approver recording these waivers')
     .requiredOption('--reason <text>', 'Reason these diagnostics are being waived')
@@ -509,10 +496,6 @@ export function createProgram(): Command {
     output(report, !!options.json, `${report.status}: ${report.valid ? 'valid' : 'invalid'}`);
     if (!report.valid) process.exitCode = 1;
   });
-  /** @id CODE-CHANGE-RECORD-RECORDEDAT-ORDER-004
-   * @implements REQ-CHANGE-RECORD-RECORDEDAT-ORDER-001
-   * @design DES-CHANGE-RECORD-RECORDEDAT-ORDER-001
-   */
   common(program.command('change-record <change-id> <phase>')
     .description('Record an ordered staged-change fingerprint checkpoint; rejects an unchanged fingerprint since the preceding phase. '
       + 'Each recorded phase/batch stores both order (the verified, gate-checked logical append sequence from order.json — the only field '
@@ -525,10 +508,6 @@ export function createProgram(): Command {
       root: string; json?: boolean; requirement: string[]; allowUnchanged?: boolean; dryRun?: boolean;
     }) => {
       if (!changePhases.includes(phase as ChangePhase)) throw new Error(`phase must be one of: ${changePhases.join(', ')}`);
-      /** @id CODE-CHANGE-RECORD-FAIL-FAST-002
-       * @implements REQ-CHANGE-RECORD-FAIL-FAST-007 REQ-CHANGE-RECORD-FAIL-FAST-009 REQ-CHANGE-RECORD-FAIL-FAST-010
-       * @design DES-CHANGE-RECORD-FAIL-FAST-003 DES-CHANGE-RECORD-FAIL-FAST-004 DES-CHANGE-RECORD-FAIL-FAST-005
-       */
       const changeOptions: { allowUnchanged?: boolean; dryRun?: boolean } = {};
       if (options.allowUnchanged !== undefined) changeOptions.allowUnchanged = options.allowUnchanged;
       if (options.dryRun !== undefined) changeOptions.dryRun = options.dryRun;
@@ -610,10 +589,6 @@ export function createProgram(): Command {
   });
   for (const phase of ['red', 'green', 'refactor'] as const) {
     const phaseCommand = common(tdd.command(`${phase} <test-id>`));
-    /* @id CODE-TDD-ADOPTION-WARNING-003
-     * @implements REQ-TDD-ADOPTION-WARNING-002
-     * @design DES-TDD-ADOPTION-WARNING-003
-     */
     // Only `red` gets its own description: `--help` renders a subcommand's
     // own description, never the parent `tdd` command's, so the adoption
     // warning documented here must live on `red` specifically and not leak

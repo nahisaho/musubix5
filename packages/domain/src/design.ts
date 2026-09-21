@@ -13,10 +13,6 @@ export function validateDesign(text: string, path = '<input>', context: DesignCo
   const diagnostics = [...parsed.diagnostics, ...duplicates(sections, path)];
   if (parsed.metadata.schemaVersion !== undefined && parsed.metadata.schemaVersion !== 1) diagnostics.push(error('DES_SCHEMA', 'Unsupported schemaVersion; expected 1.', path));
   if (!sections.length) diagnostics.push(error('DES_MISSING', 'No components found (## DES-FEATURE-001: Title).', path));
-  /* @id CODE-DESIGN-ADR-NONE-EXEMPTION-001
-   * @implements REQ-DESIGN-ADR-NONE-EXEMPTION-001 REQ-DESIGN-ADR-NONE-EXEMPTION-002 REQ-DESIGN-ADR-NONE-EXEMPTION-003
-   * @design DES-DESIGN-ADR-NONE-EXEMPTION-001
-   */
   const value = sections.map((s): Component => {
     if (!ids.design.test(s.id)) diagnostics.push(error('DES_ID', `Invalid design ID ${s.id}.`, path, s.line));
     if (!s.title) diagnostics.push(error('DES_TITLE', 'Component title is required.', path, s.line));

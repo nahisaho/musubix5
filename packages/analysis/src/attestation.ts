@@ -64,10 +64,6 @@ function repositoryName(remote: string): string {
   return remote.trim().replace(/^git@github\.com:/, '').replace(/^https?:\/\/github\.com\//, '').replace(/\.git$/, '');
 }
 
-/* @id CODE-ATTESTATION-EVIDENCE-STABILITY-002
- * @implements REQ-ATTESTATION-EVIDENCE-STABILITY-001 REQ-ATTESTATION-EVIDENCE-STABILITY-004
- * @design DES-ATTESTATION-EVIDENCE-STABILITY-004 DES-ATTESTATION-EVIDENCE-STABILITY-003
- */
 // Every per-entry evidence-head function this collects must canonicalize its
 // input so that `full`, `--changed`, and `--feature` gate re-runs with no
 // intervening tracked change reproduce identical heads; heads built from

@@ -68,10 +68,6 @@ export async function loadChangeEvidence(root: string): Promise<ChangeEvidence |
   return value;
 }
 
-/** @id CODE-CHANGE-REQUIREMENT-BATCHES-001
- * @implements REQ-CHANGE-REQUIREMENT-BATCHES-001 REQ-CHANGE-REQUIREMENT-BATCHES-003 REQ-CHANGE-REQUIREMENT-BATCHES-004
- * @design DES-CHANGE-REQUIREMENT-BATCHES-001
- */
 export function effectiveBatches(change: ChangeRecord): ChangeTddBatch[] {
   const batches = change.tddBatches ?? [];
   if (change.phases.red || change.phases.implementation || change.phases.green) {
@@ -88,13 +84,6 @@ export function batchFor(batches: ChangeTddBatch[], requirementId: string): Chan
   return batches.find((batch) => batch.requirementIds.includes(requirementId));
 }
 
-/** @id CODE-CHANGE-EVIDENCE-WAIVER-014
- * @implements REQ-CHANGE-EVIDENCE-WAIVER-016
- * @design DES-CHANGE-EVIDENCE-WAIVER-001
- * Relocated here (unchanged body) from `change.ts`, which already imports
- * from this module, so a `batchForKey` selector living here can reuse this
- * canonical definition without creating a module-dependency cycle.
- */
 export function batchKey(requirementIds: string[]): string {
   return [...new Set(requirementIds)].sort().join(',');
 }
@@ -124,10 +113,6 @@ export function batchForRecording(
   return undefined;
 }
 
-/** @id CODE-CHANGE-EVIDENCE-WAIVER-015
- * @implements REQ-CHANGE-EVIDENCE-WAIVER-016
- * @design DES-CHANGE-EVIDENCE-WAIVER-001
- */
 export function batchForKey(batches: ChangeTddBatch[], key: string): ChangeTddBatch | undefined {
   for (let index = batches.length - 1; index >= 0; index -= 1) {
     const batch = batches[index]!;
@@ -176,16 +161,6 @@ export function completenessTddUnsatisfiedCondition(change: ChangeRecord, requir
 const tddBatchPhaseNames = ['red', 'implementation', 'green'] as const;
 type TddBatchPhaseName = typeof tddBatchPhaseNames[number];
 
-/** @id CODE-CHANGE-EVIDENCE-WAIVER-016
- * @implements REQ-CHANGE-EVIDENCE-WAIVER-002
- * @design DES-CHANGE-EVIDENCE-WAIVER-001
- * Pure re-derivations of the remaining seven CHANGE-0012 codes' exact
- * "would this diagnostic currently fire" conditions, mirroring the
- * pre-existing five-code precedent above, so `recordChangeWaiver` never
- * needs to import from `change.ts` (which itself imports from
- * `change-waiver.ts`, so importing `change.ts` here would create a module
- * dependency cycle).
- */
 export async function recordMissingCondition(root: string, evidence: ChangeEvidence | null, changeId: string): Promise<boolean> {
   if (!await exists(within(root, `.musubix/changes/${changeId}.md`))) return false;
   return evidence === null || !evidence.changes.some((entry) => entry.changeId === changeId);

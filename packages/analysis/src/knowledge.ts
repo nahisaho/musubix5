@@ -55,10 +55,6 @@ async function artifactPaths(root: string): Promise<string[]> {
   return (await files(root)).filter((p) => p.endsWith('.md'));
 }
 
-/** @id CODE-BOUNDED-FILE-READ-CONCURRENCY-003
- * @implements REQ-BOUNDED-FILE-READ-CONCURRENCY-003
- * @design DES-BOUNDED-FILE-READ-CONCURRENCY-003
- */
 export async function buildKnowledge(root: string, runner: Runner = runProcess): Promise<KnowledgeIndex> {
   const paths = await artifactPaths(root);
   const documents: KnowledgeDocument[] = await mapWithConcurrency(paths, FILE_READ_CONCURRENCY, async (path) => ({ id: path, path, text: await readText(root, path), kind: 'artifact' as const }));

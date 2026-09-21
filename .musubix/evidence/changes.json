@@ -9970,6 +9970,201 @@
             },
             "order": 248
           }
+        },
+        {
+          "requirementIds": [
+            "REQ-M5-EVIDENCE-001",
+            "REQ-M5-EVIDENCE-002"
+          ],
+          "red": {
+            "phase": "red",
+            "recordedAt": "2026-09-21T06:17:29.995Z",
+            "fingerprints": {
+              "impact": "8d70b2cdb49720e294be9fb3fc2f2435a7e3a47825b371da672631ee7d73bae3",
+              "requirements": "0c42fb565effcc67258122c06507dcf5d43cd265a14f943cfb40f68e8ce7597a",
+              "design": "2e33ea84723c815804633fc499f69ef2699f158c41f365509dfa0b3be0c30894",
+              "implementation": "8b8f9465d6ec267d35b765230678bcc7f818f62441a777c8cd04ba9204f84934",
+              "tests": "fd9e63158415b7dc6eaa735f821ad7d600816cb3a93a0cae2c4f5bc60adc7299",
+              "tdd": "c1c63094c43f00329abb5a432b7914d31e7d9be229a7f51e986bf12400883767",
+              "requirementImplementations": {
+                "REQ-M5-EVIDENCE-001": {
+                  "paths": [
+                    "packages/analysis/src/canonical.ts",
+                    "packages/analysis/src/evidence-registry.ts",
+                    "packages/analysis/src/journal.ts",
+                    "packages/domain/src/constitution.ts",
+                    "packages/domain/src/design.ts",
+                    "packages/domain/src/index.ts",
+                    "packages/domain/src/markdown.ts",
+                    "packages/domain/src/requirements.ts",
+                    "packages/domain/src/types.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/canonical.ts": "1c4dcfda94bc2b93d3d1e4bbb03205f2441d6025b172e8fe24812b366e363ecf",
+                    "packages/analysis/src/evidence-registry.ts": "41bdd3f05c91734baf22cccf5289a9906eae30bfd1356236bc98c96be47da660",
+                    "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c",
+                    "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                    "packages/domain/src/design.ts": "fc1ca4d3249abc9705ba4b6f296e0f4fa3b3d6ff6d5d82e51c99f49fc7a93ac9",
+                    "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                    "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                    "packages/domain/src/requirements.ts": "65ea1e6d3bbd29e929c785037b930e5f5eb5535b607403e5f30c3657d36e9175",
+                    "packages/domain/src/types.ts": "0f0cbd43bdee4db03b83e4869e9791531a63e9b63aa7a09661f62ad1bbc75cb3"
+                  }
+                },
+                "REQ-M5-EVIDENCE-002": {
+                  "paths": [
+                    "packages/analysis/src/canonical.ts",
+                    "packages/analysis/src/evidence-registry.ts",
+                    "packages/analysis/src/journal.ts",
+                    "packages/domain/src/constitution.ts",
+                    "packages/domain/src/design.ts",
+                    "packages/domain/src/index.ts",
+                    "packages/domain/src/markdown.ts",
+                    "packages/domain/src/requirements.ts",
+                    "packages/domain/src/types.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/canonical.ts": "1c4dcfda94bc2b93d3d1e4bbb03205f2441d6025b172e8fe24812b366e363ecf",
+                    "packages/analysis/src/evidence-registry.ts": "41bdd3f05c91734baf22cccf5289a9906eae30bfd1356236bc98c96be47da660",
+                    "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c",
+                    "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                    "packages/domain/src/design.ts": "fc1ca4d3249abc9705ba4b6f296e0f4fa3b3d6ff6d5d82e51c99f49fc7a93ac9",
+                    "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                    "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                    "packages/domain/src/requirements.ts": "65ea1e6d3bbd29e929c785037b930e5f5eb5535b607403e5f30c3657d36e9175",
+                    "packages/domain/src/types.ts": "0f0cbd43bdee4db03b83e4869e9791531a63e9b63aa7a09661f62ad1bbc75cb3"
+                  }
+                }
+              }
+            },
+            "order": 251
+          },
+          "implementation": {
+            "phase": "implementation",
+            "recordedAt": "2026-09-21T06:18:00.567Z",
+            "fingerprints": {
+              "impact": "8d70b2cdb49720e294be9fb3fc2f2435a7e3a47825b371da672631ee7d73bae3",
+              "requirements": "0c42fb565effcc67258122c06507dcf5d43cd265a14f943cfb40f68e8ce7597a",
+              "design": "2e33ea84723c815804633fc499f69ef2699f158c41f365509dfa0b3be0c30894",
+              "implementation": "b85370431f860f2e54566d58747140027345fa28dc60e20d985fb84ad6e9ee5b",
+              "tests": "fd9e63158415b7dc6eaa735f821ad7d600816cb3a93a0cae2c4f5bc60adc7299",
+              "tdd": "c1c63094c43f00329abb5a432b7914d31e7d9be229a7f51e986bf12400883767",
+              "requirementImplementations": {
+                "REQ-M5-EVIDENCE-001": {
+                  "paths": [
+                    "packages/analysis/src/canonical.ts",
+                    "packages/analysis/src/evidence-registry.ts",
+                    "packages/analysis/src/journal.ts",
+                    "packages/domain/src/constitution.ts",
+                    "packages/domain/src/design.ts",
+                    "packages/domain/src/index.ts",
+                    "packages/domain/src/markdown.ts",
+                    "packages/domain/src/requirements.ts",
+                    "packages/domain/src/types.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/canonical.ts": "1c4dcfda94bc2b93d3d1e4bbb03205f2441d6025b172e8fe24812b366e363ecf",
+                    "packages/analysis/src/evidence-registry.ts": "41bdd3f05c91734baf22cccf5289a9906eae30bfd1356236bc98c96be47da660",
+                    "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c",
+                    "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                    "packages/domain/src/design.ts": "71d2e2dd046be69594dd302add666d38d326210249c1a37f3a30a2b7b0e3fa39",
+                    "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                    "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                    "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                    "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                  }
+                },
+                "REQ-M5-EVIDENCE-002": {
+                  "paths": [
+                    "packages/analysis/src/canonical.ts",
+                    "packages/analysis/src/evidence-registry.ts",
+                    "packages/analysis/src/journal.ts",
+                    "packages/domain/src/constitution.ts",
+                    "packages/domain/src/design.ts",
+                    "packages/domain/src/index.ts",
+                    "packages/domain/src/markdown.ts",
+                    "packages/domain/src/requirements.ts",
+                    "packages/domain/src/types.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/canonical.ts": "1c4dcfda94bc2b93d3d1e4bbb03205f2441d6025b172e8fe24812b366e363ecf",
+                    "packages/analysis/src/evidence-registry.ts": "41bdd3f05c91734baf22cccf5289a9906eae30bfd1356236bc98c96be47da660",
+                    "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c",
+                    "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                    "packages/domain/src/design.ts": "71d2e2dd046be69594dd302add666d38d326210249c1a37f3a30a2b7b0e3fa39",
+                    "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                    "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                    "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                    "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                  }
+                }
+              }
+            },
+            "order": 252
+          },
+          "green": {
+            "phase": "green",
+            "recordedAt": "2026-09-21T06:18:05.983Z",
+            "fingerprints": {
+              "impact": "8d70b2cdb49720e294be9fb3fc2f2435a7e3a47825b371da672631ee7d73bae3",
+              "requirements": "0c42fb565effcc67258122c06507dcf5d43cd265a14f943cfb40f68e8ce7597a",
+              "design": "2e33ea84723c815804633fc499f69ef2699f158c41f365509dfa0b3be0c30894",
+              "implementation": "b85370431f860f2e54566d58747140027345fa28dc60e20d985fb84ad6e9ee5b",
+              "tests": "fd9e63158415b7dc6eaa735f821ad7d600816cb3a93a0cae2c4f5bc60adc7299",
+              "tdd": "5334a222fa412f7f4922f116ab6c36d7ffce5ac89c34ad642f77f95ca2c45f6a",
+              "requirementImplementations": {
+                "REQ-M5-EVIDENCE-001": {
+                  "paths": [
+                    "packages/analysis/src/canonical.ts",
+                    "packages/analysis/src/evidence-registry.ts",
+                    "packages/analysis/src/journal.ts",
+                    "packages/domain/src/constitution.ts",
+                    "packages/domain/src/design.ts",
+                    "packages/domain/src/index.ts",
+                    "packages/domain/src/markdown.ts",
+                    "packages/domain/src/requirements.ts",
+                    "packages/domain/src/types.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/canonical.ts": "1c4dcfda94bc2b93d3d1e4bbb03205f2441d6025b172e8fe24812b366e363ecf",
+                    "packages/analysis/src/evidence-registry.ts": "41bdd3f05c91734baf22cccf5289a9906eae30bfd1356236bc98c96be47da660",
+                    "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c",
+                    "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                    "packages/domain/src/design.ts": "71d2e2dd046be69594dd302add666d38d326210249c1a37f3a30a2b7b0e3fa39",
+                    "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                    "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                    "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                    "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                  }
+                },
+                "REQ-M5-EVIDENCE-002": {
+                  "paths": [
+                    "packages/analysis/src/canonical.ts",
+                    "packages/analysis/src/evidence-registry.ts",
+                    "packages/analysis/src/journal.ts",
+                    "packages/domain/src/constitution.ts",
+                    "packages/domain/src/design.ts",
+                    "packages/domain/src/index.ts",
+                    "packages/domain/src/markdown.ts",
+                    "packages/domain/src/requirements.ts",
+                    "packages/domain/src/types.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/canonical.ts": "1c4dcfda94bc2b93d3d1e4bbb03205f2441d6025b172e8fe24812b366e363ecf",
+                    "packages/analysis/src/evidence-registry.ts": "41bdd3f05c91734baf22cccf5289a9906eae30bfd1356236bc98c96be47da660",
+                    "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c",
+                    "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                    "packages/domain/src/design.ts": "71d2e2dd046be69594dd302add666d38d326210249c1a37f3a30a2b7b0e3fa39",
+                    "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                    "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                    "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                    "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                  }
+                }
+              }
+            },
+            "order": 255
+          }
         }
       ]
     }

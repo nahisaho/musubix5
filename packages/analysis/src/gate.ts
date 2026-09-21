@@ -88,10 +88,6 @@ export function aggregateStatus(checks: Evidence[]): 'pass' | 'fail' {
   return checks.every((check) => !check.required || check.status === 'pass') ? 'pass' : 'fail';
 }
 
-/** @id CODE-CLI-WORKFLOW-UX-005
- * @implements REQ-CLI-WORKFLOW-UX-005
- * @design DES-CLI-WORKFLOW-UX-005
- */
 export async function runGate(root: string, options: {
   changed?: boolean;
   feature?: string;
@@ -211,10 +207,6 @@ export async function runGate(root: string, options: {
         : `${workflow.events} workflow declaration(s) are not fully reconciled with Copilot invocation events.`,
     diagnostics: workflow.diagnostics,
   });
-  /** @id CODE-WORKFLOW-EVIDENCE-WAIVER-021
-   * @implements REQ-WORKFLOW-EVIDENCE-WAIVER-008 REQ-WORKFLOW-EVIDENCE-WAIVER-014 REQ-WORKFLOW-EVIDENCE-WAIVER-015
-   * @design DES-WORKFLOW-EVIDENCE-WAIVER-007
-   */
   const { workflowWaivers, workflowWaiverDiagnostics } = deriveWorkflowWaiverAudit(workflow.workflowWaiverContext);
   const tdd = await validateTddEvidence(root);
   const tddDiagnostics = tdd.diagnostics.filter(scopedToFeature);
@@ -685,10 +677,6 @@ export async function projectStatus(root: string): Promise<{
     generatedAt = evidence.generatedAt ?? null;
   }
   if (status === 'pass' && approvals?.valid === false) status = 'stale';
-  /** @id CODE-WORKFLOW-EVIDENCE-WAIVER-022
-   * @implements REQ-WORKFLOW-EVIDENCE-WAIVER-008 REQ-WORKFLOW-EVIDENCE-WAIVER-014
-   * @design DES-WORKFLOW-EVIDENCE-WAIVER-007
-   */
   const workflow = await validateWorkflow(root);
   const { workflowWaivers, workflowWaiverDiagnostics } = deriveWorkflowWaiverAudit(workflow.workflowWaiverContext);
   const [waivers, changeWaiverDiagnostics] = await Promise.all([activeWaivers(root), waiverEvidenceDiagnostics(root)]);

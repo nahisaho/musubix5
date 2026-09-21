@@ -153,10 +153,6 @@ export function classifyEars(statement: string): EarsPattern | null {
   return kinds.length === 1 ? kinds[0] as EarsPattern : null;
 }
 
-/* @id CODE-EARS-ID-DIAGNOSTIC-MESSAGES-001
- * @implements REQ-EARS-ID-DIAGNOSTIC-MESSAGES-001 REQ-EARS-ID-DIAGNOSTIC-MESSAGES-002
- * @design DES-EARS-ID-DIAGNOSTIC-MESSAGES-001
- */
 // Diagnostic-only helper: called after classifyEars() has already returned
 // null for a single-obligation English statement, to name the specific
 // authoring mistake instead of a bare "invalid" classification. Never

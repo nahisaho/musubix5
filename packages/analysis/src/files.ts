@@ -59,10 +59,6 @@ export async function isDirectory(path: string): Promise<boolean> {
   }
 }
 
-/** @id CODE-CLI-WORKFLOW-UX-001
- * @implements REQ-CLI-WORKFLOW-UX-001
- * @design DES-CLI-WORKFLOW-UX-001
- */
 export async function files(root: string, options: { includeEvidence?: boolean } = {}): Promise<string[]> {
   const result: string[] = [];
   async function walk(directory: string): Promise<void> {
@@ -165,10 +161,6 @@ export function evidenceInputPaths(paths: string[]): string[] {
 // unexcluded vendored source trees (ADR-0018).
 export const FILE_READ_CONCURRENCY = 256;
 
-/** @id CODE-BOUNDED-FILE-READ-CONCURRENCY-001
- * @implements REQ-BOUNDED-FILE-READ-CONCURRENCY-001 REQ-BOUNDED-FILE-READ-CONCURRENCY-002
- * @design DES-BOUNDED-FILE-READ-CONCURRENCY-001
- */
 export async function mapWithConcurrency<T, R>(items: T[], limit: number, worker: (item: T, index: number) => Promise<R>): Promise<R[]> {
   const results: R[] = new Array(items.length);
   let cursor = 0;

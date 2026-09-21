@@ -30,10 +30,6 @@ async function scaffold(root: string, path: string, content: string): Promise<st
   return path;
 }
 
-/* @id CODE-REQUIREMENTS-DESIGN-SCAFFOLD-001
- * @implements REQ-REQUIREMENTS-DESIGN-SCAFFOLD-001 REQ-REQUIREMENTS-DESIGN-SCAFFOLD-002 REQ-REQUIREMENTS-DESIGN-SCAFFOLD-005 REQ-REQUIREMENTS-DESIGN-SCAFFOLD-006
- * @design DES-REQUIREMENTS-DESIGN-SCAFFOLD-001
- */
 export async function scaffoldRequirements(root: string, slug: string, options: { title?: string } = {}): Promise<string> {
   const id = assertSlug(slug);
   const title = assertTitle(options.title, 'Describe the requirement');
@@ -54,10 +50,6 @@ Acceptance: TODO: describe how this requirement will be verified.
   return scaffold(root, path, content);
 }
 
-/* @id CODE-REQUIREMENTS-DESIGN-SCAFFOLD-002
- * @implements REQ-REQUIREMENTS-DESIGN-SCAFFOLD-003 REQ-REQUIREMENTS-DESIGN-SCAFFOLD-004 REQ-REQUIREMENTS-DESIGN-SCAFFOLD-005
- * @design DES-REQUIREMENTS-DESIGN-SCAFFOLD-001
- */
 export async function scaffoldDesign(root: string, slug: string): Promise<string> {
   const id = assertSlug(slug);
   const path = `.musubix/features/${slug}/design.md`;

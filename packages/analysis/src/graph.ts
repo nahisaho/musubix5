@@ -39,10 +39,6 @@ export async function graphInputs(root: string): Promise<string[]> {
   return (await files(root)).filter((p) => isTraceSource(p) || /(?:^|\/)(?:tsconfig[^/]*\.json|package\.json|go\.mod|pubspec\.yaml)$/.test(p));
 }
 
-/** @id CODE-BOUNDED-FILE-READ-CONCURRENCY-002
- * @implements REQ-BOUNDED-FILE-READ-CONCURRENCY-002
- * @design DES-BOUNDED-FILE-READ-CONCURRENCY-002
- */
 export async function indexGraph(root: string, persist = true): Promise<CodeGraph> {
   const paths = await graphInputs(root);
   const typedSources = paths.filter(isSource);

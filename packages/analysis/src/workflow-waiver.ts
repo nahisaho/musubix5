@@ -11,10 +11,6 @@ const GENESIS_SHA256 = '0'.repeat(64);
 const ISO_UTC_MILLISECONDS = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 const SHA256_RE = /^[a-f0-9]{64}$/;
 
-/** @id CODE-WORKFLOW-EVIDENCE-WAIVER-001
- * @implements REQ-WORKFLOW-EVIDENCE-WAIVER-001 REQ-WORKFLOW-EVIDENCE-WAIVER-005 REQ-WORKFLOW-EVIDENCE-WAIVER-013 REQ-WORKFLOW-EVIDENCE-WAIVER-016
- * @design DES-WORKFLOW-EVIDENCE-WAIVER-001
- */
 export const WORKFLOW_WAIVABLE_CODES = [
   'WORKFLOW_SKILL_NOT_INVOKED',
   'WORKFLOW_INVOCATION_ORDER',
@@ -24,10 +20,6 @@ export const WORKFLOW_WAIVABLE_CODES = [
 ] as const;
 export type WorkflowWaivableCode = typeof WORKFLOW_WAIVABLE_CODES[number];
 
-/** @id CODE-WORKFLOW-EVIDENCE-WAIVER-002
- * @implements REQ-WORKFLOW-EVIDENCE-WAIVER-013
- * @design DES-WORKFLOW-EVIDENCE-WAIVER-001
- */
 export const CURRENT_SNAPSHOT_VERSION = 1;
 
 export interface WorkflowWaiverRecord {
@@ -51,10 +43,6 @@ export interface WorkflowWaiverEvidence {
   waivers: WorkflowWaiverRecord[];
 }
 
-/** @id CODE-WORKFLOW-EVIDENCE-WAIVER-003
- * @implements REQ-WORKFLOW-EVIDENCE-WAIVER-006 REQ-WORKFLOW-EVIDENCE-WAIVER-008 REQ-WORKFLOW-EVIDENCE-WAIVER-013 REQ-WORKFLOW-EVIDENCE-WAIVER-017
- * @design DES-WORKFLOW-EVIDENCE-WAIVER-002
- */
 export type LoadedWorkflowWaiverEvidence =
   | { schemaVersion: 1; waivers: unknown[]; malformed: false }
   | { schemaVersion: 1; waivers: []; malformed: true };
@@ -138,10 +126,6 @@ function recoverableScopeFields(record: unknown): Partial<{
   };
 }
 
-/** @id CODE-WORKFLOW-EVIDENCE-WAIVER-004
- * @implements REQ-WORKFLOW-EVIDENCE-WAIVER-006 REQ-WORKFLOW-EVIDENCE-WAIVER-008 REQ-WORKFLOW-EVIDENCE-WAIVER-013 REQ-WORKFLOW-EVIDENCE-WAIVER-017
- * @design DES-WORKFLOW-EVIDENCE-WAIVER-002
- */
 export async function loadWorkflowWaiverEvidence(root: string): Promise<LoadedWorkflowWaiverEvidence | null> {
   if (!await exists(within(root, WORKFLOW_WAIVER_PATH))) return null;
   try {
@@ -156,10 +140,6 @@ export async function loadWorkflowWaiverEvidence(root: string): Promise<LoadedWo
   }
 }
 
-/** @id CODE-WORKFLOW-EVIDENCE-WAIVER-005
- * @implements REQ-WORKFLOW-EVIDENCE-WAIVER-013
- * @design DES-WORKFLOW-EVIDENCE-WAIVER-002
- */
 export function waiverRecordShapeValid(record: unknown): record is WorkflowWaiverRecord {
   if (!record || typeof record !== 'object' || Array.isArray(record)) return false;
   const candidate = record as Partial<WorkflowWaiverRecord> & Record<string, unknown>;
@@ -182,10 +162,6 @@ export function waiverRecordShapeValid(record: unknown): record is WorkflowWaive
   return true;
 }
 
-/** @id CODE-WORKFLOW-EVIDENCE-WAIVER-006
- * @implements REQ-WORKFLOW-EVIDENCE-WAIVER-013 REQ-WORKFLOW-EVIDENCE-WAIVER-017
- * @design DES-WORKFLOW-EVIDENCE-WAIVER-002
- */
 export function waiverChainValid(waivers: unknown[], index: number): boolean {
   if (!waiverRecordShapeValid(waivers[index])) return false;
   const record = waivers[index];
@@ -197,10 +173,6 @@ export function waiverChainValid(waivers: unknown[], index: number): boolean {
     && record.payloadSha256 === payloadShaOf(record);
 }
 
-/** @id CODE-WORKFLOW-EVIDENCE-WAIVER-007
- * @implements REQ-WORKFLOW-EVIDENCE-WAIVER-005 REQ-WORKFLOW-EVIDENCE-WAIVER-007 REQ-WORKFLOW-EVIDENCE-WAIVER-013
- * @design DES-WORKFLOW-EVIDENCE-WAIVER-003
- */
 export function resolveEvent(
   workflow: WorkflowManifest | null,
   skill: string,
@@ -214,18 +186,10 @@ export function resolveEvent(
   return workflow?.events[index];
 }
 
-/** @id CODE-WORKFLOW-EVIDENCE-WAIVER-008
- * @implements REQ-WORKFLOW-EVIDENCE-WAIVER-005 REQ-WORKFLOW-EVIDENCE-WAIVER-007 REQ-WORKFLOW-EVIDENCE-WAIVER-013
- * @design DES-WORKFLOW-EVIDENCE-WAIVER-003
- */
 export function scopeKey(skill: string, phase: string, declarationRecordedAt: string, index: number | undefined): string {
   return JSON.stringify([skill, phase, declarationRecordedAt, index ?? null]);
 }
 
-/** @id CODE-WORKFLOW-EVIDENCE-WAIVER-009
- * @implements REQ-WORKFLOW-EVIDENCE-WAIVER-007 REQ-WORKFLOW-EVIDENCE-WAIVER-013
- * @design DES-WORKFLOW-EVIDENCE-WAIVER-003
- */
 export function waiverLinkage(
   workflow: WorkflowManifest | null,
   waivers: unknown[],
@@ -247,10 +211,6 @@ export interface WorkflowWaiverContext {
   currentHash: Array<string | undefined>;
 }
 
-/** @id CODE-WORKFLOW-EVIDENCE-WAIVER-010
- * @implements REQ-WORKFLOW-EVIDENCE-WAIVER-005 REQ-WORKFLOW-EVIDENCE-WAIVER-007 REQ-WORKFLOW-EVIDENCE-WAIVER-013
- * @design DES-WORKFLOW-EVIDENCE-WAIVER-003
- */
 export function buildWorkflowWaiverContext(
   loaded: LoadedWorkflowWaiverEvidence | null,
   workflow: WorkflowManifest | null,
@@ -290,10 +250,6 @@ export function authoritativeIndex(
   return authoritative;
 }
 
-/** @id CODE-WORKFLOW-EVIDENCE-WAIVER-011
- * @implements REQ-WORKFLOW-EVIDENCE-WAIVER-012
- * @design DES-WORKFLOW-EVIDENCE-WAIVER-004
- */
 export function snapshotPayload(
   workflow: WorkflowManifest | null,
   skill: string,
@@ -317,10 +273,6 @@ export function snapshotPayload(
   };
 }
 
-/** @id CODE-WORKFLOW-EVIDENCE-WAIVER-012
- * @implements REQ-WORKFLOW-EVIDENCE-WAIVER-012
- * @design DES-WORKFLOW-EVIDENCE-WAIVER-004
- */
 export function currentCodeFor(
   rawDiagnostics: Diagnostic[],
   skill: string,
@@ -353,10 +305,6 @@ export function snapshotHashFor(
   )));
 }
 
-/** @id CODE-WORKFLOW-EVIDENCE-WAIVER-013
- * @implements REQ-WORKFLOW-EVIDENCE-WAIVER-001 REQ-WORKFLOW-EVIDENCE-WAIVER-009 REQ-WORKFLOW-EVIDENCE-WAIVER-010 REQ-WORKFLOW-EVIDENCE-WAIVER-016
- * @design DES-WORKFLOW-EVIDENCE-WAIVER-005
- */
 export function waivedWorkflowDiagnostic(context: WorkflowWaiverContext, diagnostic: Diagnostic): Diagnostic {
   if (!(WORKFLOW_WAIVABLE_CODES as readonly string[]).includes(diagnostic.code) && diagnostic.code !== 'WORKFLOW_BINDING_MISSING') {
     return diagnostic;
@@ -386,10 +334,6 @@ export function waivedWorkflowDiagnostic(context: WorkflowWaiverContext, diagnos
   };
 }
 
-/** @id CODE-WORKFLOW-EVIDENCE-WAIVER-014
- * @implements REQ-WORKFLOW-EVIDENCE-WAIVER-008 REQ-WORKFLOW-EVIDENCE-WAIVER-012 REQ-WORKFLOW-EVIDENCE-WAIVER-014 REQ-WORKFLOW-EVIDENCE-WAIVER-015
- * @design DES-WORKFLOW-EVIDENCE-WAIVER-007
- */
 export function deriveWorkflowWaiverAudit(context: WorkflowWaiverContext): {
   workflowWaivers: Array<{
     skill: string;

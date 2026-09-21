@@ -1,10 +1,6 @@
 export type Severity = 'error' | 'warning';
 export type CheckStatus = 'pass' | 'fail' | 'skipped';
 
-/** @id CODE-WORKFLOW-EVIDENCE-WAIVER-020
- * @implements REQ-WORKFLOW-EVIDENCE-WAIVER-005 REQ-WORKFLOW-EVIDENCE-WAIVER-009 REQ-WORKFLOW-EVIDENCE-WAIVER-016
- * @design DES-WORKFLOW-EVIDENCE-WAIVER-001
- */
 export interface Diagnostic {
   code: string;
   severity: Severity;
