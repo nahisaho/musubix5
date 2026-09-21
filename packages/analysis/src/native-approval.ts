@@ -1,6 +1,13 @@
 import { canonicalBytes, sha256 } from './canonical.js';
 import { appendEvidence } from './evidence-registry.js';
-import { snapshot, writeJson } from './files.js';
+import { files, readText, snapshot, writeJson } from './files.js';
+import { error, type Diagnostic } from '../../domain/src/index.js';
+import {
+  acquireChangeLease,
+  appendJournalRecord,
+  assertChangeLeaseCurrent,
+  releaseChangeLease,
+} from './journal.js';
 
 export type NativeApprovalStage = 'requirements' | 'design' | 'release';
 
@@ -9,6 +16,7 @@ export interface NativeApprovalManifest {
   stage: NativeApprovalStage;
   artifacts: Record<string, string>;
   projection: unknown;
+  exclusions: Array<{ path: string; reason: string; sha256: string }>;
   artifactSha256: string;
 }
 
@@ -16,6 +24,7 @@ export interface PrepareNativeApprovalInput {
   stage: NativeApprovalStage;
   paths: string[];
   projection: unknown;
+  exclusions?: Array<{ path: string; reason: string; sha256: string }>;
 }
 
 export interface RecordNativeApprovalInput extends PrepareNativeApprovalInput {
@@ -38,6 +47,27 @@ export interface NativeApprovalEvidence extends NativeApprovalManifest {
   order: number;
 }
 
+export interface ApprovalSupersession {
+  order: number;
+  stage: NativeApprovalStage;
+  previousHead: string;
+  currentHead: string;
+  affectedKinds: string[];
+}
+
+export interface BootstrapApprovalBinding {
+  changeId: string;
+  repositoryId: string;
+  producerId: string;
+  stage: 'requirements' | 'design';
+  artifactSha256: string;
+  projectionSha256: string;
+}
+
+export interface BootstrapApprovalRecord extends BootstrapApprovalBinding {
+  approver: string;
+}
+
 export async function prepareNativeApproval(
   root: string,
   input: PrepareNativeApprovalInput,
@@ -49,11 +79,98 @@ export async function prepareNativeApproval(
     stage: input.stage,
     artifacts,
     projection: input.projection,
+    exclusions: input.exclusions ?? [],
   };
   return {
     ...payload,
     artifactSha256: sha256(canonicalBytes(payload)),
   };
+}
+
+const designProjectionKeys = [
+  'commands',
+  'requiredChecks',
+  'thresholds',
+  'architecture',
+  'codeGraph',
+  'formal',
+  'mutation',
+  'tdd',
+  'workflow',
+  'attestation',
+] as const;
+
+function selectProjection(config: Record<string, unknown>, keys: readonly string[]): Record<string, unknown> {
+  return Object.fromEntries(keys.map((key) => [key, config[key]]));
+}
+
+function releaseExclusion(
+  path: string,
+  changeId: string,
+  runLocalPaths: string[],
+  evidenceChangeId: string | null,
+): string | null {
+  if (/^\.musubix\/features\/[^/]+\/trace\.json$/.test(path)) return 'generated-trace';
+  if (path.endsWith('.tgz')) return 'package-archive';
+  if (/(?:^|\/)(?:log|logs|session-log|session-logs)\//.test(path)) return 'log-directory';
+  if (path.startsWith('docs/history/')) return 'historical';
+  if (runLocalPaths.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))) return 'run-local';
+  if (path === '.musubix/evidence/approvals/native/release.json') return 'release-self-reference';
+  if (evidenceChangeId !== null && evidenceChangeId !== changeId) return 'foreign-change-evidence';
+  return null;
+}
+
+/** @id CODE-M5-APPROVAL-007
+ * @implements REQ-M5-APPROVAL-007
+ * @design DES-M5-006
+ */
+export async function prepareStageApproval(root: string, input: {
+  stage: NativeApprovalStage;
+  changeId: string;
+  runLocalPaths: string[];
+}): Promise<NativeApprovalManifest> {
+  const allPaths = await files(root, { includeEvidence: input.stage === 'release' });
+  const config = JSON.parse(await readText(root, '.musubix/config.json')) as Record<string, unknown>;
+  if (input.stage === 'requirements') {
+    return prepareNativeApproval(root, {
+      stage: input.stage,
+      paths: allPaths.filter((path) =>
+        path === '.musubix/constitution.md'
+        || /^\.musubix\/features\/[^/]+\/requirements\.md$/.test(path)),
+      projection: selectProjection(config, ['schemaVersion', 'approval']),
+    });
+  }
+  if (input.stage === 'design') {
+    return prepareNativeApproval(root, {
+      stage: input.stage,
+      paths: allPaths.filter((path) =>
+        path === '.musubix/constitution.md'
+        || /^\.musubix\/features\/[^/]+\/(?:requirements|design)\.md$/.test(path)
+        || /^\.musubix\/decisions\/ADR-\d+\.md$/.test(path)),
+      projection: selectProjection(config, designProjectionKeys),
+    });
+  }
+  const exclusions: Array<{ path: string; reason: string; sha256: string }> = [];
+  const included: string[] = [];
+  for (const path of allPaths) {
+    let evidenceChangeId: string | null = null;
+    if (path.startsWith('.musubix/evidence/') && path.endsWith('.json')) {
+      const value = JSON.parse(await readText(root, path)) as { changeId?: unknown };
+      if (typeof value.changeId === 'string') evidenceChangeId = value.changeId;
+    }
+    const reason = releaseExclusion(path, input.changeId, input.runLocalPaths, evidenceChangeId);
+    if (reason === null) included.push(path);
+    else {
+      const hashes = await snapshot(root, [path]);
+      exclusions.push({ path, reason, sha256: hashes[path]! });
+    }
+  }
+  return prepareNativeApproval(root, {
+    stage: input.stage,
+    paths: included,
+    projection: null,
+    exclusions: exclusions.sort((left, right) => left.path.localeCompare(right.path)),
+  });
 }
 
 /** @id CODE-M5-APPROVAL-001
@@ -110,4 +227,105 @@ export async function recordNativeApproval(
     approval,
   );
   return approval;
+}
+
+const requirementsDependents = [
+  'requirements-approval',
+  'design-approval',
+  'tdd',
+  'integration',
+  'trace',
+  'graph',
+  'workflow',
+  'quality',
+  'release-review',
+  'release-approval',
+  'package',
+];
+const designDependents = requirementsDependents.slice(1);
+const releaseDependents = ['release-approval'];
+
+/** @id CODE-M5-APPROVAL-008
+ * @implements REQ-M5-APPROVAL-008
+ * @design DES-M5-006
+ */
+export async function supersedeFrom(root: string, input: {
+  changeId: string;
+  stage: NativeApprovalStage;
+  previousHead: string;
+  currentHead: string;
+  idempotencyKey: string;
+}): Promise<ApprovalSupersession> {
+  if (input.previousHead === input.currentHead) {
+    throw new Error('APPROVAL_SUPERSESSION_UNCHANGED: dependency head did not change.');
+  }
+  const lease = await acquireChangeLease(root, input.changeId);
+  try {
+    await assertChangeLeaseCurrent(lease);
+    const affectedKinds = input.stage === 'requirements'
+      ? requirementsDependents
+      : input.stage === 'design' ? designDependents : releaseDependents;
+    const record = await appendJournalRecord(root, {
+      stream: 'normal',
+      changeId: input.changeId,
+      kind: 'approval-supersession',
+      idempotencyKey: input.idempotencyKey,
+      payload: {
+        stage: input.stage,
+        previousHead: input.previousHead,
+        currentHead: input.currentHead,
+        affectedKinds,
+      },
+    });
+    return {
+      order: record.order,
+      stage: input.stage,
+      previousHead: input.previousHead,
+      currentHead: input.currentHead,
+      affectedKinds: [...affectedKinds],
+    };
+  } finally {
+    await releaseChangeLease(lease);
+  }
+}
+
+/** @id CODE-M5-APPROVAL-009
+ * @implements REQ-M5-APPROVAL-009
+ * @design DES-M5-006
+ */
+export function validateBootstrapApproval(
+  approval: BootstrapApprovalRecord,
+  expected: BootstrapApprovalBinding,
+): {
+  valid: boolean;
+  developmentAuthorized: boolean;
+  releaseCurrent: false;
+  diagnostics: Diagnostic[];
+} {
+  const fields = [
+    'changeId',
+    'repositoryId',
+    'producerId',
+    'stage',
+    'artifactSha256',
+    'projectionSha256',
+  ] as const;
+  const mismatches = fields.filter((field) => approval[field] !== expected[field]);
+  if (mismatches.length || !approval.approver.trim()) {
+    return {
+      valid: false,
+      developmentAuthorized: false,
+      releaseCurrent: false,
+      diagnostics: [error(
+        'BOOTSTRAP_APPROVAL_BINDING_MISMATCH',
+        `Bootstrap approval does not match ${mismatches.join(', ') || 'approver'} binding.`,
+      )],
+    };
+  }
+  return {
+    valid: true,
+    developmentAuthorized: true,
+    releaseCurrent: false,
+    diagnostics: [],
+  };
 }

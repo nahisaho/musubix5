@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-21T05:21:20.876Z",
+  "generatedAt": "2026-09-21T05:25:23.310Z",
   "nodes": [
     {
       "id": "ADR-0002",
@@ -992,10 +992,28 @@
       "line": 161
     },
     {
+      "id": "CODE-M5-APPROVAL-007",
+      "kind": "code",
+      "path": "packages/analysis/src/native-approval.ts",
+      "line": 123
+    },
+    {
       "id": "CODE-M5-APPROVAL-001",
       "kind": "code",
       "path": "packages/analysis/src/native-approval.ts",
-      "line": 59
+      "line": 176
+    },
+    {
+      "id": "CODE-M5-APPROVAL-008",
+      "kind": "code",
+      "path": "packages/analysis/src/native-approval.ts",
+      "line": 248
+    },
+    {
+      "id": "CODE-M5-APPROVAL-009",
+      "kind": "code",
+      "path": "packages/analysis/src/native-approval.ts",
+      "line": 292
     },
     {
       "id": "CODE-CHANGE-EVIDENCE-WAIVER-021",
@@ -1298,6 +1316,18 @@
       "line": 5
     },
     {
+      "id": "TEST-M5-APPROVAL-007",
+      "kind": "test",
+      "path": "tests/approval-scope.test.ts",
+      "line": 22
+    },
+    {
+      "id": "TEST-M5-APPROVAL-009",
+      "kind": "test",
+      "path": "tests/bootstrap-approval-transition.test.ts",
+      "line": 4
+    },
+    {
       "id": "TEST-M5-LIFECYCLE-004",
       "kind": "test",
       "path": "tests/change-lease.test.ts",
@@ -1332,6 +1362,12 @@
       "kind": "test",
       "path": "tests/evidence-kinds.test.ts",
       "line": 4
+    },
+    {
+      "id": "TEST-M5-APPROVAL-008",
+      "kind": "test",
+      "path": "tests/evidence-supersession.test.ts",
+      "line": 16
     },
     {
       "id": "TEST-M5-LIFECYCLE-002",
@@ -3373,12 +3409,42 @@
       "relation": "implements"
     },
     {
+      "from": "CODE-M5-APPROVAL-007",
+      "to": "REQ-M5-APPROVAL-007",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-APPROVAL-007",
+      "to": "DES-M5-006",
+      "relation": "implements"
+    },
+    {
       "from": "CODE-M5-APPROVAL-001",
       "to": "REQ-M5-APPROVAL-001",
       "relation": "implements"
     },
     {
       "from": "CODE-M5-APPROVAL-001",
+      "to": "DES-M5-006",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-APPROVAL-008",
+      "to": "REQ-M5-APPROVAL-008",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-APPROVAL-008",
+      "to": "DES-M5-006",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-APPROVAL-009",
+      "to": "REQ-M5-APPROVAL-009",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-APPROVAL-009",
       "to": "DES-M5-006",
       "relation": "implements"
     },
@@ -4233,6 +4299,16 @@
       "relation": "implements"
     },
     {
+      "from": "TEST-M5-APPROVAL-007",
+      "to": "REQ-M5-APPROVAL-007",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-APPROVAL-009",
+      "to": "REQ-M5-APPROVAL-009",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-LIFECYCLE-004",
       "to": "REQ-M5-LIFECYCLE-004",
       "relation": "verifies"
@@ -4265,6 +4341,11 @@
     {
       "from": "TEST-M5-EVIDENCE-001",
       "to": "REQ-M5-EVIDENCE-001",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-APPROVAL-008",
+      "to": "REQ-M5-APPROVAL-008",
       "relation": "verifies"
     },
     {
@@ -4326,7 +4407,7 @@
     "packages/analysis/src/change.ts": "85647ae006e4255d10d10c6172e88b556bb0a2b9d96895dd4b12fc272fba3458",
     "packages/analysis/src/config.ts": "a46214d1271124a0ccfef15e7a6b268236fd9a57d408028e61cf511816667580",
     "packages/analysis/src/evidence-registry.ts": "41bdd3f05c91734baf22cccf5289a9906eae30bfd1356236bc98c96be47da660",
-    "packages/analysis/src/files.ts": "6186177faea34f7b2f6dd865b4f911d3b8fbfe6786e2cd19bc7dffee2a058ba2",
+    "packages/analysis/src/files.ts": "6cd39d15d19c594438aa364c19bc6e7f2888b8371c13c61fc8e472dca0cc3454",
     "packages/analysis/src/formal.ts": "9f5622983fed80c1e7c141cc7c7dcd217447e5c2edd39e64877db052a57b730b",
     "packages/analysis/src/gate.ts": "d5045b5d9de832fb7714d200f8274c8a2eedbda9f8841f9eac24cf4f3fbbc72d",
     "packages/analysis/src/graph.ts": "8978a47c311ddef684de5e4c5ab032eed9bc87ad94a739351de6e2d6b2ae2aba",
@@ -4336,7 +4417,7 @@
     "packages/analysis/src/lifecycle.ts": "6dfcd2fd1915ea8edbc8d611da3d35aadd8a09581796c029e83d41a2a6fc7fc2",
     "packages/analysis/src/model-correspondence.ts": "fb19dbbdf461b8e2a2429b6107f60e7ea523e4033e4677ed7dd09ea03740659c",
     "packages/analysis/src/mutation.ts": "8e68ed8491317dca183afa8c556d3f242628f20388f33b1b6fe997a98b459740",
-    "packages/analysis/src/native-approval.ts": "f5e74d85578287979a86b5e96e92e74c80ef52e9973d9478c77984ab41fcf471",
+    "packages/analysis/src/native-approval.ts": "2f34c4af9a89e75f5fb33220e4d7b73018b264723fac655c2e62cadd8c3c14c6",
     "packages/analysis/src/order.ts": "361eff6435f7eb81ac15b9a005f8f676f499c56d3dc82abb242e2307b8af628d",
     "packages/analysis/src/performance.ts": "1145c285582ff188e90263b4d9d9f28ca49104e79b8299b2ecd3e278d8ef80ac",
     "packages/analysis/src/process.ts": "8184c7f7c4c58cdc6987fd9d2ec2c02ce8557f94b6aa30853a0c6056ba79cf4a",
@@ -4357,12 +4438,15 @@
     "packages/domain/src/types.ts": "0f0cbd43bdee4db03b83e4869e9791531a63e9b63aa7a09661f62ad1bbc75cb3",
     "scripts/check-package.mjs": "78bc796ed48fdf8033e6adde803f32e50f5de0cc69abc9db6132b6d4140b13c6",
     "scripts/smoke-package.mjs": "b1e8ef2bbf213a4927c357fff53f683f3be552f3cb3e79d48c1ddc1b46c6fc7d",
+    "tests/approval-scope.test.ts": "50c87584dde5154286b617e541bcd3acd2f55d1afef849688b84dd6df15b3a45",
+    "tests/bootstrap-approval-transition.test.ts": "d741eff7c19651cc4d47e97468e0d90a520ebb559003cc40faeac744cc3cd1ac",
     "tests/change-lease.test.ts": "90f359b766b40a5a70854148cc20115915fb127514c27bd13dcff9f03eaa256b",
     "tests/cli-help-contract.test.ts": "a6aa4e340bcbc36710aa9c74041385d48e5397f9d779a5d2979946050c144ac7",
     "tests/cli-json-error-contract.test.ts": "5c4fe89aa41b51ad50fa46aba16b29ffdeec7c70691f1e5db9d3cfd99c60e712",
     "tests/evidence-binding.test.ts": "17e118ccc2ae168913c6af833ac40deedeac84668522573c64286848c1207248",
     "tests/evidence-identity.test.ts": "3467588120ed4b23c73dd5f0aff0be4b3ff83d38867ff18beda6bcceae98a899",
     "tests/evidence-kinds.test.ts": "b1a624757dcaaaf9431a0dfa245e358139d6566b07de2566477a2dd81ae0be65",
+    "tests/evidence-supersession.test.ts": "aa73654e0e5bc737b9ed6725b4091648e9b9d7978a4d466a01506612c2d58bc7",
     "tests/journal-order.test.ts": "aed6eb3454f81a5d1a83b2f9a00f329f5371039d3f40dfdd395a10e86acd7755",
     "tests/lifecycle-resume.test.ts": "05f7a3f30acf4b0b628e1c068d17c28cb248508fa2e9523c51e6455c4bd2e6ed",
     "tests/lifecycle-state-machine.test.ts": "5cbae549161c93fb5943575d9e0ba974d716f53ca2600ef8e6e07586622a0d33",

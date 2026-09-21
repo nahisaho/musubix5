@@ -63,7 +63,7 @@ export async function isDirectory(path: string): Promise<boolean> {
  * @implements REQ-CLI-WORKFLOW-UX-001
  * @design DES-CLI-WORKFLOW-UX-001
  */
-export async function files(root: string): Promise<string[]> {
+export async function files(root: string, options: { includeEvidence?: boolean } = {}): Promise<string[]> {
   const result: string[] = [];
   async function walk(directory: string): Promise<void> {
     const entries = await readdir(directory, { withFileTypes: true });
@@ -99,7 +99,7 @@ export async function files(root: string): Promise<string[]> {
           && !isPythonVirtualEnvironment
           && path !== '.nuget/packages'
           && path !== '.musubix/cache'
-          && path !== '.musubix/evidence') await walk(absolute);
+          && (options.includeEvidence === true || path !== '.musubix/evidence')) await walk(absolute);
       } else if (entry.isFile()) {
         result.push(path);
       }
