@@ -1376,6 +1376,118 @@
       "phase": "refactor",
       "previousSha256": "36365675c7963864139da7098922e8b8046afce654242f3d36d8d126b7aa5afe",
       "recordSha256": "6e0f68e613a0f66eef41583d01d5961a44bfe695ce45930ba51ef9b66df194a4"
+    },
+    {
+      "sequence": 173,
+      "kind": "tdd",
+      "entityId": "d155a1c4-6a0e-4dae-bf00-747ebf1e636a",
+      "phase": "red",
+      "previousSha256": "6e0f68e613a0f66eef41583d01d5961a44bfe695ce45930ba51ef9b66df194a4",
+      "recordSha256": "353ed8b7e75b9a166304773200242042506950ae3c49c10898823c75af6d5977"
+    },
+    {
+      "sequence": 174,
+      "kind": "tdd",
+      "entityId": "a605ae44-2094-4c81-981d-442fc99f3b79",
+      "phase": "red",
+      "previousSha256": "353ed8b7e75b9a166304773200242042506950ae3c49c10898823c75af6d5977",
+      "recordSha256": "a0aeb061ed98b39e7960e6a51dd8d6ff4ecdd1449949c363e8f6cf0f759be00b"
+    },
+    {
+      "sequence": 175,
+      "kind": "tdd",
+      "entityId": "3d3e3ce7-fa59-4834-a1b9-e9a132ecfb42",
+      "phase": "red",
+      "previousSha256": "a0aeb061ed98b39e7960e6a51dd8d6ff4ecdd1449949c363e8f6cf0f759be00b",
+      "recordSha256": "a7681d80deffc7d48f12ab2208314016436dd91b02dd4bf792a3f6d0a151d459"
+    },
+    {
+      "sequence": 176,
+      "kind": "change",
+      "entityId": "CHANGE-0002",
+      "phase": "red:REQ-M5-WORKTREE-001,REQ-M5-WORKTREE-002,REQ-M5-WORKTREE-004",
+      "previousSha256": "a7681d80deffc7d48f12ab2208314016436dd91b02dd4bf792a3f6d0a151d459",
+      "recordSha256": "372f4cf55e0761ef60e54ff001f502d4e5429bbc0d015c17c7b5c0cee762bf8f"
+    },
+    {
+      "sequence": 177,
+      "kind": "tdd",
+      "entityId": "c71587f3-41ef-4e46-8247-c59989693b92",
+      "phase": "red",
+      "previousSha256": "372f4cf55e0761ef60e54ff001f502d4e5429bbc0d015c17c7b5c0cee762bf8f",
+      "recordSha256": "74cfcb62fe3632cfff5356bb7d59b3e72dcc279030917f9e7b98a470068a612c"
+    },
+    {
+      "sequence": 178,
+      "kind": "change",
+      "entityId": "CHANGE-0002",
+      "phase": "red:REQ-M5-WORKTREE-003",
+      "previousSha256": "74cfcb62fe3632cfff5356bb7d59b3e72dcc279030917f9e7b98a470068a612c",
+      "recordSha256": "90801afc96aad8a5fb560a16da5330b5f50ac6dddad25de871a010b438875b6f"
+    },
+    {
+      "sequence": 179,
+      "kind": "change",
+      "entityId": "CHANGE-0002",
+      "phase": "implementation:REQ-M5-WORKTREE-001,REQ-M5-WORKTREE-002,REQ-M5-WORKTREE-004",
+      "previousSha256": "90801afc96aad8a5fb560a16da5330b5f50ac6dddad25de871a010b438875b6f",
+      "recordSha256": "336d74f0000f38412760f8bd8a7e48d1fd9dd875ff2794f7d1eccd2ec52027db"
+    },
+    {
+      "sequence": 180,
+      "kind": "tdd",
+      "entityId": "d155a1c4-6a0e-4dae-bf00-747ebf1e636a",
+      "phase": "green",
+      "previousSha256": "336d74f0000f38412760f8bd8a7e48d1fd9dd875ff2794f7d1eccd2ec52027db",
+      "recordSha256": "9965ad5306355584dbff9bbbd79a2681616562e78b4f8e57bd169ebc8d36140c"
+    },
+    {
+      "sequence": 181,
+      "kind": "tdd",
+      "entityId": "a605ae44-2094-4c81-981d-442fc99f3b79",
+      "phase": "green",
+      "previousSha256": "9965ad5306355584dbff9bbbd79a2681616562e78b4f8e57bd169ebc8d36140c",
+      "recordSha256": "08b159682c5105ea6c898e8b439bcd0a67a541cd562d06a6ea0555b09e7cbfd6"
+    },
+    {
+      "sequence": 182,
+      "kind": "tdd",
+      "entityId": "3d3e3ce7-fa59-4834-a1b9-e9a132ecfb42",
+      "phase": "green",
+      "previousSha256": "08b159682c5105ea6c898e8b439bcd0a67a541cd562d06a6ea0555b09e7cbfd6",
+      "recordSha256": "a20a4dd9fe48123f588eb21be266193586ede99d92c52f913a808d0dee6086ba"
+    },
+    {
+      "sequence": 183,
+      "kind": "change",
+      "entityId": "CHANGE-0002",
+      "phase": "green:REQ-M5-WORKTREE-001,REQ-M5-WORKTREE-002,REQ-M5-WORKTREE-004",
+      "previousSha256": "a20a4dd9fe48123f588eb21be266193586ede99d92c52f913a808d0dee6086ba",
+      "recordSha256": "52464ce9ab9a8210a4fb040c221c8bf1aac2917b8f9153ab746cd6025f68e378"
+    },
+    {
+      "sequence": 184,
+      "kind": "change",
+      "entityId": "CHANGE-0002",
+      "phase": "implementation:REQ-M5-WORKTREE-003",
+      "previousSha256": "52464ce9ab9a8210a4fb040c221c8bf1aac2917b8f9153ab746cd6025f68e378",
+      "recordSha256": "73ee5706be1ccbcb2ba2bdc18234ca1f0a140c3150d46191c575b86faacf270c"
+    },
+    {
+      "sequence": 185,
+      "kind": "tdd",
+      "entityId": "c71587f3-41ef-4e46-8247-c59989693b92",
+      "phase": "green",
+      "previousSha256": "73ee5706be1ccbcb2ba2bdc18234ca1f0a140c3150d46191c575b86faacf270c",
+      "recordSha256": "7783d8a08fe8d005546e508f1abbfb139e90b9f55a8fbc9d6e833641eb4c9583"
+    },
+    {
+      "sequence": 186,
+      "kind": "change",
+      "entityId": "CHANGE-0002",
+      "phase": "green:REQ-M5-WORKTREE-003",
+      "previousSha256": "7783d8a08fe8d005546e508f1abbfb139e90b9f55a8fbc9d6e833641eb4c9583",
+      "recordSha256": "0182b7aa1279dfdd20c980dfb85b9bca4b12b8aae2c7c7797ec175a67c3e889e"
     }
   ]
 }

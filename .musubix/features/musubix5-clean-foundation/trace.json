@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-21T05:52:13.084Z",
+  "generatedAt": "2026-09-21T05:57:16.662Z",
   "nodes": [
     {
       "id": "ADR-0002",
@@ -983,7 +983,7 @@
       "id": "CODE-WORKFLOW-EVIDENCE-WAIVER-024",
       "kind": "code",
       "path": "packages/analysis/src/index.ts",
-      "line": 29
+      "line": 30
     },
     {
       "id": "CODE-M5-LIFECYCLE-004",
@@ -1292,6 +1292,30 @@
       "line": 941
     },
     {
+      "id": "CODE-M5-WORKTREE-002",
+      "kind": "code",
+      "path": "packages/analysis/src/workspace-manager.ts",
+      "line": 112
+    },
+    {
+      "id": "CODE-M5-WORKTREE-004",
+      "kind": "code",
+      "path": "packages/analysis/src/workspace-manager.ts",
+      "line": 140
+    },
+    {
+      "id": "CODE-M5-WORKTREE-001",
+      "kind": "code",
+      "path": "packages/analysis/src/workspace-manager.ts",
+      "line": 177
+    },
+    {
+      "id": "CODE-M5-WORKTREE-003",
+      "kind": "code",
+      "path": "packages/analysis/src/workspace-manager.ts",
+      "line": 277
+    },
+    {
       "id": "CODE-UPGRADE-WORKFLOW-001",
       "kind": "code",
       "path": "packages/cli/src/install.ts",
@@ -1518,6 +1542,18 @@
       "kind": "test",
       "path": "tests/tdd-cycle-resolver.test.ts",
       "line": 71
+    },
+    {
+      "id": "TEST-M5-WORKTREE-001",
+      "kind": "test",
+      "path": "tests/workspace-isolation.test.ts",
+      "line": 20
+    },
+    {
+      "id": "TEST-M5-WORKTREE-002",
+      "kind": "test",
+      "path": "tests/workspace-ownership.test.ts",
+      "line": 4
     }
   ],
   "edges": [
@@ -4332,6 +4368,46 @@
       "relation": "implements"
     },
     {
+      "from": "CODE-M5-WORKTREE-002",
+      "to": "REQ-M5-WORKTREE-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-WORKTREE-002",
+      "to": "DES-M5-012",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-WORKTREE-004",
+      "to": "REQ-M5-WORKTREE-004",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-WORKTREE-004",
+      "to": "DES-M5-012",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-WORKTREE-001",
+      "to": "REQ-M5-WORKTREE-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-WORKTREE-001",
+      "to": "DES-M5-012",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-WORKTREE-003",
+      "to": "REQ-M5-WORKTREE-003",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-WORKTREE-003",
+      "to": "DES-M5-012",
+      "relation": "implements"
+    },
+    {
       "from": "CODE-UPGRADE-WORKFLOW-001",
       "to": "REQ-UPGRADE-WORKFLOW-001",
       "relation": "implements"
@@ -4745,6 +4821,26 @@
       "from": "TEST-M5-TDD-001",
       "to": "REQ-M5-TDD-004",
       "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-WORKTREE-001",
+      "to": "REQ-M5-WORKTREE-001",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-WORKTREE-001",
+      "to": "REQ-M5-WORKTREE-002",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-WORKTREE-001",
+      "to": "REQ-M5-WORKTREE-004",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-WORKTREE-002",
+      "to": "REQ-M5-WORKTREE-003",
+      "relation": "verifies"
     }
   ],
   "diagnostics": [],
@@ -4776,7 +4872,7 @@
     "packages/analysis/src/formal.ts": "9f5622983fed80c1e7c141cc7c7dcd217447e5c2edd39e64877db052a57b730b",
     "packages/analysis/src/gate.ts": "d5045b5d9de832fb7714d200f8274c8a2eedbda9f8841f9eac24cf4f3fbbc72d",
     "packages/analysis/src/graph.ts": "8978a47c311ddef684de5e4c5ab032eed9bc87ad94a739351de6e2d6b2ae2aba",
-    "packages/analysis/src/index.ts": "3cb49516efdd2546a9470967878e7f1a07c380980ccfed699369367cbedf000d",
+    "packages/analysis/src/index.ts": "522e2a61a4cb07600335781e4bd4d7f4cb3f90c0aced896a57ce989b5210f861",
     "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c",
     "packages/analysis/src/knowledge.ts": "48b68e9785f411327e10e1bd1f086fdaf4393d2951dcbd4e6fdec84e8008d7da",
     "packages/analysis/src/lifecycle.ts": "6dfcd2fd1915ea8edbc8d611da3d35aadd8a09581796c029e83d41a2a6fc7fc2",
@@ -4796,6 +4892,7 @@
     "packages/analysis/src/workflow-types.ts": "427c3450352eb7799e2b49933e267f9888e87d51dc5c6482b5b1378620205309",
     "packages/analysis/src/workflow-waiver.ts": "7c09999654d03fbc96879f3e6726d505706cdcba36940c00d46ac208d94f972f",
     "packages/analysis/src/workflow.ts": "ec8bec0cdc08941f97a3a5bd26b1c3fc58240b59f45ca23ad08e1f4639150ce4",
+    "packages/analysis/src/workspace-manager.ts": "5dd4bc9bc320b5f4c821362697c045cc2fff68205179f777becc5eca536aa2c2",
     "packages/cli/src/install.ts": "3b7d03d1864493ea9caee34855e4fd82ec970d321a205ee3378c8f13a4a34e17",
     "packages/cli/src/main.ts": "966c3ea86b35d5d5b2fb53f98e7c6b9c6b977abf579da1960a64364c63aee5ab",
     "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
@@ -4832,6 +4929,8 @@
     "tests/run-local-workspace.test.ts": "b0071c5905412c1f846d854155fbd37b0f72c08db40a20405be71cbfc2f10561",
     "tests/tdd-batch-recording.test.ts": "e254e04461665d42877b747d038bf977f680a0c72255a03b5dfc471cca2f8ef8",
     "tests/tdd-cycle-resolver.test.ts": "71baa72ea3d6648436f98f16fc57fda03a0c95ebc9d428ed8c0425349fc125ac",
+    "tests/workspace-isolation.test.ts": "2b2fb7376f1834916cc56b244fea870efa6ae40b78164a5c35b5ccb3db9ab923",
+    "tests/workspace-ownership.test.ts": "29a82dab0567a09e186c127b8f25fe33a73d7a4943154acb01566382ac66744c",
     "vitest.config.ts": "2338c9c1fc7792c2c04fb596d182829c7259f1c60617f86751169d35c914ae54"
   }
 }

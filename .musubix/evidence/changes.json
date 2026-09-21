@@ -4838,6 +4838,220 @@
             },
             "order": 166
           }
+        },
+        {
+          "requirementIds": [
+            "REQ-M5-WORKTREE-001",
+            "REQ-M5-WORKTREE-002",
+            "REQ-M5-WORKTREE-004"
+          ],
+          "red": {
+            "phase": "red",
+            "recordedAt": "2026-09-21T05:55:04.203Z",
+            "fingerprints": {
+              "impact": "8d70b2cdb49720e294be9fb3fc2f2435a7e3a47825b371da672631ee7d73bae3",
+              "requirements": "0c42fb565effcc67258122c06507dcf5d43cd265a14f943cfb40f68e8ce7597a",
+              "design": "2e33ea84723c815804633fc499f69ef2699f158c41f365509dfa0b3be0c30894",
+              "implementation": "b55f9f19cdf4852c49e1fe0d5629daf20450cb0eadb6eed9b70808fe2c7cfa30",
+              "tests": "2f7a0b9ffb709e38e29becab515f619dbe8833341cc7052397b2180f242b629a",
+              "tdd": "079ec1b39e321a9a4046933f1d26e189d58ad39a56ccc7f1eec5f6feb3993062",
+              "requirementImplementations": {
+                "REQ-M5-WORKTREE-001": {
+                  "paths": [],
+                  "fingerprints": {}
+                },
+                "REQ-M5-WORKTREE-002": {
+                  "paths": [],
+                  "fingerprints": {}
+                },
+                "REQ-M5-WORKTREE-004": {
+                  "paths": [],
+                  "fingerprints": {}
+                }
+              }
+            },
+            "order": 176
+          },
+          "implementation": {
+            "phase": "implementation",
+            "recordedAt": "2026-09-21T05:56:38.004Z",
+            "fingerprints": {
+              "impact": "8d70b2cdb49720e294be9fb3fc2f2435a7e3a47825b371da672631ee7d73bae3",
+              "requirements": "0c42fb565effcc67258122c06507dcf5d43cd265a14f943cfb40f68e8ce7597a",
+              "design": "2e33ea84723c815804633fc499f69ef2699f158c41f365509dfa0b3be0c30894",
+              "implementation": "fd99dba88f7aacb6f0a4eb98075ae72ef87ff5d0db1a8ef0913b21599b17122e",
+              "tests": "2f7a0b9ffb709e38e29becab515f619dbe8833341cc7052397b2180f242b629a",
+              "tdd": "82a66da8e94503581d4da571f1a0d45d8cfc869f36f6e1414b66b1d04a95879c",
+              "requirementImplementations": {
+                "REQ-M5-WORKTREE-001": {
+                  "paths": [
+                    "packages/analysis/src/canonical.ts",
+                    "packages/analysis/src/journal.ts",
+                    "packages/analysis/src/workspace-manager.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/canonical.ts": "1c4dcfda94bc2b93d3d1e4bbb03205f2441d6025b172e8fe24812b366e363ecf",
+                    "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c",
+                    "packages/analysis/src/workspace-manager.ts": "5dd4bc9bc320b5f4c821362697c045cc2fff68205179f777becc5eca536aa2c2"
+                  }
+                },
+                "REQ-M5-WORKTREE-002": {
+                  "paths": [
+                    "packages/analysis/src/canonical.ts",
+                    "packages/analysis/src/journal.ts",
+                    "packages/analysis/src/workspace-manager.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/canonical.ts": "1c4dcfda94bc2b93d3d1e4bbb03205f2441d6025b172e8fe24812b366e363ecf",
+                    "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c",
+                    "packages/analysis/src/workspace-manager.ts": "5dd4bc9bc320b5f4c821362697c045cc2fff68205179f777becc5eca536aa2c2"
+                  }
+                },
+                "REQ-M5-WORKTREE-004": {
+                  "paths": [
+                    "packages/analysis/src/canonical.ts",
+                    "packages/analysis/src/journal.ts",
+                    "packages/analysis/src/workspace-manager.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/canonical.ts": "1c4dcfda94bc2b93d3d1e4bbb03205f2441d6025b172e8fe24812b366e363ecf",
+                    "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c",
+                    "packages/analysis/src/workspace-manager.ts": "5dd4bc9bc320b5f4c821362697c045cc2fff68205179f777becc5eca536aa2c2"
+                  }
+                }
+              }
+            },
+            "order": 179
+          },
+          "green": {
+            "phase": "green",
+            "recordedAt": "2026-09-21T05:56:43.084Z",
+            "fingerprints": {
+              "impact": "8d70b2cdb49720e294be9fb3fc2f2435a7e3a47825b371da672631ee7d73bae3",
+              "requirements": "0c42fb565effcc67258122c06507dcf5d43cd265a14f943cfb40f68e8ce7597a",
+              "design": "2e33ea84723c815804633fc499f69ef2699f158c41f365509dfa0b3be0c30894",
+              "implementation": "fd99dba88f7aacb6f0a4eb98075ae72ef87ff5d0db1a8ef0913b21599b17122e",
+              "tests": "2f7a0b9ffb709e38e29becab515f619dbe8833341cc7052397b2180f242b629a",
+              "tdd": "0f6ec1185f192ac483698a4a465442b6007a9fabbbf7afb032d94b49a3c005ac",
+              "requirementImplementations": {
+                "REQ-M5-WORKTREE-001": {
+                  "paths": [
+                    "packages/analysis/src/canonical.ts",
+                    "packages/analysis/src/journal.ts",
+                    "packages/analysis/src/workspace-manager.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/canonical.ts": "1c4dcfda94bc2b93d3d1e4bbb03205f2441d6025b172e8fe24812b366e363ecf",
+                    "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c",
+                    "packages/analysis/src/workspace-manager.ts": "5dd4bc9bc320b5f4c821362697c045cc2fff68205179f777becc5eca536aa2c2"
+                  }
+                },
+                "REQ-M5-WORKTREE-002": {
+                  "paths": [
+                    "packages/analysis/src/canonical.ts",
+                    "packages/analysis/src/journal.ts",
+                    "packages/analysis/src/workspace-manager.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/canonical.ts": "1c4dcfda94bc2b93d3d1e4bbb03205f2441d6025b172e8fe24812b366e363ecf",
+                    "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c",
+                    "packages/analysis/src/workspace-manager.ts": "5dd4bc9bc320b5f4c821362697c045cc2fff68205179f777becc5eca536aa2c2"
+                  }
+                },
+                "REQ-M5-WORKTREE-004": {
+                  "paths": [
+                    "packages/analysis/src/canonical.ts",
+                    "packages/analysis/src/journal.ts",
+                    "packages/analysis/src/workspace-manager.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/canonical.ts": "1c4dcfda94bc2b93d3d1e4bbb03205f2441d6025b172e8fe24812b366e363ecf",
+                    "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c",
+                    "packages/analysis/src/workspace-manager.ts": "5dd4bc9bc320b5f4c821362697c045cc2fff68205179f777becc5eca536aa2c2"
+                  }
+                }
+              }
+            },
+            "order": 183
+          }
+        },
+        {
+          "requirementIds": [
+            "REQ-M5-WORKTREE-003"
+          ],
+          "red": {
+            "phase": "red",
+            "recordedAt": "2026-09-21T05:55:08.304Z",
+            "fingerprints": {
+              "impact": "8d70b2cdb49720e294be9fb3fc2f2435a7e3a47825b371da672631ee7d73bae3",
+              "requirements": "0c42fb565effcc67258122c06507dcf5d43cd265a14f943cfb40f68e8ce7597a",
+              "design": "2e33ea84723c815804633fc499f69ef2699f158c41f365509dfa0b3be0c30894",
+              "implementation": "b55f9f19cdf4852c49e1fe0d5629daf20450cb0eadb6eed9b70808fe2c7cfa30",
+              "tests": "2f7a0b9ffb709e38e29becab515f619dbe8833341cc7052397b2180f242b629a",
+              "tdd": "82a66da8e94503581d4da571f1a0d45d8cfc869f36f6e1414b66b1d04a95879c",
+              "requirementImplementations": {
+                "REQ-M5-WORKTREE-003": {
+                  "paths": [],
+                  "fingerprints": {}
+                }
+              }
+            },
+            "order": 178
+          },
+          "implementation": {
+            "phase": "implementation",
+            "recordedAt": "2026-09-21T05:56:45.406Z",
+            "fingerprints": {
+              "impact": "8d70b2cdb49720e294be9fb3fc2f2435a7e3a47825b371da672631ee7d73bae3",
+              "requirements": "0c42fb565effcc67258122c06507dcf5d43cd265a14f943cfb40f68e8ce7597a",
+              "design": "2e33ea84723c815804633fc499f69ef2699f158c41f365509dfa0b3be0c30894",
+              "implementation": "fd99dba88f7aacb6f0a4eb98075ae72ef87ff5d0db1a8ef0913b21599b17122e",
+              "tests": "2f7a0b9ffb709e38e29becab515f619dbe8833341cc7052397b2180f242b629a",
+              "tdd": "0f6ec1185f192ac483698a4a465442b6007a9fabbbf7afb032d94b49a3c005ac",
+              "requirementImplementations": {
+                "REQ-M5-WORKTREE-003": {
+                  "paths": [
+                    "packages/analysis/src/canonical.ts",
+                    "packages/analysis/src/journal.ts",
+                    "packages/analysis/src/workspace-manager.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/canonical.ts": "1c4dcfda94bc2b93d3d1e4bbb03205f2441d6025b172e8fe24812b366e363ecf",
+                    "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c",
+                    "packages/analysis/src/workspace-manager.ts": "5dd4bc9bc320b5f4c821362697c045cc2fff68205179f777becc5eca536aa2c2"
+                  }
+                }
+              }
+            },
+            "order": 184
+          },
+          "green": {
+            "phase": "green",
+            "recordedAt": "2026-09-21T05:56:49.218Z",
+            "fingerprints": {
+              "impact": "8d70b2cdb49720e294be9fb3fc2f2435a7e3a47825b371da672631ee7d73bae3",
+              "requirements": "0c42fb565effcc67258122c06507dcf5d43cd265a14f943cfb40f68e8ce7597a",
+              "design": "2e33ea84723c815804633fc499f69ef2699f158c41f365509dfa0b3be0c30894",
+              "implementation": "fd99dba88f7aacb6f0a4eb98075ae72ef87ff5d0db1a8ef0913b21599b17122e",
+              "tests": "2f7a0b9ffb709e38e29becab515f619dbe8833341cc7052397b2180f242b629a",
+              "tdd": "839d85d15afc3981c3d4add36113a90561733b0d35dc521ea8609e50c72de6f1",
+              "requirementImplementations": {
+                "REQ-M5-WORKTREE-003": {
+                  "paths": [
+                    "packages/analysis/src/canonical.ts",
+                    "packages/analysis/src/journal.ts",
+                    "packages/analysis/src/workspace-manager.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/canonical.ts": "1c4dcfda94bc2b93d3d1e4bbb03205f2441d6025b172e8fe24812b366e363ecf",
+                    "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c",
+                    "packages/analysis/src/workspace-manager.ts": "5dd4bc9bc320b5f4c821362697c045cc2fff68205179f777becc5eca536aa2c2"
+                  }
+                }
+              }
+            },
+            "order": 186
+          }
         }
       ]
     }
