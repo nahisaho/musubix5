@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "baseline": {
+    "package": "musubix3",
+    "version": "0.1.18",
+    "commit": "c0b20f06727bceb04eeec181d95af9047b1981de"
+  },
+  "scenario": "required commands check with commands=[]",
+  "gate": {
+    "exitCode": 1,
+    "status": "fail",
+    "commandsCheck": {
+      "name": "commands",
+      "required": true,
+      "status": "skipped",
+      "summary": "No configured commands; build/test evidence is missing."
+    }
+  },
+  "status": {
+    "exitCode": 0,
+    "gateStatus": "stale",
+    "ready": false
+  }
+}

@@ -179,7 +179,7 @@ cycles remain visible but are not selected.
 ## 7. Lifecycle state machine proposal
 
 ```text
-draft-requirements
+initialized
   -> requirements-valid
   -> requirements-review-clean
   -> requirements-approved
@@ -189,6 +189,7 @@ draft-requirements
   -> red-recorded
   -> implementation-recorded
   -> green-recorded
+  -> optional-refactored
   -> integrated
   -> trace-formal-complete
   -> quality-pass

@@ -41,6 +41,24 @@ These extensions intentionally change aggregate approval hashes from musubix3.
 Bootstrap approvals recorded by musubix3 remain development authorizations
 only and must be re-recorded natively before release readiness.
 
+## Configuration and gate extensions
+
+- `approvalAutomation` is a versioned musubix5 configuration extension. It is
+  manual by default. An absent key materializes the approved default object.
+  Its modes and limits are hash-bound, so enabling verified-auto requires a new
+  design approval with the revised projection digest.
+- When required command verification has no configured commands, musubix5
+  preserves the musubix3 `skipped` check status, gate exit code 1, and status
+  exit code 0 with `ready: false`, and adds a structured `missing-command`
+  diagnostic.
+
+## Bootstrap command extension
+
+musubix5 adds explicit `bootstrap run`, `bootstrap resume`, and
+`bootstrap status` commands. They have no musubix3 equivalent, are never
+invoked by normal commands, and cannot produce normal approval, quality, or
+release authority.
+
 ## Release operation authorization
 
 Release approval does not authorize publication, tag creation, or pushing to a

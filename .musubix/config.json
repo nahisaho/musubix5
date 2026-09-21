@@ -2,7 +2,68 @@
   "schemaVersion": 1,
   "language": "auto",
   "qualityProfile": "custom",
-  "commands": [],
+  "commands": [
+    {
+      "name": "typecheck",
+      "command": "npm",
+      "args": [
+        "run",
+        "typecheck"
+      ],
+      "required": true,
+      "timeoutMs": 120000
+    },
+    {
+      "name": "build",
+      "command": "npm",
+      "args": [
+        "run",
+        "build"
+      ],
+      "required": true,
+      "timeoutMs": 120000
+    },
+    {
+      "name": "test",
+      "command": "npm",
+      "args": [
+        "test"
+      ],
+      "adapter": "vitest",
+      "required": true,
+      "timeoutMs": 180000
+    },
+    {
+      "name": "compatibility",
+      "command": "npm",
+      "args": [
+        "run",
+        "test:compat"
+      ],
+      "required": true,
+      "timeoutMs": 180000
+    },
+    {
+      "name": "pack-check",
+      "command": "npm",
+      "args": [
+        "run",
+        "pack:check"
+      ],
+      "required": true,
+      "timeoutMs": 120000
+    },
+    {
+      "name": "pack-smoke",
+      "command": "npm",
+      "args": [
+        "run",
+        "pack:smoke"
+      ],
+      "required": true,
+      "timeoutMs": 180000
+    }
+  ],
   "requiredChecks": [
     "requirements",
     "design",
