@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-21T06:09:35.869Z",
+  "generatedAt": "2026-09-21T06:15:18.265Z",
   "nodes": [
     {
       "id": "ADR-0002",
@@ -902,6 +902,48 @@
       "line": 328
     },
     {
+      "id": "CODE-M5-COMPAT-ORACLE-001",
+      "kind": "code",
+      "path": "packages/analysis/src/compatibility-oracle.ts",
+      "line": 27
+    },
+    {
+      "id": "CODE-M5-COMPAT-EXIT-001",
+      "kind": "code",
+      "path": "packages/analysis/src/compatibility-oracle.ts",
+      "line": 53
+    },
+    {
+      "id": "CODE-M5-COMPAT-CONFIG-001",
+      "kind": "code",
+      "path": "packages/analysis/src/compatibility-oracle.ts",
+      "line": 68
+    },
+    {
+      "id": "CODE-M5-COMPAT-GOVERNANCE-001",
+      "kind": "code",
+      "path": "packages/analysis/src/compatibility-oracle.ts",
+      "line": 87
+    },
+    {
+      "id": "CODE-M5-COMPAT-MIGRATION-001",
+      "kind": "code",
+      "path": "packages/analysis/src/compatibility-oracle.ts",
+      "line": 126
+    },
+    {
+      "id": "CODE-M5-COMPAT-SOLVER-001",
+      "kind": "code",
+      "path": "packages/analysis/src/compatibility-oracle.ts",
+      "line": 141
+    },
+    {
+      "id": "CODE-M5-COMPAT-ORACLE-002",
+      "kind": "code",
+      "path": "packages/analysis/src/compatibility-oracle.ts",
+      "line": 175
+    },
+    {
       "id": "CODE-APPROVAL-DOMAIN-SCOPING-001",
       "kind": "code",
       "path": "packages/analysis/src/config.ts",
@@ -1001,7 +1043,7 @@
       "id": "CODE-WORKFLOW-EVIDENCE-WAIVER-024",
       "kind": "code",
       "path": "packages/analysis/src/index.ts",
-      "line": 31
+      "line": 32
     },
     {
       "id": "CODE-M5-LIFECYCLE-004",
@@ -1482,6 +1524,12 @@
       "kind": "test",
       "path": "tests/cli-json-error-contract.test.ts",
       "line": 16
+    },
+    {
+      "id": "TEST-M5-COMPAT-ORACLE-001",
+      "kind": "test",
+      "path": "tests/compatibility-oracle.test.ts",
+      "line": 6
     },
     {
       "id": "TEST-M5-EVIDENCE-003",
@@ -3419,6 +3467,86 @@
       "relation": "implements"
     },
     {
+      "from": "CODE-M5-COMPAT-ORACLE-001",
+      "to": "REQ-M5-COMPAT-008",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-COMPAT-ORACLE-001",
+      "to": "REQ-M5-COMPAT-009",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-COMPAT-ORACLE-001",
+      "to": "DES-M5-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-COMPAT-EXIT-001",
+      "to": "REQ-M5-COMPAT-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-COMPAT-EXIT-001",
+      "to": "DES-M5-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-COMPAT-CONFIG-001",
+      "to": "REQ-M5-COMPAT-004",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-COMPAT-CONFIG-001",
+      "to": "DES-M5-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-COMPAT-GOVERNANCE-001",
+      "to": "REQ-M5-COMPAT-007",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-COMPAT-GOVERNANCE-001",
+      "to": "DES-M5-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-COMPAT-MIGRATION-001",
+      "to": "REQ-M5-COMPAT-010",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-COMPAT-MIGRATION-001",
+      "to": "DES-M5-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-COMPAT-SOLVER-001",
+      "to": "REQ-M5-COMPAT-011",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-COMPAT-SOLVER-001",
+      "to": "DES-M5-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-COMPAT-ORACLE-002",
+      "to": "REQ-M5-COMPAT-009",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-COMPAT-ORACLE-002",
+      "to": "REQ-M5-COMPAT-012",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-COMPAT-ORACLE-002",
+      "to": "DES-M5-001",
+      "relation": "implements"
+    },
+    {
       "from": "CODE-APPROVAL-DOMAIN-SCOPING-001",
       "to": "REQ-APPROVAL-DOMAIN-SCOPING-001",
       "relation": "implements"
@@ -4839,6 +4967,46 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-COMPAT-ORACLE-001",
+      "to": "REQ-M5-COMPAT-002",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-COMPAT-ORACLE-001",
+      "to": "REQ-M5-COMPAT-004",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-COMPAT-ORACLE-001",
+      "to": "REQ-M5-COMPAT-007",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-COMPAT-ORACLE-001",
+      "to": "REQ-M5-COMPAT-008",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-COMPAT-ORACLE-001",
+      "to": "REQ-M5-COMPAT-009",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-COMPAT-ORACLE-001",
+      "to": "REQ-M5-COMPAT-010",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-COMPAT-ORACLE-001",
+      "to": "REQ-M5-COMPAT-011",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-COMPAT-ORACLE-001",
+      "to": "REQ-M5-COMPAT-012",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-EVIDENCE-003",
       "to": "REQ-M5-EVIDENCE-003",
       "relation": "verifies"
@@ -4998,13 +5166,14 @@
     "packages/analysis/src/change-evidence.ts": "25251d5d877f795c181b8a2c69022e1a066600e7ff76ebf4806862a5262ce6b1",
     "packages/analysis/src/change-waiver.ts": "edabb578fe2d968bf98fe068ee240a32b67dcf7b50724a265e83ebc2a88c1ccd",
     "packages/analysis/src/change.ts": "2ac3f0381237fceceb794ab9684ead44b3acaa77bf4c786c5899b8ad263d6ac7",
+    "packages/analysis/src/compatibility-oracle.ts": "68fe2aa5601cf48a66d066126e65557163f8d34bf4bcd9b6b159e3c7b2873057",
     "packages/analysis/src/config.ts": "a46214d1271124a0ccfef15e7a6b268236fd9a57d408028e61cf511816667580",
     "packages/analysis/src/evidence-registry.ts": "41bdd3f05c91734baf22cccf5289a9906eae30bfd1356236bc98c96be47da660",
     "packages/analysis/src/files.ts": "6cd39d15d19c594438aa364c19bc6e7f2888b8371c13c61fc8e472dca0cc3454",
     "packages/analysis/src/formal.ts": "9f5622983fed80c1e7c141cc7c7dcd217447e5c2edd39e64877db052a57b730b",
     "packages/analysis/src/gate.ts": "d5045b5d9de832fb7714d200f8274c8a2eedbda9f8841f9eac24cf4f3fbbc72d",
     "packages/analysis/src/graph.ts": "8978a47c311ddef684de5e4c5ab032eed9bc87ad94a739351de6e2d6b2ae2aba",
-    "packages/analysis/src/index.ts": "4bbca1c7ba8c90b7fde8097d43be7d4efa660b4504da1bff60f3f112efbc0e4a",
+    "packages/analysis/src/index.ts": "31f8c2f8ba8c9fddfb3e03b36d65a1c317b6cf0352546c5347250135af9da1ff",
     "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c",
     "packages/analysis/src/knowledge.ts": "48b68e9785f411327e10e1bd1f086fdaf4393d2951dcbd4e6fdec84e8008d7da",
     "packages/analysis/src/lifecycle.ts": "6dfcd2fd1915ea8edbc8d611da3d35aadd8a09581796c029e83d41a2a6fc7fc2",
@@ -5047,6 +5216,7 @@
     "tests/change-lease.test.ts": "90f359b766b40a5a70854148cc20115915fb127514c27bd13dcff9f03eaa256b",
     "tests/cli-help-contract.test.ts": "a6aa4e340bcbc36710aa9c74041385d48e5397f9d779a5d2979946050c144ac7",
     "tests/cli-json-error-contract.test.ts": "5c4fe89aa41b51ad50fa46aba16b29ffdeec7c70691f1e5db9d3cfd99c60e712",
+    "tests/compatibility-oracle.test.ts": "269253c3fded2e730e81901c05ea8f533fdbaf9ae7a1324cdaa085cb7d5a6555",
     "tests/evidence-binding.test.ts": "17e118ccc2ae168913c6af833ac40deedeac84668522573c64286848c1207248",
     "tests/evidence-identity.test.ts": "3467588120ed4b23c73dd5f0aff0be4b3ff83d38867ff18beda6bcceae98a899",
     "tests/evidence-kinds.test.ts": "b1a624757dcaaaf9431a0dfa245e358139d6566b07de2566477a2dd81ae0be65",

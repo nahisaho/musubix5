@@ -37,6 +37,7 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:compat": "vitest run tests/cli-help-contract.test.ts tests/cli-json-error-contract.test.ts tests/compatibility-oracle.test.ts",
     "test:adapters": "vitest run tests/adapter-integration.test.ts --maxWorkers=1",
     "test:watch": "vitest",
     "pack:check": "node scripts/check-package.mjs",
