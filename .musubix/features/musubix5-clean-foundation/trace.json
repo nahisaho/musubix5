@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-21T05:37:52.118Z",
+  "generatedAt": "2026-09-21T05:40:04.304Z",
   "nodes": [
     {
       "id": "ADR-0002",
@@ -983,7 +983,7 @@
       "id": "CODE-WORKFLOW-EVIDENCE-WAIVER-024",
       "kind": "code",
       "path": "packages/analysis/src/index.ts",
-      "line": 27
+      "line": 28
     },
     {
       "id": "CODE-M5-LIFECYCLE-004",
@@ -1062,6 +1062,12 @@
       "kind": "code",
       "path": "packages/analysis/src/planner-output.ts",
       "line": 138
+    },
+    {
+      "id": "CODE-M5-APPROVAL-002",
+      "kind": "code",
+      "path": "packages/analysis/src/run-local-workspace.ts",
+      "line": 27
     },
     {
       "id": "CODE-REQUIREMENTS-DESIGN-SCAFFOLD-001",
@@ -1488,6 +1494,12 @@
       "kind": "test",
       "path": "tests/release-evidence-policy.test.ts",
       "line": 4
+    },
+    {
+      "id": "TEST-M5-APPROVAL-002",
+      "kind": "test",
+      "path": "tests/run-local-workspace.test.ts",
+      "line": 16
     }
   ],
   "edges": [
@@ -3647,6 +3659,16 @@
       "relation": "implements"
     },
     {
+      "from": "CODE-M5-APPROVAL-002",
+      "to": "REQ-M5-APPROVAL-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-APPROVAL-002",
+      "to": "DES-M5-006",
+      "relation": "implements"
+    },
+    {
       "from": "CODE-REQUIREMENTS-DESIGN-SCAFFOLD-001",
       "to": "REQ-REQUIREMENTS-DESIGN-SCAFFOLD-001",
       "relation": "implements"
@@ -4645,6 +4667,11 @@
       "from": "TEST-M5-EVIDENCE-004",
       "to": "REQ-M5-EVIDENCE-004",
       "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-APPROVAL-002",
+      "to": "REQ-M5-APPROVAL-002",
+      "relation": "verifies"
     }
   ],
   "diagnostics": [],
@@ -4676,7 +4703,7 @@
     "packages/analysis/src/formal.ts": "9f5622983fed80c1e7c141cc7c7dcd217447e5c2edd39e64877db052a57b730b",
     "packages/analysis/src/gate.ts": "d5045b5d9de832fb7714d200f8274c8a2eedbda9f8841f9eac24cf4f3fbbc72d",
     "packages/analysis/src/graph.ts": "8978a47c311ddef684de5e4c5ab032eed9bc87ad94a739351de6e2d6b2ae2aba",
-    "packages/analysis/src/index.ts": "11141b2adf28a73de3c84d2426a4051ba197185161400639ae52ff3811fb5f14",
+    "packages/analysis/src/index.ts": "747595feee429f2fa41c325033dce64acc376e6f2e53ae7bcc59e1fb4c9ef580",
     "packages/analysis/src/journal.ts": "db8000a22fa672bdc5b61811a9e4589ea3af5e753d000f79bb3882062cc8e31c",
     "packages/analysis/src/knowledge.ts": "48b68e9785f411327e10e1bd1f086fdaf4393d2951dcbd4e6fdec84e8008d7da",
     "packages/analysis/src/lifecycle.ts": "6dfcd2fd1915ea8edbc8d611da3d35aadd8a09581796c029e83d41a2a6fc7fc2",
@@ -4687,6 +4714,7 @@
     "packages/analysis/src/performance.ts": "1145c285582ff188e90263b4d9d9f28ca49104e79b8299b2ecd3e278d8ef80ac",
     "packages/analysis/src/planner-output.ts": "c649e484d064c2fc5078bcbc21a08e49746feae179e26de99d92bae17ffe9a5c",
     "packages/analysis/src/process.ts": "8184c7f7c4c58cdc6987fd9d2ec2c02ce8557f94b6aa30853a0c6056ba79cf4a",
+    "packages/analysis/src/run-local-workspace.ts": "a62651f947cee6955901337b4b425393855395ca199d06c7003b7e157dcbf477",
     "packages/analysis/src/scaffold-artifact.ts": "e5e6fa31fbd97ce4dcc294ab26966eb0a4a2507eb4025a7a8a522831e7fb886d",
     "packages/analysis/src/tdd.ts": "96a9eef2bf0b1fbd034679be854e1a86994e6c0c0fd7ea4569e3f895ac115f80",
     "packages/analysis/src/test-report.ts": "41c76811bfcb5e286bf097bf2f6aaf6cd5a414202efe8108f28219ecca063a01",
@@ -4727,6 +4755,7 @@
     "tests/planner-retry-identity.test.ts": "ee672f87e7528154f1842e7d0acdc70bfed742378119bb26be9e526bf6819b91",
     "tests/planner-validation.test.ts": "2af23c90768dfa6e74ac05922ec28c4eb9a0d674e730682e472ff14040387169",
     "tests/release-evidence-policy.test.ts": "4cc0d16219dfb98f580a4453b6584173381dd50a3124204587db26b2f65aeafa",
+    "tests/run-local-workspace.test.ts": "b0071c5905412c1f846d854155fbd37b0f72c08db40a20405be71cbfc2f10561",
     "vitest.config.ts": "2338c9c1fc7792c2c04fb596d182829c7259f1c60617f86751169d35c914ae54"
   }
 }

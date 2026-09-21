@@ -1535,6 +1535,49 @@
         "diagnostics": [],
         "order": 142
       }
+    },
+    {
+      "cycleId": "453168b5-1a60-42ac-a48e-b53adcdba704",
+      "requirementId": "REQ-M5-APPROVAL-002",
+      "testId": "TEST-M5-APPROVAL-002",
+      "testPath": "tests/run-local-workspace.test.ts",
+      "commandName": "test",
+      "red": {
+        "phase": "red",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "failed",
+        "reportSha256": "893fd1f865082593269ec00cb7b45f10e0767d19850a8945fb99953653156761",
+        "commandSha256": "d1224c6b6ffa2a81e7abe654a6a8d4016b49b55ac73846d3a8ec97ea78a860c1",
+        "outputSha256": "2225e3dcf41fb6bd7d78a8ce47aead94754a931a0998533d1eab40c942d36660",
+        "exitCode": 1,
+        "durationMs": 956,
+        "testFingerprint": "2f43691a6584c90a112c2d1ec28face9ab0ab2754fe95d832c25cc9bdad660af",
+        "sourceFingerprint": "f317d234beacaa64ee3e4e28463d9e3f37925a890b93d4fd844a883a6a608243",
+        "executionId": "d0ec7aa9-c32f-4240-b426-78fec17483d1",
+        "recordedAt": "2026-09-21T05:39:15.237Z",
+        "diagnostics": [],
+        "order": 144
+      },
+      "green": {
+        "phase": "green",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "passed",
+        "reportSha256": "4b806002e1d4c74c58fb74a9cc588b0b2463e39c3d3c87665e60521d6a88c6cd",
+        "commandSha256": "d1224c6b6ffa2a81e7abe654a6a8d4016b49b55ac73846d3a8ec97ea78a860c1",
+        "outputSha256": "2225e3dcf41fb6bd7d78a8ce47aead94754a931a0998533d1eab40c942d36660",
+        "exitCode": 0,
+        "durationMs": 838,
+        "testFingerprint": "2f43691a6584c90a112c2d1ec28face9ab0ab2754fe95d832c25cc9bdad660af",
+        "sourceFingerprint": "1de6ad17a259784f4cf926581f8bfbe584135f7ea9c789dd29873dbab80e9b83",
+        "executionId": "9583d74e-38be-451d-b2a7-b3d4e6f456fa",
+        "recordedAt": "2026-09-21T05:40:03.949Z",
+        "diagnostics": [],
+        "order": 147
+      }
     }
   ],
   "chain": [
@@ -2389,6 +2432,30 @@
       "phaseEvidenceSha256": "5b2209b5dbe6509c24a9975797f6885e3d462811f2b3425b9685411e2473d2fd",
       "previousSha256": "ee39564dae6107df6c9b3daf624267f842bb0f1ab7b1c8ab23d1f21d4d32d9e8",
       "recordSha256": "a9b5c9420cbe45ae6dc55f2e48dc79674a65954a6dbca44f0bd962e51761e186"
+    },
+    {
+      "sequence": 72,
+      "cycleId": "453168b5-1a60-42ac-a48e-b53adcdba704",
+      "requirementId": "REQ-M5-APPROVAL-002",
+      "testId": "TEST-M5-APPROVAL-002",
+      "testPath": "tests/run-local-workspace.test.ts",
+      "commandName": "test",
+      "phase": "red",
+      "phaseEvidenceSha256": "f1610e8c9af3127c1593b1ecd5cfc5c54910cff1c65feff137efa862ca788790",
+      "previousSha256": "a9b5c9420cbe45ae6dc55f2e48dc79674a65954a6dbca44f0bd962e51761e186",
+      "recordSha256": "f2e566a032dd992d1ebe734e0b8d3b04411c608978bd6e29b7b830ecd85bb038"
+    },
+    {
+      "sequence": 73,
+      "cycleId": "453168b5-1a60-42ac-a48e-b53adcdba704",
+      "requirementId": "REQ-M5-APPROVAL-002",
+      "testId": "TEST-M5-APPROVAL-002",
+      "testPath": "tests/run-local-workspace.test.ts",
+      "commandName": "test",
+      "phase": "green",
+      "phaseEvidenceSha256": "f3d9b66c63b254bf1f7ded3d903c1a3a6e9368d69565f32318c049a9d2c5a70a",
+      "previousSha256": "f2e566a032dd992d1ebe734e0b8d3b04411c608978bd6e29b7b830ecd85bb038",
+      "recordSha256": "669ad1e216c99dcf826bbb945082556a2b4b5d363afd21e84abf879b1539109b"
     }
   ]
 }
