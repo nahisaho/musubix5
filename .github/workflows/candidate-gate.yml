@@ -76,7 +76,7 @@ jobs:
           node --input-type=module <<'NODE'
           import { spawnSync } from 'node:child_process';
           import { createHash } from 'node:crypto';
-          import { mkdirSync, writeFileSync } from 'node:fs';
+          import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
           import { join } from 'node:path';
           import { requiredCandidateGateCommands } from './dist/packages/analysis/src/candidate-gate.js';
 
@@ -124,6 +124,15 @@ jobs:
             }));
           if (failedChecks.length) {
             console.error(JSON.stringify({ failedChecks }, null, 2));
+            const testReportPath = join(process.cwd(), '.musubix/cache/matrix-native/test/aggregate.json');
+            if (existsSync(testReportPath)) {
+              const testReport = JSON.parse(readFileSync(testReportPath, 'utf8'));
+              const failedTests = testReport.testResults.flatMap(({ name, assertionResults }) =>
+                assertionResults
+                  .filter(({ status }) => status === 'failed')
+                  .map(({ fullName, failureMessages }) => ({ name, fullName, failureMessages })));
+              console.error(JSON.stringify({ failedTests }, null, 2));
+            }
           }
           const commands = report.checks
             .filter(({ name }) => name.startsWith('command:'))
