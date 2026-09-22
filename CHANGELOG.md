@@ -31,6 +31,11 @@ All notable changes to musubix5 are documented in this file.
 
 ### Release status
 
-- Version `0.1.0` is not released.
-- Release approval is pending.
-- No package publication, Git tag, or remote push has been performed.
+- Tag `v0.1.0` was created and pushed for validation; no GitHub Release or npm
+  publication exists for it. Generation 5 targets `0.1.1`.
+- The generation-4 release approval is superseded. Generation 5 has no release
+  approval until a new immutable candidate passes its external matrix.
+- Because `v0.1.0` and its history are intentionally immutable, its historical
+  release authorization remains present in that old evidence commit. Operators
+  must not dispatch the historical `v0.1.0` release workflow; removing that
+  capability would require deleting the tag or rewriting history.

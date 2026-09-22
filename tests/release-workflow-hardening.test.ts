@@ -24,73 +24,69 @@ type WorkflowJob = {
 
 describe('release workflow hardening', () => {
   it('enforces side-effect, authorization, artifact, and registry safeguards', () => {
-    const workflowText = readFileSync(resolve('.github/workflows/release.yml'), 'utf8');
-    const workflow = parse(workflowText) as { jobs: Record<string, WorkflowJob> };
+    const releaseText = readFileSync(resolve('.github/workflows/release.yml'), 'utf8');
+    const releaseWorkflow = parse(releaseText) as { jobs: Record<string, WorkflowJob> };
+    const publishText = readFileSync(resolve('.github/workflows/npm-publish.yml'), 'utf8');
+    const publishWorkflow = parse(publishText) as { jobs: Record<string, WorkflowJob> };
+    const publish = publishWorkflow.jobs.publish!;
 
-    expect(workflow.jobs.release!.if).toBe(
-      "github.event_name == 'workflow_dispatch' && inputs.release_operation_id != ''",
-    );
-    expect(workflow.jobs.publish!.if).toBe(
-      "github.event_name == 'workflow_dispatch' && inputs.publish_operation_id != ''",
-    );
-    expect(workflow.jobs.validate!.permissions).toEqual({ contents: 'read' });
-    expect(workflow.jobs.bundle!.permissions).toEqual({
+    expect(releaseWorkflow.jobs.release!.if).toBe("github.event_name == 'workflow_dispatch'");
+    expect(releaseWorkflow.jobs.publish).toBeUndefined();
+    expect(releaseWorkflow.jobs.validate!.permissions).toEqual({ contents: 'read' });
+    expect(releaseWorkflow.jobs.bundle!.permissions).toEqual({
       contents: 'read',
       'id-token': 'write',
     });
-    expect(workflow.jobs.release!.permissions).toEqual({ contents: 'write' });
-    expect(workflow.jobs.publish!.permissions).toEqual({
+    expect(releaseWorkflow.jobs.release!.permissions).toEqual({ contents: 'write' });
+    expect(publish.permissions).toEqual({
       contents: 'read',
       'id-token': 'write',
     });
-    expect(workflow.jobs.publish!.environment).toBe('npm-publish');
+    expect(publish.environment).toBe('npm-publish');
 
-    const allRuns = Object.values(workflow.jobs)
+    const releaseRuns = Object.values(releaseWorkflow.jobs)
       .flatMap((job) => job.steps)
       .map((step) => step.run ?? '');
-    expect(allRuns.some((run) => run.includes('${{ inputs.release_operation_id }}'))).toBe(false);
-    expect(allRuns.some((run) => run.includes('${{ inputs.publish_operation_id }}'))).toBe(false);
+    expect(releaseRuns.some((run) => run.includes('${{ inputs.release_operation_id }}'))).toBe(false);
 
-    const context = workflow.jobs.validate!.steps.find((step) => step.id === 'context')!;
+    const context = releaseWorkflow.jobs.validate!.steps.find((step) => step.id === 'context')!;
     expect(context.env).toMatchObject({
       RELEASE_OPERATION_ID: '${{ inputs.release_operation_id }}',
-      PUBLISH_OPERATION_ID: '${{ inputs.publish_operation_id }}',
     });
     expect(context.run).toContain('^[A-Za-z0-9][A-Za-z0-9._-]*$');
 
-    for (const [jobName, input] of [
-      ['release', '${{ inputs.release_operation_id }}'],
-      ['publish', '${{ inputs.publish_operation_id }}'],
-    ] as const) {
-      const verify = workflow.jobs[jobName]!.steps.find((step) =>
-        step.name?.startsWith('Verify '))!;
-      expect(verify.env).toMatchObject({ OPERATION_ID: input });
-      expect(verify.run).toContain('^[A-Za-z0-9][A-Za-z0-9._-]*$');
-      expect(verify.run).toContain('"$OPERATION_ID"');
-    }
+    const releaseVerify = releaseWorkflow.jobs.release!.steps.find((step) =>
+      step.name?.startsWith('Verify '))!;
+    expect(releaseVerify.env).toMatchObject({
+      OPERATION_ID: '${{ inputs.release_operation_id }}',
+    });
+    expect(releaseVerify.run).toContain('"$OPERATION_ID"');
+    const publishVerify = publish.steps.find((step) => step.id === 'verify_assets')!;
+    expect(publishVerify.env).toMatchObject({
+      PUBLISH_OPERATION_ID: '${{ inputs.publish_operation_id }}',
+    });
+    expect(publishVerify.run).toContain('"$PUBLISH_OPERATION_ID"');
 
-    const upload = workflow.jobs.bundle!.steps.find((step) =>
+    const upload = releaseWorkflow.jobs.bundle!.steps.find((step) =>
       step.name === 'Upload run-scoped sealed bundle')!;
     expect(upload.with).toMatchObject({
       name: 'release-bundle-${{ github.run_id }}',
       overwrite: true,
     });
     expect(String(upload.with?.name)).not.toContain('run_attempt');
-    for (const jobName of ['release', 'publish']) {
-      const download = workflow.jobs[jobName]!.steps.find((step) =>
-        step.uses === 'actions/download-artifact@v4')!;
-      expect(download.with?.name).toBe('release-bundle-${{ github.run_id }}');
-    }
+    const download = releaseWorkflow.jobs.release!.steps.find((step) =>
+      step.uses === 'actions/download-artifact@v4')!;
+    expect(download.with?.name).toBe('release-bundle-${{ github.run_id }}');
+    expect(publishText).toContain('gh release download');
 
-    const releaseSteps = workflow.jobs.release!.steps;
+    const releaseSteps = releaseWorkflow.jobs.release!.steps;
     const targetValidation = releaseSteps.find((step) =>
       step.name === 'Verify checksums, attestation, authorization, and target');
     expect(targetValidation?.env).toMatchObject({ GH_TOKEN: '${{ github.token }}' });
     expect(targetValidation?.run).toContain('RELEASE_TARGET_LOOKUP_FAILED');
     expect(targetValidation?.run).toContain('release not found');
 
-    for (const jobName of ['release', 'publish']) {
-      const steps = workflow.jobs[jobName]!.steps;
+    for (const steps of [releaseSteps, publish.steps]) {
       const record = steps.find((step) => String(step.name).startsWith('Record terminal'));
       const upload = steps.find((step) => String(step.name).startsWith('Upload terminal'));
       expect(record?.if).toBe('always()');
@@ -99,25 +95,33 @@ describe('release workflow hardening', () => {
       expect(upload?.with).toMatchObject({ 'if-no-files-found': 'error' });
     }
 
-    expect(workflowText).toContain('postPublicationIntegrityFailure');
-    expect(workflowText).toContain('INTEGRITY_OUTCOME');
+    expect(publishText).toContain('manualReconciliationRequired');
+    expect(publishText).toContain('INTEGRITY_OUTCOME');
 
-    const registry = workflow.jobs.publish!.steps.find((step) =>
+    const registry = publish.steps.find((step) =>
       step.id === 'registry_integrity')!;
     expect(registry.env).toMatchObject({
-      RELEASE_TAG: '${{ needs.validate.outputs.release_tag }}',
+      RELEASE_TAG: '${{ inputs.release_tag }}',
     });
     expect(registry.run).toContain('version="${RELEASE_TAG#v}"');
-    expect(registry.run).toContain('for attempt in 1 2 3 4 5');
-    expect(registry.run).toContain('sleep $((attempt * 3))');
+    expect(registry.run).toContain('for attempt in 1 2 3 4 5 6');
+    expect(registry.run).toContain('deadline=$((SECONDS + 240))');
+    expect(registry.run).toContain(
+      'timeout --signal=TERM --kill-after=2s 15s npm view',
+    );
     expect(registry.run).toContain('^sha512-[A-Za-z0-9+/]+={0,2}$');
-    expect(registry.run).toContain('RELEASE_REGISTRY_VISIBILITY_FAILED');
-    expect(registry.run).toContain('RELEASE_REGISTRY_INTEGRITY_MISMATCH');
+    const verifyAssets = publish.steps.find((step) => step.id === 'verify_assets')!;
+    expect(verifyAssets.run).toContain('classifyNpmRegistryQuery');
+    expect(registry.run).toContain('RELEASE_PUBLISH_INTEGRITY_MISMATCH');
     expect(registry.run).toContain('npm view "musubix5@$version"');
 
-    expect(workflowText).toContain('# @id CODE-M5-RELEASE-WORKFLOW-YAML-001');
-    expect(workflowText).toContain('# @implements REQ-M5-RELEASE-003');
-    expect(workflowText).toContain('# @design DES-M5-020');
+    expect(releaseText).toContain('# @id CODE-M5-RELEASE-WORKFLOW-YAML-001');
+    expect(releaseText).toContain('# @implements REQ-M5-RELEASE-003');
+    expect(releaseText).toContain('# @design DES-M5-020');
+    expect(publishText).toContain('# @id CODE-M5-NPM-PUBLISH-WORKFLOW-YAML-001');
+    expect(publishText).toContain('# @implements REQ-M5-RELEASE-004');
+    expect(publishText).toContain('# @design DES-M5-021');
     expect(isTraceSource('.github/workflows/release.yml')).toBe(true);
+    expect(isTraceSource('.github/workflows/npm-publish.yml')).toBe(true);
   });
 });

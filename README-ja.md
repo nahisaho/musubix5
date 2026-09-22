@@ -1,6 +1,6 @@
 # musubix5
 
-**最新リリース v0.1.17 · GitHub Copilot CLI 専用 · Node.js ≥20 · TypeScript · MIT**
+**未リリース 0.1.1 candidate · GitHub Copilot CLI 専用 · Node.js ≥20 · TypeScript · MIT**
 
 [English](README.md)
 
@@ -116,8 +116,9 @@ Copilot の内部設定、MCP、LSP、hooks、既存のプロジェクト指示�
 
 ## アップグレード
 
-`upgrade` は 0.1.14 以降で利用可能です（0.1.13 以前には
-存在しません。`npm view musubix5 versions` で確認してください）。
+`upgrade` commandはmusubix5 0.1.1 candidateに含まれます。互換性契約は
+musubix3 0.1.14で導入されたcommandを基準とします。公開済みmusubix5 versionは
+`npm view musubix5 versions`で確認してください。
 
 npm でインストールした場合（`init`／リポジトリローカル Skills）:
 
@@ -920,23 +921,40 @@ attestation APIは`musubix5/analysis`と専用`musubix5/attestation` exportの
 `v*` tagは`.github/workflows/release.yml`を起動します。workflowはtagと
 package/plugin versionの一致を検証し、Linux上のnative/formal suiteを実行して、
 npm tarballを2回のclean build/packで比較し、CycloneDX SBOMとSHA256SUMSを含む
-sealed bundleを生成します。tag pushでは検証とartifact生成だけを行い、npm publishや
-GitHub Release作成は行いません。外部副作用には、同じlightweight tagからの手動実行、
-候補の子孫であるfull-SHA evidence commit、および個別の`release`/`publish` operation
-authorizationが必要です。release jobとpublish jobは互いに独立です。publish jobは
-保護された`npm-publish` environmentを使用し、Trusted Publishingでは
-`npm publish --access public`、token fallbackでは
-`npm publish --provenance --access public`を実行します。
-repository管理者は、手動release dispatchの前に、この保護environmentを作成し、
-required reviewerとdeployment restrictionを設定・確認する必要があります。
-workflow定義自体はenvironmentを作成せず、この前提条件が満たされるまで安全な
-publishは実行できません。
+sealed bundleとcanonicalな`release-context.json`を生成します。tag pushでは検証と
+artifact生成だけを行い、npm publishやGitHub Release作成は行いません。GitHub Release
+作成には、同じlightweight tagからの手動実行、候補の子孫であるfull-SHA evidence
+commit、および独立した`release` operation authorizationが必要です。Release jobは
+意図的に保護environmentを使用せず、candidate-boundなrepository authorization、
+default branch到達性、replay検査をhuman/integrity gateとします。
+
+npm publicationは、既存のstable GitHub Releaseに対して
+`.github/workflows/npm-publish.yml`を後から手動実行します。入力は`release_tag`、
+`evidence_commit`、`publish_operation_id`です。workflowは保護された`npm-publish`
+environmentで実行され、既存のstable GitHub Releaseをdownloadして、authorization、
+checksum、canonical release context、OIDC/Ed25519 attestation、approval ancestry、
+package versionを再検証します。npm versionが未登録であることを確認してから、
+`NPM_TOKEN`を`npm whoami`またはpublicationへ公開します。rebuild/repackは行わず、
+空のdirectoryから`npm publish <tarball> --provenance --access public
+--ignore-scripts`でdownload済みtarballそのものをpublishします。repository管理者は
+environment、required reviewer、tag restriction、`NPM_TOKEN`を設定する必要があり、
+workflowがsecretを作成または表示することはありません。publicationはRelease
+attestationの30日間のfreshness window内に完了する必要があります。期限切れの場合は
+検証を弱めず、新しいcandidateとpatch-version Releaseを作成します。
+
+publicationが`RELEASE_PUBLISH_INTEGRITY_MISMATCH`または
+`manualReconciliationRequired: true`を報告した場合、versionが存在した後に
+`npm publish`を再実行してはいけません。read-onlyの
+`npm view musubix5@<version> dist.integrity --json`を実行し、GitHub Release上の
+正確なtarballから計算したSHA-512 SRIと比較します。packageが未確認または不一致なら
+調査後に新しいcandidate/patch versionを作成し、既存npm versionを上書きまたは
+再publishしません。
 
 release attestationは、ephemeral Ed25519公開鍵をcustom audienceへ束縛した
 GitHub Actions OIDC tokenを使用します。署名対象にはrepository、Git commit、
 run ID、workflow/ref identity、release context（手動実行時のevidence commitと
-独立に導出したapprovalを含む）、SHA256SUMSが含まれます。各副作用jobはGitHubの
-issuer/JWKSを含むbindingを再検証します。ephemeral private keyはrun-scoped bundleを
-uploadする前に削除されます。
+独立に導出したapprovalを含む）、SHA256SUMSが含まれます。Release workflowとnpm
+workflowはGitHubのissuer/JWKSを含むbindingを再検証します。ephemeral private keyは
+run-scoped bundleをuploadする前に削除されます。
 
-[CONTRIBUTING.md](CONTRIBUTING.md) と [CHANGELOG.md](CHANGELOG.md) も参照してください。
+[CHANGELOG.md](CHANGELOG.md) も参照してください。

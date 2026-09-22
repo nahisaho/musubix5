@@ -343,6 +343,10 @@ export async function persistCandidateSnapshot(
   return { changeId, repositoryId, branch, commit, order: record.order };
 }
 
+/** @id CODE-M5-RELEASE-DETACHED-SNAPSHOT-001
+ * @implements REQ-M5-RELEASE-003 REQ-M5-RELEASE-004
+ * @design DES-M5-020 DES-M5-021
+ */
 export async function resolveCandidateSnapshot(
   root: string,
   requestedChangeId?: string,
@@ -379,11 +383,20 @@ export async function resolveCandidateSnapshot(
     throw new Error('APPROVAL_CANDIDATE_UNAVAILABLE: candidate snapshot belongs to another repository.');
   }
   const commit = await git(root, ['rev-parse', '--verify', `${snapshot.commit}^{commit}`], true);
-  const branchHead = await git(root, ['rev-parse', '--verify', `${snapshot.branch}^{commit}`], true);
-  const mergeBase = commit && branchHead
-    ? await git(root, ['merge-base', snapshot.commit, branchHead], true)
-    : '';
-  if (commit !== snapshot.commit || !branchHead || mergeBase !== snapshot.commit) {
+  const containingRefs = await git(
+    root,
+    [
+      'for-each-ref',
+      '--format=%(refname)',
+      '--contains',
+      snapshot.commit,
+      'refs/heads',
+      'refs/remotes',
+      'refs/tags',
+    ],
+    true,
+  );
+  if (commit !== snapshot.commit || !containingRefs) {
     throw new Error('APPROVAL_CANDIDATE_UNAVAILABLE: persisted candidate snapshot is not reachable.');
   }
   return snapshot;

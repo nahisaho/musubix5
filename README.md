@@ -1,6 +1,6 @@
 # musubix5
 
-**Latest release v0.1.17 · GitHub Copilot CLI only · Node.js ≥20 · TypeScript · MIT**
+**Unreleased 0.1.1 candidate · GitHub Copilot CLI only · Node.js ≥20 · TypeScript · MIT**
 
 [日本語](README-ja.md)
 
@@ -120,8 +120,9 @@ and test it, and configure real check commands before expecting the gate to pass
 
 ## Upgrade
 
-`upgrade` is available starting with 0.1.14 (not in 0.1.13 or earlier — check
-with `npm view musubix5 versions`).
+The `upgrade` command is included in the musubix5 0.1.1 candidate. Its
+compatibility contract is based on the command introduced in musubix3 0.1.14.
+Check published musubix5 versions with `npm view musubix5 versions`.
 
 For the npm-installed route (`init`/repository-local skills):
 
@@ -1111,25 +1112,43 @@ Attestation APIs are available from both `musubix5/analysis` and the focused
 Tags matching `v*` run `.github/workflows/release.yml`. The workflow requires
 the tag to equal `v` plus the package/plugin versions, runs the full Linux
 native/formal suite, performs two clean reproducible pack cycles, and creates a
-sealed npm tarball, CycloneDX `npm sbom`, and SHA256SUMS. A tag-push run performs
-validation and artifact production only: it never publishes npm or creates a
-GitHub Release. Those side effects require a separate manual dispatch from the
-same lightweight tag, a descendant full-SHA evidence commit, and independently
-authorized `release` and/or `publish` operation IDs. The release and publish
-jobs are independent. The publish job uses the protected `npm-publish`
-environment; Trusted Publishing runs `npm publish --access public`, while the
-optional token fallback runs `npm publish --provenance --access public`.
-The repository administrator must create and configure that protected
-environment, including its required reviewers and deployment restrictions,
-and verify it before any manual release dispatch. The workflow declaration
-does not create the environment, and publication cannot proceed safely until
-this prerequisite exists.
+sealed npm tarball, CycloneDX `npm sbom`, canonical `release-context.json`, and
+`SHA256SUMS`. A tag-push run performs validation and artifact production only:
+it never publishes npm or creates a GitHub Release. GitHub Release creation
+requires a separate manual dispatch from the same lightweight tag, a descendant
+full-SHA evidence commit, and an independently authorized `release` operation.
+The Release job intentionally has no protected environment; candidate-bound
+repository authorization, default-branch reachability, and replay checks are
+its human and integrity gates.
+
+Npm publication is a later, independent manual dispatch of
+`.github/workflows/npm-publish.yml` with `release_tag`, `evidence_commit`, and
+`publish_operation_id`. It runs in the protected `npm-publish` environment,
+downloads an existing stable GitHub Release, and re-verifies authorization,
+checksums, canonical release context, OIDC/Ed25519 attestation, approval
+ancestry, and packaged version. It then checks that the npm version is absent
+before exposing `NPM_TOKEN` to `npm whoami` or publication. It publishes the
+exact downloaded tarball without rebuilding or repacking by running
+`npm publish <tarball> --provenance --access public --ignore-scripts` from an
+empty directory. The repository administrator must configure the environment,
+required reviewers, tag restrictions, and `NPM_TOKEN`; the workflow never
+creates or exposes that secret. Publication must complete within the Release
+attestation's 30-day freshness window; expiry requires a new candidate and
+patch-version Release rather than weakened verification.
+
+If publication reports `RELEASE_PUBLISH_INTEGRITY_MISMATCH` or
+`manualReconciliationRequired: true`, do not rerun `npm publish` after the
+version exists. Run the read-only
+`npm view musubix5@<version> dist.integrity --json` command and compare it with
+the SHA-512 SRI computed from the exact GitHub Release tarball. A missing or
+mismatched package requires investigation and a new candidate/patch version;
+never overwrite or republish an existing npm version.
 
 The release attestation uses a real GitHub Actions OIDC token whose custom
 audience binds an ephemeral Ed25519 public key. Its signature covers repository,
 tagged candidate, run ID, workflow/ref identity, release context (including the
 evidence commit and independently derived approval on dispatch), and SHA256SUMS.
-Each side-effect job verifies those bindings and GitHub's live issuer/JWKS before
-acting. The ephemeral private key is deleted before the run-scoped bundle is
-uploaded.
-See [CONTRIBUTING.md](CONTRIBUTING.md) and [CHANGELOG.md](CHANGELOG.md).
+The Release and npm workflows verify those bindings and GitHub's live
+issuer/JWKS before acting. The ephemeral private key is deleted before the
+run-scoped bundle is uploaded.
+See [CHANGELOG.md](CHANGELOG.md).

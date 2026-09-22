@@ -1,0 +1,495 @@
+# @id CODE-M5-NPM-PUBLISH-WORKFLOW-YAML-001
+# @implements REQ-M5-RELEASE-004
+# @design DES-M5-021
+name: Publish existing GitHub Release to npm
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing stable lightweight release tag
+        required: true
+        type: string
+      evidence_commit:
+        description: Full commit containing current approval and publish authorization
+        required: true
+        type: string
+      publish_operation_id:
+        description: Authorized npm publish operation
+        required: true
+        type: string
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    environment: npm-publish
+    concurrency:
+      group: publish-${{ inputs.release_tag }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout tagged candidate with full history
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_tag }}
+          fetch-depth: 0
+          path: candidate
+      - name: Checkout publish evidence with full history
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.evidence_commit }}
+          fetch-depth: 0
+          path: evidence
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - name: Pin npm
+        run: npm install --global npm@11.6.0
+      - name: Install and build candidate validator
+        run: npm --prefix candidate ci && npm --prefix candidate run build
+      - id: identity
+        name: Validate tag, evidence ancestry, Release target, and package replay
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          EVIDENCE_COMMIT: ${{ inputs.evidence_commit }}
+          OPERATION_ID: ${{ inputs.publish_operation_id }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v[0-9A-Za-z][0-9A-Za-z._-]*$ ]] || {
+            echo "RELEASE_TAG_CANDIDATE_MISMATCH: invalid release tag" >&2
+            exit 1
+          }
+          [[ "$EVIDENCE_COMMIT" =~ ^[0-9a-f]{40}$ ]] || {
+            echo "RELEASE_OPERATION_NOT_AUTHORIZED: evidence_commit must be a full lowercase SHA" >&2
+            exit 1
+          }
+          [[ "$OPERATION_ID" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || {
+            echo "RELEASE_OPERATION_NOT_AUTHORIZED: publish operation id is invalid" >&2
+            exit 1
+          }
+          git -C candidate fetch --force origin \
+            "refs/tags/$RELEASE_TAG:refs/tags/$RELEASE_TAG" \
+            "+refs/heads/$DEFAULT_BRANCH:refs/remotes/origin/$DEFAULT_BRANCH"
+          tag_type="$(git -C candidate cat-file -t "refs/tags/$RELEASE_TAG" 2>/dev/null || true)"
+          [[ "$tag_type" == "commit" ]] || {
+            echo "RELEASE_TAG_CANDIDATE_MISMATCH: release tag must be an existing lightweight tag" >&2
+            exit 1
+          }
+          candidate_commit="$(git -C candidate rev-parse "refs/tags/$RELEASE_TAG")"
+          [[ "$(git -C candidate rev-parse HEAD)" == "$candidate_commit" ]] || {
+            echo "RELEASE_TAG_CANDIDATE_MISMATCH: candidate checkout does not match the release tag" >&2
+            exit 1
+          }
+          [[ "$(git -C evidence rev-parse HEAD)" == "$EVIDENCE_COMMIT" ]] || {
+            echo "RELEASE_OPERATION_NOT_AUTHORIZED: evidence checkout mismatch" >&2
+            exit 1
+          }
+          git -C candidate cat-file -e "$EVIDENCE_COMMIT^{commit}" || {
+            echo "RELEASE_OPERATION_NOT_AUTHORIZED: evidence commit is unavailable" >&2
+            exit 1
+          }
+          git -C candidate merge-base --is-ancestor "$candidate_commit" "$EVIDENCE_COMMIT" || {
+            echo "RELEASE_TAG_CANDIDATE_MISMATCH: publish evidence is not a candidate descendant" >&2
+            exit 1
+          }
+          git -C candidate merge-base --is-ancestor "$EVIDENCE_COMMIT" "origin/$DEFAULT_BRANCH" || {
+            echo "RELEASE_OPERATION_NOT_AUTHORIZED: publish evidence is not reachable from the default branch" >&2
+            exit 1
+          }
+          set +e
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" \
+            > release-metadata.json 2> release-metadata-error.txt
+          release_status=$?
+          set -e
+          [[ "$release_status" -eq 0 ]] || {
+            echo "RELEASE_TAG_CANDIDATE_MISMATCH: stable GitHub Release is absent" >&2
+            cat release-metadata-error.txt >&2
+            exit 1
+          }
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const release = JSON.parse(readFileSync('release-metadata.json', 'utf8'));
+          if (release.tag_name !== process.env.RELEASE_TAG || release.draft || release.prerelease) {
+            throw new Error('RELEASE_TAG_CANDIDATE_MISMATCH: Release must be stable and match the tag.');
+          }
+          NODE
+          echo "candidate_commit=$candidate_commit" >> "$GITHUB_OUTPUT"
+          echo "version=${RELEASE_TAG#v}" >> "$GITHUB_OUTPUT"
+      - name: Download authenticated GitHub Release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          mkdir release-assets
+          gh release download "$RELEASE_TAG" --dir release-assets
+      - id: verify_assets
+        name: Verify Release assets, context, attestation, approval, and authorization
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          PUBLISH_EVIDENCE_COMMIT: ${{ inputs.evidence_commit }}
+          PUBLISH_OPERATION_ID: ${{ inputs.publish_operation_id }}
+          CANDIDATE_COMMIT: ${{ steps.identity.outputs.candidate_commit }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import { readdirSync, readFileSync } from 'node:fs';
+          const { validateReleaseAssetManifest } =
+            await import('./candidate/dist/packages/analysis/src/release-workflow.js');
+          const assets = readdirSync('release-assets').sort();
+          const result = validateReleaseAssetManifest(
+            process.env.RELEASE_TAG,
+            assets,
+            readFileSync('release-assets/SHA256SUMS', 'utf8'),
+          );
+          console.log(result.tarball);
+          NODE
+          (cd release-assets && sha256sum --check SHA256SUMS) || {
+            echo "RELEASE_ARTIFACT_CHECKSUM_MISMATCH: Release asset checksum failed" >&2
+            exit 1
+          }
+          RELEASE_CONTEXT_SHA="$(sha256sum release-assets/release-context.json | cut -d' ' -f1)"
+          export RELEASE_CONTEXT_SHA
+          CHECKSUMS_SHA="$(sha256sum release-assets/SHA256SUMS | cut -d' ' -f1)"
+          export CHECKSUMS_SHA
+          RELEASE_EVIDENCE_COMMIT="$(node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const { releaseContextBytes, validateReleaseContext } =
+            await import('./candidate/dist/packages/analysis/src/release-workflow.js');
+          const bytes = readFileSync('release-assets/release-context.json');
+          const context = validateReleaseContext(JSON.parse(bytes.toString('utf8')));
+          if (!bytes.equals(releaseContextBytes(context))
+            || context.mode !== 'dispatch'
+            || context.repository !== process.env.GITHUB_REPOSITORY
+            || context.releaseTag !== process.env.RELEASE_TAG
+            || context.candidateCommit !== process.env.CANDIDATE_COMMIT) {
+            throw new Error('RELEASE_ATTESTATION_INVALID: release context does not match publication.');
+          }
+          process.stdout.write(context.evidenceCommit);
+          NODE
+          )"
+          export RELEASE_EVIDENCE_COMMIT
+          git -C candidate cat-file -e "$RELEASE_EVIDENCE_COMMIT^{commit}" || {
+            echo "RELEASE_ATTESTATION_INVALID: release evidence commit is unavailable" >&2
+            exit 1
+          }
+          git -C candidate merge-base --is-ancestor \
+            "$RELEASE_EVIDENCE_COMMIT" "$PUBLISH_EVIDENCE_COMMIT" || {
+            echo "RELEASE_ATTESTATION_INVALID: release evidence is not an ancestor of publish evidence" >&2
+            exit 1
+          }
+          git -C candidate worktree add --quiet --detach ../release-evidence "$RELEASE_EVIDENCE_COMMIT"
+          RELEASE_APPROVAL_AT_RELEASE="$(node --input-type=module <<'NODE'
+          const { readReleaseApprovalDigest } =
+            await import('./candidate/dist/packages/analysis/src/approval.js');
+          process.stdout.write(await readReleaseApprovalDigest('./release-evidence', process.env.CANDIDATE_COMMIT));
+          NODE
+          )"
+          export RELEASE_APPROVAL_AT_RELEASE
+          RELEASE_APPROVAL_AT_PUBLISH="$(node --input-type=module <<'NODE'
+          const { readReleaseApprovalDigest } =
+            await import('./candidate/dist/packages/analysis/src/approval.js');
+          process.stdout.write(await readReleaseApprovalDigest('./evidence', process.env.CANDIDATE_COMMIT));
+          NODE
+          )"
+          export RELEASE_APPROVAL_AT_PUBLISH
+          [[ "$RELEASE_APPROVAL_AT_RELEASE" == "$RELEASE_APPROVAL_AT_PUBLISH" ]] || {
+            echo "RELEASE_ATTESTATION_INVALID: release approval changed after Release creation" >&2
+            exit 1
+          }
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const {
+            validateReleaseAttestationIdentity,
+            validateReleaseContext,
+          } =
+            await import('./candidate/dist/packages/analysis/src/release-workflow.js');
+          const { verifyDetachedEvidenceAttestation } =
+            await import('./candidate/dist/packages/analysis/src/attestation.js');
+          const context = validateReleaseContext(
+            JSON.parse(readFileSync('release-assets/release-context.json', 'utf8')),
+          );
+          if (context.evidenceCommit !== process.env.RELEASE_EVIDENCE_COMMIT
+            || context.verifiedReleaseApprovalSha256 !== process.env.RELEASE_APPROVAL_AT_RELEASE
+            || context.verifiedReleaseApprovalSha256 !== process.env.RELEASE_APPROVAL_AT_PUBLISH) {
+            throw new Error('RELEASE_ATTESTATION_INVALID: release approval binding mismatch.');
+          }
+          const attestation = JSON.parse(readFileSync('release-assets/attestation.json', 'utf8'));
+          validateReleaseAttestationIdentity(
+            context,
+            attestation,
+            process.env.RELEASE_CONTEXT_SHA,
+            process.env.CHECKSUMS_SHA,
+          );
+          const diagnostics = await verifyDetachedEvidenceAttestation(attestation, {
+            mode: 'ci-required',
+            repository: process.env.GITHUB_REPOSITORY,
+            maxAgeSeconds: 2592000,
+            maxFutureSkewSeconds: 60,
+            trustedPublicKeys: [],
+            githubOidc: {
+              mode: 'strict',
+              audience: 'musubix5-release',
+              repository: process.env.GITHUB_REPOSITORY,
+              workflow: '.github/workflows/release.yml',
+              ref: `refs/tags/${process.env.RELEASE_TAG}`,
+              keyBinding: 'public-key',
+            },
+          }, {
+            repository: process.env.GITHUB_REPOSITORY,
+            commitSha: process.env.CANDIDATE_COMMIT,
+            ci: { provider: 'github', runId: attestation.ci?.runId },
+            evidenceHeads: {
+              releaseContext: process.env.RELEASE_CONTEXT_SHA,
+              releaseBundle: process.env.CHECKSUMS_SHA,
+            },
+          }, { expectedWorkflowSha: process.env.CANDIDATE_COMMIT }, 'release-assets/attestation.json');
+          if (diagnostics.length) {
+            throw new Error(`RELEASE_ATTESTATION_INVALID: ${diagnostics.map(x => x.message).join('; ')}`);
+          }
+          NODE
+          node candidate/dist/packages/cli/src/main.js release-operation validate \
+            "$PUBLISH_OPERATION_ID" --root evidence --scope publish \
+            --candidate-commit "$CANDIDATE_COMMIT" --release-tag "$RELEASE_TAG" --json \
+            > publish-authorization.json
+          authorization_approval="$(node -p \
+            'JSON.parse(require("fs").readFileSync("publish-authorization.json")).verifiedReleaseApprovalSha256')"
+          [[ "$authorization_approval" == "$RELEASE_APPROVAL_AT_PUBLISH" ]] || {
+            echo "RELEASE_OPERATION_NOT_AUTHORIZED: publish authorization approval mismatch" >&2
+            exit 1
+          }
+          version="${RELEASE_TAG#v}"
+          set +e
+          npm view "musubix5@$version" version --json \
+            > registry-version-stdout.json 2> registry-version-stderr.txt
+          registry_status=$?
+          set -e
+          export REGISTRY_STATUS="$registry_status"
+          if [[ "$registry_status" -eq 0 ]]; then
+            echo "RELEASE_OPERATION_NOT_AUTHORIZED: npm package version already exists" >&2
+            exit 1
+          fi
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const { classifyNpmRegistryQuery } =
+            await import('./candidate/dist/packages/analysis/src/release-workflow.js');
+          const result = classifyNpmRegistryQuery(
+            Number(process.env.REGISTRY_STATUS),
+            readFileSync('registry-version-stdout.json', 'utf8'),
+          );
+          if (result.status !== 'missing') {
+            throw new Error('RELEASE_OPERATION_NOT_AUTHORIZED: npm package version already exists.');
+          }
+          NODE
+          tarball="$(find release-assets -maxdepth 1 -type f -name 'musubix5-*.tgz' -printf '%f\n')"
+          export TARBALL_PATH="$GITHUB_WORKSPACE/release-assets/$tarball"
+          export EXPECTED_VERSION="${RELEASE_TAG#v}"
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const { extractPackagedVersion } =
+            await import('./candidate/dist/packages/analysis/src/release-workflow.js');
+          const version = extractPackagedVersion(readFileSync(process.env.TARBALL_PATH));
+          if (version !== process.env.EXPECTED_VERSION) {
+            throw new Error(`RELEASE_VERSION_MISMATCH: packaged version ${version} does not match tag.`);
+          }
+          NODE
+          local_sri="$(node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const { computeTarballIntegrity } =
+            await import('./candidate/dist/packages/analysis/src/release-workflow.js');
+          process.stdout.write(computeTarballIntegrity(readFileSync(process.env.TARBALL_PATH)));
+          NODE
+          )"
+          echo "tarball=$TARBALL_PATH" >> "$GITHUB_OUTPUT"
+          echo "local_sri=$local_sri" >> "$GITHUB_OUTPUT"
+      - id: npm_auth
+        name: Verify npm token authentication
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          [[ -n "$NPM_TOKEN" ]] || {
+            echo "RELEASE_OPERATION_NOT_AUTHORIZED: NPM_TOKEN is required" >&2
+            exit 1
+          }
+          npm whoami
+      - name: Prepare empty publication directory
+        run: mkdir -p "${{ runner.temp }}/musubix5-publish"
+      - id: npm_publish
+        name: Publish exact Release tarball with provenance
+        working-directory: ${{ runner.temp }}/musubix5-publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          TARBALL: ${{ steps.verify_assets.outputs.tarball }}
+        run: |
+          set -euo pipefail
+          [[ ! -e package.json ]] || {
+            echo "RELEASE_PACKAGE_DIGEST_MISMATCH: publish directory must not contain package.json" >&2
+            exit 1
+          }
+          npm publish "$TARBALL" --provenance --access public --ignore-scripts
+      - id: registry_integrity
+        name: Verify published registry integrity
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          LOCAL_SRI: ${{ steps.verify_assets.outputs.local_sri }}
+        run: |
+          set -euo pipefail
+          set +e
+          timeout --signal=TERM --kill-after=5s 240s bash <<'REGISTRY_LOOP'
+          set -euo pipefail
+          version="${RELEASE_TAG#v}"
+          deadline=$((SECONDS + 240))
+          delays=(5 10 15 20 25)
+          registry_visible=false
+          integrity_matched=false
+          for attempt in 1 2 3 4 5 6; do
+            (( SECONDS + 15 <= deadline )) || break
+            set +e
+            timeout --signal=TERM --kill-after=2s 15s npm view "musubix5@$version" \
+              dist.integrity --json \
+              > registry-integrity-stdout.json 2> registry-integrity-stderr.txt
+            registry_status=$?
+            set -e
+            export REGISTRY_STATUS="$registry_status"
+            if [[ "$registry_status" -eq 0 ]]; then
+              registry_sri="$(node -p \
+                'JSON.parse(require("fs").readFileSync("registry-integrity-stdout.json"))')"
+              [[ "$registry_sri" =~ ^sha512-[A-Za-z0-9+/]+={0,2}$ ]] || {
+                echo "registry_visible=true" >> "$GITHUB_OUTPUT"
+                echo "integrity_matched=false" >> "$GITHUB_OUTPUT"
+                echo "RELEASE_PUBLISH_INTEGRITY_MISMATCH: registry integrity is not valid SRI" >&2
+                exit 1
+              }
+              registry_visible=true
+              if [[ "$registry_sri" == "$LOCAL_SRI" ]]; then
+                integrity_matched=true
+                echo "registry_visible=true" >> "$GITHUB_OUTPUT"
+                echo "integrity_matched=true" >> "$GITHUB_OUTPUT"
+                echo "registry_sri=$registry_sri" >> "$GITHUB_OUTPUT"
+                break
+              fi
+              echo "registry_visible=true" >> "$GITHUB_OUTPUT"
+              echo "integrity_matched=false" >> "$GITHUB_OUTPUT"
+              echo "RELEASE_PUBLISH_INTEGRITY_MISMATCH: visible registry integrity differs" >&2
+              exit 1
+            fi
+            if ! node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          import { classifyNpmRegistryQuery } from './candidate/dist/packages/analysis/src/release-workflow.js';
+          try {
+            const result = classifyNpmRegistryQuery(
+              Number(process.env.REGISTRY_STATUS),
+              readFileSync('registry-integrity-stdout.json', 'utf8'),
+            );
+            process.exit(result.status === 'missing' ? 0 : 1);
+          } catch {
+            process.exit(1);
+          }
+          NODE
+            then
+              echo "registry_visible=false" >> "$GITHUB_OUTPUT"
+              echo "integrity_matched=false" >> "$GITHUB_OUTPUT"
+              echo "RELEASE_PUBLISH_INTEGRITY_MISMATCH: registry query failed without explicit E404" >&2
+              exit 1
+            fi
+            if [[ "$attempt" -lt 6 && "$SECONDS" -lt "$deadline" ]]; then
+              sleep_for="${delays[$((attempt - 1))]}"
+              remaining=$((deadline - SECONDS))
+              (( sleep_for < remaining )) || sleep_for="$remaining"
+              (( sleep_for > 0 )) && sleep "$sleep_for"
+            fi
+          done
+          [[ "$registry_visible" == true && "$integrity_matched" == true ]] || {
+            echo "registry_visible=false" >> "$GITHUB_OUTPUT"
+            echo "integrity_matched=false" >> "$GITHUB_OUTPUT"
+            echo "RELEASE_PUBLISH_INTEGRITY_MISMATCH: registry visibility deadline expired" >&2
+            exit 1
+          }
+          REGISTRY_LOOP
+          registry_loop_status=$?
+          set -e
+          if [[ "$registry_loop_status" -eq 124 || "$registry_loop_status" -eq 137 ]]; then
+            echo "registry_visible=false" >> "$GITHUB_OUTPUT"
+            echo "integrity_matched=false" >> "$GITHUB_OUTPUT"
+            echo "RELEASE_PUBLISH_INTEGRITY_MISMATCH: registry verification hard deadline expired" >&2
+          fi
+          exit "$registry_loop_status"
+      - name: Record terminal publish outcome and summary
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+          VERIFY_OUTCOME: ${{ steps.verify_assets.outcome }}
+          AUTH_OUTCOME: ${{ steps.npm_auth.outcome }}
+          PUBLISH_OUTCOME: ${{ steps.npm_publish.outcome }}
+          INTEGRITY_OUTCOME: ${{ steps.registry_integrity.outcome }}
+          REGISTRY_VISIBLE: ${{ steps.registry_integrity.outputs.registry_visible }}
+          INTEGRITY_MATCHED: ${{ steps.registry_integrity.outputs.integrity_matched }}
+          OPERATION_ID: ${{ inputs.publish_operation_id }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          CANDIDATE_COMMIT: ${{ steps.identity.outputs.candidate_commit }}
+          EVIDENCE_COMMIT: ${{ inputs.evidence_commit }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { appendFileSync, writeFileSync } from 'node:fs';
+          const published = process.env.PUBLISH_OUTCOME === 'success';
+          const publicationMayHaveOccurred = ['success', 'failure'].includes(
+            process.env.PUBLISH_OUTCOME,
+          ) || process.env.PUBLISH_OUTCOME === 'cancelled';
+          const registryVisible = process.env.REGISTRY_VISIBLE === 'true';
+          const integrityMatched = process.env.INTEGRITY_MATCHED === 'true';
+          const outcome = {
+            schemaVersion: 1,
+            scope: 'publish',
+            operationId: process.env.OPERATION_ID,
+            status: process.env.JOB_STATUS === 'success' ? 'completed' : 'failed',
+            jobStatus: process.env.JOB_STATUS,
+            verificationOutcome: process.env.VERIFY_OUTCOME || 'not-run',
+            authenticationOutcome: process.env.AUTH_OUTCOME || 'not-run',
+            publicationOutcome: process.env.PUBLISH_OUTCOME || 'not-run',
+            integrityOutcome: process.env.INTEGRITY_OUTCOME || 'not-run',
+            published,
+            registryVisible,
+            integrityMatched,
+            manualReconciliationRequired: publicationMayHaveOccurred && !integrityMatched,
+            runId: process.env.GITHUB_RUN_ID,
+            runAttempt: process.env.GITHUB_RUN_ATTEMPT,
+            repository: process.env.GITHUB_REPOSITORY,
+            package: 'musubix5',
+            version: process.env.RELEASE_TAG?.replace(/^v/, ''),
+            releaseTag: process.env.RELEASE_TAG,
+            candidateCommit: process.env.CANDIDATE_COMMIT,
+            evidenceCommit: process.env.EVIDENCE_COMMIT,
+          };
+          writeFileSync('publish-outcome.json', `${JSON.stringify(outcome, null, 2)}\n`);
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY,
+            `## npm publish outcome\n\n`
+            + `- Status: **${outcome.status}**\n`
+            + `- Operation: \`${outcome.operationId}\`\n`
+            + `- Package: \`${outcome.package}@${outcome.version}\`\n`
+            + `- Published: \`${outcome.published}\`\n`
+            + `- Registry visible: \`${outcome.registryVisible}\`\n`
+            + `- Integrity matched: \`${outcome.integrityMatched}\`\n`
+            + `- Manual reconciliation required: \`${outcome.manualReconciliationRequired}\`\n`);
+          NODE
+      - name: Upload terminal publish outcome
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: publish-outcome-${{ github.run_id }}-${{ github.run_attempt }}
+          path: publish-outcome.json
+          if-no-files-found: error

@@ -1,7 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-22T03:04:53.813Z",
+  "generatedAt": "2026-09-22T05:59:05.929Z",
   "nodes": [
+    {
+      "id": "CODE-M5-NPM-PUBLISH-WORKFLOW-YAML-001",
+      "kind": "code",
+      "path": ".github/workflows/npm-publish.yml",
+      "line": 1
+    },
     {
       "id": "CODE-M5-RELEASE-WORKFLOW-YAML-001",
       "kind": "code",
@@ -187,6 +193,12 @@
       "kind": "design",
       "path": ".musubix/features/musubix5-clean-foundation/design.md",
       "line": 241
+    },
+    {
+      "id": "DES-M5-021",
+      "kind": "design",
+      "path": ".musubix/features/musubix5-clean-foundation/design.md",
+      "line": 249
     },
     {
       "id": "REQ-M5-COMPAT-001",
@@ -630,10 +642,17 @@
       "mandatory": true
     },
     {
-      "id": "REQ-M5-RELEASE-002",
+      "id": "REQ-M5-RELEASE-004",
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 449,
+      "mandatory": true
+    },
+    {
+      "id": "REQ-M5-RELEASE-002",
+      "kind": "requirement",
+      "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
+      "line": 460,
       "mandatory": true
     },
     {
@@ -907,10 +926,40 @@
       "line": 144
     },
     {
+      "id": "CODE-M5-NPM-PUBLISH-POLICY-001",
+      "kind": "code",
+      "path": "packages/analysis/src/release-workflow.ts",
+      "line": 57
+    },
+    {
       "id": "CODE-M5-RELEASE-WORKFLOW-001",
       "kind": "code",
       "path": "packages/analysis/src/release-workflow.ts",
-      "line": 46
+      "line": 91
+    },
+    {
+      "id": "CODE-M5-RELEASE-CONTEXT-001",
+      "kind": "code",
+      "path": "packages/analysis/src/release-workflow.ts",
+      "line": 134
+    },
+    {
+      "id": "CODE-M5-RELEASE-ATTESTATION-IDENTITY-001",
+      "kind": "code",
+      "path": "packages/analysis/src/release-workflow.ts",
+      "line": 207
+    },
+    {
+      "id": "CODE-M5-RELEASE-REGISTRY-QUERY-001",
+      "kind": "code",
+      "path": "packages/analysis/src/release-workflow.ts",
+      "line": 242
+    },
+    {
+      "id": "CODE-M5-RELEASE-ASSET-VALIDATION-001",
+      "kind": "code",
+      "path": "packages/analysis/src/release-workflow.ts",
+      "line": 279
     },
     {
       "id": "CODE-M5-APPROVAL-002",
@@ -961,10 +1010,16 @@
       "line": 311
     },
     {
+      "id": "CODE-M5-RELEASE-DETACHED-SNAPSHOT-001",
+      "kind": "code",
+      "path": "packages/analysis/src/workspace-manager.ts",
+      "line": 346
+    },
+    {
       "id": "CODE-M5-WORKTREE-003",
       "kind": "code",
       "path": "packages/analysis/src/workspace-manager.ts",
-      "line": 445
+      "line": 458
     },
     {
       "id": "CODE-M5-COMPAT-001",
@@ -1345,6 +1400,36 @@
       "line": 4
     },
     {
+      "id": "TEST-M5-RELEASE-003-CONTEXT-BINDING-001",
+      "kind": "test",
+      "path": "tests/release-generation5-boundary.test.ts",
+      "line": 4
+    },
+    {
+      "id": "TEST-M5-RELEASE-004-REGISTRY-001",
+      "kind": "test",
+      "path": "tests/release-generation5-boundary.test.ts",
+      "line": 53
+    },
+    {
+      "id": "TEST-M5-RELEASE-003-DETACHED-001",
+      "kind": "test",
+      "path": "tests/release-generation5.test.ts",
+      "line": 26
+    },
+    {
+      "id": "TEST-M5-RELEASE-003-GEN5-001",
+      "kind": "test",
+      "path": "tests/release-generation5.test.ts",
+      "line": 62
+    },
+    {
+      "id": "TEST-M5-RELEASE-004-001",
+      "kind": "test",
+      "path": "tests/release-generation5.test.ts",
+      "line": 116
+    },
+    {
       "id": "TEST-M5-RELEASE-MANIFEST-001",
       "kind": "test",
       "path": "tests/release-manifest-scope.test.ts",
@@ -1361,6 +1446,66 @@
       "kind": "test",
       "path": "tests/release-operation-guard.test.ts",
       "line": 88
+    },
+    {
+      "id": "TEST-M5-RELEASE-003-REMOTE-PREFERENCE-001",
+      "kind": "test",
+      "path": "tests/release-review-fixes.test.ts",
+      "line": 26
+    },
+    {
+      "id": "TEST-M5-RELEASE-004-REVIEW-001",
+      "kind": "test",
+      "path": "tests/release-review-fixes.test.ts",
+      "line": 77
+    },
+    {
+      "id": "TEST-M5-RELEASE-003-FETCHED-REF-001",
+      "kind": "test",
+      "path": "tests/release-review-fixes.test.ts",
+      "line": 130
+    },
+    {
+      "id": "TEST-M5-RELEASE-004-CHECKSUM-PATH-001",
+      "kind": "test",
+      "path": "tests/release-review-fixes.test.ts",
+      "line": 160
+    },
+    {
+      "id": "TEST-M5-RELEASE-004-WORKFLOW-ORDER-001",
+      "kind": "test",
+      "path": "tests/release-review-fixes.test.ts",
+      "line": 186
+    },
+    {
+      "id": "TEST-M5-RELEASE-004-POLICY-BINDING-001",
+      "kind": "test",
+      "path": "tests/release-review-fixes.test.ts",
+      "line": 224
+    },
+    {
+      "id": "TEST-M5-RELEASE-004-SHELL-FAILURE-001",
+      "kind": "test",
+      "path": "tests/release-review-fixes.test.ts",
+      "line": 267
+    },
+    {
+      "id": "TEST-M5-RELEASE-004-REGISTRY-CLASSIFICATION-001",
+      "kind": "test",
+      "path": "tests/release-review-fixes.test.ts",
+      "line": 296
+    },
+    {
+      "id": "TEST-M5-RELEASE-003-SHELL-FAILURE-001",
+      "kind": "test",
+      "path": "tests/release-review-fixes.test.ts",
+      "line": 317
+    },
+    {
+      "id": "TEST-M5-RELEASE-004-CANCELLATION-001",
+      "kind": "test",
+      "path": "tests/release-review-fixes.test.ts",
+      "line": 338
     },
     {
       "id": "TEST-M5-RELEASE-003",
@@ -1424,6 +1569,16 @@
     }
   ],
   "edges": [
+    {
+      "from": "CODE-M5-NPM-PUBLISH-WORKFLOW-YAML-001",
+      "to": "REQ-M5-RELEASE-004",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-NPM-PUBLISH-WORKFLOW-YAML-001",
+      "to": "DES-M5-021",
+      "relation": "implements"
+    },
     {
       "from": "CODE-M5-RELEASE-WORKFLOW-YAML-001",
       "to": "REQ-M5-RELEASE-003",
@@ -1545,6 +1700,11 @@
       "relation": "satisfies"
     },
     {
+      "from": "DES-M5-002",
+      "to": "REQ-M5-RELEASE-004",
+      "relation": "satisfies"
+    },
+    {
       "from": "ADR-0002",
       "to": "DES-M5-002",
       "relation": "decides"
@@ -1632,6 +1792,11 @@
     {
       "from": "DES-M5-002",
       "to": "DES-M5-020",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-002",
+      "to": "DES-M5-021",
       "relation": "depends-on"
     },
     {
@@ -2651,6 +2816,11 @@
     },
     {
       "from": "DES-M5-020",
+      "to": "DES-M5-012",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-020",
       "to": "DES-M5-014",
       "relation": "depends-on"
     },
@@ -2667,6 +2837,56 @@
     {
       "from": "DES-M5-020",
       "to": "DES-M5-019",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-021",
+      "to": "REQ-M5-RELEASE-001",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-021",
+      "to": "REQ-M5-RELEASE-004",
+      "relation": "satisfies"
+    },
+    {
+      "from": "ADR-0008",
+      "to": "DES-M5-021",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0010",
+      "to": "DES-M5-021",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0011",
+      "to": "DES-M5-021",
+      "relation": "decides"
+    },
+    {
+      "from": "DES-M5-021",
+      "to": "DES-M5-006",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-021",
+      "to": "DES-M5-012",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-021",
+      "to": "DES-M5-014",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-021",
+      "to": "DES-M5-016",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-021",
+      "to": "DES-M5-020",
       "relation": "depends-on"
     },
     {
@@ -3420,6 +3640,16 @@
       "relation": "implements"
     },
     {
+      "from": "CODE-M5-NPM-PUBLISH-POLICY-001",
+      "to": "REQ-M5-RELEASE-004",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-NPM-PUBLISH-POLICY-001",
+      "to": "DES-M5-021",
+      "relation": "implements"
+    },
+    {
       "from": "CODE-M5-RELEASE-WORKFLOW-001",
       "to": "REQ-M5-RELEASE-003",
       "relation": "implements"
@@ -3427,6 +3657,66 @@
     {
       "from": "CODE-M5-RELEASE-WORKFLOW-001",
       "to": "DES-M5-020",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-CONTEXT-001",
+      "to": "REQ-M5-RELEASE-003",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-CONTEXT-001",
+      "to": "REQ-M5-RELEASE-004",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-CONTEXT-001",
+      "to": "DES-M5-020",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-CONTEXT-001",
+      "to": "DES-M5-021",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-ATTESTATION-IDENTITY-001",
+      "to": "REQ-M5-RELEASE-003",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-ATTESTATION-IDENTITY-001",
+      "to": "REQ-M5-RELEASE-004",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-ATTESTATION-IDENTITY-001",
+      "to": "DES-M5-020",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-ATTESTATION-IDENTITY-001",
+      "to": "DES-M5-021",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-REGISTRY-QUERY-001",
+      "to": "REQ-M5-RELEASE-004",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-REGISTRY-QUERY-001",
+      "to": "DES-M5-021",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-ASSET-VALIDATION-001",
+      "to": "REQ-M5-RELEASE-004",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-ASSET-VALIDATION-001",
+      "to": "DES-M5-021",
       "relation": "implements"
     },
     {
@@ -3532,6 +3822,26 @@
     {
       "from": "CODE-M5-WORKTREE-CANDIDATE-SNAPSHOT-001",
       "to": "DES-M5-012",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-DETACHED-SNAPSHOT-001",
+      "to": "REQ-M5-RELEASE-003",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-DETACHED-SNAPSHOT-001",
+      "to": "REQ-M5-RELEASE-004",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-DETACHED-SNAPSHOT-001",
+      "to": "DES-M5-020",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-DETACHED-SNAPSHOT-001",
+      "to": "DES-M5-021",
       "relation": "implements"
     },
     {
@@ -4170,6 +4480,31 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-RELEASE-003-CONTEXT-BINDING-001",
+      "to": "REQ-M5-RELEASE-003",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-RELEASE-004-REGISTRY-001",
+      "to": "REQ-M5-RELEASE-004",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-RELEASE-003-DETACHED-001",
+      "to": "REQ-M5-RELEASE-003",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-RELEASE-003-GEN5-001",
+      "to": "REQ-M5-RELEASE-003",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-RELEASE-004-001",
+      "to": "REQ-M5-RELEASE-004",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-RELEASE-MANIFEST-001",
       "to": "REQ-M5-APPROVAL-007",
       "relation": "verifies"
@@ -4197,6 +4532,56 @@
     {
       "from": "TEST-M5-RELEASE-004",
       "to": "REQ-M5-RELEASE-001",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-RELEASE-003-REMOTE-PREFERENCE-001",
+      "to": "REQ-M5-RELEASE-003",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-RELEASE-004-REVIEW-001",
+      "to": "REQ-M5-RELEASE-004",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-RELEASE-003-FETCHED-REF-001",
+      "to": "REQ-M5-RELEASE-003",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-RELEASE-004-CHECKSUM-PATH-001",
+      "to": "REQ-M5-RELEASE-004",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-RELEASE-004-WORKFLOW-ORDER-001",
+      "to": "REQ-M5-RELEASE-004",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-RELEASE-004-POLICY-BINDING-001",
+      "to": "REQ-M5-RELEASE-004",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-RELEASE-004-SHELL-FAILURE-001",
+      "to": "REQ-M5-RELEASE-004",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-RELEASE-004-REGISTRY-CLASSIFICATION-001",
+      "to": "REQ-M5-RELEASE-004",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-RELEASE-003-SHELL-FAILURE-001",
+      "to": "REQ-M5-RELEASE-003",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-RELEASE-004-CANCELLATION-001",
+      "to": "REQ-M5-RELEASE-004",
       "relation": "verifies"
     },
     {
@@ -4288,19 +4673,20 @@
   "diagnostics": [],
   "fingerprints": {
     ".github/workflows/candidate-gate.yml": "0bb85fa9af7a93d92f53dd2b80c9719f874c02e5b28c2f683109c593eac72808",
-    ".github/workflows/release.yml": "32192409fd8e1800f36411f702592982d52c0e408f8392afcf83d8115d9b9cc7",
+    ".github/workflows/npm-publish.yml": "78a49d353c000b8ceb07c9b52bd352ff53ca8349f255ec23a2b7801f91b78d69",
+    ".github/workflows/release.yml": "491b9c455ea556e13d1894bba9282d0a9fa4b57be47b76c58e5989f039ba8cf7",
     ".musubix/decisions/ADR-0002.md": "9f41d752530613cf6cc3ab6798709567e85650e5b97426dfca4147840eb35684",
     ".musubix/decisions/ADR-0003.md": "342a6a8e30c367684b02ee907f0f6bc3aef3b8ff6a08005148f43411f3885b7d",
     ".musubix/decisions/ADR-0004.md": "837623189c1605b24040bcf40db42de65f06fb1f3f47911068a8b4558ca5856f",
     ".musubix/decisions/ADR-0005.md": "d90fe9072f0f41e88ecf4df4e11f1c653d74ba4d9bff262fb7e3e405a57b2e1e",
     ".musubix/decisions/ADR-0006.md": "177062671723869629b64680cb3deabce7c0160531679819b1f908139c6697b7",
     ".musubix/decisions/ADR-0007.md": "d931c13da6a9baa087a763542bac502a6cd217359e72a1a1cbe422668418b949",
-    ".musubix/decisions/ADR-0008.md": "e66689e7b370f65ba5054facf3bd4eb60f1e6d9d47a2bca6dbac7e47b8ae8710",
+    ".musubix/decisions/ADR-0008.md": "c9576edc5db5af6bf21f6d262ef66723f88f94048e468adc94f88aff32ac81d3",
     ".musubix/decisions/ADR-0009.md": "5e38a2e75f754b89ad51bcb242ad6994e36393c41c53630f2d6dd76e67d8294e",
-    ".musubix/decisions/ADR-0010.md": "31a80dbd92a09634d902c7940dd9cc13fd843ff695e4ce7d1862647d37604e83",
-    ".musubix/decisions/ADR-0011.md": "40735db21882610231df99350a359010aa3c92c9d1af461ced071681786a1781",
-    ".musubix/features/musubix5-clean-foundation/design.md": "0d3ee60f245587b917c220a1b93565f0ba7fc4e9e7a62576e42aa5a12bb41cd0",
-    ".musubix/features/musubix5-clean-foundation/requirements.md": "f855e51d433bc48d233404612c7b9c7a19af224eeaeb7ae8acde9499f0e1b0cf",
+    ".musubix/decisions/ADR-0010.md": "7760c3c0be6353a51abbcff19291b48c92069341d63cb0eb52d3f743ee6b7dc4",
+    ".musubix/decisions/ADR-0011.md": "481022daae779baa9018919d3fc82cc1b342cd6c6cb40e3288d25508d9312933",
+    ".musubix/features/musubix5-clean-foundation/design.md": "8614dbbab6585bf7c06dbcd4693d016a6719585569cc9e4bebad3e4c96f99d47",
+    ".musubix/features/musubix5-clean-foundation/requirements.md": "3dfe52ba7e0f143db6f3b5fb6a3a51c516234f4a82174c2521b1dd091c874ee2",
     "packages/analysis/src/adapters.ts": "4db9916f432a92d27520a7aa9af575db67897a729fbbed623331ddc00c020b95",
     "packages/analysis/src/approval-boundary.ts": "ec0c2da68cff776388126e4d34db112d529462bd7dfcfe4691d2bc5701a81090",
     "packages/analysis/src/approval-domains.ts": "56363d8d7fe0158df596a09abf2688f439815c38dd582fd5970c1bb30e6c5994",
@@ -4337,7 +4723,7 @@
     "packages/analysis/src/quality-policy.ts": "0ba33ac06b4762e0f398e04fd6c8975c7db6380f20080fc3dc89a701759fcd89",
     "packages/analysis/src/release-manifest.ts": "e0be5c37e24dafab86606f15e48e40704794c9dd5ad19f150fc3386d554e6e39",
     "packages/analysis/src/release-operation-guard.ts": "3eb0edb8a82dde1085fbb1f00869bf527003e37c28344fbb997fbb4ed044c318",
-    "packages/analysis/src/release-workflow.ts": "23abac0e719face66d96288b1671c452bb9eb84cf23349e10239bb72170337e6",
+    "packages/analysis/src/release-workflow.ts": "1c8087a2f71fd77b143f3b1fed5b975c22738c430f967ee5978e6f01548e7f43",
     "packages/analysis/src/run-local-workspace.ts": "351ae9df02dfab13b58ae86f7619d68885457093a7a4b33c4070807d52324007",
     "packages/analysis/src/scaffold-artifact.ts": "8734de778f121421b3fcfbf5263611bfcffc94cf63248ef3f127459bdfa4f692",
     "packages/analysis/src/tdd-cycle-resolver.ts": "7d38cfb73227acb507d830bf85ecb87ac7cb2274ba432ba964fe17d99fef30dc",
@@ -4347,9 +4733,9 @@
     "packages/analysis/src/workflow-types.ts": "725625b0ebb1fc9a727d5947d16f239eb3e9b7306021e13aa4d8a2c3b4773f75",
     "packages/analysis/src/workflow-waiver.ts": "77a93cc41b1a917bf08f8a26eacafc0ce32edcf3b3d90a2b5ccca5d792d014ac",
     "packages/analysis/src/workflow.ts": "61f981ac17f57fb4d3d80977da7105ac3c0c2cd93e706f41f4f879aaf0f0235a",
-    "packages/analysis/src/workspace-manager.ts": "482f6d2273a2a83de67bce90b05fe57668807ccffcf35eebe3d778ef6da75fab",
+    "packages/analysis/src/workspace-manager.ts": "a3c120b02a8e52b10acba976d000937958735ab481065286920181c70ad3a1a8",
     "packages/cli/src/install.ts": "a9a632f460500bd54c562f252e147f2a1d9e2520efb23f9fa76602141b076a20",
-    "packages/cli/src/main.ts": "1988f48168cd2e7212b35dba53bf1d02b9d99f78e15682cb266e797cbfb7c5d6",
+    "packages/cli/src/main.ts": "479edd859d92d4e81ae881381905591d8f5b4a8ba0f7fd1e8dd48866fc71cd58",
     "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
     "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
     "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
@@ -4404,11 +4790,14 @@
     "tests/quality-supersession.test.ts": "fdb955ff0f5bde92ce83477c6cfe156f6961026aaae556c81b55948790a1d420",
     "tests/release-candidate-tree.test.ts": "3d7e417b1ca4e6a161413a8d4ff048b0260a50b394a831676fbd1047892fe374",
     "tests/release-evidence-policy.test.ts": "4cc0d16219dfb98f580a4453b6584173381dd50a3124204587db26b2f65aeafa",
+    "tests/release-generation5-boundary.test.ts": "472216f78e5884480a0e08f4461b5198c6843f735c795aeb863a342e79e8b376",
+    "tests/release-generation5.test.ts": "f1454faf98b03b49be7fc31daf2647bf884798f39f77300ea5f5aa652c4e844a",
     "tests/release-manifest-scope.test.ts": "4832787fe1e6c62c36fc2051aec9e6033970bb167d73c727d8009bfc9efea523",
     "tests/release-operation-cli-error.test.ts": "d80005044f2bc6e96caca1d63672f0d1e5e335e244842eba2978906d6977b092",
     "tests/release-operation-guard.test.ts": "1f5184e20c3179a69730a3da421fc0e33aa5c1f7fe4ff5a2c917a974467e5918",
-    "tests/release-workflow-hardening.test.ts": "44e53229d4c96ea704aa798ac5dc54f6606e04f396ce7ca428ce37a2c1fd4b6e",
-    "tests/release-workflow.test.ts": "1d58839f5fb9d485636ac45903010e88e3181c35a1bdcb742aa979a38e2eab04",
+    "tests/release-review-fixes.test.ts": "3e380aa84d4291d45c1e3dbbe4b4b0212cc5708517c35bae1b1032ce30912d8d",
+    "tests/release-workflow-hardening.test.ts": "b08a747b2e43c4dd899decac0acb4f9b92270aac1f458e70e904985dbc36fd3d",
+    "tests/release-workflow.test.ts": "1d1a1f516218eb5bcd3a50a485127985c40235d7b71201b370c1ffb2256db279",
     "tests/run-local-workspace.test.ts": "b0071c5905412c1f846d854155fbd37b0f72c08db40a20405be71cbfc2f10561",
     "tests/tdd-batch-recording.test.ts": "e254e04461665d42877b747d038bf977f680a0c72255a03b5dfc471cca2f8ef8",
     "tests/tdd-cycle-resolver.test.ts": "71baa72ea3d6648436f98f16fc57fda03a0c95ebc9d428ed8c0425349fc125ac",

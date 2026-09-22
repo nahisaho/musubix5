@@ -115,12 +115,17 @@ reported by the authorization record without independently validating the
 current release approval.
 
 Release runs may be retried with the same still-authorized operation record
-when they fail before the corresponding side effect. If GitHub Release creation
-succeeds but npm publication fails transiently, dispatch only the publish
-operation on retry. If deterministic package reconstruction or registry
-integrity fails after a GitHub Release exists, retain and mark that Release,
-do not reuse its tag, and prepare a corrected candidate with a new patch
-version.
+when they fail before the corresponding side effect. Npm publication is a
+separate dispatch of `.github/workflows/npm-publish.yml` with `release_tag`,
+`evidence_commit`, and `publish_operation_id`; it publishes the exact stable
+GitHub Release tarball and never reconstructs the package. If publication
+reports `RELEASE_PUBLISH_INTEGRITY_MISMATCH` or
+`manualReconciliationRequired: true`, do not rerun `npm publish` after the
+version exists. Use the read-only
+`npm view musubix5@<version> dist.integrity --json` command and compare it with
+the SHA-512 SRI of the exact Release tarball. A missing or mismatched result
+requires investigation and a corrected candidate with a new patch version;
+never overwrite or republish an existing npm version.
 
 ## Evidence migration
 

@@ -13,10 +13,10 @@ describe('release workflow', () => {
       validateReleaseVersions,
     } = await import('../packages/analysis/src/release-workflow.js');
     const root = resolve(import.meta.dirname, '..');
-    const versions = await validateReleaseVersions(root, 'v0.1.0');
+    const versions = await validateReleaseVersions(root, 'v0.1.1');
     expect(versions).toMatchObject({
-      releaseTag: 'v0.1.0',
-      version: '0.1.0',
+      releaseTag: 'v0.1.1',
+      version: '0.1.1',
       valid: true,
     });
     expect(versions.paths).toEqual(expect.arrayContaining([
@@ -43,12 +43,12 @@ describe('release workflow', () => {
     expect(workflow).toContain('workflow_dispatch:');
     expect(workflow).toContain('evidence_commit:');
     expect(workflow).toContain('release_operation_id:');
-    expect(workflow).toContain('publish_operation_id:');
-    expect(workflow).toContain('environment: npm-publish');
+    expect(workflow).not.toContain('publish_operation_id:');
+    expect(workflow).not.toContain('environment: npm-publish');
     expect(workflow).toContain('cancel-in-progress: false');
-    expect(workflow).toContain('npm publish --access public');
-    expect(workflow).toContain('npm publish --provenance --access public');
+    expect(workflow).not.toContain('npm publish');
+    expect(workflow).toContain('release-context.json');
     expect(workflow).toContain('RELEASE_PACKAGE_DIGEST_MISMATCH');
-    expect(workflow).toContain('RELEASE_REGISTRY_INTEGRITY_MISMATCH');
+    expect(workflow).toContain('RELEASE_ATTESTATION_INVALID');
   });
 });

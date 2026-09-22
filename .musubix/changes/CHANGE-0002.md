@@ -2,11 +2,11 @@
 schemaVersion: 1
 id: CHANGE-0002
 summary: Implement the clean musubix5 compatibility and architecture foundation
-status: approval-pending
+status: in-progress
 ---
 # CHANGE-0002: musubix5-clean-foundation
 
-Requirements: REQ-M5-RELEASE-001 REQ-M5-RELEASE-003
+Requirements: REQ-M5-RELEASE-003 REQ-M5-RELEASE-004
 
 ## Classification
 
@@ -17,10 +17,16 @@ workflow before creating the first musubix5 tag or package release. Generation
 3 was abandoned after requirements review showed that the runtime operation
 guard and repository workflow were separate obligations requiring distinct IDs.
 
-The changed obligations are `REQ-M5-RELEASE-001` and
-`REQ-M5-RELEASE-003`. The prior operation guard is preserved and extended so
+Generation 5 behavior change and defect correction: align npm publication with
+the musubix3 release transport by moving it to a separate manually dispatched,
+token-authenticated workflow that publishes the exact verified GitHub Release
+tarball. Correct detached evidence-checkout authorization so fetched reachable
+candidate commits do not require a same-named local branch.
+
+The generation-5 changed obligations are `REQ-M5-RELEASE-003` and
+`REQ-M5-RELEASE-004`. The prior operation guard is preserved so
 automated side effects must consume an exact candidate-bound authorization.
-The separate repository release automation:
+The repository release automation:
 
 - validates the release tag, candidate commit, and all package/plugin versions;
 - validates an exact post-candidate evidence commit containing current release
@@ -28,8 +34,10 @@ The separate repository release automation:
 - reruns the documented release validation against the tagged commit;
 - produces the npm tarball, CycloneDX SBOM, checksums, and strict GitHub OIDC
   plus ephemeral Ed25519 attestation;
-- publishes npm only through the protected `npm-publish` environment; and
-- creates an independently reportable GitHub Release with the release artifacts.
+- creates an independently reportable GitHub Release with the release artifacts;
+  and
+- publishes npm only through a separate protected `npm-publish` workflow that
+  verifies and publishes the exact GitHub Release tarball using `NPM_TOKEN`.
 
 Other requirements remain unchanged. The affected non-normative surfaces are
 the release workflow, package/plugin version consistency checks, release
@@ -63,6 +71,9 @@ input only.
 - The human selected a single `musubix5` executable with no `musubix3` alias.
   This is an intentional compatibility break requiring an ADR, migration guide,
   and regression tests.
+- Generation 5 updates every version-bearing package, plugin, and marketplace
+  field to `0.1.1`, adds Red/Green coverage for detached-checkout authorization
+  and exact GitHub Release asset publication, and updates both release guides.
 
 ## Inputs
 
@@ -133,10 +144,10 @@ input only.
   These post-candidate records must not be fabricated or projected into the
   candidate itself.
 
-## Generation 4 implementation
+## Generation 4 implementation (historical)
 
 - Corrects the executable release workflow for the changed scope
-  `REQ-M5-RELEASE-001` and `REQ-M5-RELEASE-003`; the repository contains 64
+  `REQ-M5-RELEASE-001` and `REQ-M5-RELEASE-003`; generation 4 contained 64
   total must requirements.
 - Passes release and publish operation IDs into shell steps only through
   environment variables, quotes every use, and validates each non-empty value
@@ -155,7 +166,7 @@ input only.
   repository administrators must create, configure, and verify it before any
   manual release dispatch; this change does not create it.
 
-## Generation 4 quality evidence
+## Generation 4 quality evidence (historical)
 
 - The complete suite passes 59 test files and 75 tests; all 71/71 annotated
   test IDs pass.
@@ -165,22 +176,90 @@ input only.
   established, the expected remaining blockers are missing or stale external
   candidate-bound matrix evidence and release approval.
 
-> **Post-candidate evidence warning:** `.musubix/evidence/approvals/release.json`
-> and `.musubix/evidence/release/gates/*.json` are created only after the
-> candidate is fixed. They must not be staged into the candidate commit.
+Generation 5 supersedes generation 4's in-release-workflow npm publication,
+publish operation-ID handling, and registry-visibility retries. Those
+obligations move to `.github/workflows/npm-publish.yml` under
+`REQ-M5-RELEASE-004`; generation 5 contains 65 total must requirements.
+
+## Generation 5 implementation
+
+- Updates every package, CLI, plugin, marketplace, and lockfile version surface
+  to `0.1.1` while preserving the immutable generation-4 `v0.1.0` tag.
+- Refactors `.github/workflows/release.yml` to produce the reproducible sealed
+  bundle and create only an independently authorized GitHub Release. Release
+  creation intentionally has no protected environment; exact repository
+  authorization, candidate/evidence ancestry, default-branch reachability,
+  attestation verification, and replay rejection are the required gates.
+- Adds `.github/workflows/npm-publish.yml` as a separate protected-environment
+  dispatch requiring `release_tag`, `evidence_commit`, `publish_operation_id`,
+  `NPM_TOKEN`, and `npm whoami`.
+- Publishes the exact downloaded GitHub Release tarball without rebuilding or
+  repacking after checksum, canonical `release-context-v1`, strict OIDC/Ed25519
+  attestation, approval-digest, packaged-version, and registry replay checks.
+- Corrects detached evidence validation to accept the exact persisted candidate
+  when it is reachable through any fetched repository ref, without requiring a
+  same-named local or remote-tracking candidate branch.
+- Bounds registry verification with six queries, per-query forced termination,
+  an outer hard deadline, and terminal evidence that distinguishes visibility,
+  integrity mismatch, and possible partial publication requiring manual
+  reconciliation.
+
+## Generation 5 quality evidence
+
+- The complete suite passes 62 test files and 90 tests; all 86/86 current
+  annotated test identities pass in structured Vitest reports.
+- `tdd validate` reports 280 cycles with zero diagnostics; current
+  generation-5 Red/Green evidence, strict trace validation, and graph
+  validation pass.
+- TypeScript typecheck/build, the compatibility suite, package-content checks,
+  and isolated tarball installation/startup smoke checks pass for `0.1.1`.
+- Workflow declarations are reconciled with the privacy-sanitized Copilot
+  transcript in configured compatible mode.
+- The optional formal check is classified `fail` because 0/65 prose
+  requirements are supported by the current Boolean abstraction; all formal
+  diagnostics are warnings, the solver is intentionally `none`, and this
+  grants no proof credit.
+- Before the generation-5 candidate is fixed, the sole required gate blocker is
+  the stale generation-4 release approval and candidate-matrix evidence.
+  Generation 5 requires a fresh five-job external matrix and release approval
+  bound to the new immutable candidate.
+
+> **Post-candidate evidence warning:** tracked records from completed prior
+> generations are retained as immutable history but are inert because their
+> generation, candidate, tag, approval digest, and gate context do not match
+> generation 5. New generation-5 release approval and gate records are created
+> only after the candidate is fixed and therefore are not part of that candidate
+> commit.
 
 ## Release boundary
 
-The target remains version `0.1.0` on branch `change/CHANGE-0002`. The prior
-candidate and release manifest are superseded and cannot receive release
-approval. A new immutable candidate is established when the current approved
+The existing lightweight `v0.1.0` tag and candidate commit
+`87f37a7e397036de5f47452868aaffed0a019461` are preserved and are not moved.
+Generation 5 targets version `0.1.1` on branch `change/CHANGE-0002`; every
+version-bearing file must agree before its new immutable candidate can be
+tagged `v0.1.1`. The generation-5 candidate, tag, release manifest, GitHub
+Release, and npm package publication are distinct from the generation-4
+`v0.1.0` candidate and require fresh evidence and explicit authorization.
+
+Preserving the immutable `v0.1.0` tag also preserves its historical workflow
+and authorization records in old reachable commits. Those records grant no
+generation-5 authorization, and no GitHub Release or npm package currently
+exists for `v0.1.0`; however, an operator could still deliberately dispatch the
+historical workflow against its old evidence commit. This residual operational
+risk is accepted to avoid deleting the tag or rewriting published Git history.
+Operators must not dispatch the historical `v0.1.0` release workflow.
+
+A new immutable candidate is established when the current approved
 requirements/design and complete local validation are committed. The exact
 release manifest and release approval are established afterward, outside the
 candidate tree, from all five candidate-bound CI attestations and explicit
-human release approval. No package publication, Git tag, or release operation
-is authorized by this record; remote pushes performed to produce candidate
-evidence carry no release authorization. Each external operation additionally
-requires separate explicit human authorization bound to the approved candidate.
+human release approval. Generation-4 release approval, operation authorization,
+gate evidence, release manifest, and workflow bundles grant no authorization
+for a generation-5 operation. No package publication, Git tag, or release
+operation is authorized by this record; remote pushes performed to produce
+candidate evidence carry no release authorization. Each external operation
+additionally requires separate explicit human authorization bound to the
+approved generation-5 candidate.
 
 The candidate workflow can run only after `.github/workflows/candidate-gate.yml`
 is available on the repository default branch and the exact candidate commit is
