@@ -79,6 +79,7 @@ jobs:
           import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
           import { join } from 'node:path';
           import { requiredCandidateGateCommands } from './dist/packages/analysis/src/candidate-gate.js';
+          import { canonicalRepositoryIdentity } from './dist/packages/analysis/src/canonical.js';
 
           const canonical = (value) => Array.isArray(value)
             ? `[${value.map(canonical).join(',')}]`
@@ -92,8 +93,19 @@ jobs:
             shell: process.platform === 'win32',
           });
           const head = run('git', ['rev-parse', 'HEAD']).stdout.trim();
+          const repositoryRoot = run('git', ['rev-parse', '--show-toplevel']).stdout.trim();
           if (head.toLowerCase() !== process.env.CANDIDATE_COMMIT.toLowerCase()) {
             throw new Error('Checked out commit does not match candidateCommit.');
+          }
+          const remote = run('git', ['config', '--get-all', 'remote.origin.url']);
+          const selectedRemote = remote.stdout.split(/\r?\n/, 1)[0];
+          if (remote.status !== 0
+            || !repositoryRoot
+            || canonicalRepositoryIdentity(selectedRemote, repositoryRoot) !== process.env.REPOSITORY_ID) {
+            throw new Error(
+              'RELEASE_GATE_CANDIDATE_MISMATCH: repository identity mismatch; '
+              + 'release evidence producers must use the credential-free GitHub HTTPS origin.',
+            );
           }
           const treeClean = () => {
             const status = run('git', ['status', '--porcelain=v1', '--untracked-files=no']);

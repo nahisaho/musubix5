@@ -2,7 +2,7 @@ import { execFile } from 'node:child_process';
 import { lstat, mkdir, readFile, readlink } from 'node:fs/promises';
 import { dirname, relative, resolve, sep } from 'node:path';
 import { promisify } from 'node:util';
-import { canonicalBytes, sha256 } from './canonical.js';
+import { canonicalBytes, canonicalRepositoryIdentity, sha256 } from './canonical.js';
 import { appendJournalRecord, verifyJournal } from './journal.js';
 
 const execFileAsync = promisify(execFile);
@@ -117,10 +117,8 @@ async function gitCommonDirectory(root: string): Promise<string> {
 
 async function repositoryIdentity(root: string): Promise<string> {
   const repositoryRoot = await git(root, ['rev-parse', '--show-toplevel']);
-  const remote = await git(root, ['config', '--get', 'remote.origin.url'], true);
-  return `repository:${sha256(canonicalBytes({
-    identity: remote || `local:${repositoryRoot}`,
-  }))}`;
+  const remotes = await git(root, ['config', '--get-all', 'remote.origin.url'], true);
+  return canonicalRepositoryIdentity(remotes.split(/\r?\n/, 1)[0], repositoryRoot);
 }
 
 function portable(path: string): string {
@@ -380,7 +378,10 @@ export async function resolveCandidateSnapshot(
   }
   const snapshot = selected[0]!;
   if (snapshot.repositoryId !== await repositoryIdentity(root)) {
-    throw new Error('APPROVAL_CANDIDATE_UNAVAILABLE: candidate snapshot belongs to another repository.');
+    throw new Error(
+      'APPROVAL_CANDIDATE_UNAVAILABLE: candidate snapshot belongs to another repository; '
+      + 'release evidence producers must use the credential-free GitHub HTTPS origin.',
+    );
   }
   const commit = await git(root, ['rev-parse', '--verify', `${snapshot.commit}^{commit}`], true);
   const containingRefs = await git(

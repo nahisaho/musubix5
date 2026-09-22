@@ -163,17 +163,36 @@ jobs:
           CHECKSUMS_SHA="$(sha256sum release-assets/SHA256SUMS | cut -d' ' -f1)"
           export CHECKSUMS_SHA
           RELEASE_EVIDENCE_COMMIT="$(node --input-type=module <<'NODE'
+          import { execFileSync } from 'node:child_process';
           import { readFileSync } from 'node:fs';
+          const { canonicalRepositoryIdentity } =
+            await import('./candidate/dist/packages/analysis/src/canonical.js');
           const { releaseContextBytes, validateReleaseContext } =
             await import('./candidate/dist/packages/analysis/src/release-workflow.js');
+          const remotes = execFileSync(
+            'git',
+            ['-C', 'candidate', 'config', '--get-all', 'remote.origin.url'],
+            { encoding: 'utf8' },
+          );
+          const repositoryRoot = execFileSync(
+            'git',
+            ['-C', 'candidate', 'rev-parse', '--show-toplevel'],
+            { encoding: 'utf8' },
+          ).trim();
           const bytes = readFileSync('release-assets/release-context.json');
           const context = validateReleaseContext(JSON.parse(bytes.toString('utf8')));
           if (!bytes.equals(releaseContextBytes(context))
             || context.mode !== 'dispatch'
-            || context.repository !== process.env.GITHUB_REPOSITORY
+            || context.repository !== canonicalRepositoryIdentity(
+              remotes.split(/\r?\n/, 1)[0],
+              repositoryRoot,
+            )
             || context.releaseTag !== process.env.RELEASE_TAG
             || context.candidateCommit !== process.env.CANDIDATE_COMMIT) {
-            throw new Error('RELEASE_ATTESTATION_INVALID: release context does not match publication.');
+            throw new Error(
+              'RELEASE_ATTESTATION_INVALID: release context does not match publication; '
+              + 'release evidence producers must use the credential-free GitHub HTTPS origin.',
+            );
           }
           process.stdout.write(context.evidenceCommit);
           NODE

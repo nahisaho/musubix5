@@ -121,7 +121,7 @@ describe('release generation 5', () => {
     const context = {
       schemaVersion: 'release-context-v1' as const,
       mode: 'dispatch' as const,
-      repository: 'nahisaho/musubix5',
+      repository: `repository:${'a'.repeat(64)}`,
       candidateCommit: '1'.repeat(40),
       workflow: '.github/workflows/release.yml' as const,
       releaseTag: 'v0.1.1',
@@ -132,7 +132,7 @@ describe('release generation 5', () => {
     expect(releaseContextDigest(context)).toMatch(/^[a-f0-9]{64}$/);
     expect(releaseContextBytes(context).toString('utf8')).toBe(
       `{"candidateCommit":"${'1'.repeat(40)}","evidenceCommit":"${'2'.repeat(40)}",`
-      + '"mode":"dispatch","releaseTag":"v0.1.1","repository":"nahisaho/musubix5",'
+      + `"mode":"dispatch","releaseTag":"v0.1.1","repository":"repository:${'a'.repeat(64)}",`
       + `"schemaVersion":"release-context-v1","verifiedReleaseApprovalSha256":"${'3'.repeat(64)}",`
       + '"workflow":".github/workflows/release.yml"}\n',
     );

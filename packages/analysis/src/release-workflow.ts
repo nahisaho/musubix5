@@ -331,7 +331,7 @@ export function validateReleaseContext(value: unknown): ReleaseContext {
   if (context.workflow !== '.github/workflows/release.yml') {
     return releaseContextError('release workflow identity is invalid.');
   }
-  if (typeof context.repository !== 'string' || !/^[^/\s]+\/[^/\s]+$/.test(context.repository)) {
+  if (typeof context.repository !== 'string' || !/^repository:[a-f0-9]{64}$/.test(context.repository)) {
     return releaseContextError('repository identity is invalid.');
   }
   if (typeof context.releaseTag !== 'string' || !/^v[0-9A-Za-z][0-9A-Za-z._-]*$/.test(context.releaseTag)) {

@@ -11,7 +11,7 @@ describe('release generation 5 boundaries', () => {
     const context = {
       schemaVersion: 'release-context-v1' as const,
       mode: 'dispatch' as const,
-      repository: 'nahisaho/musubix5',
+      repository: `repository:${'a'.repeat(64)}`,
       candidateCommit: '1'.repeat(40),
       workflow: '.github/workflows/release.yml' as const,
       releaseTag: 'v0.1.1',
@@ -21,7 +21,7 @@ describe('release generation 5 boundaries', () => {
     const attestation = {
       release: {
         mode: 'dispatch',
-        repository: 'nahisaho/musubix5',
+        repository: `repository:${'a'.repeat(64)}`,
         candidateCommit: '1'.repeat(40),
         workflow: '.github/workflows/release.yml',
         releaseTag: 'v0.1.1',

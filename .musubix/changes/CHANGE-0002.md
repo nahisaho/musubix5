@@ -6,7 +6,7 @@ status: in-progress
 ---
 # CHANGE-0002: musubix5-clean-foundation
 
-Requirements: REQ-M5-RELEASE-003 REQ-M5-RELEASE-004
+Requirements: REQ-M5-WORKTREE-001 REQ-M5-RELEASE-003 REQ-M5-RELEASE-004
 
 ## Classification
 
@@ -322,39 +322,116 @@ obligations move to `.github/workflows/npm-publish.yml` under
 > approval and gate records are created only after the replacement candidate is
 > fixed and therefore are not part of that candidate commit.
 
+## Generation 10 abandonment
+
+Generation 10 was abandoned before design approval, Red, or implementation.
+Requirements review refined repository identity digest construction,
+operation-ID uniqueness, and mode-specific release context/attestation
+semantics after the generation-10 requirements checkpoint had been fixed.
+Those review-driven normative edits require a fresh generation.
+
+## Generation 11 abandonment
+
+The generation-9 candidate passed its five-job matrix and tag-push validation,
+but manual GitHub Release dispatch failed before any side effect while
+revalidating the release authorization from the detached evidence checkout.
+The persisted repository identity was derived from an origin URL ending in
+`.git`, while `actions/checkout` configured the equivalent GitHub HTTPS URL
+without that suffix. Treating those spellings as different repositories
+violates the existing detached-checkout obligations in REQ-M5-RELEASE-003 and
+REQ-M5-RELEASE-004.
+
+Generation 11 approved the refined repository-identity grammar, operation
+authorization boundary, and mode-specific release-context design. Its
+implementation reached passing focused tests, but the Green TDD records were
+appended before the implementation checkpoint. Because evidence order is
+append-only, that generation could not prove the required bounded
+Red-Implementation-Green chronology and was explicitly abandoned before
+quality or candidate creation.
+
+## Generation 12 defect correction
+
+Generation 12 reuses the generation-11 normative intent with fresh
+requirements and design approvals. It derives `repository-identity-v1` from
+the first configured `remote.origin.url` value without `insteadOf` rewriting,
+canonicalizes only the exact credential-free GitHub HTTPS `.git` and trailing
+slash variants, and never persists or reports the raw origin. Candidate
+snapshots, matrix runners, GitHub Release context, and npm publication context
+all use the same `repository:<sha256>` digest. Identity mismatches state the
+credential-free GitHub HTTPS precondition without exposing the configured
+origin.
+
+Generation 12 records authoritative Red-Implementation-Green evidence for
+REQ-M5-WORKTREE-001, REQ-M5-RELEASE-003, and REQ-M5-RELEASE-004. TypeScript
+typecheck/build, 65 test files and 101 tests, compatibility tests,
+package-content checks, tarball installation/startup smoke checks, strict
+trace, graph validation, change history/completeness, and workflow
+reconciliation pass. The optional formal check remains advisory because 0/65
+prose requirements are modeled. Before the replacement candidate is committed,
+the only required gate failure is the historical release approval/candidate
+snapshot bound to the pre-canonical repository digest.
+
+The failed `v0.1.1` dispatch produced no GitHub Release and no npm publication.
+Replacing the unpublished tag requires a new approved generation-12 candidate
+plus separate explicit authorization to delete and recreate the remote tag.
+
 ## Release boundary
 
 The existing lightweight `v0.1.0` tag and candidate commit
 `87f37a7e397036de5f47452868aaffed0a019461` are preserved and are not moved.
-Generation 9 targets version `0.1.1` on branch `change/CHANGE-0002`; every
+Generation 12 targets version `0.1.1` on branch `change/CHANGE-0002`; every
 version-bearing file must agree before its new immutable candidate can be
 tagged `v0.1.1`. The generation-9 candidate supersedes generation-5 candidate
-`fa62cba9f9b79ca9611938d5b4bdbace3b19fe23`; `v0.1.1` must point at the
-generation-9 candidate. Its tag, release manifest, GitHub Release, and npm
+`fa62cba9f9b79ca9611938d5b4bdbace3b19fe23`, and the generation-12 candidate
+supersedes generation-9 candidate
+`e3f13644c2b8fc2052eb5578733e19398a5582ab`; `v0.1.1` must point at the
+generation-12 candidate. Its tag, release manifest, GitHub Release, and npm
 package publication are distinct from all prior candidates and require fresh
 evidence and explicit authorization.
 
 Preserving the immutable `v0.1.0` tag also preserves its historical workflow
 and authorization records in old reachable commits. Those records grant no
-authorization for any later generation, including generation 9, and no GitHub
+authorization for any later generation, including generation 12, and no GitHub
 Release or npm package currently
 exists for `v0.1.0`; however, an operator could still deliberately dispatch the
 historical workflow against its old evidence commit. This residual operational
 risk is accepted to avoid deleting the tag or rewriting published Git history.
-Operators must not dispatch the historical `v0.1.0` release workflow.
+Operators must not dispatch either the historical `v0.1.0` release workflow or
+the superseded `v0.1.1` workflow/evidence at candidate
+`e3f13644c2b8fc2052eb5578733e19398a5582ab`, including authorization commits
+`f2f729aaf7cfad0a76cbc05db4abc3bb649e9191` and
+`de027bd9075d2a15592f2723fde0e91e42bdc3de`.
 
 A new immutable candidate is established when the current approved
 requirements/design and complete local validation are committed. The exact
 release manifest and release approval are established afterward, outside the
 candidate tree, from all five candidate-bound CI attestations and explicit
 human release approval. Generation-4 and generation-5 release approval,
-operation authorization, gate evidence, release manifests, and workflow bundles
-grant no authorization for a generation-9 operation. No package publication,
+generation-9 release approval, operation authorization, gate evidence, release
+manifests, and workflow bundles grant no authorization for a generation-12
+operation. No package publication,
 Git tag, or release
 operation is authorized by this record; remote pushes performed to produce
 candidate evidence carry no release authorization. Each external operation
 additionally requires separate explicit human authorization bound to the
-approved generation-9 candidate.
+approved generation-12 candidate.
+
+Generation 12 retains both repository-identity regression files because the
+first three cycles were recorded before the generation-12 implementation
+checkpoint and append-only TDD evidence cannot be rewritten. The second file
+provides the authoritative bounded Red-Implementation-Green cycles. A third,
+independent workflow regression file asserts that candidate, release, and npm
+workflows derive the canonical identity rather than using the GitHub repository
+slug. The later Green completions for the first three cycles make global TDD
+evidence complete but intentionally fall outside the selected change-level
+batch; completeness selects the correctly bounded second cycles.
+
+Origins outside the exact credential-free GitHub HTTPS grammar remain distinct
+by requirement rather than being silently rewritten. Candidate creation keeps
+that deterministic identity, while candidate/release diagnostics state the
+required credential-free form before any external side effect. Remote-less
+repositories hash the approved absolute-root fallback without an additional
+namespace prefix, as required by REQ-M5-WORKTREE-001.
 
 The candidate workflow can run only after `.github/workflows/candidate-gate.yml`
 is available on the repository default branch and the exact candidate commit is

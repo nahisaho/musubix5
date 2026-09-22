@@ -227,14 +227,30 @@ jobs:
           cp "$a" release-bundle/
           (cd build-a && npm sbom --sbom-format cyclonedx > ../release-bundle/sbom.cdx.json)
           node --input-type=module <<'NODE'
+          import { execFileSync } from 'node:child_process';
           import { writeFileSync } from 'node:fs';
+          const { canonicalRepositoryIdentity } =
+            await import('./build-a/dist/packages/analysis/src/canonical.js');
           const { releaseContextBytes } =
             await import('./build-a/dist/packages/analysis/src/release-workflow.js');
+          const remotes = execFileSync(
+            'git',
+            ['-C', 'build-a', 'config', '--get-all', 'remote.origin.url'],
+            { encoding: 'utf8' },
+          );
+          const repositoryRoot = execFileSync(
+            'git',
+            ['-C', 'build-a', 'rev-parse', '--show-toplevel'],
+            { encoding: 'utf8' },
+          ).trim();
           const dispatch = process.env.RELEASE_MODE === 'dispatch';
           const context = {
             schemaVersion: 'release-context-v1',
             mode: process.env.RELEASE_MODE,
-            repository: process.env.GITHUB_REPOSITORY,
+            repository: canonicalRepositoryIdentity(
+              remotes.split(/\r?\n/, 1)[0],
+              repositoryRoot,
+            ),
             candidateCommit: process.env.CANDIDATE_COMMIT,
             workflow: '.github/workflows/release.yml',
             releaseTag: process.env.RELEASE_TAG,
@@ -371,15 +387,31 @@ jobs:
           RELEASE_CONTEXT_SHA="$(sha256sum release-bundle/release-context.json | cut -d' ' -f1)"
           export RELEASE_CONTEXT_SHA
           node --input-type=module <<'NODE'
+          import { execFileSync } from 'node:child_process';
           import { readFileSync } from 'node:fs';
+          const { canonicalRepositoryIdentity } =
+            await import('./candidate/dist/packages/analysis/src/canonical.js');
           const { releaseContextBytes, validateReleaseContext } =
             await import('./candidate/dist/packages/analysis/src/release-workflow.js');
+          const remotes = execFileSync(
+            'git',
+            ['-C', 'candidate', 'config', '--get-all', 'remote.origin.url'],
+            { encoding: 'utf8' },
+          );
+          const repositoryRoot = execFileSync(
+            'git',
+            ['-C', 'candidate', 'rev-parse', '--show-toplevel'],
+            { encoding: 'utf8' },
+          ).trim();
           const bytes = readFileSync('release-bundle/release-context.json');
           const context = validateReleaseContext(JSON.parse(bytes.toString('utf8')));
           const expected = {
             schemaVersion: 'release-context-v1',
             mode: 'dispatch',
-            repository: process.env.GITHUB_REPOSITORY,
+            repository: canonicalRepositoryIdentity(
+              remotes.split(/\r?\n/, 1)[0],
+              repositoryRoot,
+            ),
             candidateCommit: process.env.CANDIDATE_COMMIT,
             workflow: '.github/workflows/release.yml',
             releaseTag: process.env.RELEASE_TAG,
@@ -388,7 +420,10 @@ jobs:
           };
           if (!bytes.equals(releaseContextBytes(expected))
             || JSON.stringify(context) !== JSON.stringify(expected)) {
-            throw new Error('RELEASE_ATTESTATION_INVALID: release context binding mismatch.');
+            throw new Error(
+              'RELEASE_ATTESTATION_INVALID: release context binding mismatch; '
+              + 'release evidence producers must use the credential-free GitHub HTTPS origin.',
+            );
           }
           NODE
           node --input-type=module <<'NODE'
