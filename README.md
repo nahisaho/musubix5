@@ -1110,22 +1110,26 @@ Attestation APIs are available from both `musubix5/analysis` and the focused
 
 Tags matching `v*` run `.github/workflows/release.yml`. The workflow requires
 the tag to equal `v` plus the package/plugin versions, runs the full Linux
-native/formal suite, creates the npm tarball, CycloneDX `npm sbom`, SHA256SUMS,
-and a GitHub Release. A separate protected `npm-publish` environment gates
-`npm publish --provenance --access public`; npm Trusted Publishing is preferred,
-while an optional `NPM_TOKEN` environment secret remains supported. A pending or
-failed npm publish does not prevent creation of the GitHub Release.
-For manual dispatch, select the release tag as the workflow ref and provide the
-same value as `release_tag`; the workflow rejects tags that do not point to the
-OIDC-bound `GITHUB_SHA`.
+native/formal suite, performs two clean reproducible pack cycles, and creates a
+sealed npm tarball, CycloneDX `npm sbom`, and SHA256SUMS. A tag-push run performs
+validation and artifact production only: it never publishes npm or creates a
+GitHub Release. Those side effects require a separate manual dispatch from the
+same lightweight tag, a descendant full-SHA evidence commit, and independently
+authorized `release` and/or `publish` operation IDs. The release and publish
+jobs are independent. The publish job uses the protected `npm-publish`
+environment; Trusted Publishing runs `npm publish --access public`, while the
+optional token fallback runs `npm publish --provenance --access public`.
+The repository administrator must create and configure that protected
+environment, including its required reviewers and deployment restrictions,
+and verify it before any manual release dispatch. The workflow declaration
+does not create the environment, and publication cannot proceed safely until
+this prerequisite exists.
 
 The release attestation uses a real GitHub Actions OIDC token whose custom
 audience binds an ephemeral Ed25519 public key. Its signature covers repository,
-Git commit, run ID, workflow/ref identity, current workspace snapshot, and any
-musubix evidence heads present in the release runner. It verifies those bindings
-and GitHub's live issuer/JWKS before upload; it does not claim that the signature
-alone proves test semantics. Tests and solver checks are enforced separately by
-the prerequisite release-validation job. The private key exists only under the
-ignored `.test-work` directory for signing and is deleted before verification;
-only the signed attestation is uploaded.
+tagged candidate, run ID, workflow/ref identity, release context (including the
+evidence commit and independently derived approval on dispatch), and SHA256SUMS.
+Each side-effect job verifies those bindings and GitHub's live issuer/JWKS before
+acting. The ephemeral private key is deleted before the run-scoped bundle is
+uploaded.
 See [CONTRIBUTING.md](CONTRIBUTING.md) and [CHANGELOG.md](CHANGELOG.md).

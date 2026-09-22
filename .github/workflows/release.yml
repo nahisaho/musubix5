@@ -1,0 +1,736 @@
+# @id CODE-M5-RELEASE-WORKFLOW-YAML-001
+# @implements REQ-M5-RELEASE-003
+# @design DES-M5-020
+name: Candidate-bound release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      evidence_commit:
+        description: Full commit containing current approval and operation records
+        required: true
+        type: string
+      release_tag:
+        description: Existing lightweight release tag
+        required: true
+        type: string
+      release_operation_id:
+        description: Authorized GitHub Release operation (optional)
+        required: false
+        type: string
+      publish_operation_id:
+        description: Authorized npm publish operation (optional)
+        required: false
+        type: string
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      release_tag: ${{ steps.context.outputs.release_tag }}
+      candidate_commit: ${{ steps.context.outputs.candidate_commit }}
+      evidence_commit: ${{ steps.context.outputs.evidence_commit }}
+      release_approval_sha256: ${{ steps.authorization.outputs.release_approval_sha256 }}
+    steps:
+      - name: Checkout tagged candidate with full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          path: candidate
+      - name: Checkout post-candidate evidence
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.evidence_commit }}
+          fetch-depth: 0
+          path: evidence
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: candidate/package-lock.json
+      - name: Pin npm
+        run: npm install --global npm@11.5.1
+      - id: context
+        name: Validate tag, version, and ancestry
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_TAG: ${{ inputs.release_tag }}
+          EVIDENCE_COMMIT: ${{ inputs.evidence_commit }}
+          RELEASE_OPERATION_ID: ${{ inputs.release_operation_id }}
+          PUBLISH_OPERATION_ID: ${{ inputs.publish_operation_id }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            tag="$INPUT_TAG"
+            [[ "$GITHUB_REF_TYPE" == "tag" && "$GITHUB_REF_NAME" == "$tag" ]] || {
+              echo "RELEASE_TAG_CANDIDATE_MISMATCH: dispatch workflow ref must be the release tag" >&2
+              exit 1
+            }
+            [[ "$EVIDENCE_COMMIT" =~ ^[0-9a-f]{40}$ ]] || {
+              echo "RELEASE_TAG_CANDIDATE_MISMATCH: evidence_commit must be a full lowercase SHA" >&2
+              exit 1
+            }
+            for operation_id in "$RELEASE_OPERATION_ID" "$PUBLISH_OPERATION_ID"; do
+              [[ -z "$operation_id" || "$operation_id" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || {
+                echo "RELEASE_OPERATION_ID_INVALID: operation id must be a safe identifier" >&2
+                exit 1
+              }
+            done
+            [[ -n "$RELEASE_OPERATION_ID" || -n "$PUBLISH_OPERATION_ID" ]] || {
+              echo "RELEASE_OPERATION_NOT_AUTHORIZED: at least one operation id is required" >&2
+              exit 1
+            }
+          fi
+          [[ "$tag" =~ ^v ]] || { echo "RELEASE_VERSION_MISMATCH: tag must begin with v" >&2; exit 1; }
+          git -C candidate fetch --force origin "refs/tags/$tag:refs/tags/$tag" \
+            "+refs/heads/$DEFAULT_BRANCH:refs/remotes/origin/$DEFAULT_BRANCH"
+          tag_type="$(git -C candidate cat-file -t "refs/tags/$tag")"
+          [[ "$tag_type" == "commit" ]] || {
+            echo "RELEASE_TAG_CANDIDATE_MISMATCH: annotated tags are not accepted; use a lightweight tag" >&2
+            exit 1
+          }
+          candidate="$(git -C candidate rev-parse "refs/tags/$tag")"
+          [[ "$candidate" == "$GITHUB_SHA" ]] || {
+            echo "RELEASE_TAG_CANDIDATE_MISMATCH: GITHUB_SHA is not the tagged candidate" >&2
+            exit 1
+          }
+          git -C candidate merge-base --is-ancestor "$candidate" "origin/$DEFAULT_BRANCH" || {
+            echo "RELEASE_TAG_CANDIDATE_MISMATCH: candidate is not reachable from the default branch" >&2
+            exit 1
+          }
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            evidence="$(git -C evidence rev-parse HEAD)"
+            [[ "$evidence" == "$EVIDENCE_COMMIT" ]] || {
+              echo "RELEASE_TAG_CANDIDATE_MISMATCH: evidence checkout mismatch" >&2
+              exit 1
+            }
+            git -C candidate merge-base --is-ancestor "$candidate" "$evidence" || {
+              echo "RELEASE_TAG_CANDIDATE_MISMATCH: evidence is not a descendant of the candidate" >&2
+              exit 1
+            }
+            git -C candidate merge-base --is-ancestor "$evidence" "origin/$DEFAULT_BRANCH" || {
+              echo "RELEASE_TAG_CANDIDATE_MISMATCH: evidence is not reachable from the default branch" >&2
+              exit 1
+            }
+          else
+            evidence=""
+          fi
+          echo "release_tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "candidate_commit=$candidate" >> "$GITHUB_OUTPUT"
+          echo "evidence_commit=$evidence" >> "$GITHUB_OUTPUT"
+      - name: Install candidate
+        working-directory: candidate
+        run: npm ci
+      - name: Typecheck
+        working-directory: candidate
+        run: npm run typecheck
+      - name: Build
+        working-directory: candidate
+        run: npm run build
+      - name: Validate every release version surface
+        working-directory: candidate
+        env:
+          RELEASE_TAG: ${{ steps.context.outputs.release_tag }}
+        run: |
+          node --input-type=module -e \
+            "import('./dist/packages/analysis/src/release-workflow.js').then(async m => console.log(JSON.stringify(await m.validateReleaseVersions(process.cwd(), process.env.RELEASE_TAG))))" \
+            || { echo "RELEASE_VERSION_MISMATCH: version validation failed" >&2; exit 1; }
+      - id: authorization
+        name: Validate requested operations and independently derive release approval
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          CANDIDATE_COMMIT: ${{ steps.context.outputs.candidate_commit }}
+          RELEASE_TAG: ${{ steps.context.outputs.release_tag }}
+          RELEASE_OPERATION_ID: ${{ inputs.release_operation_id }}
+          PUBLISH_OPERATION_ID: ${{ inputs.publish_operation_id }}
+        run: |
+          set -euo pipefail
+          digests=()
+          if [[ -n "$RELEASE_OPERATION_ID" ]]; then
+            [[ "$RELEASE_OPERATION_ID" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || {
+              echo "RELEASE_OPERATION_ID_INVALID: operation id must be a safe identifier" >&2
+              exit 1
+            }
+            node candidate/dist/packages/cli/src/main.js release-operation validate \
+              "$RELEASE_OPERATION_ID" --root evidence --scope release \
+              --candidate-commit "$CANDIDATE_COMMIT" --release-tag "$RELEASE_TAG" --json \
+              > release-authorization.json
+            digests+=("$(node -p 'JSON.parse(require("fs").readFileSync("release-authorization.json")).verifiedReleaseApprovalSha256')")
+          fi
+          if [[ -n "$PUBLISH_OPERATION_ID" ]]; then
+            [[ "$PUBLISH_OPERATION_ID" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || {
+              echo "RELEASE_OPERATION_ID_INVALID: operation id must be a safe identifier" >&2
+              exit 1
+            }
+            node candidate/dist/packages/cli/src/main.js release-operation validate \
+              "$PUBLISH_OPERATION_ID" --root evidence --scope publish \
+              --candidate-commit "$CANDIDATE_COMMIT" --release-tag "$RELEASE_TAG" --json \
+              > publish-authorization.json
+            digests+=("$(node -p 'JSON.parse(require("fs").readFileSync("publish-authorization.json")).verifiedReleaseApprovalSha256')")
+          fi
+          [[ "${#digests[@]}" -gt 0 ]] || {
+            echo "RELEASE_OPERATION_NOT_AUTHORIZED: no requested operation was validated" >&2
+            exit 1
+          }
+          for digest in "${digests[@]}"; do
+            [[ "$digest" == "${digests[0]}" ]] || {
+              echo "RELEASE_OPERATION_NOT_AUTHORIZED: operations use different release approvals" >&2
+              exit 1
+            }
+          done
+          echo "release_approval_sha256=${digests[0]}" >> "$GITHUB_OUTPUT"
+      - name: Full tests
+        working-directory: candidate
+        run: npm test
+      - name: Compatibility tests
+        working-directory: candidate
+        run: npm run test:compat
+      - name: Package checks
+        working-directory: candidate
+        run: npm run pack:check
+      - name: Package smoke tests
+        working-directory: candidate
+        run: npm run pack:smoke
+      - name: Formal classification (advisory)
+        working-directory: candidate
+        continue-on-error: true
+        run: npx musubix5 formal check .musubix/features/musubix5-clean-foundation/requirements.md --solver none --json
+
+  bundle:
+    needs: validate
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Clean checkout A
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.candidate_commit }}
+          fetch-depth: 0
+          path: build-a
+      - name: Clean checkout B
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.candidate_commit }}
+          fetch-depth: 0
+          path: build-b
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Pin npm
+        run: npm install --global npm@11.5.1
+      - name: Build and pack twice from clean checkouts
+        run: |
+          set -euo pipefail
+          mkdir -p build-a-pack build-b-pack
+          for source in build-a build-b; do
+            npm --prefix "$source" ci
+            npm --prefix "$source" run build
+            (cd "$source" && npm pack --pack-destination "../${source}-pack")
+          done
+          a="$(find build-a-pack -name '*.tgz' -type f -print -quit)"
+          b="$(find build-b-pack -name '*.tgz' -type f -print -quit)"
+          cmp --silent "$a" "$b" || {
+            echo "RELEASE_PACKAGE_DIGEST_MISMATCH: clean npm pack outputs differ" >&2
+            exit 1
+          }
+          mkdir -p release-bundle
+          cp "$a" release-bundle/
+          (cd build-a && npm sbom --sbom-format cyclonedx > ../release-bundle/sbom.cdx.json)
+          (cd release-bundle && sha256sum ./*.tgz sbom.cdx.json > SHA256SUMS)
+      - name: Create OIDC-bound ephemeral Ed25519 attestation
+        env:
+          RELEASE_TAG: ${{ needs.validate.outputs.release_tag }}
+          CANDIDATE_COMMIT: ${{ needs.validate.outputs.candidate_commit }}
+          EVIDENCE_COMMIT: ${{ needs.validate.outputs.evidence_commit }}
+          RELEASE_APPROVAL_SHA256: ${{ needs.validate.outputs.release_approval_sha256 }}
+        run: |
+          set -euo pipefail
+          openssl genpkey -algorithm ED25519 -out release-bundle/attestation-private.pem
+          openssl pkey -in release-bundle/attestation-private.pem -pubout -out release-bundle/attestation-public.pem
+          key_sha="$(openssl pkey -pubin -in release-bundle/attestation-public.pem -outform DER | openssl dgst -sha256 -binary | base64 -w0 | tr '+/' '-_' | tr -d '=')"
+          audience="musubix5-release#musubix3-key-sha256=$key_sha"
+          oidc_token="$(curl --fail --silent --show-error \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$(node -p 'encodeURIComponent(process.argv[1])' "$audience")" \
+            | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>process.stdout.write(JSON.parse(s).value))')"
+          checksums_sha="$(sha256sum release-bundle/SHA256SUMS | cut -d' ' -f1)"
+          export RELEASE_MODE="${{ github.event_name == 'workflow_dispatch' && 'dispatch' || 'tag-push' }}"
+          release_context_sha="$(node --input-type=module <<'NODE'
+          const { releaseContextDigest } =
+            await import('./build-a/dist/packages/analysis/src/release-workflow.js');
+          const dispatch = process.env.RELEASE_MODE === 'dispatch';
+          console.log(releaseContextDigest({
+            mode: process.env.RELEASE_MODE,
+            repository: process.env.GITHUB_REPOSITORY,
+            candidateCommit: process.env.CANDIDATE_COMMIT,
+            workflow: '.github/workflows/release.yml',
+            releaseTag: process.env.RELEASE_TAG,
+            ...(dispatch ? {
+              evidenceCommit: process.env.EVIDENCE_COMMIT,
+              verifiedReleaseApprovalSha256: process.env.RELEASE_APPROVAL_SHA256,
+            } : {}),
+          }));
+          NODE
+          )"
+          export OIDC_TOKEN="$oidc_token" CHECKSUMS_SHA="$checksums_sha"
+          export RELEASE_CONTEXT_SHA="$release_context_sha"
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs';
+          const value = {
+            schemaVersion: 1,
+            repository: process.env.GITHUB_REPOSITORY,
+            commitSha: process.env.CANDIDATE_COMMIT,
+            ci: { provider: 'github', runId: process.env.GITHUB_RUN_ID },
+            evidenceHeads: {
+              releaseContext: process.env.RELEASE_CONTEXT_SHA,
+              releaseBundle: process.env.CHECKSUMS_SHA,
+            },
+            issuedAt: new Date().toISOString(),
+            keyId: `release-${process.env.GITHUB_RUN_ID}`,
+            githubOidc: {
+              token: process.env.OIDC_TOKEN,
+              publicKey: readFileSync('release-bundle/attestation-public.pem', 'utf8'),
+            },
+          };
+          const canonical = x => Array.isArray(x) ? `[${x.map(canonical).join(',')}]`
+            : x && typeof x === 'object'
+              ? `{${Object.entries(x).sort(([a],[b]) => a.localeCompare(b)).map(([k,v]) => `${JSON.stringify(k)}:${canonical(v)}`).join(',')}}`
+              : JSON.stringify(x);
+          writeFileSync('release-bundle/attestation-unsigned.json', canonical(value));
+          NODE
+          openssl pkeyutl -sign -inkey release-bundle/attestation-private.pem \
+            -rawin -in release-bundle/attestation-unsigned.json \
+            | base64 -w0 > release-bundle/attestation.sig
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs';
+          const value = JSON.parse(readFileSync('release-bundle/attestation-unsigned.json', 'utf8'));
+          value.signature = readFileSync('release-bundle/attestation.sig', 'utf8');
+          writeFileSync('release-bundle/attestation.json', JSON.stringify(value, null, 2) + '\n');
+          NODE
+          rm release-bundle/attestation-private.pem
+      - name: Upload run-scoped sealed bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-bundle-${{ github.run_id }}
+          path: release-bundle/
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: true
+
+  release:
+    if: github.event_name == 'workflow_dispatch' && inputs.release_operation_id != ''
+    needs: [validate, bundle]
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: release-${{ inputs.release_operation_id }}
+      cancel-in-progress: false
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.candidate_commit }}
+          fetch-depth: 0
+          path: candidate
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.evidence_commit }}
+          fetch-depth: 0
+          path: evidence
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --global npm@11.5.1
+      - run: npm --prefix candidate ci && npm --prefix candidate run build
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-bundle-${{ github.run_id }}
+          path: release-bundle
+      - id: verify_release
+        name: Verify checksums, attestation, authorization, and target
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.validate.outputs.release_tag }}
+          CANDIDATE_COMMIT: ${{ needs.validate.outputs.candidate_commit }}
+          EVIDENCE_COMMIT: ${{ needs.validate.outputs.evidence_commit }}
+          RELEASE_APPROVAL_SHA256: ${{ needs.validate.outputs.release_approval_sha256 }}
+          OPERATION_ID: ${{ inputs.release_operation_id }}
+        run: |
+          set -euo pipefail
+          [[ "$OPERATION_ID" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || {
+            echo "RELEASE_OPERATION_ID_INVALID: operation id must be a safe identifier" >&2
+            exit 1
+          }
+          (cd release-bundle && sha256sum --check SHA256SUMS)
+          export CHECKSUMS_SHA="$(sha256sum release-bundle/SHA256SUMS | cut -d' ' -f1)"
+          export RELEASE_CONTEXT_SHA="$(node --input-type=module <<'NODE'
+          const { releaseContextDigest } =
+            await import('./candidate/dist/packages/analysis/src/release-workflow.js');
+          console.log(releaseContextDigest({
+            mode: 'dispatch',
+            repository: process.env.GITHUB_REPOSITORY,
+            candidateCommit: process.env.CANDIDATE_COMMIT,
+            workflow: '.github/workflows/release.yml',
+            releaseTag: process.env.RELEASE_TAG,
+            evidenceCommit: process.env.EVIDENCE_COMMIT,
+            verifiedReleaseApprovalSha256: process.env.RELEASE_APPROVAL_SHA256,
+          }));
+          NODE
+          )"
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const { verifyDetachedEvidenceAttestation } =
+            await import('./candidate/dist/packages/analysis/src/attestation.js');
+          const attestation = JSON.parse(readFileSync('release-bundle/attestation.json', 'utf8'));
+          const diagnostics = await verifyDetachedEvidenceAttestation(attestation, {
+            mode: 'ci-required',
+            repository: process.env.GITHUB_REPOSITORY,
+            maxAgeSeconds: 2592000,
+            maxFutureSkewSeconds: 60,
+            trustedPublicKeys: [],
+            githubOidc: {
+              mode: 'strict',
+              audience: 'musubix5-release',
+              repository: process.env.GITHUB_REPOSITORY,
+              workflow: '.github/workflows/release.yml',
+              ref: `refs/tags/${process.env.RELEASE_TAG}`,
+              keyBinding: 'public-key',
+            },
+          }, {
+            repository: process.env.GITHUB_REPOSITORY,
+            commitSha: process.env.CANDIDATE_COMMIT,
+            ci: { provider: 'github', runId: process.env.GITHUB_RUN_ID },
+            evidenceHeads: {
+              releaseContext: process.env.RELEASE_CONTEXT_SHA,
+              releaseBundle: process.env.CHECKSUMS_SHA,
+            },
+          }, { expectedWorkflowSha: process.env.CANDIDATE_COMMIT }, 'release-bundle/attestation.json');
+          if (diagnostics.length) {
+            console.error(diagnostics.map(x => `${x.code}: ${x.message}`).join('\n'));
+            process.exit(1);
+          }
+          NODE
+          node candidate/dist/packages/cli/src/main.js release-operation validate \
+            "$OPERATION_ID" --root evidence --scope release \
+            --candidate-commit "$CANDIDATE_COMMIT" \
+            --release-tag "$RELEASE_TAG" --json
+          set +e
+          release_view="$(gh release view "$RELEASE_TAG" --json tagName 2>&1)"
+          release_view_status=$?
+          set -e
+          if [[ "$release_view_status" -eq 0 ]]; then
+            echo "RELEASE_OPERATION_NOT_AUTHORIZED: GitHub Release target already exists" >&2
+            exit 1
+          fi
+          if ! grep -Eiq '(^|[[:space:]])release not found([[:space:]]|$)|HTTP 404: Not Found' <<<"$release_view"; then
+            echo "RELEASE_TARGET_LOOKUP_FAILED: authenticated GitHub Release lookup failed: $release_view" >&2
+            exit 1
+          fi
+      - id: create_release
+        name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.validate.outputs.release_tag }}
+        run: |
+          set -euo pipefail
+          release_url="$(gh release create "$RELEASE_TAG" release-bundle/* --verify-tag --generate-notes)"
+          echo "release_url=$release_url" >> "$GITHUB_OUTPUT"
+      - name: Record terminal release outcome and summary
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+          VERIFY_OUTCOME: ${{ steps.verify_release.outcome }}
+          CREATE_OUTCOME: ${{ steps.create_release.outcome }}
+          RELEASE_URL: ${{ steps.create_release.outputs.release_url }}
+          OPERATION_ID: ${{ inputs.release_operation_id }}
+          RELEASE_TAG: ${{ needs.validate.outputs.release_tag }}
+          CANDIDATE_COMMIT: ${{ needs.validate.outputs.candidate_commit }}
+          EVIDENCE_COMMIT: ${{ needs.validate.outputs.evidence_commit }}
+          RELEASE_APPROVAL_SHA256: ${{ needs.validate.outputs.release_approval_sha256 }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { appendFileSync, writeFileSync } from 'node:fs';
+          const outcome = {
+            schemaVersion: 1,
+            scope: 'release',
+            operationId: process.env.OPERATION_ID,
+            status: process.env.JOB_STATUS === 'success' ? 'completed' : 'failed',
+            jobStatus: process.env.JOB_STATUS,
+            verificationOutcome: process.env.VERIFY_OUTCOME || 'not-run',
+            createOutcome: process.env.CREATE_OUTCOME || 'not-run',
+            failureStage: process.env.JOB_STATUS === 'success' ? null
+              : process.env.VERIFY_OUTCOME === 'failure' ? 'verification'
+                : process.env.CREATE_OUTCOME === 'failure' ? 'release-creation' : 'setup',
+            runId: process.env.GITHUB_RUN_ID,
+            runAttempt: process.env.GITHUB_RUN_ATTEMPT,
+            repository: process.env.GITHUB_REPOSITORY,
+            releaseTag: process.env.RELEASE_TAG,
+            candidateCommit: process.env.CANDIDATE_COMMIT,
+            evidenceCommit: process.env.EVIDENCE_COMMIT,
+            releaseApprovalSha256: process.env.RELEASE_APPROVAL_SHA256,
+            releaseUrl: process.env.RELEASE_URL || null,
+          };
+          writeFileSync('release-outcome.json', `${JSON.stringify(outcome, null, 2)}\n`);
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY,
+            `## Release outcome\n\n`
+            + `- Status: **${outcome.status}**\n`
+            + `- Operation: \`${outcome.operationId}\`\n`
+            + `- Tag: \`${outcome.releaseTag}\`\n`
+            + `- Candidate: \`${outcome.candidateCommit}\`\n`
+            + `- Evidence: \`${outcome.evidenceCommit}\`\n`
+            + `- Run: \`${outcome.runId}\` (attempt ${outcome.runAttempt})\n`
+            + `- Verification: \`${outcome.verificationOutcome}\`\n`
+            + `- Release creation: \`${outcome.createOutcome}\`\n`
+            + (outcome.failureStage ? `- Failure stage: \`${outcome.failureStage}\`\n` : '')
+            + (outcome.releaseUrl ? `- URL: ${outcome.releaseUrl}\n` : ''));
+          NODE
+      - name: Upload terminal release outcome
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-outcome-${{ github.run_id }}-${{ github.run_attempt }}
+          path: release-outcome.json
+          if-no-files-found: error
+
+  publish:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_operation_id != ''
+    needs: [validate, bundle]
+    runs-on: ubuntu-24.04
+    environment: npm-publish
+    concurrency:
+      group: publish-${{ inputs.publish_operation_id }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.candidate_commit }}
+          fetch-depth: 0
+          path: candidate
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.evidence_commit }}
+          fetch-depth: 0
+          path: evidence
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - run: npm install --global npm@11.5.1
+      - run: npm --prefix candidate ci && npm --prefix candidate run build
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-bundle-${{ github.run_id }}
+          path: release-bundle
+      - id: verify_publish
+        name: Verify bundle, rebuild, authorization, and target
+        env:
+          RELEASE_TAG: ${{ needs.validate.outputs.release_tag }}
+          CANDIDATE_COMMIT: ${{ needs.validate.outputs.candidate_commit }}
+          EVIDENCE_COMMIT: ${{ needs.validate.outputs.evidence_commit }}
+          RELEASE_APPROVAL_SHA256: ${{ needs.validate.outputs.release_approval_sha256 }}
+          OPERATION_ID: ${{ inputs.publish_operation_id }}
+        run: |
+          set -euo pipefail
+          [[ "$OPERATION_ID" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || {
+            echo "RELEASE_OPERATION_ID_INVALID: operation id must be a safe identifier" >&2
+            exit 1
+          }
+          (cd release-bundle && sha256sum --check SHA256SUMS)
+          export CHECKSUMS_SHA="$(sha256sum release-bundle/SHA256SUMS | cut -d' ' -f1)"
+          export RELEASE_CONTEXT_SHA="$(node --input-type=module <<'NODE'
+          const { releaseContextDigest } =
+            await import('./candidate/dist/packages/analysis/src/release-workflow.js');
+          console.log(releaseContextDigest({
+            mode: 'dispatch',
+            repository: process.env.GITHUB_REPOSITORY,
+            candidateCommit: process.env.CANDIDATE_COMMIT,
+            workflow: '.github/workflows/release.yml',
+            releaseTag: process.env.RELEASE_TAG,
+            evidenceCommit: process.env.EVIDENCE_COMMIT,
+            verifiedReleaseApprovalSha256: process.env.RELEASE_APPROVAL_SHA256,
+          }));
+          NODE
+          )"
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const { verifyDetachedEvidenceAttestation } =
+            await import('./candidate/dist/packages/analysis/src/attestation.js');
+          const attestation = JSON.parse(readFileSync('release-bundle/attestation.json', 'utf8'));
+          const diagnostics = await verifyDetachedEvidenceAttestation(attestation, {
+            mode: 'ci-required',
+            repository: process.env.GITHUB_REPOSITORY,
+            maxAgeSeconds: 2592000,
+            maxFutureSkewSeconds: 60,
+            trustedPublicKeys: [],
+            githubOidc: {
+              mode: 'strict',
+              audience: 'musubix5-release',
+              repository: process.env.GITHUB_REPOSITORY,
+              workflow: '.github/workflows/release.yml',
+              ref: `refs/tags/${process.env.RELEASE_TAG}`,
+              keyBinding: 'public-key',
+            },
+          }, {
+            repository: process.env.GITHUB_REPOSITORY,
+            commitSha: process.env.CANDIDATE_COMMIT,
+            ci: { provider: 'github', runId: process.env.GITHUB_RUN_ID },
+            evidenceHeads: {
+              releaseContext: process.env.RELEASE_CONTEXT_SHA,
+              releaseBundle: process.env.CHECKSUMS_SHA,
+            },
+          }, { expectedWorkflowSha: process.env.CANDIDATE_COMMIT }, 'release-bundle/attestation.json');
+          if (diagnostics.length) {
+            console.error(diagnostics.map(x => `${x.code}: ${x.message}`).join('\n'));
+            process.exit(1);
+          }
+          NODE
+          node candidate/dist/packages/cli/src/main.js release-operation validate \
+            "$OPERATION_ID" --root evidence --scope publish \
+            --candidate-commit "$CANDIDATE_COMMIT" \
+            --release-tag "$RELEASE_TAG" --json
+          mkdir publish-pack
+          (cd candidate && npm pack --pack-destination ../publish-pack)
+          sealed="$(awk '/\.tgz$/ {print $1; exit}' release-bundle/SHA256SUMS)"
+          rebuilt="$(sha256sum publish-pack/*.tgz | cut -d' ' -f1)"
+          [[ "$sealed" == "$rebuilt" ]] || {
+            echo "RELEASE_PACKAGE_DIGEST_MISMATCH: publish tarball differs from sealed bundle" >&2
+            exit 1
+          }
+          version="${RELEASE_TAG#v}"
+          if npm view "musubix5@$version" version >/dev/null 2>&1; then
+            echo "RELEASE_OPERATION_NOT_AUTHORIZED: npm package version already exists" >&2
+            exit 1
+          fi
+      - id: trusted_publish
+        name: Publish with npm Trusted Publishing
+        if: env.NPM_TOKEN == ''
+        working-directory: candidate
+        run: npm publish --access public
+      - id: token_publish
+        name: Publish with token fallback and provenance
+        if: env.NPM_TOKEN != ''
+        working-directory: candidate
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public
+      - id: registry_integrity
+        name: Verify registry integrity
+        env:
+          RELEASE_TAG: ${{ needs.validate.outputs.release_tag }}
+        run: |
+          set -euo pipefail
+          version="${RELEASE_TAG#v}"
+          local_sri="sha512-$(openssl dgst -sha512 -binary publish-pack/*.tgz | base64 -w0)"
+          registry_sri=""
+          for attempt in 1 2 3 4 5; do
+            set +e
+            registry_response="$(npm view "musubix5@$version" dist.integrity --json 2>&1)"
+            registry_status=$?
+            set -e
+            if [[ "$registry_status" -eq 0 ]]; then
+              registry_sri="$(tr -d '\"[:space:]' <<<"$registry_response")"
+              [[ "$registry_sri" =~ ^sha512-[A-Za-z0-9+/]+={0,2}$ ]] && break
+              registry_sri=""
+            fi
+            if [[ "$attempt" -lt 5 ]]; then
+              sleep $((attempt * 3))
+            fi
+          done
+          [[ -n "$registry_sri" ]] || {
+            echo "RELEASE_REGISTRY_VISIBILITY_FAILED: musubix5@$version was not visible after 5 attempts or the registry API failed" >&2
+            exit 1
+          }
+          [[ "$local_sri" == "$registry_sri" ]] || {
+            echo "RELEASE_REGISTRY_INTEGRITY_MISMATCH: published registry integrity differs from the sealed tarball" >&2
+            exit 1
+          }
+          echo "registry_sri=$registry_sri" >> "$GITHUB_OUTPUT"
+      - name: Record terminal publish outcome and summary
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+          VERIFY_OUTCOME: ${{ steps.verify_publish.outcome }}
+          TRUSTED_PUBLISH_OUTCOME: ${{ steps.trusted_publish.outcome }}
+          TOKEN_PUBLISH_OUTCOME: ${{ steps.token_publish.outcome }}
+          INTEGRITY_OUTCOME: ${{ steps.registry_integrity.outcome }}
+          REGISTRY_SRI: ${{ steps.registry_integrity.outputs.registry_sri }}
+          OPERATION_ID: ${{ inputs.publish_operation_id }}
+          RELEASE_TAG: ${{ needs.validate.outputs.release_tag }}
+          CANDIDATE_COMMIT: ${{ needs.validate.outputs.candidate_commit }}
+          EVIDENCE_COMMIT: ${{ needs.validate.outputs.evidence_commit }}
+          RELEASE_APPROVAL_SHA256: ${{ needs.validate.outputs.release_approval_sha256 }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { appendFileSync, writeFileSync } from 'node:fs';
+          const trusted = process.env.TRUSTED_PUBLISH_OUTCOME || 'not-run';
+          const token = process.env.TOKEN_PUBLISH_OUTCOME || 'not-run';
+          const published = trusted === 'success' || token === 'success';
+          const outcome = {
+            schemaVersion: 1,
+            scope: 'publish',
+            operationId: process.env.OPERATION_ID,
+            status: process.env.JOB_STATUS === 'success' ? 'completed' : 'failed',
+            jobStatus: process.env.JOB_STATUS,
+            verificationOutcome: process.env.VERIFY_OUTCOME || 'not-run',
+            published,
+            publicationMode: trusted === 'success' ? 'trusted-publishing'
+              : token === 'success' ? 'token-provenance' : null,
+            integrityOutcome: process.env.INTEGRITY_OUTCOME || 'not-run',
+            postPublicationIntegrityFailure:
+              published && process.env.INTEGRITY_OUTCOME === 'failure',
+            failureStage: process.env.JOB_STATUS === 'success' ? null
+              : process.env.VERIFY_OUTCOME === 'failure' ? 'verification'
+                : !published ? 'publication'
+                  : process.env.INTEGRITY_OUTCOME === 'failure' ? 'post-publication-integrity' : 'setup',
+            registryIntegrity: process.env.REGISTRY_SRI || null,
+            runId: process.env.GITHUB_RUN_ID,
+            runAttempt: process.env.GITHUB_RUN_ATTEMPT,
+            repository: process.env.GITHUB_REPOSITORY,
+            package: 'musubix5',
+            version: process.env.RELEASE_TAG?.replace(/^v/, ''),
+            releaseTag: process.env.RELEASE_TAG,
+            candidateCommit: process.env.CANDIDATE_COMMIT,
+            evidenceCommit: process.env.EVIDENCE_COMMIT,
+            releaseApprovalSha256: process.env.RELEASE_APPROVAL_SHA256,
+          };
+          writeFileSync('publish-outcome.json', `${JSON.stringify(outcome, null, 2)}\n`);
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY,
+            `## Publish outcome\n\n`
+            + `- Status: **${outcome.status}**\n`
+            + `- Operation: \`${outcome.operationId}\`\n`
+            + `- Package: \`${outcome.package}@${outcome.version}\`\n`
+            + `- Candidate: \`${outcome.candidateCommit}\`\n`
+            + `- Evidence: \`${outcome.evidenceCommit}\`\n`
+            + `- Run: \`${outcome.runId}\` (attempt ${outcome.runAttempt})\n`
+            + `- Verification: \`${outcome.verificationOutcome}\`\n`
+            + `- Published: \`${outcome.published}\`\n`
+            + `- Integrity: \`${outcome.integrityOutcome}\`\n`
+            + `- Post-publication integrity failure: \`${outcome.postPublicationIntegrityFailure}\`\n`);
+          NODE
+      - name: Upload terminal publish outcome
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: publish-outcome-${{ github.run_id }}-${{ github.run_attempt }}
+          path: publish-outcome.json
+          if-no-files-found: error

@@ -103,6 +103,25 @@ Release approval does not authorize publication, tag creation, or pushing to a
 remote. Each external operation requires a separate explicit human
 authorization bound to the exact candidate.
 
+musubix5 adds `release-operation authorize`, `release-operation validate`, and
+`release-operation status`. New authorization records use schema version 2,
+support the closed scopes `publish`, `release`, `tag`, and `push`, and bind the
+exact 40-character candidate commit, release-approval SHA-256, release tag, and
+authorizer into their authorization digest. Schema-version-1 records remain
+readable for historical status but cannot authorize workflow side effects.
+Release automation uses the candidate-built `validate` command against a
+separate post-candidate evidence checkout; it never trusts the approval digest
+reported by the authorization record without independently validating the
+current release approval.
+
+Release runs may be retried with the same still-authorized operation record
+when they fail before the corresponding side effect. If GitHub Release creation
+succeeds but npm publication fails transiently, dispatch only the publish
+operation on retry. If deterministic package reconstruction or registry
+integrity fails after a GitHub Release exists, retain and mark that Release,
+do not reuse its tag, and prepare a corrected candidate with a new patch
+version.
+
 ## Evidence migration
 
 Do not copy musubix3 or musubix4 generated evidence into musubix5. Recreate

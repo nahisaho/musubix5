@@ -6,11 +6,34 @@ status: approval-pending
 ---
 # CHANGE-0002: musubix5-clean-foundation
 
-Requirements: REQ-M5-COMPAT-001 REQ-M5-COMPAT-002 REQ-M5-COMPAT-003 REQ-M5-COMPAT-004 REQ-M5-COMPAT-005 REQ-M5-COMPAT-006 REQ-M5-COMPAT-007 REQ-M5-COMPAT-008 REQ-M5-COMPAT-009 REQ-M5-COMPAT-010 REQ-M5-COMPAT-011 REQ-M5-COMPAT-012 REQ-M5-COMPAT-013 REQ-M5-LIFECYCLE-001 REQ-M5-LIFECYCLE-002 REQ-M5-LIFECYCLE-003 REQ-M5-LIFECYCLE-004 REQ-M5-LIFECYCLE-005 REQ-M5-APPROVAL-001 REQ-M5-APPROVAL-002 REQ-M5-APPROVAL-003 REQ-M5-APPROVAL-004 REQ-M5-APPROVAL-005 REQ-M5-APPROVAL-006 REQ-M5-APPROVAL-007 REQ-M5-APPROVAL-008 REQ-M5-APPROVAL-009 REQ-M5-BUDGET-001 REQ-M5-BUDGET-002 REQ-M5-BUDGET-003 REQ-M5-BUDGET-004 REQ-M5-BUDGET-005 REQ-M5-EVIDENCE-001 REQ-M5-EVIDENCE-002 REQ-M5-EVIDENCE-003 REQ-M5-EVIDENCE-004 REQ-M5-EVIDENCE-005 REQ-M5-EVIDENCE-006 REQ-M5-EVIDENCE-007 REQ-M5-WAIVER-001 REQ-M5-TDD-001 REQ-M5-TDD-002 REQ-M5-TDD-003 REQ-M5-TDD-004 REQ-M5-WORKTREE-001 REQ-M5-WORKTREE-002 REQ-M5-WORKTREE-003 REQ-M5-WORKTREE-004 REQ-M5-PLANNER-001 REQ-M5-PLANNER-002 REQ-M5-PLANNER-003 REQ-M5-PLANNER-004 REQ-M5-BOOTSTRAP-001 REQ-M5-BOOTSTRAP-002 REQ-M5-BOOTSTRAP-003 REQ-M5-BOOTSTRAP-004 REQ-M5-QUALITY-001 REQ-M5-QUALITY-002 REQ-M5-QUALITY-003 REQ-M5-QUALITY-004 REQ-M5-QUALITY-005 REQ-M5-RELEASE-001 REQ-M5-RELEASE-002
+Requirements: REQ-M5-RELEASE-001 REQ-M5-RELEASE-003
 
 ## Classification
 
 Feature: new clean implementation with compatibility constraints.
+
+Generation 4 defect correction: restore the documented executable release
+workflow before creating the first musubix5 tag or package release. Generation
+3 was abandoned after requirements review showed that the runtime operation
+guard and repository workflow were separate obligations requiring distinct IDs.
+
+The changed obligations are `REQ-M5-RELEASE-001` and
+`REQ-M5-RELEASE-003`. The prior operation guard is preserved and extended so
+automated side effects must consume an exact candidate-bound authorization.
+The separate repository release automation:
+
+- validates the release tag, candidate commit, and all package/plugin versions;
+- validates an exact post-candidate evidence commit containing current release
+  approval and authorized operation-specific records;
+- reruns the documented release validation against the tagged commit;
+- produces the npm tarball, CycloneDX SBOM, checksums, and strict GitHub OIDC
+  plus ephemeral Ed25519 attestation;
+- publishes npm only through the protected `npm-publish` environment; and
+- creates an independently reportable GitHub Release with the release artifacts.
+
+Other requirements remain unchanged. The affected non-normative surfaces are
+the release workflow, package/plugin version consistency checks, release
+workflow regression tests, and English/Japanese release documentation.
 
 ## Intent
 
@@ -51,7 +74,7 @@ input only.
 - musubix3 tag `v0.1.18`
 - musubix4 tag `v0.1.3` and its dirty state as non-release design evidence
 
-## Generation 2 implementation
+## Generation 2 implementation (historical)
 
 - Preserves the pinned musubix3 CLI, JSON, exit-code, configuration, trace,
   graph, TDD, approval, gate, status, installation, and startup contracts.
@@ -74,7 +97,7 @@ input only.
   plus ephemeral Ed25519 artifact verification, journal-backed idempotent
   ingestion, CI run-reuse rejection, and per-job release projections.
 
-## Generation 2 quality evidence
+## Generation 2 quality evidence (historical)
 
 - All 63 normative requirements have generation-2 Red, Implementation, and
   Green evidence; `tdd validate` reports no uncovered or invalid cycles.
@@ -110,6 +133,42 @@ input only.
   These post-candidate records must not be fabricated or projected into the
   candidate itself.
 
+## Generation 4 implementation
+
+- Corrects the executable release workflow for the changed scope
+  `REQ-M5-RELEASE-001` and `REQ-M5-RELEASE-003`; the repository contains 64
+  total must requirements.
+- Passes release and publish operation IDs into shell steps only through
+  environment variables, quotes every use, and validates each non-empty value
+  against the operation guard's strict
+  `^[A-Za-z0-9][A-Za-z0-9._-]*$` identifier rule before use.
+- Keeps bundle artifacts isolated by GitHub run ID while allowing
+  **Re-run failed jobs** to overwrite and consume the same sealed bundle name.
+- Retries npm registry visibility five times with bounded backoff (30 seconds
+  total), distinguishes registry visibility/API failure from a confirmed SRI
+  mismatch, and consistently queries the tag-stripped package version.
+- Adds authoritative workflow trace annotations and YAML-structural regression
+  tests for side-effect job guards, exact permissions, operation-ID handling,
+  artifact retry semantics, and registry integrity retries.
+- Preserves the protected `npm-publish` environment as a publication
+  invariant. Because that GitHub environment does not currently exist,
+  repository administrators must create, configure, and verify it before any
+  manual release dispatch; this change does not create it.
+
+## Generation 4 quality evidence
+
+- The complete suite passes 59 test files and 75 tests; all 71/71 annotated
+  test IDs pass.
+- `tdd validate` reports 259 cycles and 0 diagnostics.
+- Strict trace validation and the graph gate pass.
+- All local required checks pass. Before a new immutable candidate is
+  established, the expected remaining blockers are missing or stale external
+  candidate-bound matrix evidence and release approval.
+
+> **Post-candidate evidence warning:** `.musubix/evidence/approvals/release.json`
+> and `.musubix/evidence/release/gates/*.json` are created only after the
+> candidate is fixed. They must not be staged into the candidate commit.
+
 ## Release boundary
 
 The target remains version `0.1.0` on branch `change/CHANGE-0002`. The prior
@@ -127,3 +186,10 @@ The candidate workflow can run only after `.github/workflows/candidate-gate.yml`
 is available on the repository default branch and the exact candidate commit is
 available to GitHub Actions. Those pushes are prerequisites for external matrix
 evidence and require their own explicit human authorization.
+
+The release workflow can run only when `.github/workflows/release.yml` exists
+on the tagged candidate and repository default branch. The candidate must first
+be integrated into the default branch so the later evidence commit can be its
+descendant and remain reachable from that branch. Pushing that candidate, the
+separate post-candidate evidence commit, and the release tag are distinct
+external operations requiring explicit human authorization.

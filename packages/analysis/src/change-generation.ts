@@ -3,12 +3,14 @@ import { exists, readText, within } from './files.js';
 export interface ActiveChangeContext {
   changeId: string;
   generation: number;
+  requirementIds: string[];
 }
 
 interface StoredChangeGeneration {
   changeId: string;
   generation?: number;
   activeGeneration?: number | null;
+  requirementIds?: string[];
 }
 
 function activeGeneration(change: StoredChangeGeneration): number | null {
@@ -32,7 +34,11 @@ export async function activeChangeContext(root: string): Promise<ActiveChangeCon
   }
   const active = evidence.changes.flatMap((change) => {
     const generation = activeGeneration(change);
-    return generation === null ? [] : [{ changeId: change.changeId, generation }];
+    return generation === null ? [] : [{
+      changeId: change.changeId,
+      generation,
+      requirementIds: Array.isArray(change.requirementIds) ? change.requirementIds : [],
+    }];
   });
   if (active.length > 1) {
     throw new Error('CHANGE_GENERATION_MIXED: more than one CHANGE has an active generation.');

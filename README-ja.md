@@ -919,19 +919,24 @@ attestation APIは`musubix5/analysis`と専用`musubix5/attestation` exportの
 
 `v*` tagは`.github/workflows/release.yml`を起動します。workflowはtagと
 package/plugin versionの一致を検証し、Linux上のnative/formal suiteを実行して、
-npm tarball、CycloneDX SBOM、SHA256SUMS、GitHub Releaseを生成します。
-`npm publish --provenance --access public`は保護された`npm-publish` environmentで
-別途承認されます。npm Trusted Publishingを優先し、任意の`NPM_TOKEN` environment
-secretも利用できます。npm publishがpendingまたは失敗してもGitHub Release作成結果を
-成功に見せかけず、各jobの状態を独立して確認できます。手動実行ではrelease tagを
-workflow refとして選び、同じ値を`release_tag`へ指定します。tagがOIDCに束縛された
-`GITHUB_SHA`を指していなければworkflowは拒否します。
+npm tarballを2回のclean build/packで比較し、CycloneDX SBOMとSHA256SUMSを含む
+sealed bundleを生成します。tag pushでは検証とartifact生成だけを行い、npm publishや
+GitHub Release作成は行いません。外部副作用には、同じlightweight tagからの手動実行、
+候補の子孫であるfull-SHA evidence commit、および個別の`release`/`publish` operation
+authorizationが必要です。release jobとpublish jobは互いに独立です。publish jobは
+保護された`npm-publish` environmentを使用し、Trusted Publishingでは
+`npm publish --access public`、token fallbackでは
+`npm publish --provenance --access public`を実行します。
+repository管理者は、手動release dispatchの前に、この保護environmentを作成し、
+required reviewerとdeployment restrictionを設定・確認する必要があります。
+workflow定義自体はenvironmentを作成せず、この前提条件が満たされるまで安全な
+publishは実行できません。
 
 release attestationは、ephemeral Ed25519公開鍵をcustom audienceへ束縛した
 GitHub Actions OIDC tokenを使用します。署名対象にはrepository、Git commit、
-run ID、workflow/ref identity、workspace snapshot、存在するmusubix evidence headが
-含まれます。release automationは`.test-work`内のprivate keyで署名した後、
-CLI検証前に削除し、署名済みattestationだけをuploadします。署名だけでtest semanticsが
-正しいとは主張せず、testとsolverは先行するrelease validation jobで検査します。
+run ID、workflow/ref identity、release context（手動実行時のevidence commitと
+独立に導出したapprovalを含む）、SHA256SUMSが含まれます。各副作用jobはGitHubの
+issuer/JWKSを含むbindingを再検証します。ephemeral private keyはrun-scoped bundleを
+uploadする前に削除されます。
 
 [CONTRIBUTING.md](CONTRIBUTING.md) と [CHANGELOG.md](CHANGELOG.md) も参照してください。

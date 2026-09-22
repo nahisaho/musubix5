@@ -23,6 +23,8 @@ import {
   type BootstrapAuthorityManifest,
   candidateGateContext, ingestCandidateGateEnvelopes, loadCandidateGateResults,
   validateCandidateGateSet, type CandidateGateEnvelope,
+  authorizeReleaseOperation, releaseOperationStatus, validateReleaseOperationAuthorization,
+  type ReleaseOperationScope,
 } from '../../analysis/src/index.js';
 
 const compatibleWorkflowSanitizationDescription =
@@ -39,6 +41,23 @@ function output(value: unknown, json: boolean, summary?: string): void {
 function result(value: { valid: boolean; diagnostics: Diagnostic[] }, json: boolean): void {
   output(value, json, `${value.valid ? 'PASS / 合格' : 'FAIL / 不合格'}\n${value.diagnostics.map((d) => `${d.severity} ${d.code}${d.path ? ` ${d.path}${d.line ? `:${d.line}` : ''}` : ''}: ${d.message}`).join('\n')}`.trim());
   if (!value.valid) process.exitCode = 1;
+}
+
+async function releaseOperationAction(
+  json: boolean,
+  action: () => Promise<void>,
+): Promise<void> {
+  try {
+    await action();
+  } catch (cause) {
+    const message = cause instanceof Error ? cause.message : String(cause);
+    const domainFailure = /^(RELEASE_OPERATION_[A-Z0-9_]+):\s*(.*)$/.exec(message);
+    if (!domainFailure) throw cause;
+    const [, code, detail] = domainFailure;
+    if (json) console.log(JSON.stringify({ error: { code, message: detail } }));
+    else console.error(`${code}: ${detail}`);
+    process.exitCode = 1;
+  }
 }
 
 function common(command: Command): Command {
@@ -674,6 +693,56 @@ export function createProgram(): Command {
         stages.map((stage) => `${stage.status.toUpperCase()} ${stage.stage}${stage.domain ? ` [${stage.domain}]` : ''}${stage.required ? ' [required]' : ''}`).join('\n'),
       );
       if (!report.valid) process.exitCode = 1;
+    });
+  const releaseOperation = new Command('release-operation')
+    .description('Authorize and validate candidate-bound external release operations');
+  program.addCommand(releaseOperation, { hidden: true });
+  common(releaseOperation.command('authorize <operation-id>'))
+    .requiredOption('--scope <scope>', 'publish | release | tag | push')
+    .requiredOption('--candidate-commit <sha>', 'Exact 40-character lowercase candidate commit')
+    .requiredOption('--release-approval-sha256 <sha256>', 'Current release approval artifact SHA-256')
+    .requiredOption('--release-tag <tag>', 'Release tag beginning with v')
+    .requiredOption('--authorizer <name>', 'Human authorizer')
+    .requiredOption('--confirm', 'Explicitly confirm this external-operation authorization')
+    .action(async (operationId: string, options: {
+      root: string; json?: boolean; scope: string; candidateCommit: string;
+      releaseApprovalSha256: string; releaseTag: string; authorizer: string; confirm: boolean;
+    }) => {
+      const authorization = await authorizeReleaseOperation(resolve(options.root), {
+        operationId,
+        scope: options.scope as ReleaseOperationScope,
+        candidateCommit: options.candidateCommit,
+        releaseApprovalSha256: options.releaseApprovalSha256,
+        releaseTag: options.releaseTag,
+        authorizer: options.authorizer,
+        confirm: options.confirm,
+      });
+      output(authorization, !!options.json, `Authorized ${authorization.scope} operation ${operationId}.`);
+    });
+  common(releaseOperation.command('validate <operation-id>'))
+    .requiredOption('--scope <scope>', 'publish | release | tag | push')
+    .requiredOption('--candidate-commit <sha>', 'Exact 40-character lowercase candidate commit')
+    .requiredOption('--release-tag <tag>', 'Release tag beginning with v')
+    .action(async (operationId: string, options: {
+      root: string; json?: boolean; scope: string; candidateCommit: string; releaseTag: string;
+    }) => {
+      await releaseOperationAction(!!options.json, async () => {
+        const authorization = await validateReleaseOperationAuthorization(
+          resolve(options.root),
+          operationId,
+          {
+            scope: options.scope as ReleaseOperationScope,
+            candidateCommit: options.candidateCommit,
+            releaseTag: options.releaseTag,
+          },
+        );
+        output(authorization, !!options.json, `Validated ${authorization.scope} operation ${operationId}.`);
+      });
+    });
+  common(releaseOperation.command('status <operation-id>'))
+    .action(async (operationId: string, options: { root: string; json?: boolean }) => {
+      const authorization = await releaseOperationStatus(resolve(options.root), operationId);
+      output(authorization, !!options.json, `${authorization.operationId}: ${authorization.status}`);
     });
   const tdd = program.command('tdd').description(
     'Verified Red-Green-Refactor execution evidence. <test-id> requires two independent things: '

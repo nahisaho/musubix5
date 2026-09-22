@@ -661,7 +661,11 @@ export async function validateTddEvidence(root: string): Promise<{
     }
   }
   const trace = await buildTrace(root, false);
-  for (const requirement of trace.nodes.filter((node) => node.kind === 'requirement' && node.mandatory)) {
+  const activeRequirementIds = activeChange ? new Set(activeChange.requirementIds) : null;
+  for (const requirement of trace.nodes.filter((node) =>
+    node.kind === 'requirement'
+    && node.mandatory
+    && (activeRequirementIds === null || activeRequirementIds.has(node.id)))) {
     const verifiedTests = trace.edges
       .filter((edge) => edge.relation === 'verifies' && edge.to === requirement.id)
       .map((edge) => edge.from);

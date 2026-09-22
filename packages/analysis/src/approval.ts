@@ -253,6 +253,7 @@ export async function validateApprovalStage(
       if (!releaseDiagnostic) {
         throw manifestCause;
       }
+
       diagnostics.push(error(code, message, path));
       return {
         stage,
@@ -325,6 +326,32 @@ export async function validateApprovalStage(
     currentArtifactSha256: current.artifactSha256,
     diagnostics,
   };
+}
+
+/**
+ * Read the current repository-wide release approval without acquiring a
+ * mutation lease. The normal approval projection and candidate-gate paths are
+ * deliberately reused so stale evidence cannot be mistaken for authorization.
+ */
+export async function readReleaseApprovalDigest(
+  root: string,
+  candidateCommit: string,
+): Promise<string> {
+  if (!/^[a-f0-9]{40}$/.test(candidateCommit)) {
+    throw new Error('RELEASE_APPROVAL_CANDIDATE_MISMATCH: candidateCommit must be exactly 40 lowercase hexadecimal characters.');
+  }
+  const config = await loadApprovalProjectionConfig(root);
+  const validation = await validateApprovalStage(root, 'release', config.approval);
+  if (validation.status !== 'approved' || !validation.evidence) {
+    const diagnostic = validation.diagnostics[0];
+    throw new Error(`RELEASE_APPROVAL_STALE: ${diagnostic?.message ?? 'current release approval is not approved.'}`);
+  }
+  const projection = validation.evidence.projection;
+  if (!projection || typeof projection !== 'object' || Array.isArray(projection)
+    || (projection as Record<string, unknown>).candidateCommit !== candidateCommit) {
+    throw new Error('RELEASE_APPROVAL_CANDIDATE_MISMATCH: release approval is bound to another candidate.');
+  }
+  return validation.evidence.artifactSha256;
 }
 
 export async function validateApprovals(root: string, config: ApprovalConfig): Promise<ApprovalValidation> {

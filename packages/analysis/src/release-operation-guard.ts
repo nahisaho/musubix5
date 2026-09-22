@@ -1,23 +1,55 @@
 import { canonicalBytes, sha256 } from './canonical.js';
 import { exists, readText, safePath, writeJson } from './files.js';
+import { readReleaseApprovalDigest } from './approval.js';
 
-export type ReleaseOperationScope = 'publish' | 'tag' | 'push';
+export type ReleaseOperationScope = 'publish' | 'release' | 'tag' | 'push';
+type ReleaseOperationStatus = 'authorized' | 'executing' | 'completed';
 
-export interface ReleaseOperationAuthorization {
+interface ReleaseOperationHistoryEntry {
+  order: number;
+  status: ReleaseOperationStatus;
+  outputSha256: string | null;
+}
+
+export interface LegacyReleaseOperationAuthorization {
   schemaVersion: 1;
   operationId: string;
-  scope: ReleaseOperationScope;
+  scope: Exclude<ReleaseOperationScope, 'release'>;
   candidateSha256: string;
   releaseApprovalSha256: string;
   authorizer: string;
   authorizationSha256: string;
-  status: 'authorized' | 'executing' | 'completed';
-  history: Array<{
-    order: number;
-    status: 'authorized' | 'executing' | 'completed';
-    outputSha256: string | null;
-  }>;
+  status: ReleaseOperationStatus;
+  history: ReleaseOperationHistoryEntry[];
   outputSha256: string | null;
+}
+
+export interface ReleaseOperationAuthorization {
+  schemaVersion: 2;
+  operationId: string;
+  scope: ReleaseOperationScope;
+  candidateCommit: string;
+  releaseApprovalSha256: string;
+  releaseTag: string;
+  authorizer: string;
+  authorizationSha256: string;
+  status: ReleaseOperationStatus;
+  history: ReleaseOperationHistoryEntry[];
+  outputSha256: string | null;
+}
+
+export type ReadableReleaseOperationAuthorization =
+  | LegacyReleaseOperationAuthorization
+  | ReleaseOperationAuthorization;
+
+export interface ReleaseOperationBinding {
+  scope: ReleaseOperationScope;
+  candidateCommit: string;
+  releaseTag: string;
+}
+
+export interface ValidatedReleaseOperationAuthorization extends ReleaseOperationAuthorization {
+  verifiedReleaseApprovalSha256: string;
 }
 
 function authorizationPath(operationId: string): string {
@@ -30,31 +62,80 @@ function validateOperationId(operationId: string): void {
   }
 }
 
-async function loadAuthorization(
-  root: string,
-  operationId: string,
-): Promise<ReleaseOperationAuthorization> {
-  validateOperationId(operationId);
-  const path = authorizationPath(operationId);
-  if (!await exists(await safePath(root, path))) {
-    throw new Error(`RELEASE_OPERATION_NOT_AUTHORIZED: ${operationId}.`);
-  }
-  const value = JSON.parse(await readText(root, path)) as ReleaseOperationAuthorization;
-  if (value.schemaVersion !== 1 || value.operationId !== operationId
-    || !Array.isArray(value.history)) {
-    throw new Error(`RELEASE_OPERATION_AUTHORIZATION_INVALID: ${operationId}.`);
-  }
-  const identity = {
+function validHistory(value: ReadableReleaseOperationAuthorization): boolean {
+  if (!Array.isArray(value.history) || value.history.length === 0) return false;
+  const entriesValid = value.history.every((entry, index) =>
+    entry.order === index + 1
+    && (entry.status === 'authorized' || entry.status === 'executing' || entry.status === 'completed')
+    && (entry.outputSha256 === null || /^[a-f0-9]{64}$/.test(entry.outputSha256))
+    && (index !== 0 || entry.status === 'authorized'));
+  const final = value.history.at(-1)!;
+  return entriesValid
+    && final.status === value.status
+    && final.outputSha256 === value.outputSha256
+    && (value.status === 'completed'
+      ? typeof value.outputSha256 === 'string'
+      : value.outputSha256 === null);
+}
+
+function v1Identity(value: LegacyReleaseOperationAuthorization): Record<string, unknown> {
+  return {
     operationId: value.operationId,
     scope: value.scope,
     candidateSha256: value.candidateSha256,
     releaseApprovalSha256: value.releaseApprovalSha256,
     authorizer: value.authorizer,
   };
-  const historyValid = value.history.every((entry, index) =>
-    entry.order === index + 1
-    && (index === 0 ? entry.status === 'authorized' : true));
-  if (value.authorizationSha256 !== sha256(canonicalBytes(identity)) || !historyValid) {
+}
+
+function v2Identity(value: Pick<ReleaseOperationAuthorization,
+  'schemaVersion' | 'operationId' | 'scope' | 'candidateCommit'
+  | 'releaseApprovalSha256' | 'releaseTag' | 'authorizer'>): Record<string, unknown> {
+  return {
+    schemaVersion: value.schemaVersion,
+    operationId: value.operationId,
+    scope: value.scope,
+    candidateCommit: value.candidateCommit,
+    releaseApprovalSha256: value.releaseApprovalSha256,
+    releaseTag: value.releaseTag,
+    authorizer: value.authorizer,
+  };
+}
+
+function validReleaseTag(value: string): boolean {
+  return /^v[0-9A-Za-z][0-9A-Za-z._-]*$/.test(value);
+}
+
+async function loadAuthorization(
+  root: string,
+  operationId: string,
+): Promise<ReadableReleaseOperationAuthorization> {
+  validateOperationId(operationId);
+  const path = authorizationPath(operationId);
+  if (!await exists(await safePath(root, path))) {
+    throw new Error(`RELEASE_OPERATION_NOT_AUTHORIZED: ${operationId}.`);
+  }
+  const value = JSON.parse(await readText(root, path)) as ReadableReleaseOperationAuthorization;
+  if (value.operationId !== operationId || !validHistory(value)) {
+    throw new Error(`RELEASE_OPERATION_AUTHORIZATION_INVALID: ${operationId}.`);
+  }
+  if (value.schemaVersion === 1) {
+    if (!['publish', 'tag', 'push'].includes(value.scope)
+      || !/^[a-f0-9]{64}$/.test(value.candidateSha256)
+      || !/^[a-f0-9]{64}$/.test(value.releaseApprovalSha256)
+      || !value.authorizer.trim()
+      || value.authorizationSha256 !== sha256(canonicalBytes(v1Identity(value)))) {
+      throw new Error(`RELEASE_OPERATION_AUTHORIZATION_INVALID: ${operationId}.`);
+    }
+    return value;
+  }
+  if (value.schemaVersion !== 2
+    || !['publish', 'release', 'tag', 'push'].includes(value.scope)
+    || !/^[a-f0-9]{40}$/.test(value.candidateCommit)
+    || !/^[a-f0-9]{64}$/.test(value.releaseApprovalSha256)
+    || !validReleaseTag(value.releaseTag)
+    || !value.authorizer.trim()
+    || value.authorizationSha256 !== sha256(canonicalBytes(v2Identity(value)))) {
     throw new Error(`RELEASE_OPERATION_AUTHORIZATION_INVALID: ${operationId}.`);
   }
   return value;
@@ -67,8 +148,9 @@ async function loadAuthorization(
 export async function authorizeReleaseOperation(root: string, request: {
   operationId: string;
   scope: ReleaseOperationScope;
-  candidateSha256: string;
+  candidateCommit: string;
   releaseApprovalSha256: string;
+  releaseTag: string;
   authorizer: string;
   confirm: boolean;
 }): Promise<ReleaseOperationAuthorization> {
@@ -76,25 +158,27 @@ export async function authorizeReleaseOperation(root: string, request: {
   if (!request.confirm) {
     throw new Error('RELEASE_OPERATION_CONFIRMATION_REQUIRED: explicit external-operation confirmation is required.');
   }
-  if (!['publish', 'tag', 'push'].includes(request.scope)
-    || !/^[a-f0-9]{64}$/.test(request.candidateSha256)
+  if (!['publish', 'release', 'tag', 'push'].includes(request.scope)
+    || !/^[a-f0-9]{40}$/.test(request.candidateCommit)
     || !/^[a-f0-9]{64}$/.test(request.releaseApprovalSha256)
+    || !validReleaseTag(request.releaseTag)
     || !request.authorizer.trim()) {
-    throw new Error('RELEASE_OPERATION_AUTHORIZATION_INVALID: scope, candidate, approval, and authorizer are required.');
+    throw new Error('RELEASE_OPERATION_AUTHORIZATION_INVALID: scope, candidate, approval, tag, and authorizer are required.');
   }
   const path = authorizationPath(request.operationId);
   if (await exists(await safePath(root, path))) {
     throw new Error(`RELEASE_OPERATION_EXISTS: ${request.operationId}.`);
   }
   const identity = {
+    schemaVersion: 2 as const,
     operationId: request.operationId,
     scope: request.scope,
-    candidateSha256: request.candidateSha256,
+    candidateCommit: request.candidateCommit,
     releaseApprovalSha256: request.releaseApprovalSha256,
+    releaseTag: request.releaseTag,
     authorizer: request.authorizer,
   };
   const authorization: ReleaseOperationAuthorization = {
-    schemaVersion: 1,
     ...identity,
     authorizationSha256: sha256(canonicalBytes(identity)),
     status: 'authorized',
@@ -108,25 +192,67 @@ export async function authorizeReleaseOperation(root: string, request: {
 export async function releaseOperationStatus(
   root: string,
   operationId: string,
-): Promise<ReleaseOperationAuthorization> {
+): Promise<ReadableReleaseOperationAuthorization> {
   return loadAuthorization(root, operationId);
 }
 
+export async function validateReleaseOperationAuthorization(
+  root: string,
+  operationId: string,
+  request: ReleaseOperationBinding,
+  dependencies: {
+    readReleaseApprovalDigest?: typeof readReleaseApprovalDigest;
+  } = {},
+): Promise<ValidatedReleaseOperationAuthorization> {
+  const authorization = await loadAuthorization(root, operationId);
+  if (authorization.schemaVersion !== 2
+    || authorization.status !== 'authorized'
+    || authorization.scope !== request.scope
+    || authorization.candidateCommit !== request.candidateCommit
+    || authorization.releaseTag !== request.releaseTag) {
+    throw new Error(`RELEASE_OPERATION_NOT_AUTHORIZED: ${operationId} does not match the requested release operation.`);
+  }
+  let verifiedReleaseApprovalSha256: string;
+  try {
+    verifiedReleaseApprovalSha256 = await (
+      dependencies.readReleaseApprovalDigest ?? readReleaseApprovalDigest
+    )(root, request.candidateCommit);
+  } catch (cause) {
+    const detail = cause instanceof Error ? cause.message : String(cause);
+    throw new Error(`RELEASE_OPERATION_NOT_AUTHORIZED: ${detail}`);
+  }
+  if (authorization.releaseApprovalSha256 !== verifiedReleaseApprovalSha256) {
+    throw new Error('RELEASE_OPERATION_NOT_AUTHORIZED: authorization is bound to another release approval.');
+  }
+  return { ...authorization, verifiedReleaseApprovalSha256 };
+}
+
+/**
+ * @deprecated Legacy local-only state transition retained for direct-module
+ * compatibility. Public release workflows must call
+ * validateReleaseOperationAuthorization and perform side effects separately.
+ */
 export async function executeReleaseOperation(
   root: string,
   operationId: string,
-  request: { scope: ReleaseOperationScope; candidateSha256: string },
+  request: ReleaseOperationBinding,
   executor: () => Promise<{ outputSha256: string }>,
 ): Promise<ReleaseOperationAuthorization> {
   const authorization = await loadAuthorization(root, operationId);
+  if (authorization.schemaVersion !== 2) {
+    throw new Error(`RELEASE_OPERATION_NOT_AUTHORIZED: ${operationId} uses a historical schema.`);
+  }
   if (authorization.status !== 'authorized') {
     throw new Error(`RELEASE_OPERATION_ALREADY_USED: ${operationId}.`);
   }
   if (authorization.scope !== request.scope) {
     throw new Error(`RELEASE_OPERATION_SCOPE_MISMATCH: authorized ${authorization.scope}, requested ${request.scope}.`);
   }
-  if (authorization.candidateSha256 !== request.candidateSha256) {
+  if (authorization.candidateCommit !== request.candidateCommit) {
     throw new Error('RELEASE_OPERATION_CANDIDATE_MISMATCH: authorization is bound to another candidate.');
+  }
+  if (authorization.releaseTag !== request.releaseTag) {
+    throw new Error('RELEASE_OPERATION_TAG_MISMATCH: authorization is bound to another release tag.');
   }
   authorization.status = 'executing';
   authorization.history.push({

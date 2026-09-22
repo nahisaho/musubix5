@@ -135,7 +135,7 @@ export function isSource(path: string): boolean {
 }
 
 export function isTraceSource(path: string): boolean {
-  return /\.(?:[cm]?[jt]sx?|rs|py|go|java|kt|kts|cs|c|cc|cpp|h|hh|hpp|rb|php|swift|dart|scala|ex|exs|hs|lua|zig|sol|m|mm|fs|fsx|vb|[rR]|jl)$/.test(path)
+  return /\.(?:[cm]?[jt]sx?|ya?ml|rs|py|go|java|kt|kts|cs|c|cc|cpp|h|hh|hpp|rb|php|swift|dart|scala|ex|exs|hs|lua|zig|sol|m|mm|fs|fsx|vb|[rR]|jl)$/.test(path)
     && !/\.d\.[cm]?ts$/.test(path);
 }
 
