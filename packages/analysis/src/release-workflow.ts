@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { gunzipSync } from 'node:zlib';
 import { canonicalBytes, sha256 } from './canonical.js';
 import { files, readText } from './files.js';
+import { resolveNpmInvocation } from './process.js';
 
 export interface ReleaseVersionValidation {
   releaseTag: string;
@@ -77,6 +78,29 @@ export function npmPublishTransportPolicy(): {
     registryDeadlineSeconds: 240,
     registryDeadlineKillAfterSeconds: 5,
     reconcileFailedPublication: true,
+  };
+}
+
+/** @id CODE-M5-NPM-CLI-INVOCATION-001
+ * @implements REQ-M5-RELEASE-004
+ * @design DES-M5-021
+ */
+export function npmCliInvocation(
+  npmExecPath: string | undefined,
+  platform: NodeJS.Platform = process.platform,
+  nodeExecutable = process.execPath,
+): { command: string; args: string[] } {
+  if (!npmExecPath) {
+    return resolveNpmInvocation([], platform, nodeExecutable);
+  }
+  if (!/\.(?:[cm]?js)$/i.test(npmExecPath)) {
+    throw new Error(
+      'RELEASE_OPERATION_NOT_AUTHORIZED: npm CLI path is not a JavaScript entrypoint.',
+    );
+  }
+  return {
+    command: nodeExecutable,
+    args: [npmExecPath],
   };
 }
 

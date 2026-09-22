@@ -118,11 +118,31 @@ describe('release generation 5', () => {
    * @verifies REQ-M5-RELEASE-004
    */
   it('TEST-M5-RELEASE-004-001 publishes the exact verified GitHub Release tarball', async () => {
+    const releaseWorkflow = await import('../packages/analysis/src/release-workflow.js');
     const {
       computeTarballIntegrity,
       extractPackagedVersion,
+      npmCliInvocation,
       validateReleaseAssetManifest,
-    } = await import('../packages/analysis/src/release-workflow.js');
+    } = releaseWorkflow;
+    expect(npmCliInvocation(
+      undefined,
+      'win32',
+      'C:\\Program Files\\nodejs\\node.exe',
+    )).toEqual({
+      command: 'C:\\Program Files\\nodejs\\node.exe',
+      args: ['C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js'],
+    });
+    expect(() => npmCliInvocation(
+      'C:\\Program Files\\nodejs\\npm.cmd',
+      'win32',
+      'C:\\Program Files\\nodejs\\node.exe',
+    )).toThrow(/npm CLI path is not a JavaScript entrypoint/);
+    const npmInvocation = npmCliInvocation(
+      process.env.npm_execpath,
+      process.platform,
+      process.execPath,
+    );
     const root = resolve(import.meta.dirname, '..');
     const fixture = mkdtempSync(join(tmpdir(), 'musubix5-release-tarball-'));
     temporaryDirectories.push(fixture);
@@ -130,7 +150,8 @@ describe('release generation 5', () => {
       name: 'musubix5',
       version: '0.1.1',
     }));
-    execFileSync('npm', [
+    execFileSync(npmInvocation.command, [
+      ...npmInvocation.args,
       'pack',
       '--ignore-scripts',
       '--pack-destination',

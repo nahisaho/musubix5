@@ -208,7 +208,7 @@ obligations move to `.github/workflows/npm-publish.yml` under
 
 - The complete suite passes 62 test files and 90 tests; all 86/86 current
   annotated test identities pass in structured Vitest reports.
-- `tdd validate` reports 280 cycles with zero diagnostics; current
+- `tdd validate` reports 283 cycles with zero diagnostics; current
   generation-5 Red/Green evidence, strict trace validation, and graph
   validation pass.
 - TypeScript typecheck/build, the compatibility suite, package-content checks,
