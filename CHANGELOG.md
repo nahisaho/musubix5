@@ -2,7 +2,7 @@
 
 All notable changes to musubix5 are documented in this file.
 
-## Unreleased
+## 0.1.1
 
 ### Added
 
@@ -29,12 +29,12 @@ All notable changes to musubix5 are documented in this file.
 - The executable is named `musubix5`; no `musubix3` alias is installed. This
   intentional incompatibility is documented in the migration guide and ADRs.
 
-### Release status
+### Release process
 
-- Tag `v0.1.0` was created and pushed for validation; no GitHub Release or npm
-  publication exists for it. Generation 5 targets `0.1.1`.
-- The generation-4 release approval is superseded. Generation 5 has no release
-  approval until a new immutable candidate passes its external matrix.
+- Version `0.1.1` uses separate candidate validation, GitHub Release creation,
+  and exact-tarball npm publication workflows.
+- Tag `v0.1.0` was created and pushed for validation but has no GitHub Release
+  or npm publication.
 - Because `v0.1.0` and its history are intentionally immutable, its historical
   release authorization remains present in that old evidence commit. Operators
   must not dispatch the historical `v0.1.0` release workflow; removing that

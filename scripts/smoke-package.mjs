@@ -14,13 +14,19 @@ try {
   const packed = JSON.parse(execFileSync(process.execPath, [
     npmCli, 'pack', '--json', '--ignore-scripts', '--pack-destination', work,
   ], { cwd: root, encoding: 'utf8' }))[0];
+  const { extractPackagedReleasePackage } =
+    await import('../dist/packages/analysis/src/release-workflow.js');
+  const packedRelease = extractPackagedReleasePackage(
+    readFileSync(resolve(work, packed.filename)),
+  );
+  const version = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')).version;
+  assert.equal(packedRelease.version, version);
   writeFileSync(resolve(consumer, 'package.json'), '{"name":"musubix5-smoke-consumer","private":true,"type":"module"}\n');
   execFileSync(process.execPath, [
     npmCli, 'install', '--ignore-scripts', '--no-audit', '--no-fund', '--workspaces=false', resolve(work, packed.filename),
   ], { cwd: consumer, stdio: 'pipe' });
   const executable = resolve(consumer, 'node_modules/musubix5/dist/packages/cli/src/main.js');
   const run = (args) => execFileSync(process.execPath, [executable, ...args], { cwd: consumer, encoding: 'utf8' });
-  const version = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')).version;
   assert.equal(run(['--version']).trim(), version);
   assert.equal(JSON.parse(run(['init', '--dry-run', '--json'])).dryRun, true);
   assert(!existsSync(resolve(consumer, '.musubix')));

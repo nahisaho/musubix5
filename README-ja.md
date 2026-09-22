@@ -1,6 +1,6 @@
 # musubix5
 
-**未リリース 0.1.1 candidate · GitHub Copilot CLI 専用 · Node.js ≥20 · TypeScript · MIT**
+**0.1.1 · GitHub Copilot CLI 専用 · Node.js ≥20 · TypeScript · MIT**
 
 [English](README.md)
 
@@ -116,7 +116,7 @@ Copilot の内部設定、MCP、LSP、hooks、既存のプロジェクト指示�
 
 ## アップグレード
 
-`upgrade` commandはmusubix5 0.1.1 candidateに含まれます。互換性契約は
+`upgrade` commandはmusubix5 0.1.1に含まれます。互換性契約は
 musubix3 0.1.14で導入されたcommandを基準とします。公開済みmusubix5 versionは
 `npm view musubix5 versions`で確認してください。
 

@@ -16,6 +16,50 @@ function git(root: string, ...args: string[]): string {
   return execFileSync('git', ['-C', root, ...args], { encoding: 'utf8' }).trim();
 }
 
+function releaseDocuments(version: string): {
+  readme: string;
+  readmeJa: string;
+  changelog: string;
+} {
+  return {
+    readme: [
+      '# musubix5',
+      '',
+      `**${version} · GitHub Copilot CLI only**`,
+      '',
+      '## Upgrade',
+      '',
+      `The \`upgrade\` command is included in musubix5 ${version}. Its contract is stable.`,
+      '',
+    ].join('\n'),
+    readmeJa: [
+      '# musubix5',
+      '',
+      `**${version} · GitHub Copilot CLI 専用**`,
+      '',
+      '## アップグレード',
+      '',
+      `\`upgrade\` commandはmusubix5 ${version}に含まれます。互換性契約は安定しています。`,
+      '',
+    ].join('\n'),
+    changelog: [
+      '# Changelog',
+      '',
+      `## ${version}`,
+      '',
+      '- Release validation.',
+      '',
+    ].join('\n'),
+  };
+}
+
+function writeReleaseDocuments(root: string, version: string): void {
+  const documents = releaseDocuments(version);
+  writeFileSync(join(root, 'README.md'), documents.readme);
+  writeFileSync(join(root, 'README-ja.md'), documents.readmeJa);
+  writeFileSync(join(root, 'CHANGELOG.md'), documents.changelog);
+}
+
 afterEach(() => {
   for (const directory of temporaryDirectories.splice(0)) {
     rmSync(directory, { recursive: true, force: true });
@@ -114,6 +158,89 @@ describe('release generation 5', () => {
   });
 
   /**
+   * @id TEST-M5-RELEASE-003-DOCS-001
+   * @verifies REQ-M5-RELEASE-003
+   */
+  it('TEST-M5-RELEASE-003-DOCS-001 validates release documentation version surfaces', async () => {
+    const {
+      validateReleaseDocumentation,
+      validateReleaseVersions,
+    } = await import('../packages/analysis/src/release-workflow.js');
+    const documents = releaseDocuments('0.1.1');
+    expect(validateReleaseDocumentation(documents, '0.1.1')).toEqual({
+      valid: true,
+      version: '0.1.1',
+    });
+
+    for (const invalid of [
+      { ...documents, readme: documents.readme.replace('**0.1.1 ·', '**Unreleased 0.1.1 candidate ·') },
+      { ...documents, readmeJa: documents.readmeJa.replace('0.1.1に含まれます。', '0.1.1 candidateに含まれます。') },
+      { ...documents, changelog: documents.changelog.replace('## 0.1.1', '## Unreleased') },
+      { ...documents, changelog: `${documents.changelog}\n\`\`\`text\n## ignored\n` },
+    ]) {
+      expect(() => validateReleaseDocumentation(invalid, '0.1.1'))
+        .toThrow(/RELEASE_VERSION_MISMATCH/);
+    }
+
+    await expect(validateReleaseVersions(
+      resolve(import.meta.dirname, '..'),
+      'v0.1.1',
+    )).resolves.toMatchObject({ valid: true, version: '0.1.1' });
+  });
+
+  /**
+   * @id TEST-M5-RELEASE-004-DOCS-001
+   * @verifies REQ-M5-RELEASE-004
+   */
+  it('TEST-M5-RELEASE-004-DOCS-001 validates exact tarball release documents', async () => {
+    const {
+      extractPackagedReleasePackage,
+      npmCliInvocation,
+    } = await import('../packages/analysis/src/release-workflow.js');
+    const npmInvocation = npmCliInvocation(
+      process.env.npm_execpath,
+      process.platform,
+      process.execPath,
+    );
+    const fixture = mkdtempSync(join(tmpdir(), 'musubix5-release-docs-'));
+    temporaryDirectories.push(fixture);
+    writeFileSync(join(fixture, 'package.json'), JSON.stringify({
+      name: 'musubix5',
+      version: '0.1.1',
+    }));
+    writeReleaseDocuments(fixture, '0.1.1');
+    execFileSync(npmInvocation.command, [
+      ...npmInvocation.args,
+      'pack',
+      '--ignore-scripts',
+      '--pack-destination',
+      fixture,
+    ], { cwd: fixture, stdio: 'pipe' });
+    const extracted = extractPackagedReleasePackage(
+      readFileSync(join(fixture, 'musubix5-0.1.1.tgz')),
+    );
+    expect(extracted.version).toBe('0.1.1');
+    expect(extracted.documents).toEqual(releaseDocuments('0.1.1'));
+
+    const missing = mkdtempSync(join(tmpdir(), 'musubix5-release-docs-missing-'));
+    temporaryDirectories.push(missing);
+    writeFileSync(join(missing, 'package.json'), JSON.stringify({
+      name: 'musubix5',
+      version: '0.1.1',
+    }));
+    execFileSync(npmInvocation.command, [
+      ...npmInvocation.args,
+      'pack',
+      '--ignore-scripts',
+      '--pack-destination',
+      missing,
+    ], { cwd: missing, stdio: 'pipe' });
+    expect(() => extractPackagedReleasePackage(
+      readFileSync(join(missing, 'musubix5-0.1.1.tgz')),
+    )).toThrow(/RELEASE_VERSION_MISMATCH/);
+  });
+
+  /**
    * @id TEST-M5-RELEASE-004-001
    * @verifies REQ-M5-RELEASE-004
    */
@@ -150,6 +277,7 @@ describe('release generation 5', () => {
       name: 'musubix5',
       version: '0.1.1',
     }));
+    writeReleaseDocuments(fixture, '0.1.1');
     execFileSync(npmInvocation.command, [
       ...npmInvocation.args,
       'pack',

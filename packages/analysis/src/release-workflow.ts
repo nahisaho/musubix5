@@ -1,7 +1,8 @@
 import { createHash } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
 import { gunzipSync } from 'node:zlib';
 import { canonicalBytes, sha256 } from './canonical.js';
-import { files, readText } from './files.js';
+import { files, readText, safePath } from './files.js';
 import { resolveNpmInvocation } from './process.js';
 
 export interface ReleaseVersionValidation {
@@ -28,6 +29,22 @@ export interface ReleaseAssetManifestValidation {
   version: string;
   tarball: string;
   checksummed: string[];
+}
+
+export interface ReleaseDocumentation {
+  readme: string;
+  readmeJa: string;
+  changelog: string;
+}
+
+export interface ReleaseDocumentationValidation {
+  valid: true;
+  version: string;
+}
+
+export interface PackagedReleasePackage {
+  version: string;
+  documents: ReleaseDocumentation;
 }
 
 export interface ReleaseAttestationEnvelope {
@@ -112,6 +129,125 @@ function packageVersion(value: unknown, path: string): string {
   return (value as { version: string }).version;
 }
 
+function releaseVersionError(message: string): never {
+  throw new Error(`RELEASE_VERSION_MISMATCH: ${message}`);
+}
+
+function normalizedDocument(value: string): string {
+  return value.replace(/\r\n?|\u2028|\u2029/g, '\n').normalize('NFC');
+}
+
+function readmeSurfaces(
+  value: string,
+  sectionHeading: string,
+  path: string,
+): { preamble: string; paragraph: string } {
+  const lines = normalizedDocument(value).split('\n');
+  const titleIndexes = lines.flatMap((line, index) => line === '# musubix5' ? [index] : []);
+  if (titleIndexes.length !== 1) releaseVersionError(`${path} must contain one # musubix5 title.`);
+  const titleIndex = titleIndexes[0]!;
+  const nextHeading = lines.findIndex((line, index) => index > titleIndex && line.startsWith('## '));
+  const preamble = lines.slice(titleIndex + 1, nextHeading < 0 ? lines.length : nextHeading)
+    .find((line) => line.startsWith('**'));
+  const sectionIndex = lines.findIndex((line) => line === sectionHeading);
+  if (!preamble || sectionIndex < 0) releaseVersionError(`${path} release locator is absent.`);
+  let paragraphStart = sectionIndex + 1;
+  while (paragraphStart < lines.length && lines[paragraphStart] === '') paragraphStart += 1;
+  let paragraphEnd = paragraphStart;
+  while (paragraphEnd < lines.length && lines[paragraphEnd] !== '') paragraphEnd += 1;
+  if (paragraphEnd === paragraphStart) releaseVersionError(`${path} release paragraph is absent.`);
+  return {
+    preamble,
+    paragraph: lines.slice(paragraphStart, paragraphEnd).join(' ').replace(/ +/g, ' '),
+  };
+}
+
+function rejectTransientQualifier(values: string[]): void {
+  const tokens = new Set(['unreleased', 'candidate', 'prerelease', 'rc', 'beta', 'alpha']);
+  for (const value of values) {
+    const folded = value.replace(/[A-Z]/g, (character) => character.toLowerCase());
+    const observed = folded.split(/[^a-z0-9]+/).filter(Boolean);
+    if (observed.some((token) => tokens.has(token))
+      || folded.includes('pre-release')
+      || value.includes('未リリース')) {
+      releaseVersionError('release documentation contains a transient qualifier.');
+    }
+  }
+}
+
+function validateChangelog(value: string, version: string): void {
+  const lines = normalizedDocument(value).split('\n');
+  const headings: string[] = [];
+  let fenced = false;
+  for (const line of lines) {
+    if (line.startsWith('```')) {
+      fenced = !fenced;
+      continue;
+    }
+    if (!fenced && line.startsWith('## ')) headings.push(line);
+  }
+  if (fenced) releaseVersionError('CHANGELOG.md contains an unterminated fence.');
+  if (headings[0] !== `## ${version}`) {
+    releaseVersionError(`CHANGELOG.md first version heading must be ## ${version}.`);
+  }
+  if (headings.some((heading) =>
+    heading.slice(3).trim().toLowerCase().includes('unreleased')
+    || heading.includes('未リリース'))) {
+    releaseVersionError('CHANGELOG.md contains an unreleased heading.');
+  }
+}
+
+/** @id CODE-M5-RELEASE-DOCUMENTATION-001
+ * @implements REQ-M5-RELEASE-003
+ * @design DES-M5-020
+ */
+export function validateReleaseDocumentation(
+  documents: ReleaseDocumentation,
+  version: string,
+): ReleaseDocumentationValidation {
+  const english = readmeSurfaces(documents.readme, '## Upgrade', 'README.md');
+  const japanese = readmeSurfaces(documents.readmeJa, '## アップグレード', 'README-ja.md');
+  if (!english.preamble.startsWith(`**${version} ·`)
+    || !english.paragraph.startsWith(`The \`upgrade\` command is included in musubix5 ${version}.`)
+    || !japanese.preamble.startsWith(`**${version} ·`)
+    || !japanese.paragraph.startsWith(`\`upgrade\` commandはmusubix5 ${version}に含まれます。`)) {
+    releaseVersionError('README release version surface does not match the release tag.');
+  }
+  const englishSuffix = english.paragraph.slice(
+    `The \`upgrade\` command is included in musubix5 ${version}.`.length,
+  );
+  if (englishSuffix !== '' && !englishSuffix.startsWith(' ')) {
+    releaseVersionError('README.md upgrade sentence boundary is invalid.');
+  }
+  rejectTransientQualifier([
+    english.preamble,
+    english.paragraph,
+    japanese.preamble,
+    japanese.paragraph,
+  ]);
+  validateChangelog(documents.changelog, version);
+  return { valid: true, version };
+}
+
+export async function readReleaseDocumentation(root: string): Promise<ReleaseDocumentation> {
+  async function strict(path: string): Promise<string> {
+    try {
+      return new TextDecoder('utf-8', { fatal: true }).decode(
+        await readFile(await safePath(root, path)),
+      );
+    } catch (cause) {
+      throw new Error(`RELEASE_VERSION_MISMATCH: ${path} is absent, unreadable, or not UTF-8.`, {
+        cause,
+      });
+    }
+  }
+  return {
+    readme: await strict('README.md'),
+    readmeJa: await strict('README-ja.md'),
+    changelog: await strict('CHANGELOG.md'),
+  };
+}
+
 /** @id CODE-M5-RELEASE-WORKFLOW-001
  * @implements REQ-M5-RELEASE-003
  * @design DES-M5-020
@@ -148,6 +284,7 @@ export async function validateReleaseVersions(
   if (mismatch) {
     throw new Error(`RELEASE_VERSION_MISMATCH: ${mismatch[0]} is ${mismatch[1]}, expected ${version}.`);
   }
+  validateReleaseDocumentation(await readReleaseDocumentation(root), version);
   return { releaseTag, version, valid: true, paths, versions };
 }
 
@@ -351,43 +488,130 @@ function tarString(buffer: Buffer, start: number, length: number): string {
     .toString('utf8');
 }
 
-export function extractPackagedVersion(tarball: Uint8Array): string {
+function tarOctal(buffer: Buffer, start: number, length: number, field: string): number {
+  const encoded = buffer.subarray(start, start + length).toString('ascii');
+  if (!/^ *[0-7]+[\0 ]*$/.test(encoded)) {
+    throw new Error(`RELEASE_VERSION_MISMATCH: package tarball ${field} is invalid.`);
+  }
+  const digits = encoded.match(/[0-7]+/)![0];
+  const value = Number.parseInt(digits, 8);
+  if (!Number.isSafeInteger(value) || value < 0) {
+    throw new Error(`RELEASE_VERSION_MISMATCH: package tarball ${field} is invalid.`);
+  }
+  return value;
+}
+
+function validateTarHeaderChecksum(header: Buffer): void {
+  const expected = tarOctal(header, 148, 8, 'checksum');
+  let observed = 0;
+  for (let index = 0; index < header.length; index += 1) {
+    observed += index >= 148 && index < 156 ? 32 : header[index]!;
+  }
+  if (observed !== expected) {
+    throw new Error('RELEASE_VERSION_MISMATCH: package tarball checksum is invalid.');
+  }
+}
+
+const MAX_TARBALL_OUTPUT_BYTES = 64 * 1024 * 1024;
+const MAX_SELECTED_ENTRY_BYTES = 8 * 1024 * 1024;
+const packagedTargets = new Set([
+  'package/package.json',
+  'package/README.md',
+  'package/README-ja.md',
+  'package/CHANGELOG.md',
+]);
+
+/** @id CODE-M5-PACKAGED-RELEASE-DOCUMENTATION-001
+ * @implements REQ-M5-RELEASE-004
+ * @design DES-M5-021
+ */
+export function extractPackagedReleasePackage(
+  tarball: Uint8Array,
+): PackagedReleasePackage {
   let archive: Buffer;
   try {
-    archive = gunzipSync(tarball);
-  } catch {
-    throw new Error('RELEASE_VERSION_MISMATCH: package tarball is not valid gzip.');
+    archive = gunzipSync(tarball, { maxOutputLength: MAX_TARBALL_OUTPUT_BYTES });
+  } catch (cause) {
+    throw new Error('RELEASE_VERSION_MISMATCH: package tarball gzip expansion is invalid or too large.', {
+      cause,
+    });
   }
+  const selected = new Map<string, Buffer>();
+  let terminated = false;
   for (let offset = 0; offset + 512 <= archive.length;) {
     const header = archive.subarray(offset, offset + 512);
-    if (header.every((byte) => byte === 0)) break;
+    if (header.every((byte) => byte === 0)) {
+      terminated = true;
+      break;
+    }
+    validateTarHeaderChecksum(header);
     const name = tarString(header, 0, 100);
     const prefix = tarString(header, 345, 155);
     const path = prefix ? `${prefix}/${name}` : name;
-    const sizeText = tarString(header, 124, 12).trim();
-    const size = Number.parseInt(sizeText || '0', 8);
-    if (!Number.isSafeInteger(size) || size < 0) {
-      throw new Error('RELEASE_VERSION_MISMATCH: package tarball header is invalid.');
-    }
+    const typeflag = header[156]!;
+    const size = tarOctal(header, 124, 12, 'size');
     const bodyStart = offset + 512;
     const bodyEnd = bodyStart + size;
     if (bodyEnd > archive.length) {
       throw new Error('RELEASE_VERSION_MISMATCH: package tarball is truncated.');
     }
-    if (path === 'package/package.json') {
-      try {
-        const value = JSON.parse(archive.subarray(bodyStart, bodyEnd).toString('utf8')) as unknown;
-        return packageVersion(value, 'package/package.json');
-      } catch (cause) {
-        if (cause instanceof Error && cause.message.startsWith('RELEASE_VERSION_MISMATCH:')) {
-          throw cause;
-        }
-        throw new Error('RELEASE_VERSION_MISMATCH: packaged package.json is invalid.', { cause });
+    if ([...'xgLK'].some((value) => typeflag === value.charCodeAt(0))) {
+      throw new Error('RELEASE_VERSION_MISMATCH: package tarball aliases are not allowed.');
+    }
+    if (path.startsWith('./') && packagedTargets.has(path.slice(2))) {
+      throw new Error('RELEASE_VERSION_MISMATCH: package tarball target alias is not allowed.');
+    }
+    if (packagedTargets.has(path)) {
+      if (typeflag !== 0 && typeflag !== '0'.charCodeAt(0)) {
+        throw new Error(`RELEASE_VERSION_MISMATCH: ${path} is not a regular file.`);
       }
+      if (size > MAX_SELECTED_ENTRY_BYTES) {
+        throw new Error(`RELEASE_VERSION_MISMATCH: ${path} exceeds the entry size limit.`);
+      }
+      if (selected.has(path)) {
+        throw new Error(`RELEASE_VERSION_MISMATCH: duplicate package entry ${path}.`);
+      }
+      selected.set(path, archive.subarray(bodyStart, bodyEnd));
     }
     offset = bodyStart + Math.ceil(size / 512) * 512;
   }
-  throw new Error('RELEASE_VERSION_MISMATCH: package/package.json is absent.');
+  if (!terminated) {
+    throw new Error('RELEASE_VERSION_MISMATCH: package tarball has no terminal zero block.');
+  }
+  for (const target of packagedTargets) {
+    if (!selected.has(target)) {
+      throw new Error(`RELEASE_VERSION_MISMATCH: ${target} is absent.`);
+    }
+  }
+  let version: string;
+  try {
+    const manifestText = new TextDecoder('utf-8', { fatal: true })
+      .decode(selected.get('package/package.json')!);
+    version = packageVersion(JSON.parse(manifestText) as unknown, 'package/package.json');
+  } catch (cause) {
+    if (cause instanceof Error && cause.message.startsWith('RELEASE_VERSION_MISMATCH:')) {
+      throw cause;
+    }
+    throw new Error('RELEASE_VERSION_MISMATCH: packaged package.json is invalid.', { cause });
+  }
+  function document(path: string): string {
+    try {
+      return new TextDecoder('utf-8', { fatal: true }).decode(selected.get(path)!);
+    } catch (cause) {
+      throw new Error(`RELEASE_VERSION_MISMATCH: ${path} is not UTF-8.`, { cause });
+    }
+  }
+  const documents = {
+    readme: document('package/README.md'),
+    readmeJa: document('package/README-ja.md'),
+    changelog: document('package/CHANGELOG.md'),
+  };
+  validateReleaseDocumentation(documents, version);
+  return { version, documents };
+}
+
+export function extractPackagedVersion(tarball: Uint8Array): string {
+  return extractPackagedReleasePackage(tarball).version;
 }
 
 export function computeTarballIntegrity(tarball: Uint8Array): string {

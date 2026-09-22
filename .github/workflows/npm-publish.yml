@@ -269,6 +269,27 @@ jobs:
             exit 1
           }
           version="${RELEASE_TAG#v}"
+          tarball="$(find release-assets -maxdepth 1 -type f -name 'musubix5-*.tgz' -printf '%f\n')"
+          export TARBALL_PATH="$GITHUB_WORKSPACE/release-assets/$tarball"
+          export EXPECTED_VERSION="${RELEASE_TAG#v}"
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const { extractPackagedReleasePackage } =
+            await import('./candidate/dist/packages/analysis/src/release-workflow.js');
+          const packaged = extractPackagedReleasePackage(
+            readFileSync(process.env.TARBALL_PATH),
+          );
+          if (packaged.version !== process.env.EXPECTED_VERSION) {
+            throw new Error(`RELEASE_VERSION_MISMATCH: packaged version ${packaged.version} does not match tag.`);
+          }
+          NODE
+          local_sri="$(node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const { computeTarballIntegrity } =
+            await import('./candidate/dist/packages/analysis/src/release-workflow.js');
+          process.stdout.write(computeTarballIntegrity(readFileSync(process.env.TARBALL_PATH)));
+          NODE
+          )"
           set +e
           npm view "musubix5@$version" version --json \
             > registry-version-stdout.json 2> registry-version-stderr.txt
@@ -291,25 +312,6 @@ jobs:
             throw new Error('RELEASE_OPERATION_NOT_AUTHORIZED: npm package version already exists.');
           }
           NODE
-          tarball="$(find release-assets -maxdepth 1 -type f -name 'musubix5-*.tgz' -printf '%f\n')"
-          export TARBALL_PATH="$GITHUB_WORKSPACE/release-assets/$tarball"
-          export EXPECTED_VERSION="${RELEASE_TAG#v}"
-          node --input-type=module <<'NODE'
-          import { readFileSync } from 'node:fs';
-          const { extractPackagedVersion } =
-            await import('./candidate/dist/packages/analysis/src/release-workflow.js');
-          const version = extractPackagedVersion(readFileSync(process.env.TARBALL_PATH));
-          if (version !== process.env.EXPECTED_VERSION) {
-            throw new Error(`RELEASE_VERSION_MISMATCH: packaged version ${version} does not match tag.`);
-          }
-          NODE
-          local_sri="$(node --input-type=module <<'NODE'
-          import { readFileSync } from 'node:fs';
-          const { computeTarballIntegrity } =
-            await import('./candidate/dist/packages/analysis/src/release-workflow.js');
-          process.stdout.write(computeTarballIntegrity(readFileSync(process.env.TARBALL_PATH)));
-          NODE
-          )"
           echo "tarball=$TARBALL_PATH" >> "$GITHUB_OUTPUT"
           echo "local_sri=$local_sri" >> "$GITHUB_OUTPUT"
       - id: npm_auth

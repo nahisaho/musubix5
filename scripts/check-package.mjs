@@ -32,7 +32,7 @@ for (const required of [
   'dist/packages/domain/src/index.js', 'dist/packages/analysis/src/index.js',
   'dist/packages/analysis/src/attestation.js',
   'assets/constitution.md', 'assets/requirements.md', 'assets/design.md', 'assets/ADR-0001.md',
-  'README.md', 'README-ja.md', 'LICENSE',
+  'README.md', 'README-ja.md', 'CHANGELOG.md', 'LICENSE',
   ...skills.map((name) => `.github/skills/sdd-${name}/SKILL.md`),
 ]) assert(files.has(required), `Package is missing ${required}`);
 for (const skill of skills) {
