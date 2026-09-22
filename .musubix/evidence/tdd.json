@@ -10928,6 +10928,51 @@
         "diagnostics": [],
         "order": 910
       }
+    },
+    {
+      "cycleId": "551aa2ae-6a47-4553-99dc-d676bcb37467",
+      "changeId": "CHANGE-0002",
+      "generation": 2,
+      "requirementId": "REQ-M5-COMPAT-003",
+      "testId": "TEST-M5-COMPAT-003",
+      "testPath": "tests/cli-json-error-contract.test.ts",
+      "commandName": "test",
+      "red": {
+        "phase": "red",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "failed",
+        "reportSha256": "063c212e598d5580e8f278931a6a7ba732824f96d347778d0f16d3d22b0e7008",
+        "commandSha256": "58183d77add6ced3c144d55dc41787192dbfa84ec9a39283fe4aae2045627483",
+        "outputSha256": "21a97ce4786034c6724226b841e45d075709dbc69712df3c8d89f790dc098ecc",
+        "exitCode": 1,
+        "durationMs": 794,
+        "testFingerprint": "75d9a5b562e6284e7b6babfc0c790605e04e9bc93067680e8bd9e302c4f08d18",
+        "sourceFingerprint": "269a28aecfa6a329d52268216b77319674eec198dd14431f87a59ca9e1996539",
+        "executionId": "7ba26bc6-67b7-434b-b0d8-c1bd121c6ff7",
+        "recordedAt": "2026-09-22T00:30:45.348Z",
+        "diagnostics": [],
+        "order": 911
+      },
+      "green": {
+        "phase": "green",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "passed",
+        "reportSha256": "1e93d4bddfa326dfb047efabeee92f171793e50303dc2413c6802f3641acae36",
+        "commandSha256": "58183d77add6ced3c144d55dc41787192dbfa84ec9a39283fe4aae2045627483",
+        "outputSha256": "21a97ce4786034c6724226b841e45d075709dbc69712df3c8d89f790dc098ecc",
+        "exitCode": 0,
+        "durationMs": 4387,
+        "testFingerprint": "75d9a5b562e6284e7b6babfc0c790605e04e9bc93067680e8bd9e302c4f08d18",
+        "sourceFingerprint": "864f39df6db09056865e2af09a3bcf846ede1af1dd21ac358e1a405789766037",
+        "executionId": "304d3474-df58-45d6-9d57-662c8556fecb",
+        "recordedAt": "2026-09-22T00:31:08.551Z",
+        "diagnostics": [],
+        "order": 912
+      }
     }
   ],
   "chain": [
@@ -17176,6 +17221,34 @@
       "phaseEvidenceSha256": "1860589a6e986e1877f7bcad859e9c05695bd8a3c5821b4bef25b351b7151c4c",
       "previousSha256": "b832dbec6d731eabfd4b9ab3b70d155115d2bcb0b4e2adddebfe30a63efe6a04",
       "recordSha256": "e1dc66cf96b6e0a118fad0676dab818ca0f97509b5e273c785aee23938949ab3"
+    },
+    {
+      "sequence": 493,
+      "cycleId": "551aa2ae-6a47-4553-99dc-d676bcb37467",
+      "changeId": "CHANGE-0002",
+      "generation": 2,
+      "requirementId": "REQ-M5-COMPAT-003",
+      "testId": "TEST-M5-COMPAT-003",
+      "testPath": "tests/cli-json-error-contract.test.ts",
+      "commandName": "test",
+      "phase": "red",
+      "phaseEvidenceSha256": "4570c940fd65c301d9f24fa52bc339b60c18d10dc997d9d8d1a10850d2d3709f",
+      "previousSha256": "e1dc66cf96b6e0a118fad0676dab818ca0f97509b5e273c785aee23938949ab3",
+      "recordSha256": "fb700d2b27edb3c99cd8636d1240335452d0a92452f72dbc46c1ebfe7c56d155"
+    },
+    {
+      "sequence": 494,
+      "cycleId": "551aa2ae-6a47-4553-99dc-d676bcb37467",
+      "changeId": "CHANGE-0002",
+      "generation": 2,
+      "requirementId": "REQ-M5-COMPAT-003",
+      "testId": "TEST-M5-COMPAT-003",
+      "testPath": "tests/cli-json-error-contract.test.ts",
+      "commandName": "test",
+      "phase": "green",
+      "phaseEvidenceSha256": "70eeb480912da420435fb5631bdf6491c79941182d08debbfbc1cb1bae3aeef5",
+      "previousSha256": "fb700d2b27edb3c99cd8636d1240335452d0a92452f72dbc46c1ebfe7c56d155",
+      "recordSha256": "94e86373ebd8b42ffd80bf899c1bcbeb27c01c3dc9fe8b8704fd70f57c99060f"
     }
   ]
 }
