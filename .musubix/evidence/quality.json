@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-22T14:56:05.192Z",
-  "status": "fail",
+  "generatedAt": "2026-09-22T21:03:57.551Z",
+  "status": "pass",
   "checks": [
     {
       "name": "policy",
@@ -419,7 +419,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 3129,
+      "durationMs": 3620,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.1.1 typecheck\n> tsc --noEmit\n\n",
       "stderr": ""
@@ -429,7 +429,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 3029,
+      "durationMs": 3661,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.1.1 build\n> tsc -p tsconfig.build.json\n\n",
       "stderr": ""
@@ -439,7 +439,7 @@
       "required": true,
       "status": "pass",
       "summary": "npx: completed, exit 0.",
-      "durationMs": 19504,
+      "durationMs": 23143,
       "exitCode": 0,
       "stdout": "JSON report written to /home/nahisaho/GitHub/musubix5/.musubix/evidence/native/test/aggregate.json\n",
       "stderr": ""
@@ -449,9 +449,9 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 4218,
+      "durationMs": 4964,
       "exitCode": 0,
-      "stdout": "\n> musubix5@0.1.1 test:compat\n> vitest run tests/cli-help-contract.test.ts tests/cli-json-error-contract.test.ts tests/compatibility-oracle.test.ts\n\n\n RUN  v3.2.7 /home/nahisaho/GitHub/musubix5\n\n ✓ tests/cli-help-contract.test.ts (1 test) 1167ms\n   ✓ CLI help compatibility > TEST-M5-COMPAT-001 preserves every inventoried help entry  1166ms\n ✓ tests/compatibility-oracle.test.ts (1 test) 42ms\n ✓ tests/cli-json-error-contract.test.ts (1 test) 3528ms\n   ✓ CLI JSON failure compatibility > TEST-M5-COMPAT-003 preserves the operational-error envelope  3527ms\n\n Test Files  3 passed (3)\n      Tests  3 passed (3)\n   Start at  23:55:55\n   Duration  3.76s (transform 561ms, setup 0ms, collect 117ms, tests 4.74s, environment 1ms, prepare 153ms)\n\n",
+      "stdout": "\n> musubix5@0.1.1 test:compat\n> vitest run tests/cli-help-contract.test.ts tests/cli-json-error-contract.test.ts tests/compatibility-oracle.test.ts\n\n\n RUN  v3.2.7 /home/nahisaho/GitHub/musubix5\n\n ✓ tests/cli-help-contract.test.ts (1 test) 1392ms\n   ✓ CLI help compatibility > TEST-M5-COMPAT-001 preserves every inventoried help entry  1391ms\n ✓ tests/compatibility-oracle.test.ts (1 test) 59ms\n ✓ tests/cli-json-error-contract.test.ts (1 test) 4147ms\n   ✓ CLI JSON failure compatibility > TEST-M5-COMPAT-003 preserves the operational-error envelope  4146ms\n\n Test Files  3 passed (3)\n      Tests  3 passed (3)\n   Start at  06:03:42\n   Duration  4.43s (transform 676ms, setup 0ms, collect 149ms, tests 5.60s, environment 0ms, prepare 160ms)\n\n",
       "stderr": ""
     },
     {
@@ -459,7 +459,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 766,
+      "durationMs": 848,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.1.1 pack:check\n> node scripts/check-package.mjs\n\nPackage verified: musubix5-0.1.1.tgz, 185 files, 9 skills.\n",
       "stderr": ""
@@ -469,7 +469,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 4111,
+      "durationMs": 4528,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.1.1 pack:smoke\n> node scripts/smoke-package.mjs\n\nInstalled tarball verified: executable bin, ESM exports, init, status, assets, and hidden skills (0.1.1).\n",
       "stderr": ""
@@ -512,16 +512,9 @@
     {
       "name": "approval",
       "required": true,
-      "status": "fail",
-      "summary": "2/3 approval stage(s) are current.",
-      "diagnostics": [
-        {
-          "code": "RELEASE_GATE_EVIDENCE_STALE",
-          "severity": "error",
-          "message": "RELEASE_GATE_EVIDENCE_STALE: Candidate gate macos-node22 is bound to another candidate context.",
-          "path": ".musubix/evidence/approvals/release.json"
-        }
-      ]
+      "status": "pass",
+      "summary": "3/3 approval stage(s) are current.",
+      "diagnostics": []
     },
     {
       "name": "commands",
@@ -577,7 +570,7 @@
     "modelCorrespondence.coveredRequirements": 0,
     "modelCorrespondence.errors": 0,
     "attestation.errors": 0,
-    "approval.errors": 1,
+    "approval.errors": 0,
     "coverage.design": 1,
     "coverage.implementation": 1,
     "coverage.tests": 1
@@ -585,85 +578,51 @@
   "mode": "changed",
   "feature": null,
   "changed": [
-    ".github/workflows/release.yml",
-    ".musubix/changes/CHANGE-0002.md",
-    ".musubix/decisions/ADR-0011.md",
-    ".musubix/evidence/approvals/design.json",
-    ".musubix/evidence/approvals/requirements.json",
-    ".musubix/evidence/changes.json",
+    ".musubix/evidence/approvals/release.json",
     ".musubix/evidence/formal.json",
     ".musubix/evidence/model-correspondence.json",
-    ".musubix/evidence/native/test/TEST-M5-RELEASE-003-CONTEXT-EQUALITY-001.json",
     ".musubix/evidence/native/test/aggregate.json",
-    ".musubix/evidence/order.json",
     ".musubix/evidence/performance.json",
     ".musubix/evidence/quality.json",
-    ".musubix/evidence/tdd.json",
-    ".musubix/evidence/workflow.json",
-    ".musubix/features/musubix5-clean-foundation/design.md",
-    ".musubix/features/musubix5-clean-foundation/requirements.md",
+    ".musubix/evidence/release/gates/macos-node22.json",
+    ".musubix/evidence/release/gates/ubuntu-node20.json",
+    ".musubix/evidence/release/gates/ubuntu-node22.json",
+    ".musubix/evidence/release/gates/ubuntu-node24.json",
+    ".musubix/evidence/release/gates/windows-node22.json",
     ".musubix/features/musubix5-clean-foundation/trace.json",
-    "packages/analysis/src/release-workflow.ts",
-    "tests/release-context-generation13.test.ts"
+    ".musubix/journal/normal/000000000033.json",
+    ".musubix/journal/normal/000000000034.json",
+    ".musubix/journal/normal/000000000035.json",
+    ".musubix/journal/normal/000000000036.json",
+    ".musubix/journal/normal/000000000037.json",
+    ".musubix/journal/normal/000000000038.json"
   ],
-  "impacted": [
-    "packages/analysis/src/index.ts",
-    "packages/analysis/src/release-workflow.ts",
-    "packages/cli/src/install.ts",
-    "packages/cli/src/main.ts",
-    "tests/bootstrap-cli.test.ts",
-    "tests/cli-help-contract.test.ts",
-    "tests/release-context-generation13.test.ts",
-    "tests/release-generation5-boundary.test.ts",
-    "tests/release-generation5.test.ts",
-    "tests/release-operation-cli-error.test.ts",
-    "tests/release-review-fixes.test.ts",
-    "tests/release-workflow.test.ts",
-    "tests/trace-namespace.test.ts",
-    "tests/workflow-generation-reconciliation.test.ts"
-  ],
+  "impacted": [],
   "lastChangeAnalysis": {
     "baseline": "HEAD",
-    "head": "fc6ec4a31ffdfe0970c5803fa55e2d7f99f6e435",
+    "head": "906db8cc3f8bca6bcc75debd67d9fa06af9c845b",
     "changed": [
-      ".github/workflows/release.yml",
-      ".musubix/changes/CHANGE-0002.md",
-      ".musubix/decisions/ADR-0011.md",
-      ".musubix/evidence/approvals/design.json",
-      ".musubix/evidence/approvals/requirements.json",
-      ".musubix/evidence/changes.json",
+      ".musubix/evidence/approvals/release.json",
       ".musubix/evidence/formal.json",
       ".musubix/evidence/model-correspondence.json",
-      ".musubix/evidence/native/test/TEST-M5-RELEASE-003-CONTEXT-EQUALITY-001.json",
       ".musubix/evidence/native/test/aggregate.json",
-      ".musubix/evidence/order.json",
       ".musubix/evidence/performance.json",
       ".musubix/evidence/quality.json",
-      ".musubix/evidence/tdd.json",
-      ".musubix/evidence/workflow.json",
-      ".musubix/features/musubix5-clean-foundation/design.md",
-      ".musubix/features/musubix5-clean-foundation/requirements.md",
+      ".musubix/evidence/release/gates/macos-node22.json",
+      ".musubix/evidence/release/gates/ubuntu-node20.json",
+      ".musubix/evidence/release/gates/ubuntu-node22.json",
+      ".musubix/evidence/release/gates/ubuntu-node24.json",
+      ".musubix/evidence/release/gates/windows-node22.json",
       ".musubix/features/musubix5-clean-foundation/trace.json",
-      "packages/analysis/src/release-workflow.ts",
-      "tests/release-context-generation13.test.ts"
+      ".musubix/journal/normal/000000000033.json",
+      ".musubix/journal/normal/000000000034.json",
+      ".musubix/journal/normal/000000000035.json",
+      ".musubix/journal/normal/000000000036.json",
+      ".musubix/journal/normal/000000000037.json",
+      ".musubix/journal/normal/000000000038.json"
     ],
-    "impacted": [
-      "packages/analysis/src/index.ts",
-      "packages/analysis/src/release-workflow.ts",
-      "packages/cli/src/install.ts",
-      "packages/cli/src/main.ts",
-      "tests/bootstrap-cli.test.ts",
-      "tests/cli-help-contract.test.ts",
-      "tests/release-context-generation13.test.ts",
-      "tests/release-generation5-boundary.test.ts",
-      "tests/release-generation5.test.ts",
-      "tests/release-operation-cli-error.test.ts",
-      "tests/release-review-fixes.test.ts",
-      "tests/release-workflow.test.ts",
-      "tests/trace-namespace.test.ts",
-      "tests/workflow-generation-reconciliation.test.ts"
-    ],
-    "generatedAt": "2026-09-22T14:56:05.192Z"
+    "impacted": [],
+    "generatedAt": "2026-09-22T21:03:57.551Z"
   },
   "fingerprints": {
     ".gitattributes": "d60f352d0db1404c70afb4bb8b2ca3fd1c610572aa40720e8a0b7baa7885418c",
@@ -719,6 +678,12 @@
     ".musubix/journal/normal/000000000030.json": "820304a099e9388085f0f7ddff6d1d12510db398ea81fe5d7e3e3a65d50b6a8f",
     ".musubix/journal/normal/000000000031.json": "ba68e0cdd1b709c2607cdeee23b64e6782e598f38bff1f516f2718ab0f53ba66",
     ".musubix/journal/normal/000000000032.json": "a2686d8f5020cf65b4146fbaf279c2de40b7287f4c8ce068cdf31a1680057d53",
+    ".musubix/journal/normal/000000000033.json": "c880a7d3364406b1a9ae0272bb6e670a6dd643bc2f80ae7d27f1c19eb28cc23f",
+    ".musubix/journal/normal/000000000034.json": "8187ab6d93b17f1908a68c8caaf406cc96d2ee0f78e4f8ac602bd0521270f3c4",
+    ".musubix/journal/normal/000000000035.json": "da3672d439be4457940be9569017251ccd59d4977daca684d660b8d07fffb4a4",
+    ".musubix/journal/normal/000000000036.json": "1fbebd5e1c87d1fd5f1526dbff53eb3a7a7cacd697c337f09ff1f8c9de08897b",
+    ".musubix/journal/normal/000000000037.json": "68c72a740f60f57a9eda759a564d6a240d8d3d6a6a75602513de6662ac766f83",
+    ".musubix/journal/normal/000000000038.json": "3f56b5936b0a543d177bd91e84bfb84bf5e326e1727bc5e97f75dc98cded23bd",
     ".musubix/runs/CHANGE-0002/candidate-gate/35680846245/candidate-gate-macos-node22/candidate-gate-envelope.json": "fc054698e76f6a43dce00cf137bc53046ce3670e592f27c8f23186c22b6c10e3",
     ".musubix/runs/CHANGE-0002/candidate-gate/35680846245/candidate-gate-ubuntu-node20/candidate-gate-envelope.json": "0ce9218320d5ed9bd5f6d02f1ce685e7b72de5c0d988f415eef2bc609a7d9e05",
     ".musubix/runs/CHANGE-0002/candidate-gate/35680846245/candidate-gate-ubuntu-node22/candidate-gate-envelope.json": "7d6ec618b4d4f03c766bcb0a3794b6952c438c401ad35c0990ff2ae3b823a39e",
