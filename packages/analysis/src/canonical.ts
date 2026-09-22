@@ -50,9 +50,12 @@ function canonicalGithubHttpsOrigin(origin: string): string | null {
  */
 export function canonicalRepositoryIdentity(
   origin: string | undefined,
-  repositoryRoot: string,
+  repositoryRoot = '',
 ): string {
   const trimmed = (origin ?? '').replace(ASCII_EDGE_WHITESPACE, '');
+  if (!trimmed && !repositoryRoot) {
+    throw new Error('Repository identity requires an origin or repository root.');
+  }
   const identity = trimmed
     ? canonicalGithubHttpsOrigin(trimmed) ?? trimmed
     : repositoryRoot;

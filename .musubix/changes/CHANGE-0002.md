@@ -6,7 +6,7 @@ status: in-progress
 ---
 # CHANGE-0002: musubix5-clean-foundation
 
-Requirements: REQ-M5-RELEASE-003
+Requirements: REQ-M5-RELEASE-003 REQ-M5-RELEASE-004
 
 ## Classification
 
@@ -401,26 +401,74 @@ reconciliation checks pass. Formal classification remains optional advisory at
 only required gate failure is the generation-12 release approval and external
 matrix evidence bound to the superseded candidate context.
 
+## Generation 14 defect correction
+
+Generation-13 dispatch runs `35784803151` and `35785225172` passed candidate,
+authorization, checksum, canonical release-context, and attestation
+verification, then stopped before GitHub Release creation with
+`RELEASE_TARGET_LOOKUP_FAILED`. The release job checks out candidate and
+evidence repositories into subdirectories, so its working directory is not a
+Git repository. `gh release view` and `gh release create` did not receive an
+explicit repository and therefore could not resolve the target repository.
+
+Generation 14 requires both GitHub Release lookup and creation to address the
+verified GitHub repository explicitly, independent of process working
+directory. Both failed runs were side-effect-free; no GitHub Release or npm
+publication exists.
+
+Generation 14 was abandoned before requirements approval because impact scope
+omitted REQ-M5-RELEASE-004 even though npm publication uses the same
+subdirectory checkout and implicit `gh` repository resolution.
+
+## Generation 15 defect correction
+
+Generation 15 covers both release creation and npm publication. Every GitHub
+Release CLI/API operation must explicitly address the already verified
+repository, independent of the process working directory or ambient checkout.
+Release creation may continue only after a machine-readable Releases-by-tag
+HTTP 404 for that exact repository and tag plus a complete draft-inclusive
+enumeration proving no matching tag; human-readable stderr matching is not
+authoritative. Both workflows must bind `$GITHUB_REPOSITORY` to the canonical
+identity independently derived from the candidate checkout before using it as
+an explicit API/CLI target. The npm workflow must verify repository identity before its
+Release lookup, classify only exact 404 or a successful draft/prerelease result
+as `RELEASE_TAG_CANDIDATE_MISMATCH`, classify other lookup or asset-download
+failures as `RELEASE_TARGET_LOOKUP_FAILED`, and register that diagnostic as an
+intentional REQ-M5-COMPAT-013/ADR-0011-governed extension.
+Generation-13 approvals, authorizations, matrix evidence, and tag are
+superseded; no external side effect occurred.
+
+The complete impact includes `.github/workflows/release.yml`,
+`.github/workflows/npm-publish.yml`, their workflow-structure and behavior
+tests, REQ-M5-RELEASE-003, REQ-M5-RELEASE-004, DES-M5-020, DES-M5-021, the
+release diagnostic compatibility registry, and ADR-0011 if the design review
+requires a new decision. Because these workflow changes produce a different
+immutable candidate, generation 15 also requires a fresh five-job external
+matrix, release manifest, release approval, operation authorizations, tag
+replacement, GitHub Release, and npm publication evidence.
+
 ## Release boundary
 
 The existing lightweight `v0.1.0` tag and candidate commit
 `87f37a7e397036de5f47452868aaffed0a019461` are preserved and are not moved.
-Generation 13 targets version `0.1.1` on branch `change/CHANGE-0002`; every
+Generation 15 targets version `0.1.1` on branch `change/CHANGE-0002`; every
 version-bearing file must agree before its new immutable candidate can be
 tagged `v0.1.1`. The generation-9 candidate supersedes generation-5 candidate
 `fa62cba9f9b79ca9611938d5b4bdbace3b19fe23`, and the generation-12 candidate
 supersedes generation-9 candidate
 `e3f13644c2b8fc2052eb5578733e19398a5582ab`. The generation-13 candidate
 supersedes generation-12 candidate
-`9880e6af45952a3bb1635cc75e9593379c356ebf`; the unpublished remote and local
-`v0.1.1` tag currently pointing at that generation-12 candidate must be deleted
-and recreated at the generation-13 candidate. Its tag, release manifest, GitHub Release, and npm
+`9880e6af45952a3bb1635cc75e9593379c356ebf`, and the generation-15 candidate
+supersedes generation-13 candidate
+`906db8cc3f8bca6bcc75debd67d9fa06af9c845b`. The unpublished remote and local
+`v0.1.1` tag currently pointing at that generation-13 candidate must be deleted
+and recreated at the generation-15 candidate. Its tag, release manifest, GitHub Release, and npm
 package publication are distinct from all prior candidates and require fresh
 evidence and explicit authorization.
 
 Preserving the immutable `v0.1.0` tag also preserves its historical workflow
 and authorization records in old reachable commits. Those records grant no
-authorization for any later generation, including generation 13, and no GitHub
+authorization for any later generation, including generation 15, and no GitHub
 Release or npm package currently
 exists for `v0.1.0`; however, an operator could still deliberately dispatch the
 historical workflow against its old evidence commit. This residual operational
@@ -429,21 +477,29 @@ Operators must not dispatch either the historical `v0.1.0` release workflow or
 the superseded `v0.1.1` workflow/evidence at candidate
 `e3f13644c2b8fc2052eb5578733e19398a5582ab`, including authorization commits
 `f2f729aaf7cfad0a76cbc05db4abc3bb649e9191` and
-`de027bd9075d2a15592f2723fde0e91e42bdc3de`.
+`de027bd9075d2a15592f2723fde0e91e42bdc3de`, at generation-12 candidate
+`9880e6af45952a3bb1635cc75e9593379c356ebf`, including approval-evidence commit
+`4f806c65afe288d2738b714a1901ddb1ead36e89` and authorization commits
+`8e9302df853768899046ec959e841742aa0aef45` and
+`fc6ec4a31ffdfe0970c5803fa55e2d7f99f6e435`, or at generation-13 candidate
+`906db8cc3f8bca6bcc75debd67d9fa06af9c845b`, including approval-evidence commit
+`a22c262f88f56013f0aad5d429261ae2c1aa33e0` and authorization commit
+`33b307f485a020d93f59ec1c5122205e750c9d86`.
 
 A new immutable candidate is established when the current approved
 requirements/design and complete local validation are committed. The exact
 release manifest and release approval are established afterward, outside the
 candidate tree, from all five candidate-bound CI attestations and explicit
 human release approval. Generation-4 and generation-5 release approval,
-generation-9 and generation-12 release approval, operation authorization, gate
-evidence, release manifests, and workflow bundles grant no authorization for a generation-13
+generation-9, generation-12, and generation-13 release approval, operation
+authorization, gate evidence, release manifests, and workflow bundles grant no
+authorization for a generation-15
 operation. No package publication,
 Git tag, or release
 operation is authorized by this record; remote pushes performed to produce
 candidate evidence carry no release authorization. Each external operation
 additionally requires separate explicit human authorization bound to the
-approved generation-13 candidate.
+approved generation-15 candidate.
 
 Generation 12 retains both repository-identity regression files because the
 first three cycles were recorded before the generation-12 implementation

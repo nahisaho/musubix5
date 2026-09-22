@@ -84,7 +84,9 @@ describe('release workflow hardening', () => {
       step.name === 'Verify checksums, attestation, authorization, and target');
     expect(targetValidation?.env).toMatchObject({ GH_TOKEN: '${{ github.token }}' });
     expect(targetValidation?.run).toContain('RELEASE_TARGET_LOOKUP_FAILED');
-    expect(targetValidation?.run).toContain('release not found');
+    expect(targetValidation?.run).toContain('gh api --include');
+    expect(targetValidation?.run).toContain('gh api --paginate --slurp');
+    expect(targetValidation?.run).not.toContain('release not found');
 
     for (const steps of [releaseSteps, publish.steps]) {
       const record = steps.find((step) => String(step.name).startsWith('Record terminal'));

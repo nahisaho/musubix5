@@ -55,7 +55,7 @@ jobs:
       - name: Install and build candidate validator
         run: npm --prefix candidate ci && npm --prefix candidate run build
       - id: identity
-        name: Validate tag, evidence ancestry, Release target, and package replay
+        name: Validate tag, stable Release, ancestry, and operation identity
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ inputs.release_tag }}
@@ -105,21 +105,84 @@ jobs:
             echo "RELEASE_OPERATION_NOT_AUTHORIZED: publish evidence is not reachable from the default branch" >&2
             exit 1
           }
+          node --input-type=module <<'NODE'
+          import { execFileSync } from 'node:child_process';
+          const { canonicalRepositoryIdentity } =
+            await import('./candidate/dist/packages/analysis/src/canonical.js');
+          const remotes = execFileSync(
+            'git',
+            ['-C', 'candidate', 'config', '--get-all', 'remote.origin.url'],
+            { encoding: 'utf8' },
+          );
+          const repositoryRoot = execFileSync(
+            'git',
+            ['-C', 'candidate', 'rev-parse', '--show-toplevel'],
+            { encoding: 'utf8' },
+          ).trim();
+          const checkoutRepository = canonicalRepositoryIdentity(
+            remotes.split(/\r?\n/, 1)[0],
+            repositoryRoot,
+          );
+          const eventRepository = canonicalRepositoryIdentity(`https://github.com/${process.env.GITHUB_REPOSITORY}.git`);
+          if (checkoutRepository !== eventRepository) {
+            throw new Error(
+              'RELEASE_OPERATION_NOT_AUTHORIZED: event repository identity mismatch',
+            );
+          }
+          NODE
           set +e
-          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" \
-            > release-metadata.json 2> release-metadata-error.txt
+          gh api --include "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" \
+            > release-metadata.txt 2> release-metadata-error.txt
           release_status=$?
           set -e
-          [[ "$release_status" -eq 0 ]] || {
-            echo "RELEASE_TAG_CANDIDATE_MISMATCH: stable GitHub Release is absent" >&2
-            cat release-metadata-error.txt >&2
-            exit 1
-          }
-          node --input-type=module <<'NODE'
+          RELEASE_STATUS="$release_status" node --input-type=module <<'NODE'
           import { readFileSync } from 'node:fs';
-          const release = JSON.parse(readFileSync('release-metadata.json', 'utf8'));
-          if (release.tag_name !== process.env.RELEASE_TAG || release.draft || release.prerelease) {
-            throw new Error('RELEASE_TAG_CANDIDATE_MISMATCH: Release must be stable and match the tag.');
+          const {
+            classifyReleaseTargetLookup,
+            parseReleaseTargetApiResponse,
+          } =
+            await import('./candidate/dist/packages/analysis/src/release-workflow.js');
+          const text = readFileSync('release-metadata.txt', 'utf8');
+          let response;
+          try {
+            response = parseReleaseTargetApiResponse(text);
+          } catch {
+            response = undefined;
+          }
+          const statusCode = response?.statusCode;
+          let release;
+          if (statusCode === 200 && response?.body) {
+            const value = response.body;
+            release = {
+              tagName: value.tag_name,
+              draft: value.draft,
+              prerelease: value.prerelease,
+            };
+          }
+          const outcome = classifyReleaseTargetLookup({
+            expectedTag: process.env.RELEASE_TAG,
+            exact: {
+              exitCode: Number(process.env.RELEASE_STATUS),
+              statusCode,
+              release,
+            },
+          });
+          if (outcome === 'absent') {
+            console.error(readFileSync('release-metadata-error.txt', 'utf8'));
+            throw new Error(
+              'RELEASE_TAG_CANDIDATE_MISMATCH: stable GitHub Release is absent.',
+            );
+          }
+          if (outcome === 'present-draft-or-prerelease') {
+            throw new Error(
+              'RELEASE_TAG_CANDIDATE_MISMATCH: GitHub Release is draft or prerelease.',
+            );
+          }
+          if (outcome !== 'present-stable') {
+            console.error(readFileSync('release-metadata-error.txt', 'utf8'));
+            throw new Error(
+              'RELEASE_TARGET_LOOKUP_FAILED: authenticated GitHub Release lookup failed',
+            );
           }
           NODE
           echo "candidate_commit=$candidate_commit" >> "$GITHUB_OUTPUT"
@@ -131,7 +194,10 @@ jobs:
         run: |
           set -euo pipefail
           mkdir release-assets
-          gh release download "$RELEASE_TAG" --dir release-assets
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir release-assets || {
+            echo "RELEASE_TARGET_LOOKUP_FAILED: authenticated GitHub Release asset download failed" >&2
+            exit 1
+          }
       - id: verify_assets
         name: Verify Release assets, context, attestation, approval, and authorization
         env:

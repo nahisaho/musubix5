@@ -56,6 +56,122 @@ export type NpmRegistryQueryClassification =
   | { status: 'missing' }
   | { status: 'found'; value: unknown };
 
+export type ReleaseTargetLookupClassification =
+  | 'absent'
+  | 'present-stable'
+  | 'present-draft-or-prerelease'
+  | 'lookup-failed';
+
+export interface ReleaseTargetLookupInput {
+  expectedTag?: string;
+  exact: {
+    exitCode: number;
+    statusCode?: number;
+    release?: {
+      tagName: string;
+      draft: boolean;
+      prerelease: boolean;
+    };
+  };
+  enumeration?: {
+    complete: boolean;
+    releases: Array<{
+      tagName: string;
+      draft: boolean;
+      prerelease: boolean;
+    }>;
+  };
+}
+
+/** @id CODE-M5-RELEASE-TARGET-HTTP-001
+ * @implements REQ-M5-RELEASE-003 REQ-M5-RELEASE-004
+ * @design DES-M5-020 DES-M5-021
+ */
+export function parseReleaseTargetApiResponse(
+  text: string,
+): { statusCode: number; body: unknown } {
+  const matches = [...text.matchAll(/^HTTP\/\S+\s+(\d{3})[^\r\n]*(?:\r?\n)/gm)];
+  const last = matches.at(-1);
+  if (!last || last.index === undefined) {
+    throw new Error('RELEASE_TARGET_LOOKUP_FAILED: GitHub API status is missing.');
+  }
+  const headersStart = last.index + last[0].length;
+  const separator = text.slice(headersStart).match(/\r?\n\r?\n/);
+  if (!separator || separator.index === undefined) {
+    throw new Error('RELEASE_TARGET_LOOKUP_FAILED: GitHub API headers are incomplete.');
+  }
+  const bodyStart = headersStart + separator.index + separator[0].length;
+  try {
+    return {
+      statusCode: Number(last[1]),
+      body: JSON.parse(text.slice(bodyStart)),
+    };
+  } catch {
+    throw new Error('RELEASE_TARGET_LOOKUP_FAILED: GitHub API body is not JSON.');
+  }
+}
+
+/** @id CODE-M5-RELEASE-TARGET-LOOKUP-001
+ * @implements REQ-M5-RELEASE-003 REQ-M5-RELEASE-004
+ * @design DES-M5-020 DES-M5-021
+ */
+export function classifyReleaseTargetLookup(
+  input: ReleaseTargetLookupInput,
+): ReleaseTargetLookupClassification {
+  const classifyRelease = (
+    release: ReleaseTargetLookupInput['exact']['release'],
+  ): ReleaseTargetLookupClassification => {
+    if (
+      !release
+      || typeof release.tagName !== 'string'
+      || release.tagName.length === 0
+      || typeof release.draft !== 'boolean'
+      || typeof release.prerelease !== 'boolean'
+      || (input.expectedTag !== undefined && release.tagName !== input.expectedTag)
+    ) {
+      return 'lookup-failed';
+    }
+    return release.draft || release.prerelease
+      ? 'present-draft-or-prerelease'
+      : 'present-stable';
+  };
+
+  if (input.exact.exitCode === 0 && input.exact.statusCode === 200) {
+    return classifyRelease(input.exact.release);
+  }
+  if (input.exact.statusCode !== 404 || input.exact.exitCode === 0) {
+    return 'lookup-failed';
+  }
+  if (!input.enumeration) return 'absent';
+  if (!input.enumeration.complete) return 'lookup-failed';
+  const releases = input.expectedTag === undefined
+    ? input.enumeration.releases
+    : input.enumeration.releases.filter(
+      (release) => release.tagName === input.expectedTag,
+    );
+  if (releases.length === 0) return 'absent';
+  if (releases.some(
+    (release) => classifyRelease(release) === 'lookup-failed',
+  )) {
+    return 'lookup-failed';
+  }
+  const stable = releases.find(
+    (release) => !release.draft && !release.prerelease,
+  );
+  return classifyRelease(stable ?? releases[0]);
+}
+
+/** @id CODE-M5-RELEASE-CREATION-TARGET-001
+ * @implements REQ-M5-RELEASE-003
+ * @design DES-M5-020
+ */
+export function classifyReleaseCreationTargetLookup(
+  input: ReleaseTargetLookupInput,
+): ReleaseTargetLookupClassification {
+  if (!input.enumeration) return 'lookup-failed';
+  return classifyReleaseTargetLookup(input);
+}
+
 export function releaseTransportPolicy(): {
   workflow: '.github/workflows/release.yml';
   maxAgeSeconds: 2_592_000;

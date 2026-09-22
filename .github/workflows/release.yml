@@ -478,6 +478,12 @@ jobs:
             evidenceCommit: process.env.EVIDENCE_COMMIT,
             verifiedReleaseApprovalSha256: process.env.RELEASE_APPROVAL_SHA256,
           };
+          const eventRepository = canonicalRepositoryIdentity(`https://github.com/${process.env.GITHUB_REPOSITORY}.git`);
+          if (expected.repository !== eventRepository) {
+            throw new Error(
+              'RELEASE_OPERATION_NOT_AUTHORIZED: event repository identity mismatch',
+            );
+          }
           if (!bytes.equals(releaseContextBytes(expected))) {
             throw new Error(
               'RELEASE_ATTESTATION_INVALID: context-canonical-bytes: '
@@ -531,33 +537,95 @@ jobs:
             "$OPERATION_ID" --root evidence --scope release \
             --candidate-commit "$CANDIDATE_COMMIT" --release-tag "$RELEASE_TAG" --json
           set +e
-          release_view="$(gh release view "$RELEASE_TAG" --json tagName 2>&1)"
-          release_view_status=$?
+          gh api --include "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" \
+            > release-target-exact.txt 2> release-target-exact-error.txt
+          exact_status=$?
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/releases?per_page=100" \
+            > release-target-pages.json 2> release-target-pages-error.txt
+          enumeration_status=$?
           set -e
-          if [[ "$release_view_status" -eq 0 ]]; then
-            echo "RELEASE_OPERATION_NOT_AUTHORIZED: GitHub Release target already exists" >&2
-            exit 1
+          EXACT_STATUS="$exact_status" ENUMERATION_STATUS="$enumeration_status" \
+            node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const {
+            classifyReleaseCreationTargetLookup,
+            parseReleaseTargetApiResponse,
+          } =
+            await import('./candidate/dist/packages/analysis/src/release-workflow.js');
+
+          const exactText = readFileSync('release-target-exact.txt', 'utf8');
+          let exactResponse;
+          try {
+            exactResponse = parseReleaseTargetApiResponse(exactText);
+          } catch {
+            exactResponse = undefined;
+          }
+          const statusCode = exactResponse?.statusCode;
+          let exactRelease;
+          if (statusCode === 200 && exactResponse?.body) {
+            const release = exactResponse.body;
+            exactRelease = {
+              tagName: release.tag_name,
+              draft: release.draft,
+              prerelease: release.prerelease,
+            };
+          }
+
+          let pages;
+          try {
+            pages = JSON.parse(readFileSync('release-target-pages.json', 'utf8'));
+          } catch {
+            pages = undefined;
+          }
+          const complete = Number(process.env.ENUMERATION_STATUS) === 0
+            && Array.isArray(pages)
+            && pages.every((page) => Array.isArray(page));
+          const releases = complete
+            ? pages.flat().map((release) => ({
+                tagName: release.tag_name,
+                draft: release.draft,
+                prerelease: release.prerelease,
+              }))
+            : [];
+          const outcome = classifyReleaseCreationTargetLookup({
+            expectedTag: process.env.RELEASE_TAG,
+            exact: {
+              exitCode: Number(process.env.EXACT_STATUS),
+              statusCode,
+              release: exactRelease,
+            },
+            enumeration: { complete, releases },
+          });
+          if (outcome === 'present-stable' || outcome === 'present-draft-or-prerelease') {
+            throw new Error(
+              'RELEASE_OPERATION_NOT_AUTHORIZED: GitHub Release target already exists',
+            );
+          }
+          if (outcome !== 'absent') {
+            console.error(readFileSync('release-target-exact-error.txt', 'utf8'));
+            console.error(readFileSync('release-target-pages-error.txt', 'utf8'));
+            throw new Error(
+              'RELEASE_TARGET_LOOKUP_FAILED: authenticated GitHub Release lookup failed',
+            );
+          }
+          NODE
+          echo "attempted" > release-create-state.txt
+          set +e
+          release_url="$(gh release create "$RELEASE_TAG" release-bundle/* --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes)"
+          create_status=$?
+          set -e
+          if [[ "$create_status" -ne 0 ]]; then
+            echo "failure" > release-create-state.txt
+            exit "$create_status"
           fi
-          if ! grep -Eiq 'release not found|HTTP 404: Not Found' <<<"$release_view"; then
-            echo "RELEASE_TARGET_LOOKUP_FAILED: authenticated GitHub Release lookup failed" >&2
-            exit 1
-          fi
-      - id: create_release
-        name: Create GitHub Release
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ needs.validate.outputs.release_tag }}
-        run: |
-          set -euo pipefail
-          release_url="$(gh release create "$RELEASE_TAG" release-bundle/* --verify-tag --generate-notes)"
+          echo "success" > release-create-state.txt
           echo "release_url=$release_url" >> "$GITHUB_OUTPUT"
       - name: Record terminal release outcome and summary
         if: always()
         env:
           JOB_STATUS: ${{ job.status }}
           VERIFY_OUTCOME: ${{ steps.verify_release.outcome }}
-          CREATE_OUTCOME: ${{ steps.create_release.outcome }}
-          RELEASE_URL: ${{ steps.create_release.outputs.release_url }}
+          RELEASE_URL: ${{ steps.verify_release.outputs.release_url }}
           OPERATION_ID: ${{ inputs.release_operation_id }}
           RELEASE_TAG: ${{ needs.validate.outputs.release_tag }}
           CANDIDATE_COMMIT: ${{ needs.validate.outputs.candidate_commit }}
@@ -565,18 +633,25 @@ jobs:
           RELEASE_APPROVAL_SHA256: ${{ needs.validate.outputs.release_approval_sha256 }}
         run: |
           node --input-type=module <<'NODE'
-          import { appendFileSync, writeFileSync } from 'node:fs';
+          import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+          const createState = existsSync('release-create-state.txt')
+            ? readFileSync('release-create-state.txt', 'utf8').trim()
+            : 'not-run';
+          const verificationOutcome = createState === 'not-run'
+            ? process.env.VERIFY_OUTCOME || 'not-run'
+            : 'success';
           const outcome = {
             schemaVersion: 1,
             scope: 'release',
             operationId: process.env.OPERATION_ID,
             status: process.env.JOB_STATUS === 'success' ? 'completed' : 'failed',
             jobStatus: process.env.JOB_STATUS,
-            verificationOutcome: process.env.VERIFY_OUTCOME || 'not-run',
-            createOutcome: process.env.CREATE_OUTCOME || 'not-run',
+            verificationOutcome,
+            createOutcome: createState,
             failureStage: process.env.JOB_STATUS === 'success' ? null
-              : process.env.VERIFY_OUTCOME === 'failure' ? 'verification'
-                : process.env.CREATE_OUTCOME === 'failure' ? 'release-creation' : 'setup',
+              : createState === 'failure' || createState === 'attempted'
+                ? 'release-creation'
+                : process.env.VERIFY_OUTCOME === 'failure' ? 'verification' : 'setup',
             runId: process.env.GITHUB_RUN_ID,
             runAttempt: process.env.GITHUB_RUN_ATTEMPT,
             repository: process.env.GITHUB_REPOSITORY,
