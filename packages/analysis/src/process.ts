@@ -46,7 +46,7 @@ export function resolveNpmInvocation(
   return resolveProcessInvocation('npm', args, platform, nodeExecutable);
 }
 
-export function resolveNpmInvocationForEnvironment(
+export function resolvePortableNpmInvocation(
   args: string[],
   matrixOs: string | undefined = process.env.MATRIX_OS,
   platform: NodeJS.Platform = process.platform,
@@ -59,10 +59,19 @@ export function resolveNpmInvocationForEnvironment(
   );
 }
 
+export function resolveNpmInvocationForEnvironment(
+  args: string[],
+  matrixOs: string | undefined = process.env.MATRIX_OS,
+  platform: NodeJS.Platform = process.platform,
+  nodeExecutable: string = process.execPath,
+): { command: string; args: string[] } {
+  return resolvePortableNpmInvocation(args, matrixOs, platform, nodeExecutable);
+}
+
 export const runProcess: Runner = async (command, args, options) => new Promise((resolve) => {
   const start = performance.now();
   const invocation = /^npm$/i.test(command)
-    ? resolveNpmInvocationForEnvironment(args)
+    ? resolvePortableNpmInvocation(args)
     : resolveProcessInvocation(command, args);
   const child = spawn(invocation.command, invocation.args, {
     cwd: options.cwd,

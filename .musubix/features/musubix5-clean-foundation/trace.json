@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-22T00:31:20.655Z",
+  "generatedAt": "2026-09-22T00:39:59.333Z",
   "nodes": [
     {
       "id": "ADR-0002",
@@ -1215,7 +1215,7 @@
       "id": "TEST-M5-LIFECYCLE-002",
       "kind": "test",
       "path": "tests/journal-order.test.ts",
-      "line": 44
+      "line": 46
     },
     {
       "id": "TEST-M5-LIFECYCLE-003",
@@ -1245,7 +1245,7 @@
       "id": "TEST-M5-COMPAT-005",
       "kind": "test",
       "path": "tests/package-archive.test.ts",
-      "line": 5
+      "line": 7
     },
     {
       "id": "TEST-M5-COMPAT-006",
@@ -4182,7 +4182,7 @@
     "packages/analysis/src/order.ts": "712ef698e5136da577602a9e603cbd59fe84f237ccda712cdcc9d2c6dd2335aa",
     "packages/analysis/src/performance.ts": "a51c388499c57f177ebc4a6d5a160d7fb07550626b24a9c987b6b0d17e96ebe7",
     "packages/analysis/src/planner-output.ts": "c649e484d064c2fc5078bcbc21a08e49746feae179e26de99d92bae17ffe9a5c",
-    "packages/analysis/src/process.ts": "1330c6294f9fb56628a403c450a27657b216f22e7261a66155c44e009d32d009",
+    "packages/analysis/src/process.ts": "d112fdcfc069366eb4f5326c2db58e61621cf0bad9760757bf4deff708ded2a4",
     "packages/analysis/src/quality-policy.ts": "0ba33ac06b4762e0f398e04fd6c8975c7db6380f20080fc3dc89a701759fcd89",
     "packages/analysis/src/release-manifest.ts": "e0be5c37e24dafab86606f15e48e40704794c9dd5ad19f150fc3386d554e6e39",
     "packages/analysis/src/release-operation-guard.ts": "99bd1f95ad21b49b5d79c449230ca05e81f7d3707ccec77b7891ee7d3151645c",
@@ -4237,12 +4237,12 @@
     "tests/evidence-identity.test.ts": "3467588120ed4b23c73dd5f0aff0be4b3ff83d38867ff18beda6bcceae98a899",
     "tests/evidence-kinds.test.ts": "b1a624757dcaaaf9431a0dfa245e358139d6566b07de2566477a2dd81ae0be65",
     "tests/evidence-supersession.test.ts": "aa73654e0e5bc737b9ed6725b4091648e9b9d7978a4d466a01506612c2d58bc7",
-    "tests/journal-order.test.ts": "ad0d6d3af105bd9d3775372dcbb130b3436b8ca32d22e8b0b2ac363ec0e5db56",
+    "tests/journal-order.test.ts": "a06616c2cfdae956db2b611de5edc0337b4468cfc94ca3e9ca305f2bef67918c",
     "tests/lifecycle-resume.test.ts": "05f7a3f30acf4b0b628e1c068d17c28cb248508fa2e9523c51e6455c4bd2e6ed",
     "tests/lifecycle-state-machine.test.ts": "5cbae549161c93fb5943575d9e0ba974d716f53ca2600ef8e6e07586622a0d33",
     "tests/native-approval.test.ts": "d0525f378f3fb655b6716c0847ddfba37f6e1dc3d3fd42e5d97ce0c1e218a9f0",
     "tests/native-release-candidate-tree.test.ts": "a2504f00976508c54e51e3b09c39aa8113adcd32a42f2bc0fc5325f938fdc649",
-    "tests/package-archive.test.ts": "78e461d23036373cdd73740eda64ddc2b4e83bfa5b3cc20917c194d17a882713",
+    "tests/package-archive.test.ts": "16e4bc787ae283e9a51534ac2f864fb5e0110e126dcb67399a1ce5dfcfd3a0e9",
     "tests/package-contract.test.ts": "3536d366dd871d09d1e6633b14f54354aed82349f3269de119cfcba40354dd1c",
     "tests/planner-retry-identity.test.ts": "ee672f87e7528154f1842e7d0acdc70bfed742378119bb26be9e526bf6819b91",
     "tests/planner-validation.test.ts": "2af23c90768dfa6e74ac05922ec28c4eb9a0d674e730682e472ff14040387169",
