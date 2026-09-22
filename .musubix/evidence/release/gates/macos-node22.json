@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "artifactDigest": "e5d4edbc523630901e21e0fc2c02030633fc0bf58ef5bb8100d902498a36a52c",
+  "attestationDigest": "2c7bea01e9215dca76af9b96b59e7285d0236f8720a085046c13200c5bf381c0",
+  "ci": {
+    "provider": "github",
+    "runId": "35680846245"
+  },
+  "result": {
+    "candidateCommit": "87f37a7e397036de5f47452868aaffed0a019461",
+    "changeId": "CHANGE-0002",
+    "commands": [
+      {
+        "digest": "6abffc787603cfa7aa2807a912fab1579c966b01cd40331df8d2c9608007256a",
+        "exitCode": 0,
+        "name": "typecheck",
+        "status": "pass"
+      },
+      {
+        "digest": "f80004c9e5eab8d8b2f95cb9d9ee49719c49ad13530b0f2bd62734352f84d5b4",
+        "exitCode": 0,
+        "name": "build",
+        "status": "pass"
+      },
+      {
+        "digest": "df22cf90e1a47454de82a81a8624f09d99a69490d70871f794b751671d8f28d0",
+        "exitCode": 0,
+        "name": "test",
+        "status": "pass"
+      },
+      {
+        "digest": "84a536c371c7fdc677d7f344569206fb3b86dbc1e8db575f9e3a6625dc50a23e",
+        "exitCode": 0,
+        "name": "compatibility",
+        "status": "pass"
+      },
+      {
+        "digest": "4bf5193c8140eda97e06eed8cb30e6f557df876c99c33b4a3ec1d1b9f71da094",
+        "exitCode": 0,
+        "name": "pack-check",
+        "status": "pass"
+      },
+      {
+        "digest": "d170b1fd93f6b6b333add736a6809d8ce02d89480a9ae13369b11577fee7340e",
+        "exitCode": 0,
+        "name": "pack-smoke",
+        "status": "pass"
+      }
+    ],
+    "commandsPassed": true,
+    "gateInputFingerprint": "a972d4e916a3b92a8fdf781afce570363023139b1d0b44c3c0449231bb91eee6",
+    "gateReportDigest": "8e5a43d144994a68208a386d3ccb605bd22575f8d967dd845f0175cfbae8bd1c",
+    "generation": 4,
+    "job": {
+      "nodeMajor": 22,
+      "os": "macos"
+    },
+    "postTreeMatchesCandidate": true,
+    "preTreeMatchesCandidate": true,
+    "producer": "github-actions",
+    "repositoryId": "repository:fd221c12cd997ae2a3aa95ed0003d1b84eb6b376dbbf4a77584e4394d7574414",
+    "runtime": {
+      "nodeMajor": 22,
+      "os": "macos"
+    },
+    "schemaVersion": 1,
+    "status": "pass"
+  }
+}

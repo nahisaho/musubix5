@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "artifactDigest": "adfd499c16d58bd1af507cf72cff136bc85ea9401860576afa9784e9af41ce70",
+  "attestationDigest": "e713aa0a6cd54bda312cef46e22eb25b1dabc0a8b49e790513c8f16ad2c61d45",
+  "ci": {
+    "provider": "github",
+    "runId": "35680846245"
+  },
+  "result": {
+    "candidateCommit": "87f37a7e397036de5f47452868aaffed0a019461",
+    "changeId": "CHANGE-0002",
+    "commands": [
+      {
+        "digest": "6abffc787603cfa7aa2807a912fab1579c966b01cd40331df8d2c9608007256a",
+        "exitCode": 0,
+        "name": "typecheck",
+        "status": "pass"
+      },
+      {
+        "digest": "f80004c9e5eab8d8b2f95cb9d9ee49719c49ad13530b0f2bd62734352f84d5b4",
+        "exitCode": 0,
+        "name": "build",
+        "status": "pass"
+      },
+      {
+        "digest": "86d6f3666599d3a6b6b8f98bca46c03bcb6f57c3d345e33851982e2d002290e3",
+        "exitCode": 0,
+        "name": "test",
+        "status": "pass"
+      },
+      {
+        "digest": "36003291214dc88b149673b84077737aff35cd8e6ec7fe57e1b845c0a6f039d2",
+        "exitCode": 0,
+        "name": "compatibility",
+        "status": "pass"
+      },
+      {
+        "digest": "4bf5193c8140eda97e06eed8cb30e6f557df876c99c33b4a3ec1d1b9f71da094",
+        "exitCode": 0,
+        "name": "pack-check",
+        "status": "pass"
+      },
+      {
+        "digest": "d170b1fd93f6b6b333add736a6809d8ce02d89480a9ae13369b11577fee7340e",
+        "exitCode": 0,
+        "name": "pack-smoke",
+        "status": "pass"
+      }
+    ],
+    "commandsPassed": true,
+    "gateInputFingerprint": "a972d4e916a3b92a8fdf781afce570363023139b1d0b44c3c0449231bb91eee6",
+    "gateReportDigest": "de0af6dd4d760c47c452db7b14a8f41fd961f58dbea05a878637d1274400da84",
+    "generation": 4,
+    "job": {
+      "nodeMajor": 22,
+      "os": "windows"
+    },
+    "postTreeMatchesCandidate": true,
+    "preTreeMatchesCandidate": true,
+    "producer": "github-actions",
+    "repositoryId": "repository:fd221c12cd997ae2a3aa95ed0003d1b84eb6b376dbbf4a77584e4394d7574414",
+    "runtime": {
+      "nodeMajor": 22,
+      "os": "windows"
+    },
+    "schemaVersion": 1,
+    "status": "pass"
+  }
+}
