@@ -88,13 +88,13 @@ input only.
 - The read-only matrix gate executes all six configured commands successfully
   and preserves the tracked tree. After reconciling the privacy-sanitized
   transcripts from both implementation sessions, the matrix gate passes
-  locally and workflow verification reconciles 13 declarations across two
-  Skills.
+  locally and workflow verification reconciles the recorded declarations with
+  their Copilot Skill invocation events.
 - The first external matrix run exposed Windows `.cmd` shim resolution for
   `npm` and `npx`; focused Red-to-Green pure-function tests now verify the
   Windows Node-CLI invocation mapping while native and non-Windows commands
-  remain unchanged. Execution-level Windows confirmation remains pending until
-  the candidate is regenerated.
+  remain unchanged. Execution-level Windows confirmation is accepted only from
+  external candidate-bound matrix evidence.
 - Repository text checkouts are pinned to LF through `.gitattributes`, keeping
   persisted byte-level trace, graph, and approval fingerprints stable on the
   Windows matrix runner.
@@ -104,24 +104,26 @@ input only.
 - `CHANGE_RECORDEDAT_OUT_OF_ORDER` remains a non-blocking historical warning:
   one waiver-related wall-clock `recordedAt` value does not follow journal
   sequence. Persisted monotonic order, not wall-clock time, is authoritative.
-- Release readiness is still blocked by five externally produced
-  candidate-matrix attestations and explicit human release approval. These
-  records must not be fabricated.
+- Release readiness is evaluated outside the immutable candidate tree: each
+  candidate requires a fresh complete set of five externally produced
+  candidate-matrix attestations followed by explicit human release approval.
+  These post-candidate records must not be fabricated or projected into the
+  candidate itself.
 
 ## Release boundary
 
 The target remains version `0.1.0` on branch `change/CHANGE-0002`. The prior
 candidate and release manifest are superseded and cannot receive release
-approval. A new immutable candidate and exact manifest can be established only
-after the current approved requirements/design and complete local validation
-are committed as an immutable candidate, followed by ingestion of all five
-candidate-bound CI attestations. No package publication, Git tag, remote push,
-or release operation has been performed. Each external operation additionally
-requires a separate explicit human authorization bound to the approved
-candidate.
+approval. A new immutable candidate is established when the current approved
+requirements/design and complete local validation are committed. The exact
+release manifest and release approval are established afterward, outside the
+candidate tree, from all five candidate-bound CI attestations and explicit
+human release approval. No package publication, Git tag, or release operation
+is authorized by this record; remote pushes performed to produce candidate
+evidence carry no release authorization. Each external operation additionally
+requires separate explicit human authorization bound to the approved candidate.
 
 The candidate workflow can run only after `.github/workflows/candidate-gate.yml`
 is available on the repository default branch and the exact candidate commit is
 available to GitHub Actions. Those pushes are prerequisites for external matrix
-evidence, are outside this local continuation, and require their own explicit
-human authorization.
+evidence and require their own explicit human authorization.
