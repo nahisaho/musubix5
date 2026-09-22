@@ -5,6 +5,8 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { resolveNpmInvocation } from '../packages/analysis/src/process.js';
+
 const temporaryDirectories: string[] = [];
 
 afterEach(() => {
@@ -22,7 +24,8 @@ describe('CLI JSON failure compatibility', () => {
     const root = mkdtempSync(join(tmpdir(), 'musubix5-json-error-'));
     temporaryDirectories.push(root);
     const repositoryRoot = fileURLToPath(new URL('..', import.meta.url));
-    execFileSync('npm', ['run', 'build'], { cwd: repositoryRoot, stdio: 'pipe' });
+    const build = resolveNpmInvocation(['run', 'build']);
+    execFileSync(build.command, build.args, { cwd: repositoryRoot, stdio: 'pipe' });
 
     const result = spawnSync(process.execPath, [
       resolve(repositoryRoot, 'dist/packages/cli/src/main.js'),

@@ -38,9 +38,19 @@ export function resolveProcessInvocation(
   return { command: nodeExecutable, args: [cli, ...args] };
 }
 
+export function resolveNpmInvocation(
+  args: string[],
+  platform: NodeJS.Platform = process.platform,
+  nodeExecutable: string = process.execPath,
+): { command: string; args: string[] } {
+  return resolveProcessInvocation('npm', args, platform, nodeExecutable);
+}
+
 export const runProcess: Runner = async (command, args, options) => new Promise((resolve) => {
   const start = performance.now();
-  const invocation = resolveProcessInvocation(command, args);
+  const invocation = /^npm$/i.test(command)
+    ? resolveNpmInvocation(args)
+    : resolveProcessInvocation(command, args);
   const child = spawn(invocation.command, invocation.args, {
     cwd: options.cwd,
     shell: false,
