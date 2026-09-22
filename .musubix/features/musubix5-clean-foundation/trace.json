@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-22T13:38:31.546Z",
+  "generatedAt": "2026-09-22T14:55:28.267Z",
   "nodes": [
     {
       "id": "CODE-M5-NPM-PUBLISH-WORKFLOW-YAML-001",
@@ -13,6 +13,18 @@
       "kind": "code",
       "path": ".github/workflows/release.yml",
       "line": 1
+    },
+    {
+      "id": "CODE-M5-RELEASE-003-CONTEXT-BUNDLE-001",
+      "kind": "code",
+      "path": ".github/workflows/release.yml",
+      "line": 206
+    },
+    {
+      "id": "CODE-M5-RELEASE-003-CONTEXT-VERIFY-001",
+      "kind": "code",
+      "path": ".github/workflows/release.yml",
+      "line": 405
     },
     {
       "id": "ADR-0002",
@@ -198,7 +210,7 @@
       "id": "DES-M5-021",
       "kind": "design",
       "path": ".musubix/features/musubix5-clean-foundation/design.md",
-      "line": 249
+      "line": 250
     },
     {
       "id": "REQ-M5-COMPAT-001",
@@ -1418,6 +1430,12 @@
       "line": 38
     },
     {
+      "id": "TEST-M5-RELEASE-003-CONTEXT-EQUALITY-001",
+      "kind": "test",
+      "path": "tests/release-context-generation13.test.ts",
+      "line": 26
+    },
+    {
       "id": "TEST-M5-EVIDENCE-004",
       "kind": "test",
       "path": "tests/release-evidence-policy.test.ts",
@@ -1676,6 +1694,26 @@
     },
     {
       "from": "CODE-M5-RELEASE-WORKFLOW-YAML-001",
+      "to": "DES-M5-020",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-003-CONTEXT-BUNDLE-001",
+      "to": "REQ-M5-RELEASE-003",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-003-CONTEXT-BUNDLE-001",
+      "to": "DES-M5-020",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-003-CONTEXT-VERIFY-001",
+      "to": "REQ-M5-RELEASE-003",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-003-CONTEXT-VERIFY-001",
       "to": "DES-M5-020",
       "relation": "implements"
     },
@@ -4650,6 +4688,11 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-RELEASE-003-CONTEXT-EQUALITY-001",
+      "to": "REQ-M5-RELEASE-003",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-EVIDENCE-004",
       "to": "REQ-M5-EVIDENCE-004",
       "relation": "verifies"
@@ -4904,7 +4947,7 @@
   "fingerprints": {
     ".github/workflows/candidate-gate.yml": "ae238d30cab2aa79f68e9897fd17f5a02f86018dacc46308190cd248533439c2",
     ".github/workflows/npm-publish.yml": "e4a87e6c27dc27ca852731fa22d8743268795972c284669b98def697696d413d",
-    ".github/workflows/release.yml": "30a7d3e807793519f90abfbcaf0c31807c0a1041d77bfc2b5a93fff71e07f815",
+    ".github/workflows/release.yml": "0624546e45bbde9389e9c499a1b86de4bf6cf3e4aef31fafab93664c4475f89d",
     ".musubix/decisions/ADR-0002.md": "9f41d752530613cf6cc3ab6798709567e85650e5b97426dfca4147840eb35684",
     ".musubix/decisions/ADR-0003.md": "342a6a8e30c367684b02ee907f0f6bc3aef3b8ff6a08005148f43411f3885b7d",
     ".musubix/decisions/ADR-0004.md": "837623189c1605b24040bcf40db42de65f06fb1f3f47911068a8b4558ca5856f",
@@ -4914,9 +4957,9 @@
     ".musubix/decisions/ADR-0008.md": "c9576edc5db5af6bf21f6d262ef66723f88f94048e468adc94f88aff32ac81d3",
     ".musubix/decisions/ADR-0009.md": "5e38a2e75f754b89ad51bcb242ad6994e36393c41c53630f2d6dd76e67d8294e",
     ".musubix/decisions/ADR-0010.md": "3f132b55b97896d15e1d156353993cdedf24700c877b1cf221da9cfc2a988f87",
-    ".musubix/decisions/ADR-0011.md": "19045f826674eee848d8d7fd17b3f95ab53b2d9e71ea679a76603c112690cb18",
-    ".musubix/features/musubix5-clean-foundation/design.md": "692b9c2a207acb39d5cb610811e3ff06ad087f6fbcff8b7841dc3557708c5b18",
-    ".musubix/features/musubix5-clean-foundation/requirements.md": "2e0ddd894a7aed5e8a24a28fd24b47ef28d42fad17d7568f4e5276888ac63a43",
+    ".musubix/decisions/ADR-0011.md": "37b2b5d20f2afd1dd0e35fe8d21f2e56b91c749af5eb9fc430a21c79bd21f5fc",
+    ".musubix/features/musubix5-clean-foundation/design.md": "748dae018437283070bddfc89cfec3d90f1c38421583a1b9dbc7428cd9a105a8",
+    ".musubix/features/musubix5-clean-foundation/requirements.md": "df6c1dc8a34d6ad47ebfa55cad83e77f685d3f675e9285596ddd6049afd3bed8",
     "packages/analysis/src/adapters.ts": "4db9916f432a92d27520a7aa9af575db67897a729fbbed623331ddc00c020b95",
     "packages/analysis/src/approval-boundary.ts": "ec0c2da68cff776388126e4d34db112d529462bd7dfcfe4691d2bc5701a81090",
     "packages/analysis/src/approval-domains.ts": "56363d8d7fe0158df596a09abf2688f439815c38dd582fd5970c1bb30e6c5994",
@@ -4953,7 +4996,7 @@
     "packages/analysis/src/quality-policy.ts": "0ba33ac06b4762e0f398e04fd6c8975c7db6380f20080fc3dc89a701759fcd89",
     "packages/analysis/src/release-manifest.ts": "e0be5c37e24dafab86606f15e48e40704794c9dd5ad19f150fc3386d554e6e39",
     "packages/analysis/src/release-operation-guard.ts": "3eb0edb8a82dde1085fbb1f00869bf527003e37c28344fbb997fbb4ed044c318",
-    "packages/analysis/src/release-workflow.ts": "86034818a814757adb645daf2866e3f8cf1ad7ba717ddf70efe22f725f446933",
+    "packages/analysis/src/release-workflow.ts": "5d068f7709de58191c76f33ef2855c8c47cfa2b6cc7262e0b46eedf0c772db7e",
     "packages/analysis/src/run-local-workspace.ts": "351ae9df02dfab13b58ae86f7619d68885457093a7a4b33c4070807d52324007",
     "packages/analysis/src/scaffold-artifact.ts": "8734de778f121421b3fcfbf5263611bfcffc94cf63248ef3f127459bdfa4f692",
     "packages/analysis/src/tdd-cycle-resolver.ts": "7d38cfb73227acb507d830bf85ecb87ac7cb2274ba432ba964fe17d99fef30dc",
@@ -5019,6 +5062,7 @@
     "tests/quality-readiness.test.ts": "4ef772be4a0795abd460ccb79ccc6639da2b69baf47f6226f3e6e00d030101ec",
     "tests/quality-supersession.test.ts": "fdb955ff0f5bde92ce83477c6cfe156f6961026aaae556c81b55948790a1d420",
     "tests/release-candidate-tree.test.ts": "3d7e417b1ca4e6a161413a8d4ff048b0260a50b394a831676fbd1047892fe374",
+    "tests/release-context-generation13.test.ts": "800607beb805a87fd4251a4c8611543b7749114c70bf75bc2c88ce2a6765901f",
     "tests/release-evidence-policy.test.ts": "4cc0d16219dfb98f580a4453b6584173381dd50a3124204587db26b2f65aeafa",
     "tests/release-generation5-boundary.test.ts": "60a1ab6ff9c553582829da851b4f237c5f87c5e7b1a30e609361aa0610a78416",
     "tests/release-generation5.test.ts": "4d25d8588864f02aad610db56494911099b96c39b2156d67708de22d41124268",

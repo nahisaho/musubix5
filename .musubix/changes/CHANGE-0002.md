@@ -6,7 +6,7 @@ status: in-progress
 ---
 # CHANGE-0002: musubix5-clean-foundation
 
-Requirements: REQ-M5-WORKTREE-001 REQ-M5-RELEASE-003 REQ-M5-RELEASE-004
+Requirements: REQ-M5-RELEASE-003
 
 ## Classification
 
@@ -375,23 +375,52 @@ The failed `v0.1.1` dispatch produced no GitHub Release and no npm publication.
 Replacing the unpublished tag requires a new approved generation-12 candidate
 plus separate explicit authorization to delete and recreate the remote tag.
 
+## Generation 13 defect correction
+
+After the generation-12 candidate passed its five-job matrix, release approval,
+tag replacement, and tag-push bundle validation, manual GitHub Release run
+`35736771996` stopped before Release creation. The sealed
+`release-context.json` had already passed canonical byte validation, but the
+release job then compared `JSON.stringify` output for the parsed canonical
+object with an insertion-ordered expected object. Canonical key sorting makes
+those property orders different even when every bound value is identical.
+
+Generation 13 changes only REQ-M5-RELEASE-003 implementation and design
+clarification: release context equality is determined by validated schema plus
+canonical `releaseContextBytes(expected)` byte equality. It must not add a
+second property-insertion-order comparison. Run `35736630993` is also retained
+as a side-effect-free operator error: it was dispatched from `main` rather than
+the required lightweight tag ref. Neither failed run created a GitHub Release
+or published npm.
+
+Generation 13 local validation passes all six configured commands, including
+66 test files and 102 tests, with 98/98 annotated test identities observed.
+Strict trace, graph, TDD, change-history, change-completeness, and workflow
+reconciliation checks pass. Formal classification remains optional advisory at
+0/65 modeled requirements. Before the replacement candidate is committed, the
+only required gate failure is the generation-12 release approval and external
+matrix evidence bound to the superseded candidate context.
+
 ## Release boundary
 
 The existing lightweight `v0.1.0` tag and candidate commit
 `87f37a7e397036de5f47452868aaffed0a019461` are preserved and are not moved.
-Generation 12 targets version `0.1.1` on branch `change/CHANGE-0002`; every
+Generation 13 targets version `0.1.1` on branch `change/CHANGE-0002`; every
 version-bearing file must agree before its new immutable candidate can be
 tagged `v0.1.1`. The generation-9 candidate supersedes generation-5 candidate
 `fa62cba9f9b79ca9611938d5b4bdbace3b19fe23`, and the generation-12 candidate
 supersedes generation-9 candidate
-`e3f13644c2b8fc2052eb5578733e19398a5582ab`; `v0.1.1` must point at the
-generation-12 candidate. Its tag, release manifest, GitHub Release, and npm
+`e3f13644c2b8fc2052eb5578733e19398a5582ab`. The generation-13 candidate
+supersedes generation-12 candidate
+`9880e6af45952a3bb1635cc75e9593379c356ebf`; the unpublished remote and local
+`v0.1.1` tag currently pointing at that generation-12 candidate must be deleted
+and recreated at the generation-13 candidate. Its tag, release manifest, GitHub Release, and npm
 package publication are distinct from all prior candidates and require fresh
 evidence and explicit authorization.
 
 Preserving the immutable `v0.1.0` tag also preserves its historical workflow
 and authorization records in old reachable commits. Those records grant no
-authorization for any later generation, including generation 12, and no GitHub
+authorization for any later generation, including generation 13, and no GitHub
 Release or npm package currently
 exists for `v0.1.0`; however, an operator could still deliberately dispatch the
 historical workflow against its old evidence commit. This residual operational
@@ -407,14 +436,14 @@ requirements/design and complete local validation are committed. The exact
 release manifest and release approval are established afterward, outside the
 candidate tree, from all five candidate-bound CI attestations and explicit
 human release approval. Generation-4 and generation-5 release approval,
-generation-9 release approval, operation authorization, gate evidence, release
-manifests, and workflow bundles grant no authorization for a generation-12
+generation-9 and generation-12 release approval, operation authorization, gate
+evidence, release manifests, and workflow bundles grant no authorization for a generation-13
 operation. No package publication,
 Git tag, or release
 operation is authorized by this record; remote pushes performed to produce
 candidate evidence carry no release authorization. Each external operation
 additionally requires separate explicit human authorization bound to the
-approved generation-12 candidate.
+approved generation-13 candidate.
 
 Generation 12 retains both repository-identity regression files because the
 first three cycles were recorded before the generation-12 implementation

@@ -203,6 +203,9 @@ jobs:
           node-version: 22
       - name: Pin npm
         run: npm install --global npm@11.5.1
+      # @id CODE-M5-RELEASE-003-CONTEXT-BUNDLE-001
+      # @implements REQ-M5-RELEASE-003
+      # @design DES-M5-020
       - name: Build reproducible package and release context
         env:
           RELEASE_TAG: ${{ needs.validate.outputs.release_tag }}
@@ -228,10 +231,10 @@ jobs:
           (cd build-a && npm sbom --sbom-format cyclonedx > ../release-bundle/sbom.cdx.json)
           node --input-type=module <<'NODE'
           import { execFileSync } from 'node:child_process';
-          import { writeFileSync } from 'node:fs';
+          import { readFileSync, writeFileSync } from 'node:fs';
           const { canonicalRepositoryIdentity } =
             await import('./build-a/dist/packages/analysis/src/canonical.js');
-          const { releaseContextBytes } =
+          const { releaseContextBytes, validateReleaseContext } =
             await import('./build-a/dist/packages/analysis/src/release-workflow.js');
           const remotes = execFileSync(
             'git',
@@ -244,7 +247,7 @@ jobs:
             { encoding: 'utf8' },
           ).trim();
           const dispatch = process.env.RELEASE_MODE === 'dispatch';
-          const context = {
+          const expected = {
             schemaVersion: 'release-context-v1',
             mode: process.env.RELEASE_MODE,
             repository: canonicalRepositoryIdentity(
@@ -259,7 +262,39 @@ jobs:
               verifiedReleaseApprovalSha256: process.env.RELEASE_APPROVAL_SHA256,
             } : {}),
           };
-          writeFileSync('release-bundle/release-context.json', releaseContextBytes(context));
+          writeFileSync(
+            'release-bundle/release-context.json',
+            releaseContextBytes(expected),
+          );
+          const bytes = readFileSync('release-bundle/release-context.json');
+          let decoded;
+          try {
+            decoded = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+          } catch {
+            throw new Error(
+              'RELEASE_ATTESTATION_INVALID: context-decode: release context is not strict UTF-8',
+            );
+          }
+          let parsed;
+          try {
+            parsed = JSON.parse(decoded);
+          } catch {
+            throw new Error(
+              'RELEASE_ATTESTATION_INVALID: context-parse: release context is not valid JSON',
+            );
+          }
+          try {
+            validateReleaseContext(parsed);
+          } catch {
+            throw new Error(
+              'RELEASE_ATTESTATION_INVALID: context-schema: release context schema is invalid',
+            );
+          }
+          if (!bytes.equals(releaseContextBytes(expected))) {
+            throw new Error(
+              'RELEASE_ATTESTATION_INVALID: context-canonical-bytes: release context bytes are not canonical',
+            );
+          }
           NODE
           (cd release-bundle && sha256sum ./*.tgz sbom.cdx.json release-context.json > SHA256SUMS)
       - name: Create OIDC-bound ephemeral Ed25519 attestation
@@ -367,6 +402,9 @@ jobs:
         with:
           name: release-bundle-${{ github.run_id }}
           path: release-bundle
+      # @id CODE-M5-RELEASE-003-CONTEXT-VERIFY-001
+      # @implements REQ-M5-RELEASE-003
+      # @design DES-M5-020
       - id: verify_release
         name: Verify checksums, attestation, authorization, and target
         env:
@@ -404,7 +442,29 @@ jobs:
             { encoding: 'utf8' },
           ).trim();
           const bytes = readFileSync('release-bundle/release-context.json');
-          const context = validateReleaseContext(JSON.parse(bytes.toString('utf8')));
+          let decoded;
+          try {
+            decoded = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+          } catch {
+            throw new Error(
+              'RELEASE_ATTESTATION_INVALID: context-decode: release context is not strict UTF-8',
+            );
+          }
+          let parsed;
+          try {
+            parsed = JSON.parse(decoded);
+          } catch {
+            throw new Error(
+              'RELEASE_ATTESTATION_INVALID: context-parse: release context is not valid JSON',
+            );
+          }
+          try {
+            validateReleaseContext(parsed);
+          } catch {
+            throw new Error(
+              'RELEASE_ATTESTATION_INVALID: context-schema: release context schema is invalid',
+            );
+          }
           const expected = {
             schemaVersion: 'release-context-v1',
             mode: 'dispatch',
@@ -418,10 +478,10 @@ jobs:
             evidenceCommit: process.env.EVIDENCE_COMMIT,
             verifiedReleaseApprovalSha256: process.env.RELEASE_APPROVAL_SHA256,
           };
-          if (!bytes.equals(releaseContextBytes(expected))
-            || JSON.stringify(context) !== JSON.stringify(expected)) {
+          if (!bytes.equals(releaseContextBytes(expected))) {
             throw new Error(
-              'RELEASE_ATTESTATION_INVALID: release context binding mismatch; '
+              'RELEASE_ATTESTATION_INVALID: context-canonical-bytes: '
+              + 'release context binding mismatch; '
               + 'release evidence producers must use the credential-free GitHub HTTPS origin.',
             );
           }

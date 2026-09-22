@@ -289,7 +289,7 @@ export async function validateReleaseVersions(
 }
 
 function releaseContextError(message: string): never {
-  throw new Error(`RELEASE_ATTESTATION_INVALID: ${message}`);
+  throw new Error(`RELEASE_ATTESTATION_INVALID: context-schema: ${message}`);
 }
 
 /** @id CODE-M5-RELEASE-CONTEXT-001
