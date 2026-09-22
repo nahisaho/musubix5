@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-21T23:15:23.827Z",
+  "generatedAt": "2026-09-22T00:13:08.196Z",
   "nodes": [
     {
       "id": "ADR-0002",
@@ -840,6 +840,12 @@
       "line": 138
     },
     {
+      "id": "CODE-M5-PROCESS-WINDOWS-001",
+      "kind": "code",
+      "path": "packages/analysis/src/process.ts",
+      "line": 20
+    },
+    {
       "id": "CODE-M5-QUALITY-001",
       "kind": "code",
       "path": "packages/analysis/src/quality-policy.ts",
@@ -1086,6 +1092,12 @@
       "line": 16
     },
     {
+      "id": "TEST-M5-RELEASE-002-EOL-001",
+      "kind": "test",
+      "path": "tests/candidate-gate-eol.test.ts",
+      "line": 6
+    },
+    {
       "id": "TEST-M5-RELEASE-002-TRUST-001",
       "kind": "test",
       "path": "tests/candidate-gate-trust.test.ts",
@@ -1258,6 +1270,18 @@
       "kind": "test",
       "path": "tests/planner-validation.test.ts",
       "line": 4
+    },
+    {
+      "id": "TEST-M5-QUALITY-005-WINDOWS-001",
+      "kind": "test",
+      "path": "tests/process-windows-command.test.ts",
+      "line": 6
+    },
+    {
+      "id": "TEST-M5-QUALITY-005-WINDOWS-002",
+      "kind": "test",
+      "path": "tests/process-windows-command.test.ts",
+      "line": 19
     },
     {
       "id": "TEST-M5-COMPAT-BIN-001",
@@ -3153,6 +3177,26 @@
       "relation": "implements"
     },
     {
+      "from": "CODE-M5-PROCESS-WINDOWS-001",
+      "to": "REQ-M5-QUALITY-005",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-PROCESS-WINDOWS-001",
+      "to": "REQ-M5-RELEASE-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-PROCESS-WINDOWS-001",
+      "to": "DES-M5-015",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-PROCESS-WINDOWS-001",
+      "to": "DES-M5-019",
+      "relation": "implements"
+    },
+    {
       "from": "CODE-M5-QUALITY-001",
       "to": "REQ-M5-WAIVER-001",
       "relation": "implements"
@@ -3598,6 +3642,11 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-RELEASE-002-EOL-001",
+      "to": "REQ-M5-RELEASE-002",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-RELEASE-002-TRUST-001",
       "to": "REQ-M5-APPROVAL-007",
       "relation": "verifies"
@@ -3888,6 +3937,21 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-QUALITY-005-WINDOWS-001",
+      "to": "REQ-M5-QUALITY-005",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-QUALITY-005-WINDOWS-001",
+      "to": "REQ-M5-RELEASE-002",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-QUALITY-005-WINDOWS-002",
+      "to": "REQ-M5-QUALITY-005",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-COMPAT-BIN-001",
       "to": "REQ-M5-COMPAT-005",
       "relation": "verifies"
@@ -4118,7 +4182,7 @@
     "packages/analysis/src/order.ts": "712ef698e5136da577602a9e603cbd59fe84f237ccda712cdcc9d2c6dd2335aa",
     "packages/analysis/src/performance.ts": "a51c388499c57f177ebc4a6d5a160d7fb07550626b24a9c987b6b0d17e96ebe7",
     "packages/analysis/src/planner-output.ts": "c649e484d064c2fc5078bcbc21a08e49746feae179e26de99d92bae17ffe9a5c",
-    "packages/analysis/src/process.ts": "8184c7f7c4c58cdc6987fd9d2ec2c02ce8557f94b6aa30853a0c6056ba79cf4a",
+    "packages/analysis/src/process.ts": "6b48da69c48739c2708f179ffda4f09751de1b43565f692988f1a3e2bb157b12",
     "packages/analysis/src/quality-policy.ts": "0ba33ac06b4762e0f398e04fd6c8975c7db6380f20080fc3dc89a701759fcd89",
     "packages/analysis/src/release-manifest.ts": "e0be5c37e24dafab86606f15e48e40704794c9dd5ad19f150fc3386d554e6e39",
     "packages/analysis/src/release-operation-guard.ts": "99bd1f95ad21b49b5d79c449230ca05e81f7d3707ccec77b7891ee7d3151645c",
@@ -4155,6 +4219,7 @@
     "tests/budget-limits.test.ts": "190f30d101797850227644e32cfffefba0b5f2606de21bfb606d6fbd4daa8742",
     "tests/budget-reservation.test.ts": "f7ee772c7546cba05001013d89cfce0fd692096fc9062e4e7e7c7ad1732def7c",
     "tests/budget-usage.test.ts": "45bf344f884740b91adfaf18a41830a72a3095a314aa71193a8750186752689f",
+    "tests/candidate-gate-eol.test.ts": "db72054d71bb5bb2cb986c7a5ccb7b31d714b6c863e5901fd7d1fe723e8a1ad4",
     "tests/candidate-gate-trust.test.ts": "790c226c4b4c3a435e044a63f2740d1321796b55f1ea2b8bbbe6fee224e1eded",
     "tests/candidate-gate.test.ts": "cbba3d51e70b9d39806b039914426ceb142016b5ed37a702df29b2fef216a90b",
     "tests/candidate-snapshot-repository-binding.test.ts": "17b1d63cacfb98061293bae8c4fb1218cc27f5576b1c67e73d529b511a936b28",
@@ -4181,6 +4246,7 @@
     "tests/package-contract.test.ts": "3536d366dd871d09d1e6633b14f54354aed82349f3269de119cfcba40354dd1c",
     "tests/planner-retry-identity.test.ts": "ee672f87e7528154f1842e7d0acdc70bfed742378119bb26be9e526bf6819b91",
     "tests/planner-validation.test.ts": "2af23c90768dfa6e74ac05922ec28c4eb9a0d674e730682e472ff14040387169",
+    "tests/process-windows-command.test.ts": "e642aa6277313c47d894f2715f86986fb76c43039a82d960eaa2534c393b5182",
     "tests/published-bin-contract.test.ts": "1d493ba16d76cba71fe9f148e62fff0fa55f068dd28cf5391c2f18200ae56745",
     "tests/quality-readiness.test.ts": "4ef772be4a0795abd460ccb79ccc6639da2b69baf47f6226f3e6e00d030101ec",
     "tests/quality-supersession.test.ts": "fdb955ff0f5bde92ce83477c6cfe156f6961026aaae556c81b55948790a1d420",

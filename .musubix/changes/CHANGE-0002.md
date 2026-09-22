@@ -78,7 +78,7 @@ input only.
 
 - All 63 normative requirements have generation-2 Red, Implementation, and
   Green evidence; `tdd validate` reports no uncovered or invalid cycles.
-- The latest complete validation passed 53 test files and 66 tests,
+- The latest complete validation passed 55 test files and 69 tests,
   TypeScript typecheck/build, the pinned compatibility suite,
   package-content checks, isolated tarball installation/startup smoke checks,
   strict trace, and graph validation.
@@ -90,6 +90,14 @@ input only.
   transcripts from both implementation sessions, the matrix gate passes
   locally and workflow verification reconciles 13 declarations across two
   Skills.
+- The first external matrix run exposed Windows `.cmd` shim resolution for
+  `npm` and `npx`; focused Red-to-Green pure-function tests now verify the
+  Windows Node-CLI invocation mapping while native and non-Windows commands
+  remain unchanged. Execution-level Windows confirmation remains pending until
+  the candidate is regenerated.
+- Repository text checkouts are pinned to LF through `.gitattributes`, keeping
+  persisted byte-level trace, graph, and approval fingerprints stable on the
+  Windows matrix runner.
 - The optional formal check reports `fail` because the prose requirements
   are `FORMAL_UNSUPPORTED` by the current Boolean abstraction; it grants no
   proof credit.

@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { win32 } from 'node:path';
 import { performance } from 'node:perf_hooks';
 
 export interface ProcessResult {
@@ -11,9 +12,41 @@ export interface ProcessResult {
 
 export type Runner = (command: string, args: string[], options: { cwd: string; timeoutMs: number; input?: string }) => Promise<ProcessResult>;
 
+export function resolveProcessCommand(command: string, platform: NodeJS.Platform = process.platform): string {
+  if (platform !== 'win32' || !/^(?:npm|npx)$/i.test(command)) return command;
+  return `${command}.cmd`;
+}
+
+/** @id CODE-M5-PROCESS-WINDOWS-001
+ * @implements REQ-M5-QUALITY-005 REQ-M5-RELEASE-002
+ * @design DES-M5-015 DES-M5-019
+ */
+export function resolveProcessInvocation(
+  command: string,
+  args: string[],
+  platform: NodeJS.Platform = process.platform,
+  nodeExecutable: string = process.execPath,
+): { command: string; args: string[] } {
+  if (platform !== 'win32' || !/^(?:npm|npx)$/i.test(command)) return { command, args };
+  const cli = win32.join(
+    win32.dirname(nodeExecutable),
+    'node_modules',
+    'npm',
+    'bin',
+    `${command.toLowerCase()}-cli.js`,
+  );
+  return { command: nodeExecutable, args: [cli, ...args] };
+}
+
 export const runProcess: Runner = async (command, args, options) => new Promise((resolve) => {
   const start = performance.now();
-  const child = spawn(command, args, { cwd: options.cwd, shell: false, stdio: ['pipe', 'pipe', 'pipe'], detached: process.platform !== 'win32' });
+  const invocation = resolveProcessInvocation(command, args);
+  const child = spawn(invocation.command, invocation.args, {
+    cwd: options.cwd,
+    shell: false,
+    stdio: ['pipe', 'pipe', 'pipe'],
+    detached: process.platform !== 'win32',
+  });
   let stdout = '';
   let stderr = '';
   let status: ProcessResult['status'] = 'completed';
