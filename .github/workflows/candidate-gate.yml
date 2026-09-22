@@ -112,6 +112,19 @@ jobs:
           });
           if (!completed.stdout) throw new Error(`Matrix gate produced no JSON: ${completed.stderr}`);
           const report = JSON.parse(completed.stdout);
+          const failedChecks = report.checks
+            .filter(({ required, status, name }) => required && status !== 'pass' && name !== 'approval')
+            .map(({ name, status, summary, diagnostics, stdout, stderr }) => ({
+              name,
+              status,
+              summary,
+              diagnostics,
+              stdout: stdout?.slice(-20_000),
+              stderr: stderr?.slice(-20_000),
+            }));
+          if (failedChecks.length) {
+            console.error(JSON.stringify({ failedChecks }, null, 2));
+          }
           const commands = report.checks
             .filter(({ name }) => name.startsWith('command:'))
             .map((check) => {
