@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-23T14:59:17.001Z",
+  "generatedAt": "2026-09-23T15:22:08.330Z",
   "nodes": [
     {
       "id": "CODE-M5-NPM-PUBLISH-WORKFLOW-YAML-001",
@@ -868,6 +868,27 @@
       "kind": "requirement",
       "path": ".musubix/features/parallel-agent-development/requirements.md",
       "line": 120,
+      "mandatory": true
+    },
+    {
+      "id": "REQ-M5-REL020-001",
+      "kind": "requirement",
+      "path": ".musubix/features/release-0-2-0/requirements.md",
+      "line": 9,
+      "mandatory": true
+    },
+    {
+      "id": "REQ-M5-REL020-002",
+      "kind": "requirement",
+      "path": ".musubix/features/release-0-2-0/requirements.md",
+      "line": 16,
+      "mandatory": true
+    },
+    {
+      "id": "REQ-M5-REL020-003",
+      "kind": "requirement",
+      "path": ".musubix/features/release-0-2-0/requirements.md",
+      "line": 23,
       "mandatory": true
     },
     {
@@ -8112,6 +8133,7 @@
     ".musubix/features/musubix5-clean-foundation/requirements.md": "acad145405b899cc10cb97e05d45b253a865852ef5ada5f857a9ad593a8cd6dc",
     ".musubix/features/parallel-agent-development/design.md": "b82140e2728a3f4744486bffa126199b51b4df3f81851fdbee56662eaae2849d",
     ".musubix/features/parallel-agent-development/requirements.md": "ff106781090ca42d511610d6957c59fb9fde7ede002ca86da64018b2285dae1a",
+    ".musubix/features/release-0-2-0/requirements.md": "9a21b40b82cd44ffc0a7975583be3e309b1541ec29e78e8eac22eb74f6eb7acf",
     "packages/analysis/src/adapters.ts": "4db9916f432a92d27520a7aa9af575db67897a729fbbed623331ddc00c020b95",
     "packages/analysis/src/approval-boundary.ts": "ec0c2da68cff776388126e4d34db112d529462bd7dfcfe4691d2bc5701a81090",
     "packages/analysis/src/approval-domains.ts": "56363d8d7fe0158df596a09abf2688f439815c38dd582fd5970c1bb30e6c5994",
