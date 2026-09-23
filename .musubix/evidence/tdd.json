@@ -18327,6 +18327,51 @@
         "diagnostics": [],
         "order": 1506
       }
+    },
+    {
+      "cycleId": "547f316b-fc4b-4023-b525-92380ffacb66",
+      "changeId": "CHANGE-0003",
+      "generation": 5,
+      "requirementId": "REQ-M5-WORKTREE-001",
+      "testId": "TEST-M5-PARALLEL-CROSS-PLATFORM-WORKTREE-001",
+      "testPath": "tests/parallel-runtime-regression.test.ts",
+      "commandName": "test",
+      "red": {
+        "phase": "red",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "failed",
+        "reportSha256": "4bec5eb8fc10aad2600efd75ca0752667dc4b837e205671d8be4a8843552d882",
+        "commandSha256": "451cc09c393406ec00ad5786ad505aa440ecf290969bd5c7f513ab6027994869",
+        "outputSha256": "6a85b598b0ffebe51556bef6ea87074a133dd251a202e3904049b4bd845ba723",
+        "exitCode": 1,
+        "durationMs": 787,
+        "testFingerprint": "5496cf95021ee7eda86543d209d6515d4931b04d6b050c0afd97353dade8219a",
+        "sourceFingerprint": "54abe129bae2d7daacb8ed19a2a34ba2aa39d398862fc722f4ffee130cf19ba0",
+        "executionId": "8956ec92-7b5b-4300-8adb-2edd69594c2d",
+        "recordedAt": "2026-09-23T13:46:24.295Z",
+        "diagnostics": [],
+        "order": 1509
+      },
+      "green": {
+        "phase": "green",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "passed",
+        "reportSha256": "2b3c63028c9404c467dfead539e21f2401c53e6beba2efdcfc7aa77dff2d5f40",
+        "commandSha256": "451cc09c393406ec00ad5786ad505aa440ecf290969bd5c7f513ab6027994869",
+        "outputSha256": "6a85b598b0ffebe51556bef6ea87074a133dd251a202e3904049b4bd845ba723",
+        "exitCode": 0,
+        "durationMs": 754,
+        "testFingerprint": "5496cf95021ee7eda86543d209d6515d4931b04d6b050c0afd97353dade8219a",
+        "sourceFingerprint": "21bfa8686160cc1db0840a56aff75c26174961a59887b15346109f21643f623f",
+        "executionId": "172e0293-c2a2-4a84-8fdf-521df33369ff",
+        "recordedAt": "2026-09-23T13:47:23.768Z",
+        "diagnostics": [],
+        "order": 1512
+      }
     }
   ],
   "chain": [
@@ -29209,6 +29254,34 @@
       "phaseEvidenceSha256": "93ef497bfef137b9e8f95eb86c6bcdb1a102b23536c92063a7490fd36540a3c6",
       "previousSha256": "231e31650336bcc79dd6c7b9491ba5c233a09df72fb27c836aa94430970b433d",
       "recordSha256": "6fa13a3c58a165c7d731f2c765dc44f518e6e00bf81fcc07504c792f9d9e3a61"
+    },
+    {
+      "sequence": 824,
+      "cycleId": "547f316b-fc4b-4023-b525-92380ffacb66",
+      "changeId": "CHANGE-0003",
+      "generation": 5,
+      "requirementId": "REQ-M5-WORKTREE-001",
+      "testId": "TEST-M5-PARALLEL-CROSS-PLATFORM-WORKTREE-001",
+      "testPath": "tests/parallel-runtime-regression.test.ts",
+      "commandName": "test",
+      "phase": "red",
+      "phaseEvidenceSha256": "1c4672291e3db61afe890877d7a14135cf7e638cf923473435a55e5d449e5a95",
+      "previousSha256": "6fa13a3c58a165c7d731f2c765dc44f518e6e00bf81fcc07504c792f9d9e3a61",
+      "recordSha256": "c985b7094757db81cb1c096e2f9d69bfad75a80c8f2366639b4b8a0ad134dc87"
+    },
+    {
+      "sequence": 825,
+      "cycleId": "547f316b-fc4b-4023-b525-92380ffacb66",
+      "changeId": "CHANGE-0003",
+      "generation": 5,
+      "requirementId": "REQ-M5-WORKTREE-001",
+      "testId": "TEST-M5-PARALLEL-CROSS-PLATFORM-WORKTREE-001",
+      "testPath": "tests/parallel-runtime-regression.test.ts",
+      "commandName": "test",
+      "phase": "green",
+      "phaseEvidenceSha256": "fd39ed3d6ce72358495c0887350ab015fa6380a40d0c027ef7fb2be88f5ec211",
+      "previousSha256": "c985b7094757db81cb1c096e2f9d69bfad75a80c8f2366639b4b8a0ad134dc87",
+      "recordSha256": "f7056e792057fd24d1994b96d64bcc9b868c545db4b43f27aa97360410cbb5e5"
     }
   ]
 }

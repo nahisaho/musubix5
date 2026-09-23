@@ -51,6 +51,10 @@ describe('parallel runtime regressions', () => {
     const canonicalWorkspacePath = requiredFunction<
       (path: string) => Promise<string>
     >(parallel, 'canonicalWorkspacePath');
+    const preserveUnresolvedWorkspacePath = requiredFunction<
+      (code: string | undefined, parentIsDirectory: boolean) => boolean
+    >(parallel, 'preserveUnresolvedWorkspacePath');
+    expect(preserveUnresolvedWorkspacePath('ENOENT', false)).toBe(true);
     const directory = mkdtempSync(resolve(tmpdir(), 'musubix5-path-alias-'));
     const actual = resolve(directory, 'actual');
     const alias = resolve(directory, 'alias');

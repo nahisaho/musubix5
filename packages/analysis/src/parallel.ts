@@ -1,4 +1,4 @@
-import { realpath } from 'node:fs/promises';
+import { realpath, stat } from 'node:fs/promises';
 import {
   basename, dirname, parse, resolve,
 } from 'node:path';
@@ -44,16 +44,29 @@ function parallelPlanPathSlug(planId: string): string {
   return `parallel-plan-${/^[a-f0-9]{64}$/i.test(identity) ? identity.slice(0, 20) : identity}`;
 }
 
+export function preserveUnresolvedWorkspacePath(
+  code: string | undefined,
+  parentIsDirectory: boolean,
+): boolean {
+  return code === 'ENOTDIR' || (code === 'ENOENT' && !parentIsDirectory);
+}
+
 export async function canonicalWorkspacePath(path: string): Promise<string> {
   const absolute = resolve(path);
   try {
     return await realpath(absolute);
   } catch (cause) {
     const code = (cause as NodeJS.ErrnoException).code;
-    if (code === 'ENOTDIR') return absolute;
-    if (code !== 'ENOENT') throw cause;
+    if (code !== 'ENOENT' && code !== 'ENOTDIR') throw cause;
     const parent = dirname(absolute);
     if (parent === absolute || parent === parse(absolute).root) return absolute;
+    let parentIsDirectory = true;
+    try {
+      parentIsDirectory = (await stat(parent)).isDirectory();
+    } catch (parentCause) {
+      if ((parentCause as NodeJS.ErrnoException).code !== 'ENOENT') throw parentCause;
+    }
+    if (preserveUnresolvedWorkspacePath(code, parentIsDirectory)) return absolute;
     return resolve(await canonicalWorkspacePath(parent), basename(absolute));
   }
 }

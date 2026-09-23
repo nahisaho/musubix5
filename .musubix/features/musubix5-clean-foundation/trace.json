@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-23T13:30:54.361Z",
+  "generatedAt": "2026-09-23T13:49:01.055Z",
   "nodes": [
     {
       "id": "CODE-M5-NPM-PUBLISH-WORKFLOW-YAML-001",
@@ -1120,19 +1120,19 @@
       "id": "CODE-M5-PARALLEL-PLAN-001",
       "kind": "code",
       "path": "packages/analysis/src/parallel.ts",
-      "line": 200
+      "line": 213
     },
     {
       "id": "CODE-M5-PARALLEL-ASSIGNMENT-001",
       "kind": "code",
       "path": "packages/analysis/src/parallel.ts",
-      "line": 368
+      "line": 381
     },
     {
       "id": "CODE-M5-PARALLEL-INTEGRATION-001",
       "kind": "code",
       "path": "packages/analysis/src/parallel.ts",
-      "line": 612
+      "line": 625
     },
     {
       "id": "CODE-M5-PLANNER-001",
@@ -1972,61 +1972,61 @@
       "id": "TEST-M5-PARALLEL-RETRY-002",
       "kind": "test",
       "path": "tests/parallel-runtime-regression.test.ts",
-      "line": 71
+      "line": 75
     },
     {
       "id": "TEST-M5-PARALLEL-SPLIT-ROOT-001",
       "kind": "test",
       "path": "tests/parallel-runtime-regression.test.ts",
-      "line": 82
+      "line": 86
     },
     {
       "id": "TEST-M5-PARALLEL-DETACHED-VERIFY-001",
       "kind": "test",
       "path": "tests/parallel-runtime-regression.test.ts",
-      "line": 116
+      "line": 120
     },
     {
       "id": "TEST-M5-PARALLEL-FENCING-001",
       "kind": "test",
       "path": "tests/parallel-runtime-regression.test.ts",
-      "line": 142
+      "line": 146
     },
     {
       "id": "TEST-M5-PARALLEL-PROVENANCE-001",
       "kind": "test",
       "path": "tests/parallel-runtime-regression.test.ts",
-      "line": 167
+      "line": 171
     },
     {
       "id": "TEST-M5-PARALLEL-STALE-CLEANUP-001",
       "kind": "test",
       "path": "tests/parallel-runtime-regression.test.ts",
-      "line": 197
+      "line": 201
     },
     {
       "id": "TEST-M5-PARALLEL-LIFECYCLE-MAPPING-001",
       "kind": "test",
       "path": "tests/parallel-runtime-regression.test.ts",
-      "line": 216
+      "line": 220
     },
     {
       "id": "TEST-M5-PARALLEL-WORKTREE-SAFETY-001",
       "kind": "test",
       "path": "tests/parallel-runtime-regression.test.ts",
-      "line": 236
+      "line": 240
     },
     {
       "id": "TEST-M5-PARALLEL-INTEGRATION-SEMANTICS-002",
       "kind": "test",
       "path": "tests/parallel-runtime-regression.test.ts",
-      "line": 256
+      "line": 260
     },
     {
       "id": "TEST-M5-PARALLEL-RUNTIME-CONCURRENCY-001",
       "kind": "test",
       "path": "tests/parallel-runtime-regression.test.ts",
-      "line": 274
+      "line": 278
     },
     {
       "id": "TEST-M5-PARALLEL-SCAFFOLD-PROVISION-001",
@@ -8107,7 +8107,7 @@
     "packages/analysis/src/order.ts": "712ef698e5136da577602a9e603cbd59fe84f237ccda712cdcc9d2c6dd2335aa",
     "packages/analysis/src/parallel-runtime.ts": "f6afa2a4c26094249602cdc503ea12fdf040f9ac53cf9792ecb8fbcdae2b7b54",
     "packages/analysis/src/parallel-tdd-evidence.ts": "5968a550696b4f93c70bfd322f18afcf70f5e8dc04b888241fc76acc94a116ea",
-    "packages/analysis/src/parallel.ts": "b978376a64eed9266799d8eca91b8d83443ef3bc5af7408668cfa20b0ff7a8e7",
+    "packages/analysis/src/parallel.ts": "ac698520f8a60dcae907c4da7ec6bf53d920003a6db3ab8470d04252bdabcdae",
     "packages/analysis/src/performance.ts": "a51c388499c57f177ebc4a6d5a160d7fb07550626b24a9c987b6b0d17e96ebe7",
     "packages/analysis/src/planner-output.ts": "c649e484d064c2fc5078bcbc21a08e49746feae179e26de99d92bae17ffe9a5c",
     "packages/analysis/src/process.ts": "675e76428f4e78e631fe1cbf9cddee298c93576d43fc63a5e977ff044b32d5d4",
@@ -8188,7 +8188,7 @@
     "tests/parallel-release-blockers-generation5.test.ts": "8739007ad5fbe19451cf1e6e2abba2265f1c1435a35e9e05164e927360bbefdc",
     "tests/parallel-review-regressions.test.ts": "b0ddb63c6f2a4fc41dd7b959b971c4cff8a2cc87f665a5ca2e42652b6cfc5423",
     "tests/parallel-runtime-lifecycle-generation5.test.ts": "66a6fb7e09b6ac620d30cc4c92f9c1fcbfdf79dab9c9109cca7cfa97314b9ea0",
-    "tests/parallel-runtime-regression.test.ts": "ebf08cf56639f7dac7c851a820419b4cbbbac5a8e4505b9da8b116b275a5b084",
+    "tests/parallel-runtime-regression.test.ts": "96daf5a5d6155e357d5bd5b5053f966df697c95b7d9647275539818d9b01b45e",
     "tests/parallel-scaffold-policy-generation5.test.ts": "e66329e655a000b3b7131a74415223f5b903ea40f258d6a40169fcc407de9aae",
     "tests/parallel-skill-contract-generation5.test.ts": "7f923e5b793a8f45d2f6a3701a78167d5bf1db4649f03dffc0e4f4b98dc05001",
     "tests/planner-retry-identity.test.ts": "ee672f87e7528154f1842e7d0acdc70bfed742378119bb26be9e526bf6819b91",
