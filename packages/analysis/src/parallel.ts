@@ -49,7 +49,9 @@ export async function canonicalWorkspacePath(path: string): Promise<string> {
   try {
     return await realpath(absolute);
   } catch (cause) {
-    if (!['ENOENT', 'ENOTDIR'].includes((cause as NodeJS.ErrnoException).code ?? '')) throw cause;
+    const code = (cause as NodeJS.ErrnoException).code;
+    if (code === 'ENOTDIR') return absolute;
+    if (code !== 'ENOENT') throw cause;
     const parent = dirname(absolute);
     if (parent === absolute || parent === parse(absolute).root) return absolute;
     return resolve(await canonicalWorkspacePath(parent), basename(absolute));

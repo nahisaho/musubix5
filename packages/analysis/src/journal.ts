@@ -213,7 +213,7 @@ export async function loadJournalRecords(root: string): Promise<JournalRecord[]>
 }
 
 /** @id CODE-M5-LIFECYCLE-002
- * @implements REQ-M5-LIFECYCLE-002
+ * @implements REQ-M5-LIFECYCLE-002 REQ-M5-PARALLEL-011
  * @design DES-M5-004
  */
 export async function appendJournalRecord(root: string, input: JournalRecordInput): Promise<JournalRecord> {
@@ -233,7 +233,7 @@ export async function appendJournalRecord(root: string, input: JournalRecordInpu
     const previous = records.at(-1);
     const payload = {
       schemaVersion: 1 as const,
-      order: (previous?.order ?? 0) + 1,
+      order: records.length + 1,
       ...input,
       previousSha256: previous?.recordSha256 ?? null,
     };

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-23T13:13:34.128Z",
+  "generatedAt": "2026-09-23T13:30:54.361Z",
   "nodes": [
     {
       "id": "CODE-M5-NPM-PUBLISH-WORKFLOW-YAML-001",
@@ -1120,19 +1120,19 @@
       "id": "CODE-M5-PARALLEL-PLAN-001",
       "kind": "code",
       "path": "packages/analysis/src/parallel.ts",
-      "line": 198
+      "line": 200
     },
     {
       "id": "CODE-M5-PARALLEL-ASSIGNMENT-001",
       "kind": "code",
       "path": "packages/analysis/src/parallel.ts",
-      "line": 366
+      "line": 368
     },
     {
       "id": "CODE-M5-PARALLEL-INTEGRATION-001",
       "kind": "code",
       "path": "packages/analysis/src/parallel.ts",
-      "line": 610
+      "line": 612
     },
     {
       "id": "CODE-M5-PLANNER-001",
@@ -1702,7 +1702,7 @@
       "id": "TEST-M5-LIFECYCLE-002",
       "kind": "test",
       "path": "tests/journal-order.test.ts",
-      "line": 46
+      "line": 47
     },
     {
       "id": "TEST-M5-LIFECYCLE-003",
@@ -5158,6 +5158,11 @@
     },
     {
       "from": "CODE-M5-LIFECYCLE-002",
+      "to": "REQ-M5-PARALLEL-011",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-LIFECYCLE-002",
       "to": "DES-M5-004",
       "relation": "implements"
     },
@@ -6672,6 +6677,11 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-LIFECYCLE-002",
+      "to": "REQ-M5-PARALLEL-011",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-LIFECYCLE-003",
       "to": "REQ-M5-LIFECYCLE-003",
       "relation": "verifies"
@@ -8088,16 +8098,16 @@
     "packages/analysis/src/gate.ts": "d5c99e7bcb5bed53c577b82741f743832ca01397f8ec931e025f26243b166d85",
     "packages/analysis/src/graph.ts": "448a2ebb4aa9f8b5a3b8a3ca7fbe06b51dd0a38f8c69830f6717947bda050a23",
     "packages/analysis/src/index.ts": "a023078b9461fa83b0f565cb9f80eb6b525c6028854f87f4bee20f3c2587ed1e",
-    "packages/analysis/src/journal.ts": "10240c93c50b5975479d3a498aa21aa228cf99de1e7586e08ff2c387adade56c",
+    "packages/analysis/src/journal.ts": "a852798a86b2fe5ec38f32e827df64e45a37ba0dfa870fd3a513b605307094f6",
     "packages/analysis/src/knowledge.ts": "31313a4519c711ac98648313059359daf69959403e39deb1509dea90840182b4",
     "packages/analysis/src/lifecycle.ts": "6dfcd2fd1915ea8edbc8d611da3d35aadd8a09581796c029e83d41a2a6fc7fc2",
     "packages/analysis/src/model-correspondence.ts": "30d993a8198f8b5aaad2e69e5711c47410195ce16dd3de1813df363a32a253ff",
     "packages/analysis/src/mutation.ts": "87fcc7a0ef44b43a093c941319d7d6d600314d3ca2c4d94abddcb6c247c1dd9b",
     "packages/analysis/src/native-approval.ts": "bd6bba0231389ada6758213a90be9a6cfde96e45e89dc9776d9d4e46e2951c53",
     "packages/analysis/src/order.ts": "712ef698e5136da577602a9e603cbd59fe84f237ccda712cdcc9d2c6dd2335aa",
-    "packages/analysis/src/parallel-runtime.ts": "eefcfdbf1b2d950f53ae0260c0d6b9aeca80b1effd775fa608a0e632ded48f04",
+    "packages/analysis/src/parallel-runtime.ts": "f6afa2a4c26094249602cdc503ea12fdf040f9ac53cf9792ecb8fbcdae2b7b54",
     "packages/analysis/src/parallel-tdd-evidence.ts": "5968a550696b4f93c70bfd322f18afcf70f5e8dc04b888241fc76acc94a116ea",
-    "packages/analysis/src/parallel.ts": "a9c16e00fcb6b5467b054b6543398fcf2d1ea0516d0fc75167fe38fef8019934",
+    "packages/analysis/src/parallel.ts": "b978376a64eed9266799d8eca91b8d83443ef3bc5af7408668cfa20b0ff7a8e7",
     "packages/analysis/src/performance.ts": "a51c388499c57f177ebc4a6d5a160d7fb07550626b24a9c987b6b0d17e96ebe7",
     "packages/analysis/src/planner-output.ts": "c649e484d064c2fc5078bcbc21a08e49746feae179e26de99d92bae17ffe9a5c",
     "packages/analysis/src/process.ts": "675e76428f4e78e631fe1cbf9cddee298c93576d43fc63a5e977ff044b32d5d4",
@@ -8161,7 +8171,8 @@
     "tests/evidence-kinds.test.ts": "b1a624757dcaaaf9431a0dfa245e358139d6566b07de2566477a2dd81ae0be65",
     "tests/evidence-supersession.test.ts": "aa73654e0e5bc737b9ed6725b4091648e9b9d7978a4d466a01506612c2d58bc7",
     "tests/fixtures/parallel-runtime-fixture.ts": "e3eebc948e666a306f6ee4bd5cdbf661c6ef992be7cbf968540556a801ac1637",
-    "tests/journal-order.test.ts": "a06616c2cfdae956db2b611de5edc0337b4468cfc94ca3e9ca305f2bef67918c",
+    "tests/helpers/journal-order-sentinel.ts": "4202b2775d671925f346eadf6ff8b5a54cfa8134842197f3952eed9842c5b3b1",
+    "tests/journal-order.test.ts": "57aea384a29f75a18367c088662dd856aa2bbebf5cd0b9fd45416988e49601a0",
     "tests/lifecycle-resume.test.ts": "05f7a3f30acf4b0b628e1c068d17c28cb248508fa2e9523c51e6455c4bd2e6ed",
     "tests/lifecycle-state-machine.test.ts": "5cbae549161c93fb5943575d9e0ba974d716f53ca2600ef8e6e07586622a0d33",
     "tests/native-approval.test.ts": "d0525f378f3fb655b6716c0847ddfba37f6e1dc3d3fd42e5d97ce0c1e218a9f0",

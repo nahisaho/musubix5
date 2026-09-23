@@ -547,7 +547,7 @@ async function resolveApprovedPolicy(
 }
 
 async function gitCommonDirectory(root: string): Promise<string> {
-  return resolve(root, await git(root, ['rev-parse', '--git-common-dir']));
+  return canonicalWorkspacePath(resolve(root, await git(root, ['rev-parse', '--git-common-dir'])));
 }
 
 async function currentBinding(root: string): Promise<CurrentBinding> {
@@ -1194,7 +1194,7 @@ function integrationPaths(
   const slug = basename(resolve(assignmentPath, '..', '..', '..'));
   return {
     branch: `musubix5/${plan.binding.changeId}/${slug}/integration/attempt-${attempt}`,
-    worktree: portable(resolve(base, 'integration', `attempt-${attempt}`)),
+    worktree: resolve(base, 'integration', `attempt-${attempt}`),
   };
 }
 
