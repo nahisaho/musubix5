@@ -232,6 +232,9 @@ Installing another feature does not reset existing configuration.
 | `sdd-quality` | Actual verification commands, policy, readiness evidence |
 | `sdd-knowledge` | Local artifact/Git retrieval, not conversational memory |
 | `sdd-formal-codegraph` | Optional consistency checks, compiler graph, architecture |
+| `sdd-parallel-dispatch` | Dispatch approved assignments without exceeding plan concurrency |
+| `sdd-agent-assignment` | Execute one owned-path assignment in its managed worktree |
+| `sdd-integration-verification` | Integrate verified ranges, verify, hand off, and clean up |
 
 Use **native Copilot** for planning, editing, research, review, security review,
 memory, code navigation/LSP, MCP management, and subagent/fleet/task coordination.
@@ -281,6 +284,29 @@ Any AI-generated documentation deliverable (requirements, design, ADRs, the
 CHANGE document, or release/quality evidence summaries) goes through this
 `rubber-duck` review/fix loop until zero issues remain **before** the
 corresponding human approval step is requested.
+
+### Parallel implementation workflow
+
+After requirements and design approval, put the active feature's
+`Parallel-Policy:` JSON declaration in the first policy-bearing artifact listed
+by the active CHANGE's design approval manifest. This makes policy ownership
+deterministic when the manifest also contains unrelated feature designs.
+Validate and create the bound plan with `parallel plan`,
+then prepare its managed Git worktrees. `sdd-parallel-dispatch` requests
+assignment instructions without exceeding persisted concurrency; each
+`sdd-agent-assignment` changes only its declared worktree and owned paths, and
+the CLI verifies every commit in the result range before accepting it.
+
+`provisionCommands` declares trusted argument-array commands that prepare each
+managed worktree before focused or integration verification. The starter design
+uses `npm ci --ignore-scripts`; replace it with the repository's lockfile-based
+installer when the project does not use npm.
+
+Use `parallel status` for persisted plan, assignment, and integration state.
+After all assignments complete, `sdd-integration-verification` performs
+deterministic integration, required verification, fast-forward-only candidate
+handoff, and branch-retaining cleanup. Stale plans permit only explicitly
+targeted status and stale cleanup; dirty or unconsumed worktrees are retained.
 
 ```sh
 npx musubix5 requirements validate .musubix/features/example/requirements.md --json
@@ -410,6 +436,10 @@ validation/gate or requested solver failure, **2** usage, I/O or malformed confi
 | `evidence refresh [--changed]` | Regenerate derived evidence through the same fail-closed gate pipeline |
 | `mutation validate` | Revalidate requirement-scoped schema-v1 killed-mutant evidence |
 | `mutation identity <REQ-ID> <TEST-ID> <sourcePath> <operator> <line> <column>` | Print the deterministic `MUT-*` identity a mutation report must declare |
+| `parallel plan validate\|create <file>` | Validate or persist an approval-, generation-, candidate-, policy-, and command-bound plan |
+| `parallel prepare\|assignment ...` | Create managed worktrees and process assignment instruction, heartbeat, result, failure, and retry |
+| `parallel integration start\|verify\|reopen ...` | Integrate verified ranges and verify or reopen a dependency-closed assignment set |
+| `parallel handoff\|status\|cleanup ...` | Fast-forward the candidate, inspect persisted state, or perform branch-retaining cleanup |
 | `tdd validate` | Validate persisted Red/Green/Refactor order, fingerprints, durations, and hash-chain evidence |
 | `tdd red\|green\|refactor <TEST-ID> --requirement <REQ-ID> --command <name>` | Execute and record a verified TDD phase. Recording the project's **first** `tdd` cycle (any `red` call while `.musubix/evidence/tdd.json` has zero cycles) makes `gate`'s `tdd` check required **project-wide**, for every mandatory requirement, not just the ones touched by the current change; each uncovered requirement then surfaces as `TDD_REQUIREMENT_UNCOVERED`. `approval record release` always runs the full (non-`--changed`) gate, so it is blocked by any resulting `TDD_REQUIREMENT_UNCOVERED` diagnostics. `tdd migrate` cannot be used to bulk-onboard previously-uncovered requirements: it only re-fingerprints a requirement that already has a valid Green cycle. `tdd red` prints/returns a `TDD_ADOPTION_PROJECT_WIDE` warning (in a `warnings` array, separate from `diagnostics`) the moment this first cycle is persisted, listing every other still-uncovered mandatory requirement. |
 | `workflow-record <skill> <phase> --status <status>` | Record a compact self-reported workflow declaration |

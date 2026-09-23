@@ -182,7 +182,7 @@ export async function releaseChangeLease(lease: ChangeLease): Promise<void> {
   await releaseOrderLease(lease);
 }
 
-async function journalRecords(root: string): Promise<JournalRecord[]> {
+export async function loadJournalRecords(root: string): Promise<JournalRecord[]> {
   const records: JournalRecord[] = [];
   for (const stream of ['normal', 'bootstrap'] as const) {
     const directory = join(root, '.musubix', 'journal', stream);
@@ -219,7 +219,7 @@ async function journalRecords(root: string): Promise<JournalRecord[]> {
 export async function appendJournalRecord(root: string, input: JournalRecordInput): Promise<JournalRecord> {
   const lease = await acquireOrderLease(root);
   try {
-    const records = await journalRecords(root);
+    const records = await loadJournalRecords(root);
     const existing = records.find((record) => record.idempotencyKey === input.idempotencyKey);
     if (existing) {
       if (existing.stream !== input.stream
@@ -265,13 +265,13 @@ export async function appendJournalRecord(root: string, input: JournalRecordInpu
 }
 
 export async function verifyJournal(root: string): Promise<JournalRecord[]> {
-  return journalRecords(root);
+  return loadJournalRecords(root);
 }
 
 export async function loadJournalRecordByIdempotencyKey(
   root: string,
   idempotencyKey: string,
 ): Promise<JournalRecord | null> {
-  return (await journalRecords(root))
+  return (await loadJournalRecords(root))
     .find((record) => record.idempotencyKey === idempotencyKey) ?? null;
 }

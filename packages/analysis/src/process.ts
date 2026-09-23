@@ -10,7 +10,12 @@ export interface ProcessResult {
   durationMs: number;
 }
 
-export type Runner = (command: string, args: string[], options: { cwd: string; timeoutMs: number; input?: string }) => Promise<ProcessResult>;
+export type Runner = (command: string, args: string[], options: {
+  cwd: string;
+  timeoutMs: number;
+  input?: string;
+  env?: NodeJS.ProcessEnv;
+}) => Promise<ProcessResult>;
 
 export function resolveProcessCommand(command: string, platform: NodeJS.Platform = process.platform): string {
   if (platform !== 'win32' || !/^(?:npm|npx)$/i.test(command)) return command;
@@ -75,6 +80,7 @@ export const runProcess: Runner = async (command, args, options) => new Promise(
     : resolveProcessInvocation(command, args);
   const child = spawn(invocation.command, invocation.args, {
     cwd: options.cwd,
+    ...(options.env ? { env: options.env } : {}),
     shell: false,
     stdio: ['pipe', 'pipe', 'pipe'],
     detached: process.platform !== 'win32',

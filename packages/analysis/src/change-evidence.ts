@@ -2,6 +2,9 @@ import { exists, readText, within } from './files.js';
 import type { TddEvidence } from './tdd.js';
 import { selectCurrentTddCycle } from './tdd-cycle-resolver.js';
 import { canonicalBytes } from './canonical.js';
+import { classifyParallelTddEvidence } from './parallel-tdd-evidence.js';
+
+export { classifyParallelTddEvidence } from './parallel-tdd-evidence.js';
 
 // Shared change-chronology data model and pure accessors used by both
 // change.ts (recording/validation) and change-waiver.ts (waiver evidence).
@@ -28,6 +31,10 @@ export interface ChangePhaseEvidence {
   phase: ChangePhase;
   order?: number;
   qualityOrdinal?: number;
+  requirementsOrdinal?: number;
+  designOrdinal?: number;
+  operationId?: string;
+  approvalManifestSha256?: string;
   recordedAt: string;
   fingerprints: ChangeFingerprints;
   allowUnchanged?: boolean;
@@ -52,6 +59,8 @@ export interface ChangeGenerationHistory {
   status: 'superseded' | 'abandoned';
   requirementIds: string[];
   phases: Partial<Record<ChangePhase, ChangePhaseEvidence>>;
+  requirementsHistory?: ChangePhaseEvidence[];
+  designHistory?: ChangePhaseEvidence[];
   qualityHistory?: ChangePhaseEvidence[];
   tddBatches?: ChangeTddBatch[];
   abandonment?: ChangeGenerationAbandonment;
@@ -63,6 +72,8 @@ export interface ChangeRecord {
   activeGeneration?: number | null;
   requirementIds: string[];
   phases: Partial<Record<ChangePhase, ChangePhaseEvidence>>;
+  requirementsHistory?: ChangePhaseEvidence[];
+  designHistory?: ChangePhaseEvidence[];
   qualityHistory?: ChangePhaseEvidence[];
   tddBatches?: ChangeTddBatch[];
   generationHistory?: ChangeGenerationHistory[];
@@ -89,6 +100,13 @@ export interface ChangeGenerationSummary {
   generations: Array<{
     generation: number;
     status: 'active' | 'superseded' | 'abandoned';
+    unprojectedPhaseCheckpoints: Array<{
+      generation: number;
+      phase: 'requirements' | 'design';
+      operationId: string;
+      ordinal: number;
+      journalOrder: number;
+    }>;
   }>;
 }
 
@@ -129,6 +147,8 @@ function snapshotGeneration(
     status,
     requirementIds: [...change.requirementIds],
     phases: change.phases,
+    ...(change.requirementsHistory ? { requirementsHistory: change.requirementsHistory } : {}),
+    ...(change.designHistory ? { designHistory: change.designHistory } : {}),
     ...(change.qualityHistory ? { qualityHistory: change.qualityHistory } : {}),
     ...(change.tddBatches ? { tddBatches: change.tddBatches } : {}),
     ...(change.abandonment ? { abandonment: change.abandonment } : {}),
@@ -158,6 +178,8 @@ export function reopenChangeGeneration(
   change.activeGeneration = generation;
   change.requirementIds = normalizedRequirementIds(requirementIds);
   change.phases = {};
+  delete change.requirementsHistory;
+  delete change.designHistory;
   delete change.qualityHistory;
   delete change.tddBatches;
   delete change.abandonment;
@@ -185,20 +207,75 @@ export function abandonChangeGeneration(
 export function summarizeChangeGeneration(change: ChangeRecord): ChangeGenerationSummary {
   const active = activeChangeGeneration(change);
   const generations: ChangeGenerationSummary['generations'] = (change.generationHistory ?? [])
-    .map((entry) => ({ generation: entry.generation, status: entry.status }));
+    .map((entry) => ({
+      generation: entry.generation,
+      status: entry.status,
+      unprojectedPhaseCheckpoints: [],
+    }));
   const currentGeneration = change.generation ?? 1;
   if (!generations.some((entry) => entry.generation === currentGeneration)) {
     generations.push({
       generation: currentGeneration,
       status: active === null ? 'abandoned' : 'active',
+      unprojectedPhaseCheckpoints: [],
     });
   }
+
   generations.sort((left, right) => left.generation - right.generation);
   return {
     changeId: change.changeId,
     activeGeneration: active,
     generations,
   };
+}
+
+export type SupersedingPhase = 'requirements' | 'design';
+
+function phaseOrdinalField(phase: SupersedingPhase): 'requirementsOrdinal' | 'designOrdinal' {
+  return phase === 'requirements' ? 'requirementsOrdinal' : 'designOrdinal';
+}
+
+function phaseHistory(change: ChangeRecord, phase: SupersedingPhase): ChangePhaseEvidence[] {
+  if (phase === 'requirements') return change.requirementsHistory ??= [];
+  return change.designHistory ??= [];
+}
+
+export function phaseCheckpointEntries(
+  change: ChangeRecord,
+  phase: SupersedingPhase,
+): ChangePhaseEvidence[] {
+  return [
+    ...phaseHistory(change, phase),
+    ...(change.phases[phase] ? [change.phases[phase]!] : []),
+  ];
+}
+
+export function nextPhaseCheckpointOrdinal(change: ChangeRecord, phase: SupersedingPhase): number {
+  const field = phaseOrdinalField(phase);
+  return Math.max(0, ...phaseCheckpointEntries(change, phase).map((entry, index) =>
+    entry[field] ?? index + 1)) + 1;
+}
+
+/** @id CODE-M5-PHASE-CHECKPOINT-PROJECTION-001
+ * @implements REQ-M5-LIFECYCLE-005 REQ-M5-COMPAT-013
+ * @design DES-M5-005
+ */
+export function supersedeApprovedPhase(
+  change: ChangeRecord,
+  phase: SupersedingPhase,
+  candidate: ChangePhaseEvidence,
+  ordinal: number,
+): void {
+  const field = phaseOrdinalField(phase);
+  const current = change.phases[phase];
+  const history = phaseHistory(change, phase);
+  for (const [index, historical] of history.entries()) historical[field] ??= index + 1;
+  if (current) {
+    current[field] ??= history.length + 1;
+    history.push(current);
+  }
+  candidate[field] = ordinal;
+  change.phases[phase] = candidate;
 }
 
 export async function loadChangeEvidence(root: string): Promise<ChangeEvidence | null> {
@@ -222,7 +299,11 @@ export function effectiveBatches(change: ChangeRecord): ChangeTddBatch[] {
 }
 
 export function batchFor(batches: ChangeTddBatch[], requirementId: string): ChangeTddBatch | undefined {
-  return batches.find((batch) => batch.requirementIds.includes(requirementId));
+  for (let index = batches.length - 1; index >= 0; index -= 1) {
+    const batch = batches[index]!;
+    if (batch.requirementIds.includes(requirementId)) return batch;
+  }
+  return undefined;
 }
 
 export function batchKey(requirementIds: string[]): string {
@@ -346,6 +427,29 @@ export function greenUnprovenCondition(change: ChangeRecord, requirementId: stri
 
 export function completenessTddUnsatisfiedCondition(change: ChangeRecord, requirementId: string, tdd: TddEvidence | null): boolean {
   return !hasValidTddCycle(change, requirementId, tdd);
+}
+
+export async function selectCurrentChangeTddCycle(
+  root: string,
+  change: ChangeRecord,
+  requirementId: string,
+  tdd: TddEvidence,
+  purpose: string,
+): Promise<ReturnType<typeof selectCurrentTddCycle> & {
+  parallelStatus: 'pass' | 'PARALLEL_TDD_UNCONSUMED' | null;
+}> {
+  const resolution = selectCurrentTddCycle(change, requirementId, tdd);
+  if (!resolution.selected) return { ...resolution, parallelStatus: null };
+  const parallelStatus = await classifyParallelTddEvidence(root, {
+    changeId: change.changeId,
+    generation: change.activeGeneration ?? change.generation ?? 1,
+    requirementId,
+    cycleId: resolution.selected.cycle.cycleId ?? null,
+    purpose,
+  });
+  return parallelStatus === 'PARALLEL_TDD_UNCONSUMED'
+    ? { ...resolution, selected: null, parallelStatus }
+    : { ...resolution, parallelStatus };
 }
 
 const tddBatchPhaseNames = ['red', 'implementation', 'green'] as const;

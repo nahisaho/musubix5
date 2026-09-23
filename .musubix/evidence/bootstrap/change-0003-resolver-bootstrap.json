@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "runId": "change-0003-resolver-bootstrap",
+  "changeId": "CHANGE-0003",
+  "candidateId": "candidate:83c686e529dd166b501a23f802f983b8f4b11834",
+  "manifestSha256": "766e8d888411eb46a2e188b4e3c3da5413a499470dd07bd6c9cd2a4191998a7d",
+  "manifest": {
+    "schemaVersion": 1,
+    "explicitBootstrap": true,
+    "runId": "change-0003-resolver-bootstrap",
+    "changeId": "CHANGE-0003",
+    "candidateId": "candidate:83c686e529dd166b501a23f802f983b8f4b11834",
+    "targetPaths": [
+      "packages/analysis/src/change-generation.ts",
+      "tests/active-change-context.test.ts"
+    ],
+    "permissions": [
+      "write"
+    ],
+    "budget": 2,
+    "maxIterations": 2,
+    "maxDurationMs": 30000,
+    "operations": [
+      {
+        "id": "write-active-change-resolver",
+        "kind": "write",
+        "targetPath": "packages/analysis/src/change-generation.ts",
+        "estimatedUsage": 1,
+        "inputDigest": "a9525ca3e3e47a9985dd1683bca4dc14d171ed8502adcd8f81e828cfd96a77d8",
+        "content": "import { exists, files, readText, within } from './files.js';\n\nexport interface ActiveChangeContext {\n  changeId: string;\n  generation: number;\n  requirementIds: string[];\n}\n\ninterface StoredChangeGeneration {\n  changeId: string;\n  generation?: number;\n  activeGeneration?: number | null;\n  requirementIds?: string[];\n}\n\nfunction activeGeneration(change: StoredChangeGeneration): number | null {\n  if (change.activeGeneration === null) return null;\n  return change.activeGeneration ?? change.generation ?? 1;\n}\n\nfunction changeDocumentStatus(source: string): 'active' | 'completed' {\n  const frontmatter = /^---\\r?\\n([\\s\\S]*?)\\r?\\n---(?:\\r?\\n|$)/.exec(source)?.[1];\n  const status = frontmatter === undefined\n    ? null\n    : /^status:\\s*(active|completed)\\s*$/m.exec(frontmatter)?.[1];\n  return status === 'completed' ? 'completed' : 'active';\n}\n\nasync function implicitlyActiveChangeIds(root: string): Promise<Set<string>> {\n  const ids = new Set<string>();\n  for (const path of (await files(root)).filter((candidate) =>\n    /^\\.musubix\\/changes\\/CHANGE-\\d+\\.md$/.test(candidate))) {\n    if (changeDocumentStatus(await readText(root, path)) === 'active') {\n      ids.add(path.slice('.musubix/changes/'.length, -'.md'.length));\n    }\n  }\n  return ids;\n}\n\n/** @id CODE-M5-GENERATION-CONTEXT-001\n * @implements REQ-M5-LIFECYCLE-005 REQ-M5-APPROVAL-007 REQ-M5-TDD-003\n * @design DES-M5-005 DES-M5-006 DES-M5-011\n */\nexport async function activeChangeContext(root: string): Promise<ActiveChangeContext | null> {\n  const path = '.musubix/evidence/changes.json';\n  if (!await exists(within(root, path))) return null;\n  const evidence = JSON.parse(await readText(root, path)) as {\n    schemaVersion?: unknown;\n    changes?: StoredChangeGeneration[];\n  };\n  if (evidence.schemaVersion !== 1 || !Array.isArray(evidence.changes)) {\n    throw new Error('Invalid change chronology evidence.');\n  }\n  const selectableChangeIds = await implicitlyActiveChangeIds(root);\n  const active = evidence.changes.flatMap((change) => {\n    if (!selectableChangeIds.has(change.changeId)) return [];\n    const generation = activeGeneration(change);\n    return generation === null ? [] : [{\n      changeId: change.changeId,\n      generation,\n      requirementIds: Array.isArray(change.requirementIds) ? change.requirementIds : [],\n    }];\n  });\n  if (active.length > 1) {\n    throw new Error('CHANGE_GENERATION_MIXED: more than one CHANGE has an active generation.');\n  }\n  return active[0] ?? null;\n}\n"
+      },
+      {
+        "id": "write-active-change-test",
+        "kind": "write",
+        "targetPath": "tests/active-change-context.test.ts",
+        "estimatedUsage": 1,
+        "inputDigest": "79c9e638387ec6a7b468b6e5a385d04a0ef24d377e96466d97fab817921f7b2d",
+        "content": "import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';\nimport { tmpdir } from 'node:os';\nimport { join } from 'node:path';\nimport { afterEach, describe, expect, it } from 'vitest';\nimport { activeChangeContext } from '../packages/analysis/src/change-generation.js';\n\nconst temporaryDirectories: string[] = [];\n\nfunction write(root: string, path: string, content: string): void {\n  const destination = join(root, path);\n  mkdirSync(join(destination, '..'), { recursive: true });\n  writeFileSync(destination, content);\n}\n\nafterEach(() => {\n  for (const directory of temporaryDirectories.splice(0)) {\n    rmSync(directory, { recursive: true, force: true });\n  }\n});\n\ndescribe('active CHANGE context', () => {\n  /** @id TEST-M5-LIFECYCLE-ACTIVE-STATUS-001\n   * @verifies REQ-M5-LIFECYCLE-005\n   */\n  it('TEST-M5-LIFECYCLE-ACTIVE-STATUS-001 excludes completed CHANGE documents from implicit selection', async () => {\n    const root = mkdtempSync(join(tmpdir(), 'musubix5-active-change-'));\n    temporaryDirectories.push(root);\n    write(root, '.musubix/changes/CHANGE-0002.md', [\n      '---',\n      'schemaVersion: 1',\n      'id: CHANGE-0002',\n      'status: completed',\n      '---',\n      '# CHANGE-0002',\n      '',\n    ].join('\\n'));\n    write(root, '.musubix/changes/CHANGE-0003.md', [\n      '---',\n      'schemaVersion: 1',\n      'id: CHANGE-0003',\n      'status: active',\n      '---',\n      '# CHANGE-0003',\n      '',\n    ].join('\\n'));\n    write(root, '.musubix/evidence/changes.json', JSON.stringify({\n      schemaVersion: 1,\n      changes: [\n        { changeId: 'CHANGE-0002', activeGeneration: 15, requirementIds: ['REQ-OLD-001'] },\n        { changeId: 'CHANGE-0003', activeGeneration: 5, requirementIds: ['REQ-NEW-001'] },\n      ],\n    }));\n\n    await expect(activeChangeContext(root)).resolves.toEqual({\n      changeId: 'CHANGE-0003',\n      generation: 5,\n      requirementIds: ['REQ-NEW-001'],\n    });\n  });\n});\n"
+      }
+    ]
+  },
+  "status": "completed",
+  "terminalReason": null,
+  "consumedBudget": 2,
+  "completedIterations": 2,
+  "elapsedMs": 5,
+  "history": [
+    {
+      "order": 1,
+      "operationId": "write-active-change-resolver",
+      "invocationKey": "bootstrap:1085b4d02dad2ebff4e3d92907bc79e4045a28e8ab37b266c4784ac8ce4dd7f4",
+      "status": "pending",
+      "inputDigest": "a9525ca3e3e47a9985dd1683bca4dc14d171ed8502adcd8f81e828cfd96a77d8",
+      "outputDigest": null,
+      "reservedUsage": 1,
+      "actualUsage": null,
+      "candidateDigest": null,
+      "changedPaths": []
+    },
+    {
+      "order": 2,
+      "operationId": "write-active-change-resolver",
+      "invocationKey": "bootstrap:1085b4d02dad2ebff4e3d92907bc79e4045a28e8ab37b266c4784ac8ce4dd7f4",
+      "status": "completed",
+      "inputDigest": "a9525ca3e3e47a9985dd1683bca4dc14d171ed8502adcd8f81e828cfd96a77d8",
+      "outputDigest": "a9525ca3e3e47a9985dd1683bca4dc14d171ed8502adcd8f81e828cfd96a77d8",
+      "reservedUsage": 1,
+      "actualUsage": 1,
+      "candidateDigest": "d45bbfeb0fde3b59e9c5590a33e9724a011435b41649f48ac5149fa57ffdec46",
+      "changedPaths": [
+        "packages/analysis/src/change-generation.ts"
+      ]
+    },
+    {
+      "order": 3,
+      "operationId": "write-active-change-test",
+      "invocationKey": "bootstrap:eaf1bef183901d74ba36dbb1d39722b00e96f157b637d5b4edc22e8a9246841d",
+      "status": "pending",
+      "inputDigest": "79c9e638387ec6a7b468b6e5a385d04a0ef24d377e96466d97fab817921f7b2d",
+      "outputDigest": null,
+      "reservedUsage": 1,
+      "actualUsage": null,
+      "candidateDigest": null,
+      "changedPaths": []
+    },
+    {
+      "order": 4,
+      "operationId": "write-active-change-test",
+      "invocationKey": "bootstrap:eaf1bef183901d74ba36dbb1d39722b00e96f157b637d5b4edc22e8a9246841d",
+      "status": "completed",
+      "inputDigest": "79c9e638387ec6a7b468b6e5a385d04a0ef24d377e96466d97fab817921f7b2d",
+      "outputDigest": "79c9e638387ec6a7b468b6e5a385d04a0ef24d377e96466d97fab817921f7b2d",
+      "reservedUsage": 1,
+      "actualUsage": 1,
+      "candidateDigest": "221fed1af5dde7289546bcf668c8ba4fe4fc47068f57d9aa8754c5884988c37c",
+      "changedPaths": [
+        "tests/active-change-context.test.ts"
+      ]
+    }
+  ]
+}

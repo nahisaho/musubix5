@@ -229,6 +229,9 @@ ID 接頭辞を変えます。別機能の追加でも既存設定はリセッ�
 | `sdd-quality` | 実コマンド、ポリシー、品質根拠 |
 | `sdd-knowledge` | ローカル成果物・Git 根拠の検索 |
 | `sdd-formal-codegraph` | 形式的整合性、依存グラフ、アーキテクチャ |
+| `sdd-parallel-dispatch` | planの並行数を超えず承認済みassignmentをdispatch |
+| `sdd-agent-assignment` | 管理worktree内で所有pathだけを変更するassignment実行 |
+| `sdd-integration-verification` | 検証済みrangeの統合・検証・handoff・cleanup |
 
 計画、編集、調査、レビュー、セキュリティレビュー、メモリ、LSP、MCP管理、
 サブエージェント・fleet・tasks は **Copilot のネイティブ機能**を使用します。
@@ -268,6 +271,27 @@ Copilot の提案を記号的検査で制約する構成であり、独自の「
 AIが生成した文書成果物(要求、設計、ADR、CHANGE文書、リリース・品質エビデンス
 要約)は、対応する人間承認を依頼する**前**に、指摘事項がゼロになるまでこの
 `rubber-duck`レビュー・修正ループを実施する。
+
+### 並列実装ワークフロー
+
+要求・設計承認後、active CHANGEのdesign approval manifestに列挙された成果物の
+うち、最初に`Parallel-Policy:`を持つartifactをactive featureのpolicy ownerとして
+扱います。これにより無関係なfeature designもmanifestに含まれる場合の所有権が
+決定的になります。`parallel plan`で
+承認・generation・candidate・policy・commandに束縛されたplanを検証・作成し、
+管理Git worktreeをprepareします。`sdd-parallel-dispatch`は保存済み並行数を
+決して超えずinstructionを発行し、各`sdd-agent-assignment`は指定worktreeと
+所有pathだけを変更します。CLIはresult受理前にcommit range全体を検証します。
+
+`provisionCommands`は、focused verificationまたはintegration verificationの前に
+各managed worktreeを準備する、信頼済みargument-array commandを宣言します。
+starter designは`npm ci --ignore-scripts`を使用します。npmを使わないrepositoryでは、
+そのrepositoryのlockfileベースinstallerへ置き換えてください。
+
+保存済みplan・assignment・integration状態は`parallel status`で確認します。
+全assignment完了後、`sdd-integration-verification`が決定的統合、必須検証、
+fast-forward限定candidate handoff、branch保持cleanupを実行します。stale planは
+明示的なstatusとstale cleanupだけが利用でき、dirtyまたは未消費worktreeは保持します。
 
 ```sh
 npx musubix5 requirements validate .musubix/features/example/requirements.md --json
@@ -360,6 +384,10 @@ npx musubix5 tdd green TEST-EXAMPLE-002 --requirement REQ-EXAMPLE-002 --command 
 | `evidence refresh [--changed]` | 同じfail-closed gate pipelineで派生証拠を再生成 |
 | `mutation validate` | 要求scopeのschema-v1 killed-mutant証拠を再検証 |
 | `mutation identity <REQ-ID> <TEST-ID> <sourcePath> <operator> <line> <column>` | mutation reportが宣言すべき決定的な`MUT-*`識別子を出力 |
+| `parallel plan validate\|create <file>` | approval・generation・candidate・policy・commandに束縛したplanを検証・保存 |
+| `parallel prepare\|assignment ...` | 管理worktreeを作成しassignmentのinstruction・heartbeat・result・fail・retryを処理 |
+| `parallel integration start\|verify\|reopen ...` | 検証済みrangeを統合し、検証または依存閉包assignment setをreopen |
+| `parallel handoff\|status\|cleanup ...` | candidateのfast-forward、保存状態確認、branch保持cleanup |
 | `tdd validate` | 保存済みRed/Green/Refactorの順序、指紋、実行時間、hash-chainを検証 |
 | `tdd red\|green\|refactor <TEST-ID> --requirement <REQ-ID> --command <name>` | 検証可能なTDDフェーズを実行・記録 |
 | `workflow-record <skill> <phase> --status <status>` | 自己申告のworkflow宣言を記録 |

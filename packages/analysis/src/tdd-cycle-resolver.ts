@@ -19,10 +19,13 @@ interface ResolverChangeRecord {
   requirementIds: string[];
   phases: {
     requirements?: ResolverPhaseEvidence;
+    design?: ResolverPhaseEvidence;
     red?: ResolverPhaseEvidence;
     implementation?: ResolverPhaseEvidence;
     green?: ResolverPhaseEvidence;
   };
+  requirementsHistory?: ResolverPhaseEvidence[];
+  designHistory?: ResolverPhaseEvidence[];
   tddBatches?: ResolverBatch[];
 }
 
@@ -90,6 +93,15 @@ function completeBatch(batch: ResolverBatch): { complete: boolean; ordered: bool
 
 function batchSubject(scope: TddBatchScope): string {
   return `batch:${scope.identity}`;
+}
+
+function greatestOrderBefore(entries: ResolverPhaseEvidence[], boundary: number): number | undefined {
+  const orders = entries
+    .map((entry) => entry.order)
+    .filter((order): order is number => typeof order === 'number'
+      && Number.isInteger(order)
+      && order < boundary);
+  return orders.length > 0 ? Math.max(...orders) : undefined;
 }
 
 /** @id CODE-M5-TDD-001
@@ -166,7 +178,14 @@ export function selectCurrentTddCycle(
   const redOrder = selectedBatch.batch.red!.order!;
   const implementationOrder = selectedBatch.batch.implementation!.order!;
   const greenOrder = selectedBatch.batch.green!.order!;
-  const requirementsOrder = change.phases.requirements?.order;
+  const requirementsOrder = greatestOrderBefore([
+    ...(change.requirementsHistory ?? []),
+    ...(change.phases.requirements ? [change.phases.requirements] : []),
+  ], redOrder);
+  const designOrder = greatestOrderBefore([
+    ...(change.designHistory ?? []),
+    ...(change.phases.design ? [change.phases.design] : []),
+  ], redOrder);
   const cycles: TddCycle[] = [];
   const activeGeneration = change.activeGeneration ?? change.generation ?? 1;
   for (const cycle of evidence.cycles.filter((entry) => entry.requirementId === requirementId)) {
@@ -188,6 +207,7 @@ export function selectCurrentTddCycle(
     }
     if (!(Number.isInteger(requirementsOrder)
       && cycle.red.order! > requirementsOrder!
+      && (!Number.isInteger(designOrder) || cycle.red.order! > designOrder!)
       && cycle.red.order! <= redOrder
       && cycle.green!.order! > implementationOrder
       && cycle.green!.order! <= greenOrder

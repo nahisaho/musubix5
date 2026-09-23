@@ -2,7 +2,20 @@ import { readdir, mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { buildTrace, defaultConfig, defaultPolicyBaseline, exists, readText, safePath, writeJson, writeText, runProcess, type Runner } from '../../analysis/src/index.js';
 
-export const skillNames = ['sdd-change', 'sdd-requirements', 'sdd-design', 'sdd-implementation', 'sdd-traceability', 'sdd-quality', 'sdd-knowledge', 'sdd-formal-codegraph', 'sdd-issue-report'] as const;
+export const skillNames = [
+  'sdd-change',
+  'sdd-requirements',
+  'sdd-design',
+  'sdd-implementation',
+  'sdd-traceability',
+  'sdd-quality',
+  'sdd-knowledge',
+  'sdd-formal-codegraph',
+  'sdd-issue-report',
+  'sdd-parallel-dispatch',
+  'sdd-agent-assignment',
+  'sdd-integration-verification',
+] as const;
 
 export interface InstallAction {
   path: string;

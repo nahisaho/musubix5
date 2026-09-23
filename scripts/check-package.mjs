@@ -26,7 +26,20 @@ assert.equal(manifest.version, pkg.version);
 assert.equal(marketplace.plugins[0].source, '.');
 assert.equal(marketplace.plugins[0].name, manifest.name);
 assert.equal(marketplace.plugins[0].version, pkg.version);
-const skills = ['change', 'requirements', 'design', 'implementation', 'traceability', 'quality', 'knowledge', 'formal-codegraph', 'issue-report'];
+const skills = [
+  'change',
+  'requirements',
+  'design',
+  'implementation',
+  'traceability',
+  'quality',
+  'knowledge',
+  'formal-codegraph',
+  'issue-report',
+  'parallel-dispatch',
+  'agent-assignment',
+  'integration-verification',
+];
 for (const required of [
   'plugin.json', '.github/plugin/marketplace.json', executablePath(pkg),
   'dist/packages/domain/src/index.js', 'dist/packages/analysis/src/index.js',

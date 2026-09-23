@@ -20,6 +20,10 @@ All notable changes to musubix5 are documented in this file.
   workspaces, strict trace and graph checks, and release-readiness policy.
 - Candidate-bound, single-purpose authorization guards for publish, tag, and
   push operations. Release approval alone grants no external side effect.
+- Approval-bound parallel development with `sdd-parallel-dispatch`,
+  `sdd-agent-assignment`, and `sdd-integration-verification`; persisted
+  plan/assignment/integration state; bounded managed worktrees; verified
+  commit-range ownership; fast-forward handoff; and branch-retaining cleanup.
 
 ### Compatibility
 

@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import { Command, CommanderError, InvalidArgumentError, Option } from 'commander';
 import { realpathSync } from 'node:fs';
-import { basename, relative, resolve } from 'node:path';
+import { cp, mkdtemp, rename, rm } from 'node:fs/promises';
+import { basename, dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   c4Diagram, validateConstitution, validateDesign, validateRequirements, type Diagnostic,
@@ -18,13 +19,19 @@ import {
   approvalManifest, approvalStages, formatApprovalManifestText, recordApproval, requireApproval, requireDomainOption, requireValidateDomainOption, resolveDesignFileDomain, resolveNamedDomain,
   validateApprovals, validateApprovalsForDomain, type ApprovalStage,
   scaffoldCommands, scaffoldRequirements, scaffoldDesign,
-  recordChangeWaiver, recordWorkflowWaiver, recordAllWorkflowWaivers,
+  recordChangeWaiver, recordWorkflowWaiver, recordAllWorkflowWaivers, recordWorkflowDeclarationCorrection,
   bootstrapRun, bootstrapResume, bootstrapStatus, executeBootstrapFileOperation,
   type BootstrapAuthorityManifest,
   candidateGateContext, ingestCandidateGateEnvelopes, loadCandidateGateResults,
   validateCandidateGateSet, type CandidateGateEnvelope,
   authorizeReleaseOperation, releaseOperationStatus, validateReleaseOperationAuthorization,
   type ReleaseOperationScope,
+  cleanupParallelRuntime, createParallelPlan, failParallelAssignment, handoffParallelPlan,
+  issueParallelAssignmentInstruction, parallelRuntimeStatus, prepareParallelPlanRuntime,
+  recordParallelAssignmentResult, recordParallelHeartbeat, reopenParallelIntegration,
+  retryParallelAssignment, startParallelIntegration, validateParallelPlanFile,
+  verifyParallelIntegration,
+  parallelExitCode,
 } from '../../analysis/src/index.js';
 
 const compatibleWorkflowSanitizationDescription =
@@ -60,8 +67,129 @@ async function releaseOperationAction(
   }
 }
 
+async function parallelAction(
+  json: boolean,
+  action: () => Promise<unknown>,
+): Promise<void> {
+  try {
+    const value = await action();
+    output(value, json);
+  } catch (cause) {
+    const message = cause instanceof Error ? cause.message : String(cause);
+    const failure = /^(CLI_ERROR|(?:PARALLEL_[A-Z0-9_]+)|CHANGE_GENERATION_[A-Z0-9_]+|WORKFLOW_CHANGE_MISMATCH|LEASE_FENCED):\s*(.*)$/.exec(message);
+    if (!failure) throw cause;
+    const code = failure[1]!;
+    const rawDetail = failure[2]!;
+    const detailsMatch = /^(.*)\s(\{.*\})$/.exec(rawDetail);
+    const detail = detailsMatch?.[1] ?? rawDetail;
+    const details = detailsMatch ? JSON.parse(detailsMatch[2]!) as Record<string, unknown> : undefined;
+    if (json) console.log(JSON.stringify({ error: { code, message: detail, ...(details ? { details } : {}) } }));
+    else console.error(`${code}: ${detail}`);
+    process.exitCode = parallelExitCode(code);
+  }
+}
+
 function common(command: Command): Command {
   return command.option('--root <directory>', 'Project root / プロジェクトルート', '.').option('--json', 'Machine-readable JSON');
+}
+
+/** @id CODE-M5-PARALLEL-WORKSPACE-OVERLAY-001
+ * @implements REQ-M5-WORKTREE-001 REQ-M5-PARALLEL-009 REQ-M5-PARALLEL-010
+ * @design DES-M5-PARALLEL-004 DES-M5-PARALLEL-007
+ */
+async function withWorkspaceRoot<T>(
+  rootOption: string,
+  workspaceOption: string | undefined,
+  action: (root: string) => Promise<T>,
+): Promise<T> {
+  const controlRoot = resolve(rootOption);
+  if (workspaceOption === undefined) return action(controlRoot);
+  const workspace = resolve(workspaceOption);
+  if (workspace === controlRoot) return action(controlRoot);
+  const controlState = resolve(controlRoot, '.musubix');
+  const workspaceState = resolve(workspace, '.musubix');
+  const backupRoot = await mkdtemp(resolve(dirname(workspace), '.musubix5-workspace-state-'));
+  const backupState = resolve(backupRoot, '.musubix');
+  let movedWorkspaceState = false;
+  let installedOverlay = false;
+  let value: T | undefined;
+  let actionFailure: unknown;
+  try {
+    if (await exists(workspaceState)) {
+      await rename(workspaceState, backupState);
+      movedWorkspaceState = true;
+    }
+    installedOverlay = true;
+    await cp(controlState, workspaceState, { recursive: true, force: false, errorOnExist: true });
+    value = await action(workspace);
+  } catch (cause) {
+    actionFailure = cause;
+  }
+  const restoreFailures: string[] = [];
+  if (installedOverlay) {
+    try {
+      await rm(workspaceState, { recursive: true, force: true });
+    } catch (cause) {
+      restoreFailures.push(`remove overlay: ${cause instanceof Error ? cause.message : String(cause)}`);
+    }
+  }
+  if (movedWorkspaceState && !await exists(workspaceState)) {
+    try {
+      await rename(backupState, workspaceState);
+      movedWorkspaceState = false;
+    } catch (cause) {
+      restoreFailures.push(`restore original state: ${cause instanceof Error ? cause.message : String(cause)}`);
+    }
+  }
+  if (!movedWorkspaceState) {
+    try {
+      await rm(backupRoot, { recursive: true, force: true });
+    } catch (cause) {
+      restoreFailures.push(`remove backup directory: ${cause instanceof Error ? cause.message : String(cause)}`);
+    }
+  }
+  if (restoreFailures.length) {
+    const backup = movedWorkspaceState ? ` Original state remains at ${backupState}.` : '';
+    throw new Error(
+      `CLI_ERROR: workspace state restoration failed: ${restoreFailures.join('; ')}.${backup}`,
+      { cause: actionFailure },
+    );
+  }
+  if (actionFailure) throw actionFailure;
+  return value as T;
+}
+
+async function validateParallelVerificationContext(
+  root: string,
+  workspace: string | undefined,
+  planId: string | undefined,
+): Promise<boolean> {
+  if (planId === undefined) return false;
+  if (workspace === undefined) {
+    throw new Error('CLI_ERROR: --parallel-verification requires --workspace.');
+  }
+  const path = within(resolve(root), '.musubix/evidence/parallel.json');
+  if (!await exists(path)) {
+    throw new Error('CLI_ERROR: parallel verification context is unavailable.');
+  }
+  const store = JSON.parse(await readText(resolve(root), '.musubix/evidence/parallel.json')) as {
+    integrations?: Array<{
+      planId?: string;
+      attempt?: number;
+      state?: string;
+      worktree?: string;
+      provenance?: { status?: string };
+    }>;
+  };
+  const integration = store.integrations
+    ?.filter((entry) => entry.planId === planId)
+    .sort((left, right) => Number(right.attempt ?? 0) - Number(left.attempt ?? 0))[0];
+  if (integration?.state !== 'provisional'
+    || integration.provenance?.status !== 'provisional'
+    || resolve(integration.worktree ?? '') !== resolve(workspace)) {
+    throw new Error('CLI_ERROR: parallel verification context does not match the provisional integration.');
+  }
+  return true;
 }
 
 function pathQuery(root: string, query: string): string {
@@ -161,11 +289,20 @@ export function createProgram(): Command {
     output(graph, !!options.json, `Trace: ${graph.nodes.length} nodes, ${graph.edges.length} edges, ${graph.diagnostics.length} diagnostics.`);
     if (graph.diagnostics.some((d) => d.severity === 'error')) process.exitCode = 1;
   });
+  /** @id CODE-M5-PARALLEL-INTEGRATION-TRACE-001
+   * @implements REQ-M5-PARALLEL-010
+   */
   common(trace.command('check')).option('--strict', 'Fail missing mandatory coverage')
-    .action(async (options: { root: string; json?: boolean; strict?: boolean }) => {
-      const root = resolve(options.root);
-      result(await checkTrace(root, await loadTrace(root), !!options.strict), !!options.json);
-    });
+    .addOption(new Option('--workspace <directory>').hideHelp())
+    .action(async (options: { root: string; json?: boolean; strict?: boolean; workspace?: string }) => {
+      const report = await withWorkspaceRoot(options.root, options.workspace, async (root) =>
+      checkTrace(
+        root,
+        options.workspace === undefined ? await loadTrace(root) : await buildTrace(root, false),
+        !!options.strict,
+      ));
+    result(report, !!options.json);
+  });
   common(trace.command('impact <id-or-path>')).action(async (query: string, options: { root: string; json?: boolean }) => {
     const root = resolve(options.root);
     const graph = await loadTrace(root);
@@ -199,10 +336,14 @@ export function createProgram(): Command {
     output({ cycles: found }, !!options.json);
     if (found.length) process.exitCode = 1;
   });
-  common(graph.command('gate')).action(async (options: { root: string; json?: boolean }) => {
-    const root = resolve(options.root);
-    const config = await loadConfig(root);
-    result(graphGate(await indexGraph(root), config.architecture, config.codeGraph), !!options.json);
+  common(graph.command('gate'))
+    .addOption(new Option('--workspace <directory>').hideHelp())
+    .action(async (options: { root: string; json?: boolean; workspace?: string }) => {
+      const report = await withWorkspaceRoot(options.root, options.workspace, async (root) => {
+        const config = await loadConfig(root);
+        return graphGate(await indexGraph(root), config.architecture, config.codeGraph);
+      });
+      result(report, !!options.json);
   });
 
   const knowledge = program.command('knowledge').description('Local artifact and Git evidence retrieval (TF-IDF, not GraphRAG)');
@@ -215,6 +356,151 @@ export function createProgram(): Command {
       const limit = Number(options.limit);
       if (!Number.isInteger(limit) || limit < 1 || limit > 100) throw new Error('--limit must be 1..100.');
       output(await queryKnowledge(resolve(options.root), query.join(' '), limit), !!options.json);
+    });
+  /** @id CODE-M5-PARALLEL-CLI-001
+   * @implements REQ-M5-COMPAT-013 REQ-M5-PARALLEL-013 REQ-M5-PARALLEL-017
+   * @design DES-M5-002 DES-M5-PARALLEL-009
+   */
+  const parallel = program.command('parallel').description('Coordinate approved parallel assignment worktrees and integration');
+  const parallelPlan = parallel.command('plan').description('Validate and create bound parallel plans');
+  common(parallelPlan.command('validate <plan-file>'))
+    .action(async (planFile: string, options: { root: string; json?: boolean }) => {
+      await parallelAction(!!options.json, () => validateParallelPlanFile(resolve(options.root), planFile));
+    });
+  common(parallelPlan.command('create <plan-file>'))
+    .option('--concurrency <count>', 'Effective concurrency from 1 through 8')
+    .action(async (planFile: string, options: {
+      root: string; json?: boolean; concurrency?: string;
+    }) => {
+      const concurrency = options.concurrency === undefined ? undefined : Number(options.concurrency);
+      if (concurrency !== undefined && (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 8)) {
+        throw new Error('CLI_ERROR: PARALLEL_CONCURRENCY_INVALID: --concurrency must be an integer from 1 through 8.');
+      }
+      await parallelAction(
+        !!options.json,
+        () => createParallelPlan(resolve(options.root), planFile, concurrency),
+      );
+    });
+  common(parallel.command('prepare <plan-id>'))
+    .action(async (planId: string, options: { root: string; json?: boolean }) => {
+      await parallelAction(!!options.json, () => prepareParallelPlanRuntime(resolve(options.root), planId));
+    });
+  const assignment = parallel.command('assignment').description('Issue and record assignment attempts');
+  common(assignment.command('instruction <plan-id> <assignment-id>'))
+    .action(async (planId: string, assignmentId: string, options: { root: string; json?: boolean }) => {
+      await parallelAction(
+        !!options.json,
+        () => issueParallelAssignmentInstruction(resolve(options.root), planId, assignmentId),
+      );
+    });
+  common(assignment.command('heartbeat <plan-id> <assignment-id>'))
+    .requiredOption('--attempt <number>', 'Positive assignment attempt')
+    .action(async (planId: string, assignmentId: string, options: {
+      root: string; json?: boolean; attempt: string;
+    }) => {
+      const attempt = Number(options.attempt);
+      if (!Number.isInteger(attempt) || attempt < 1) throw new Error('--attempt must be a positive integer.');
+      await parallelAction(
+        !!options.json,
+        () => recordParallelHeartbeat(resolve(options.root), planId, assignmentId, attempt),
+      );
+    });
+  common(assignment.command('fail <plan-id> <assignment-id>'))
+    .requiredOption('--attempt <number>', 'Positive assignment attempt')
+    .requiredOption('--reason <text>', 'Failure reason')
+    .action(async (planId: string, assignmentId: string, options: {
+      root: string; json?: boolean; attempt: string; reason: string;
+    }) => {
+      const attempt = Number(options.attempt);
+      if (!Number.isInteger(attempt) || attempt < 1 || !options.reason.trim()) {
+        throw new Error('--attempt must be positive and --reason must be non-empty.');
+      }
+      await parallelAction(
+        !!options.json,
+        () => failParallelAssignment(resolve(options.root), planId, assignmentId, attempt, options.reason),
+      );
+    });
+  common(assignment.command('result <plan-id> <assignment-id>'))
+    .requiredOption('--attempt <number>', 'Positive assignment attempt')
+    .requiredOption('--head <sha>', 'Reported assignment Git head')
+    .action(async (planId: string, assignmentId: string, options: {
+      root: string; json?: boolean; attempt: string; head: string;
+    }) => {
+      const attempt = Number(options.attempt);
+      if (!Number.isInteger(attempt) || attempt < 1) throw new Error('--attempt must be a positive integer.');
+      await parallelAction(
+        !!options.json,
+        () => recordParallelAssignmentResult(resolve(options.root), planId, assignmentId, attempt, options.head),
+      );
+    });
+  common(assignment.command('retry <plan-id> <assignment-id>'))
+    .action(async (planId: string, assignmentId: string, options: { root: string; json?: boolean }) => {
+      await parallelAction(
+        !!options.json,
+        () => retryParallelAssignment(resolve(options.root), planId, assignmentId),
+      );
+    });
+  common(parallel.command('status [plan-id]'))
+    .option('--change-id <id>', 'Inspect every persisted plan for a known CHANGE')
+    .action(async (planId: string | undefined, options: {
+      root: string; json?: boolean; changeId?: string;
+    }) => {
+      if ((!planId && !options.changeId) || (planId && options.changeId)) {
+        throw new Error('parallel status requires exactly one plan ID or --change-id.');
+      }
+      await parallelAction(
+        !!options.json,
+        () => parallelRuntimeStatus(resolve(options.root), {
+          ...(planId ? { planId } : {}),
+          ...(options.changeId ? { changeId: options.changeId } : {}),
+        }),
+      );
+    });
+  const integration = parallel.command('integration').description('Integrate and verify completed assignments');
+  common(integration.command('start <plan-id>'))
+    .action(async (planId: string, options: { root: string; json?: boolean }) => {
+      await parallelAction(!!options.json, () => startParallelIntegration(resolve(options.root), planId));
+    });
+  common(integration.command('reopen <plan-id>'))
+    .requiredOption('--assignment <ids...>', 'Completed assignment IDs to reopen')
+    .requiredOption('--reason <text>', 'Reopen reason')
+    .action(async (planId: string, options: {
+      root: string; json?: boolean; assignment: string[]; reason: string;
+    }) => {
+      if (!options.reason.trim()) throw new Error('--reason must be non-empty.');
+      await parallelAction(
+        !!options.json,
+        () => reopenParallelIntegration(
+          resolve(options.root),
+          planId,
+          options.assignment,
+          options.reason,
+        ),
+      );
+    });
+  common(integration.command('verify <plan-id>'))
+    .action(async (planId: string, options: { root: string; json?: boolean }) => {
+      await parallelAction(!!options.json, () => verifyParallelIntegration(resolve(options.root), planId));
+    });
+  common(parallel.command('handoff <plan-id>'))
+    .action(async (planId: string, options: { root: string; json?: boolean }) => {
+      await parallelAction(!!options.json, () => handoffParallelPlan(resolve(options.root), planId));
+    });
+  common(parallel.command('cleanup [plan-id]'))
+    .option('--change-id <id>', 'Branch-retaining stale maintenance cleanup')
+    .action(async (planId: string | undefined, options: {
+      root: string; json?: boolean; changeId?: string;
+    }) => {
+      if ((!planId && !options.changeId) || (planId && options.changeId)) {
+        throw new Error('parallel cleanup requires exactly one plan ID or --change-id.');
+      }
+      await parallelAction(
+        !!options.json,
+        () => cleanupParallelRuntime(resolve(options.root), {
+          ...(planId ? { planId } : {}),
+          ...(options.changeId ? { changeId: options.changeId } : {}),
+        }),
+      );
     });
   const formal = program.command('formal').description('Honest consistency checking of an explicit abstraction');
   common(formal.command('check <file>'))
@@ -268,12 +554,20 @@ export function createProgram(): Command {
         + `\n  ${entry.recommendation}`).join('\n'));
     });
   async function executeGate(options: {
-    root: string; json?: boolean; changed?: boolean; feature?: string; matrix?: boolean;
+    root: string; json?: boolean; changed?: boolean; feature?: string; matrix?: boolean; workspace?: string;
+    parallelVerification?: string;
   }): Promise<void> {
-    const report = await runGate(resolve(options.root), {
-      ...options,
+    const parallelVerification = await validateParallelVerificationContext(
+      options.root,
+      options.workspace,
+      options.parallelVerification,
+    );
+    const report = await withWorkspaceRoot(options.root, options.workspace, (root) => runGate(root, {
+      ...(options.changed === undefined ? {} : { changed: options.changed }),
+      ...(options.feature === undefined ? {} : { feature: options.feature }),
       persistenceMode: options.matrix ? 'matrix' : 'normal',
-    });
+      ...(parallelVerification ? { tddPurpose: 'integration-verification' as const } : {}),
+    }));
     const scopeNote = report.mode === 'feature' ? ` [feature-scoped: ${report.feature}; not the repository-wide gate]` : '';
     output(report, !!options.json, `${report.status.toUpperCase()}${scopeNote}\n${report.checks.map((c) => `${c.status.padEnd(7)} ${c.name}${c.required ? ' [required]' : ' [optional]'}: ${c.summary}`).join('\n')}`);
     if (report.status !== 'pass') process.exitCode = 1;
@@ -281,6 +575,8 @@ export function createProgram(): Command {
   common(program.command('gate').description('Run actual configured commands and deterministic SDD checks'))
     .option('--changed', 'Report changed/impacted files; keep all checks to avoid unsafe skips')
     .option('--feature <name>', 'Restrict requirements/design/trace/tdd/change checks to one feature; diagnostic view only, not a substitute for the repository-wide gate')
+    .addOption(new Option('--workspace <directory>').hideHelp())
+    .addOption(new Option('--parallel-verification <plan-id>').hideHelp())
     .addOption(new Option('--matrix').hideHelp())
     .action(executeGate);
   const candidateGate = program.command('candidate-gate', { hidden: true })
@@ -387,19 +683,23 @@ export function createProgram(): Command {
   });
   common(program.command('workflow-record <skill> <phase>').description('Record a self-reported workflow declaration'))
     .requiredOption('--status <status>', 'completed | skipped | failed')
+    .option('--change-id <id>', 'Bind the declaration to an explicit current CHANGE')
     .option('--reason <text>', 'Reason for skipped or failed phases')
     .option('--command <text>', 'Command to hash without storing its contents')
     .action(async (skill: string, phase: string, options: {
-      root: string; json?: boolean; status: string; reason?: string; command?: string;
+      root: string; json?: boolean; status: string; changeId?: string; reason?: string; command?: string;
     }) => {
       if (!['completed', 'skipped', 'failed'].includes(options.status)) throw new Error('--status must be completed, skipped, or failed.');
+      if (options.changeId && !/^CHANGE-\d+$/.test(options.changeId)) {
+        throw new Error('--change-id must match CHANGE-<digits>.');
+      }
       const manifest = await recordWorkflow(resolve(options.root), {
         skill,
         phase,
         status: options.status as 'completed' | 'skipped' | 'failed',
         ...(options.reason ? { reason: options.reason } : {}),
         ...(options.command ? { command: options.command } : {}),
-      });
+      }, { ...(options.changeId ? { changeId: options.changeId } : {}) });
       output(manifest, !!options.json, `Recorded ${skill}:${phase} as ${options.status}.`);
     });
   common(program.command('workflow-verify <log...>').description('Reconcile workflow declarations with Copilot JSONL Skill events'))
@@ -461,6 +761,60 @@ export function createProgram(): Command {
       );
     });
   const workflow = program.command('workflow').description('Workflow reconciliation waiver evidence');
+  const workflowDeclaration = new Command('declaration')
+    .description('Manage append-only workflow declaration corrections');
+  workflow.addCommand(workflowDeclaration);
+  common(workflowDeclaration.command('supersede <code>'))
+    .requiredOption('--skill <skill>', 'Skill name of the duplicate declaration')
+    .requiredOption('--phase <phase>', 'Phase name of the duplicate declaration')
+    .requiredOption('--recorded-at <timestamp>', 'Exact target declaration recordedAt timestamp')
+    .option('--index <n>', 'disambiguating event index', (value) => {
+      const parsed = Number(value);
+      if (!/^\d+$/.test(value) || !Number.isSafeInteger(parsed)) {
+        throw new InvalidArgumentError('--index must be a nonnegative safe integer.');
+      }
+      return parsed;
+    })
+    .requiredOption('--approver <name>', 'Human approver recording this correction')
+    .requiredOption('--reason <text>', 'Reason the later declaration is an accidental duplicate')
+    .option('--confirm', 'Confirm the correction is reviewed and intended', false)
+    .action(async (code: string, options: {
+      root: string;
+      json?: boolean;
+      skill: string;
+      phase: string;
+      recordedAt: string;
+      index?: number;
+      approver: string;
+      reason: string;
+      confirm?: boolean;
+    }) => {
+      if (code !== 'WORKFLOW_INVOCATION_REUSED') {
+        throw new Error('CLI_ERROR: only WORKFLOW_INVOCATION_REUSED can be superseded.');
+      }
+      if (!/^[a-z0-9-]+$/.test(options.skill) || !/^[a-z0-9-]+$/.test(options.phase)) {
+        throw new Error('CLI_ERROR: --skill and --phase must be lowercase kebab-case identifiers.');
+      }
+      if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(options.recordedAt)
+        || Number.isNaN(Date.parse(options.recordedAt))
+        || new Date(options.recordedAt).toISOString() !== options.recordedAt) {
+        throw new Error('CLI_ERROR: --recorded-at must be a canonical UTC timestamp with milliseconds.');
+      }
+      const correction = await recordWorkflowDeclarationCorrection(resolve(options.root), {
+        skill: options.skill,
+        phase: options.phase,
+        recordedAt: options.recordedAt,
+        ...(options.index === undefined ? {} : { index: options.index }),
+        approver: options.approver,
+        reason: options.reason,
+        confirm: options.confirm ?? false,
+      });
+      output(
+        correction,
+        !!options.json,
+        `Superseded workflow declaration ${options.skill}:${options.phase}:${options.recordedAt}.`,
+      );
+    });
   const workflowWaiver = workflow.command('waiver').description('Record an audited, bounded downgrade of one declaration-scoped workflow reconciliation diagnostic');
   common(workflowWaiver.command('record <code>'))
     .requiredOption('--skill <skill>', 'Skill name of the declaration being waived')
@@ -584,17 +938,25 @@ export function createProgram(): Command {
     .option('--requirement <ids...>', 'Requirement IDs affected by this change')
     .option('--allow-unchanged', 'Record requirements even if unchanged since impact (defect fixes only)')
     .option('--reopen', 'Start or resume the next CHANGE generation (impact only)')
+    .option('--operation-id <id>', 'Idempotency identity for same-generation requirements/design supersession')
     .option('--dry-run', 'Preview the outcome without recording it')
     .action(async (changeId: string, phase: string, options: {
-      root: string; json?: boolean; requirement?: string[]; allowUnchanged?: boolean; reopen?: boolean; dryRun?: boolean;
+      root: string; json?: boolean; requirement?: string[]; allowUnchanged?: boolean; reopen?: boolean;
+      operationId?: string; dryRun?: boolean;
     }) => {
       if (!changePhases.includes(phase as ChangePhase)) throw new Error(`phase must be one of: ${changePhases.join(', ')}`);
       if (!options.reopen && !options.requirement?.length) throw new Error('--requirement is required unless impact uses --reopen.');
       if (options.reopen && phase !== 'impact') throw new Error('--reopen is accepted only for impact.');
-      const changeOptions: { allowUnchanged?: boolean; reopen?: boolean; dryRun?: boolean } = {};
+      const changeOptions: {
+        allowUnchanged?: boolean;
+        reopen?: boolean;
+        dryRun?: boolean;
+        operationId?: string;
+      } = {};
       if (options.allowUnchanged !== undefined) changeOptions.allowUnchanged = options.allowUnchanged;
       if (options.reopen !== undefined) changeOptions.reopen = options.reopen;
       if (options.dryRun !== undefined) changeOptions.dryRun = options.dryRun;
+      if (options.operationId !== undefined) changeOptions.operationId = options.operationId;
       const evidence = await recordChangePhase(
         resolve(options.root),
         changeId,
@@ -776,15 +1138,43 @@ export function createProgram(): Command {
     phaseCommand
       .requiredOption('--requirement <id>', 'Requirement ID verified by the test')
       .requiredOption('--command <name>', 'Configured command name to execute')
+      .option('--workspace <directory>', 'Execute the configured runner in a separate worktree')
+      .option('--parallel-plan <id>', 'Bind evidence to a parallel plan')
+      .option('--parallel-assignment <id>', 'Bind evidence to a parallel assignment')
+      .option('--parallel-attempt <number>', 'Bind evidence to a parallel assignment attempt')
+      .option('--parallel-start-commit <sha>', 'Bind evidence to the assignment start commit')
       .action(async (testId: string, options: {
-        root: string; json?: boolean; requirement: string; command: string;
+        root: string; json?: boolean; requirement: string; command: string; workspace?: string;
+        parallelPlan?: string; parallelAssignment?: string; parallelAttempt?: string; parallelStartCommit?: string;
       }) => {
+        const root = resolve(options.root);
+        const workspace = options.workspace === undefined ? root : resolve(options.workspace);
+        const parallelValues = [
+          options.parallelPlan,
+          options.parallelAssignment,
+          options.parallelAttempt,
+          options.parallelStartCommit,
+        ];
+        if (parallelValues.some((value) => value !== undefined)
+          && parallelValues.some((value) => value === undefined)) {
+          throw new Error('CLI_ERROR: parallel TDD identity options must be supplied together.');
+        }
+        const parallel = options.parallelPlan === undefined ? undefined : {
+          planId: options.parallelPlan,
+          assignmentId: options.parallelAssignment!,
+          attempt: Number(options.parallelAttempt),
+          worktree: workspace,
+          startCommit: options.parallelStartCommit!,
+        };
         const evidence = await runTddPhase(
-          resolve(options.root),
+          root,
           phase as TddPhase,
           testId,
           options.requirement,
           options.command,
+          undefined,
+          workspace,
+          parallel,
         );
         const summaryLines = [`${phase.toUpperCase()}: ${evidence.valid ? 'PASS' : 'FAIL'} (${testId})`];
         for (const warning of evidence.warnings ?? []) summaryLines.push(warning.message);
@@ -861,12 +1251,16 @@ export function createProgram(): Command {
       output(state, !!options.json, `Bootstrap ${state.runId}: ${state.status}`);
     });
   common(program.command('status').description('One-shot artifact and gate readiness summary'))
-    .action(async (options: { root: string; json?: boolean }) => {
-      const status = await projectStatus(resolve(options.root));
+    .addOption(new Option('--workspace <directory>').hideHelp())
+    .action(async (options: { root: string; json?: boolean; workspace?: string }) => {
+      const status = await withWorkspaceRoot(options.root, options.workspace, projectStatus);
       const approvalSummary = status.approvals
         ? status.approvals.stages.map((stage) => `${stage.stage}=${stage.status}`).join(', ')
         : 'unconfigured';
-      output(status, !!options.json, `SDD: ${status.initialized ? 'initialized / 初期化済み' : 'not initialized / 未初期化'}\nRequirement files: ${status.artifacts.requirements}; design files: ${status.artifacts.designs}; ADRs: ${status.artifacts.decisions}\nCode Graph: ${status.codeGraph?.mode ?? 'unconfigured'}\nApprovals: ${approvalSummary}\nGate: ${status.gate.status}; ready: ${status.gate.ready}\n${status.next.join('\n')}`);
+      const changeDiagnosticSummary = status.changeDiagnostics
+        .map((diagnostic) => `${diagnostic.code}: ${diagnostic.message}`)
+        .join('\n');
+      output(status, !!options.json, `SDD: ${status.initialized ? 'initialized / 初期化済み' : 'not initialized / 未初期化'}\nRequirement files: ${status.artifacts.requirements}; design files: ${status.artifacts.designs}; ADRs: ${status.artifacts.decisions}\nCode Graph: ${status.codeGraph?.mode ?? 'unconfigured'}\nApprovals: ${approvalSummary}\nGate: ${status.gate.status}; ready: ${status.gate.ready}\n${changeDiagnosticSummary}\n${status.next.join('\n')}`);
     });
   const help = program.command('help [command]').description('display help for command').helpOption(false);
   help.helpInformation = () => program.helpInformation();
@@ -890,6 +1284,14 @@ async function main(): Promise<void> {
   } catch (cause) {
     if (cause instanceof CommanderError && cause.exitCode === 0) return;
     const message = cause instanceof Error ? cause.message : String(cause);
+    const domainFailure = /^(CLI_ERROR|(?:PARALLEL_[A-Z0-9_]+)|CHANGE_GENERATION_[A-Z0-9_]+|CHANGE_CHECKPOINT_JOURNAL_INVALID|WORKFLOW_CHANGE_MISMATCH|WORKFLOW_DECLARATION_CORRECTION_INVALID|JOURNAL_IDEMPOTENCY_CONFLICT|LEASE_FENCED):\s*(.*)$/.exec(message);
+    if (domainFailure) {
+      const [, code, detail] = domainFailure;
+      if (process.argv.includes('--json')) console.log(JSON.stringify({ error: { code, message: detail } }));
+      else console.error(`${code}: ${detail}`);
+      process.exitCode = parallelExitCode(code!);
+      return;
+    }
     if (process.argv.includes('--json')) console.log(JSON.stringify({ error: { code: 'CLI_ERROR', message } }));
     else console.error(`musubix5: ${message}`);
     process.exitCode = 2;

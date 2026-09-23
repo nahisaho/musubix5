@@ -7,6 +7,7 @@ export interface WorkflowEvent {
   provenance?: 'self-reported';
   changeId?: string;
   generation?: number;
+  requirementIds?: string[];
   phase: string;
   status: 'completed' | 'skipped' | 'failed';
   reason?: string;

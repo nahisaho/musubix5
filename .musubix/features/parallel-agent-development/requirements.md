@@ -1,0 +1,125 @@
+---
+schemaVersion: 1
+feature: parallel-agent-development
+status: approval-pending
+---
+# Parallel agent development requirements
+
+## REQ-M5-PARALLEL-001: Bind a parallel plan to one active generation
+Priority: must
+Type: functional
+Pattern: state-driven
+Statement: While a CHANGE generation is active, the system shall bind each parallel development plan to that CHANGE, generation, immutable base commit, approved requirements digest, and approved design digest.
+Acceptance: Plan creation fails before current requirements and design approval; permits at most one plan per CHANGE generation or fails with `PARALLEL_PLAN_EXISTS`; requires the plan base to equal the clean active CHANGE candidate head and descend from the persisted CHANGE baseline commit; persists the complete binding; and never accepts approval or plan evidence from another CHANGE or generation. Every instruction, result, retry, integration, and handoff operation revalidates the active generation plus current requirements and design approval digests. A generation change or digest mismatch makes the plan terminally stale and fails those operations without mutation using `PARALLEL_PLAN_STALE`; explicitly targeted `parallel status --change-id` and branch-retaining stale cleanup remain available whether the stale plan's CHANGE is active, abandoned, or completed. Creating another plan requires abandoning that generation, reopening a new generation, and first removing every clean stale managed worktree; otherwise plan creation fails with `PARALLEL_STALE_WORKTREES_PRESENT`.
+
+## REQ-M5-PARALLEL-002: Validate requirement-batch task graphs
+Priority: must
+Type: functional
+Pattern: event-driven
+Statement: When a parallel development plan is created, the system shall validate a deterministic directed acyclic graph of requirement-batch assignments.
+Acceptance: Every assignment has a unique stable ID, a non-empty subset of the CHANGE `Requirements:` set, explicit dependencies, owned path patterns, focused verification command references, and one Agent role. Each focused verification reference names a design-approved configured command and requirement-scoped arguments, and the plan names a design-approved dependency-provisioning command sequence for fresh verification and integration worktrees. The plan provides explicit integrator-owned path patterns, and the system always adds the CHANGE document, approved requirements and design artifacts, `.musubix/evidence/**`, and `.musubix/journal/**` to that set. Owned path patterns of assignments without a transitive dependency relation are pairwise disjoint, and every assignment pattern is disjoint from integrator-owned patterns. An overlap fails with `PARALLEL_PLAN_OWNERSHIP_OVERLAP` naming the intersecting assignments and patterns; unknown requirements, unknown commands, duplicate IDs, cycles, self-dependencies, empty batches, ambiguous dependency references, and every other graph or schema failure use path-specific `PARALLEL_PLAN_INVALID` diagnostics.
+
+## REQ-M5-PARALLEL-003: Enforce bounded parallelism
+Priority: must
+Type: non-functional
+Pattern: state-driven
+Statement: While a parallel development plan is executing, the system shall limit simultaneously issued assignment instruction manifests to the plan concurrency.
+Acceptance: The attempt states are `waiting` when dependencies are incomplete with no failed ancestor, `queued` when dependencies are complete and the attempt awaits a slot or manifest, `running`, `completed`, `failed`, and `blocked` when a failed ancestor or stale plan prevents execution. `waiting`, `queued`, `blocked`, and occupied slots are derived deterministically from persisted dependency, failure, completion, generation, and `running` records and are never persisted independently. For a stale plan, status projects every non-terminal attempt, including one with a persisted running transition, as `blocked` and reports zero occupied slots; completed and failed remain terminal. Omitted plan concurrency resolves to 3; `parallel plan create --concurrency` may set the persisted value once, cannot override an existing plan, and a value outside the integer range 1 through 8 exits 2 with `CLI_ERROR` whose message identifies `PARALLEL_CONCURRENCY_INVALID`, while the same invalid value in a plan document exits 1 with `PARALLEL_PLAN_INVALID`; no project configuration overrides that default or cap. Issuing an instruction manifest atomically transitions `queued` to `running`; validated completion or explicit failure ends its occupancy; reopen of a non-running attempt changes no slot count; when N assignments are `running`, requesting another manifest fails with exit 1 and `PARALLEL_CONCURRENCY_LIMIT`; fixtures cover N equal to 1, 3, and 8; and `parallel status` reports every state count.
+
+## REQ-M5-PARALLEL-004: Isolate each assignment in a Git worktree
+Priority: must
+Type: functional
+Pattern: event-driven
+Statement: When an assignment attempt becomes runnable, the system shall create a dedicated Git branch and worktree from its resolved start commit.
+Acceptance: An assignment without dependencies uses the plan's immutable base commit; a dependent assignment deterministically materializes its completed dependency commit ranges in stable topological order on that base, persists the resulting start commit, and excludes those dependency commits from its own result range. Assignment branches and worktrees are derived from CHANGE, generation, plan, assignment, and positive attempt number; the integration branch/worktree is derived from CHANGE, generation, plan, and positive integration attempt number; and detached verification worktrees are derived from plan, assignment, attempt, and reported head. Every path is under the Git common directory's fixed `musubix5/workspaces/<change>/parallel/<plan>/` root. A path escape, symlinked ancestor, existing divergent branch or worktree, dirty reused worktree, missing dependency, or base mismatch fails with `PARALLEL_WORKTREE_CONFLICT`; unrelated user-owned paths in the control worktree remain byte-for-byte and mode-for-mode unchanged.
+
+## REQ-M5-PARALLEL-005: Produce constrained Agent instructions
+Priority: must
+Type: functional
+Pattern: event-driven
+Statement: When an assignment worktree is ready, the system shall produce a complete instruction manifest for one Copilot native subagent.
+Acceptance: The manifest contains CHANGE and generation, plan, assignment, attempt and role, requirement IDs, approved requirement and design paths and digests, dependency commit ranges, resolved start commit, control repository state root, worktree and branch, allowed and integrator-owned path patterns, prohibited operations, required Red/Implementation/Green commands, focused verification commands, commit requirements, heartbeat/failure commands, and a structured result contract. Evidence commands route journal and evidence writes to the control repository state root while executing configured runners in the assignment worktree; `.musubix/**` in the assignment worktree remains unmodified. The three new Skills use this manifest without replacing or rewriting existing Skills.
+
+## REQ-M5-PARALLEL-006: Restrict assignment changes to declared ownership
+Priority: must
+Type: functional
+Pattern: unwanted-behavior
+Statement: If an assignment changes a path outside its declared ownership, then the system shall reject the assignment result before integration.
+Acceptance: Result validation requires the reported head to descend from the persisted start commit through an append-only non-empty assignment commit range, compares that range with the declared ownership, rejects undeclared tracked changes, rejects changes to integrator-owned paths including any assignment-worktree `.musubix/**` change, rejects rewritten or deleted assignment history, rejects missing or non-regular required files, and reports every violating path with `PARALLEL_RESULT_OWNERSHIP` without modifying the integration worktree. Rejection performs no state mutation and leaves the attempt `running`; explicit `parallel assignment fail` is the only recovery path before retry.
+
+## REQ-M5-PARALLEL-007: Require assignment-level TDD and verification
+Priority: must
+Type: functional
+Pattern: event-driven
+Statement: When an assignment reports completion, the system shall require current requirement-scoped Red, Implementation, and Green evidence plus independently executed focused verification for its declared requirement batch.
+Acceptance: The Agent invokes only musubix5 CLI operations for evidence and never edits `.musubix` state directly. Normal generation-bound TDD cycles produced by configured runners in the assignment worktree bind the assignment attempt, persisted start commit, authoritative test, source/test fingerprints, and resulting head. Until current integration provenance proves their exact commit ranges were consumed, coverage selection classifies those cycles non-pass with `PARALLEL_TDD_UNCONSUMED`, gate exits 1, and status exits 0 with `ready: false`; after consumption they satisfy the existing CHANGE TDD obligation. Result validation reads current control-root journal evidence, creates a clean detached verification worktree at the reported head, runs the plan's design-approved dependency-provisioning commands, and then independently executes every declared focused verification reference with its configured timeout. Provisioning failure uses `PARALLEL_VERIFICATION_ENVIRONMENT`; missing, failed, skipped, stale, foreign, prior-generation, wrong-attempt, or mismatched evidence uses `PARALLEL_RESULT_UNVERIFIED`. Either failure performs no state mutation and leaves the attempt `running`; Agent-supplied statuses are advisory; and a validated result atomically transitions `running` to `completed` and releases its slot.
+
+## REQ-M5-PARALLEL-008: Propagate failures without stopping independent work
+Priority: must
+Type: functional
+Pattern: unwanted-behavior
+Statement: If an assignment fails, then the system shall allow independent runnable assignments to continue while blocking every transitive dependent assignment and the integration phase.
+Acceptance: Deterministic fixtures prove that failure marks only the failed attempt and its transitive dependents as non-runnable, unrelated nodes remain schedulable within the concurrency limit, and integration fails with `PARALLEL_INTEGRATION_INCOMPLETE` until every assignment in the plan is completed successfully. Retry is permitted only from the latest `failed` attempt; otherwise it fails with `PARALLEL_ASSIGNMENT_STATE`. A valid retry preserves the assignment ID, allocates attempt N+1, derives a new branch and worktree, retains every prior attempt branch and worktree, recomputes descendant waiting states and start commits, and makes only the latest successful attempt eligible for integration. After `PARALLEL_INTEGRATION_CONFLICT` or `PARALLEL_INTEGRATION_VERIFICATION_FAILED`, an explicit `parallel integration reopen` command requires a non-empty reason and named completed assignments, transitions those assignments to failed, closes the current integration attempt, retains its branch for diagnostics, removes its worktree, discards the entire provisional integration provenance record for the plan without mutating assignment branches, increments the integration attempt, recomputes descendant states, and makes the named assignments retryable; every other transition out of completed remains rejected with `PARALLEL_ASSIGNMENT_STATE`.
+
+## REQ-M5-PARALLEL-009: Integrate assignment commits deterministically
+Priority: must
+Type: functional
+Pattern: event-driven
+Statement: When every assignment in the plan is complete, the system shall integrate assignment commit ranges into a dedicated integration branch in deterministic dependency order.
+Acceptance: Integration attempt 1 is created on the first integration start, a stopped invocation resumes the same attempt and persisted progress, and only REQ-M5-PARALLEL-008 reopen creates attempt N+1. Each attempt's branch starts at the plan base, and the order is a stable topological order with assignment ID as the tie-breaker. Each validated assignment's own commits after its persisted start commit are cherry-picked exactly once after its dependency ranges; missing commits, changed heads, duplicate consumption within the current integration attempt, ancestry mismatch, an empty required range, or cherry-pick conflicts stop with `PARALLEL_INTEGRATION_CONFLICT`, persist resumable progress, leave success unrecorded, and never auto-resolve content. A successful integration atomically persists provisional provenance containing the integration attempt, integration commit, and every consumed assignment, attempt, start commit, head, and commit range before integration verification starts; REQ-M5-PARALLEL-007 coverage selection reads this provenance, and REQ-M5-PARALLEL-008 reopen invalidates it.
+
+## REQ-M5-PARALLEL-010: Verify the integrated candidate
+Priority: must
+Type: functional
+Pattern: event-driven
+Statement: When all assignment commits have been integrated, the system shall run the complete configured integration verification before recording pass evidence.
+Acceptance: Integration verification reads and validates the provisional REQ-M5-PARALLEL-009 provenance, runs the plan's design-approved dependency-provisioning commands in the clean integration worktree, then runs conflict and ownership checks, every configured command whose `required` value is true, strict trace, graph gate, changed quality gate, and status. Provisioning failure uses `PARALLEL_VERIFICATION_ENVIRONMENT`. Passing verification atomically records generation-bound integration verification evidence binding the exact integration commit, provisional provenance head, and command outcomes and marks that bound provenance verified; an absent, failed, or skipped required check fails with `PARALLEL_INTEGRATION_VERIFICATION_FAILED`, leaves provenance provisional, and blocks pass, candidate handoff, and automatic cleanup.
+
+## REQ-M5-PARALLEL-011: Preserve resumable parallel state
+Priority: must
+Type: functional
+Pattern: ubiquitous
+Statement: The system shall persist plan, assignment, worktree, result, integration, retry, and cleanup transitions through the existing ordered journal and CHANGE lease mechanisms.
+Acceptance: Every transition uses the existing exclusive CHANGE lease, its existing bounded acquisition wait, wall-clock expiry takeover, and fencing token without adding a parallel-specific lease option or changing existing commands. Timeout maps to retryable `PARALLEL_LEASE_BUSY` without mutation; stale-owner takeover obtains a new fencing token; a fenced-out holder fails with `LEASE_FENCED` without committing its transition; and persisted monotonic order determines the winner. Injected-clock and instrumented handoff fixtures with eight concurrent transition writers prove that released or stale leases commit each successful invocation exactly once. Crash injection and repeated CLI invocation at every transition reuse the same identities, branch names, worktree paths, commits, order keys, and terminal outcomes without duplicate cherry-picks, duplicate evidence, lost failure state, or cross-generation reuse.
+
+## REQ-M5-PARALLEL-012: Clean up only safe completed worktrees
+Priority: must
+Type: functional
+Pattern: event-driven
+Statement: When integrated verification and candidate handoff pass, the system shall remove successfully consumed assignment worktrees while retaining their branches and every failed or unintegrated worktree.
+Acceptance: Automatic cleanup unconditionally refuses dirty, failed, blocked, and unknown assignment worktrees. It also refuses any clean completed assignment worktree whose validated attempt range is not recorded exactly once in current verified integration provenance. Verification worktrees are removed after their validation succeeds or fails, the current integration worktree is removed only after candidate handoff passes, and closed failed integration worktrees are removed by reopen while their branches remain; all are recognized managed worktrees. Successful clean consumed assignment worktrees are removed idempotently; all branches and failed or unintegrated assignment worktrees are preserved. `parallel cleanup --change-id <id>` performs explicit branch-retaining stale cleanup for an active, abandoned, or completed known CHANGE: it removes every clean managed worktree for the stale plan regardless of attempt state, retains every branch and dirty worktree, reports retained reasons, and never deletes outside the fixed Git-common-directory parallel workspace root. `parallel status --change-id <id>` is available for the same active, abandoned, or completed known CHANGE states. With no active generation every other plan-scoped `parallel` command except explicitly targeted status and stale cleanup fails with `PARALLEL_PLAN_STALE`.
+
+## REQ-M5-PARALLEL-013: Expose additive parallel CLI contracts
+Priority: must
+Type: functional
+Pattern: ubiquitous
+Statement: The system shall expose additive `parallel` CLI commands and JSON contracts without changing any existing command, Skill, option, default, output, or exit-code contract.
+Acceptance: Contract tests cover plan creation and validation, preparation, assignment instruction retrieval, heartbeat/failure, result recording, `parallel status`, deterministic integration, integration reopen, verification recording, candidate handoff, retry, and cleanup; success exits 0, domain validation or state failure exits 1, usage failure exits 2, and all new diagnostic, help, configuration projection, and JSON additions are registered as intentional compatibility extensions without adding fields to the existing `status` command. The REQ-M5-COMPAT-013 registry explicitly includes these extensions to REQ-M5-WORKTREE-001, REQ-M5-TDD-003, REQ-M5-EVIDENCE-006, and the additive parallel command surface.
+
+## REQ-M5-PARALLEL-014: Coordinate three non-replacing Skills
+Priority: must
+Type: functional
+Pattern: ubiquitous
+Statement: The system shall provide `sdd-parallel-dispatch`, `sdd-agent-assignment`, and `sdd-integration-verification` as additive Skills that coordinate existing SDD Skills and Copilot native subagents.
+Acceptance: Skill contract tests prove that dispatch validates approved inputs, requests at most the plan's configured concurrency of running instruction manifests, and launches only corresponding Copilot native subagents; assignment follows the generated instruction manifest in its dedicated worktree; integration waits for all required results and executes deterministic cherry-pick plus complete verification and candidate handoff; each Skill records exactly one workflow outcome; and none modifies or replaces an existing `.github/skills/sdd-*` directory.
+
+## REQ-M5-PARALLEL-015: Declare failure and retry explicitly
+Priority: must
+Type: functional
+Pattern: event-driven
+Statement: When a running Agent cannot complete an assignment attempt, the system shall permit an explicit failure declaration and a later retry.
+Acceptance: `parallel assignment fail` requires the current plan, assignment, attempt, and a non-empty reason; atomically changes `running` to `failed`; releases its concurrency slot; retains its branch and worktree; blocks dependents; and is idempotent. Idempotency is keyed by plan, assignment, and attempt: repeating failure for the already-failed current attempt returns success without a new journal record regardless of the repeated reason and retains the first recorded reason. Failure of a waiting, queued, completed, blocked, or superseded attempt uses `PARALLEL_ASSIGNMENT_STATE`. `parallel assignment heartbeat` refreshes display-only liveness metadata but never changes persisted lifecycle order, and no automatic timeout fabricates failure.
+
+## REQ-M5-PARALLEL-016: Hand off the verified integration commit
+Priority: must
+Type: functional
+Pattern: event-driven
+Statement: When integration verification passes, the system shall advance the active CHANGE candidate workspace to the exact verified integration commit.
+Acceptance: Candidate handoff holds the CHANGE lease, requires the candidate branch and worktree to be clean and still at the exact plan base, fast-forwards without rewriting history, records the resulting candidate identity and integration evidence head, and fails with `PARALLEL_CANDIDATE_DIVERGED` without performing cleanup. The machine-readable diagnostic reason is `dirty-at-base` when the candidate points to the exact plan base but is dirty; after restoring cleanliness, the same handoff may be retried. The reason is `missing` when the candidate is unavailable and `not-at-base` when its commit is any commit other than the exact plan base, including an ancestor, descendant, unrelated commit, or concurrently advanced commit; either reason requires abandoning the current generation and reopening a new generation from the intended candidate state. musubix5 never rewrites candidate history to recover.
+
+## REQ-M5-PARALLEL-017: Target workflow declarations explicitly
+Priority: must
+Type: functional
+Pattern: event-driven
+Statement: When workflow declarations coexist across CHANGEs or generations, the system shall preserve and resolve their ownership explicitly.
+Acceptance: `workflow-record --change-id <id>` accepts a syntactically valid `CHANGE-<digits>` ID and persists the named active CHANGE's `changeId`, positive active generation, and current requirement ID set. A malformed ID exits 2 with `CLI_ERROR`; an unknown CHANGE or conflict with already persisted ownership exits 1 with `WORKFLOW_CHANGE_MISMATCH`; a known CHANGE whose document is completed, whose document is not active, or whose active generation is null exits 1 with `CHANGE_GENERATION_PHASE`; explicit targeting never falls back to implicit resolution. Omitting `--change-id` preserves existing behavior when exactly one active CHANGE with a positive active generation is implicitly selectable; when none is selectable it exits 1 with `CHANGE_GENERATION_PHASE` and writes no declaration; when more than one active CHANGE document exists it exits 1 with `CHANGE_GENERATION_MIXED` and writes no declaration. Workflow verification scopes declarations by persisted ownership, never cross-binds or rebinds them, reports other-CHANGE declarations without blocking the selected CHANGE, and never fails only because completed historical CHANGEs coexist. Help, JSON, exit codes, and compatibility registries cover the additive option.

@@ -9,10 +9,11 @@ import { validateWorkflow } from './workflow.js';
 import { validateTddEvidence } from './tdd.js';
 import { parseMusubixTestReport, type MusubixTestReport } from './test-report.js';
 import {
-  activeChangeGeneration, loadChangeEvidence, summarizeChangeGeneration,
+  activeChangeGeneration, loadChangeEvidence, summarizeChangeGeneration, unprojectedPhaseCheckpointSummaries,
   validateChangeCompleteness, validateChangeEvidence,
   type ChangeGenerationSummary,
 } from './change.js';
+import { resolveChangeContext } from './change-generation.js';
 import { activeWaivers, waiverEvidenceDiagnostics } from './change-waiver.js';
 import { deriveWorkflowWaiverAudit } from './workflow-waiver.js';
 import { changedFiles, runProcess, type Runner } from './process.js';
@@ -102,6 +103,7 @@ export async function runGate(root: string, options: {
   environment?: NodeJS.ProcessEnv;
   attestationOptions?: AttestationVerificationOptions;
   persistenceMode?: 'normal' | 'matrix';
+  tddPurpose?: 'readiness' | 'integration-verification';
 } = {}): Promise<GateReport> {
   const config = options.config ?? await loadConfig(root);
   const runner = options.runner ?? runProcess;
@@ -216,7 +218,8 @@ export async function runGate(root: string, options: {
     diagnostics: workflow.diagnostics,
   });
   const { workflowWaivers, workflowWaiverDiagnostics } = deriveWorkflowWaiverAudit(workflow.workflowWaiverContext);
-  const tdd = await validateTddEvidence(root);
+  const tddPurpose = options.tddPurpose ?? 'readiness';
+  const tdd = await validateTddEvidence(root, tddPurpose);
   const tddDiagnostics = tdd.diagnostics.filter(scopedToFeature);
   checks.push({
     name: 'tdd',
@@ -225,7 +228,10 @@ export async function runGate(root: string, options: {
     summary: tdd.present ? `${tdd.cycles} Red-Green TDD cycle(s) recorded.` : 'No TDD cycle evidence is available.',
     diagnostics: tddDiagnostics,
   });
-  const changes = await validateChangeEvidence(root);
+  const changes = await validateChangeEvidence(
+    root,
+    tddPurpose === 'integration-verification' ? 'integration-verification' : 'phase-validation',
+  );
   const changeDiagnostics = changes.diagnostics.filter(scopedToFeature);
   checks.push({
     name: 'change-history',
@@ -234,7 +240,7 @@ export async function runGate(root: string, options: {
     summary: changes.present ? `${changes.changes} staged change(s) checked for ordered artifact and TDD evidence.` : 'No staged change chronology evidence is available.',
     diagnostics: changeDiagnostics,
   });
-  const completeness = await validateChangeCompleteness(root);
+  const completeness = await validateChangeCompleteness(root, tddPurpose);
   const completenessDiagnostics = completeness.diagnostics.filter(scopedToFeature);
   const completenessCheck: Evidence = {
     name: 'change-completeness',
@@ -493,7 +499,7 @@ export async function runGate(root: string, options: {
       : `${correspondence.coveredRequirements.length}/${correspondence.requirements} explicitly modeled requirement(s) correspond to current authoritative passing tests.`,
     diagnostics: correspondence.diagnostics,
   });
-  const refreshedCompleteness = await validateChangeCompleteness(root);
+  const refreshedCompleteness = await validateChangeCompleteness(root, tddPurpose);
   const refreshedCompletenessDiagnostics = refreshedCompleteness.diagnostics.filter(scopedToFeature);
   completenessCheck.status = !refreshedCompleteness.present ? 'skipped' : (featureDir ? countErrors(refreshedCompletenessDiagnostics) === 0 : refreshedCompleteness.valid) ? 'pass' : 'fail';
   completenessCheck.summary = refreshedCompleteness.present
@@ -677,7 +683,7 @@ export async function runGate(root: string, options: {
 }
 
 /** @id CODE-M5-STATUS-GUIDANCE-001
- * @implements REQ-M5-COMPAT-005 REQ-M5-COMPAT-006 REQ-M5-COMPAT-007
+ * @implements REQ-M5-COMPAT-005 REQ-M5-COMPAT-006 REQ-M5-COMPAT-007 REQ-M5-COMPAT-013 REQ-M5-LIFECYCLE-005
  * @design DES-M5-002
  */
 export async function projectStatus(root: string): Promise<{
@@ -686,6 +692,7 @@ export async function projectStatus(root: string): Promise<{
   codeGraph: Config['codeGraph'] | null;
   approvals: ApprovalValidation | null;
   change: ChangeGenerationSummary | null;
+  changeDiagnostics: Diagnostic[];
   gate: { status: 'pass' | 'fail' | 'skipped' | 'stale'; generatedAt: string | null; ready: boolean };
   next: string[];
   waivers: Array<{ changeId: string; code: string; requirementId?: string; detail?: string; approver: string; reason: string; recordedAt: string }>;
@@ -696,13 +703,50 @@ export async function projectStatus(root: string): Promise<{
   const initialized = paths.includes('.musubix/config.json');
   const config = initialized ? await loadConfig(root) : null;
   const codeGraph = config?.codeGraph ?? null;
-  const approvals = config ? await validateApprovals(root, config.approval) : null;
   const changeEvidence = await loadChangeEvidence(root);
-  const changeRecord = changeEvidence?.changes.find((entry) => activeChangeGeneration(entry) !== null)
-    ?? changeEvidence?.changes.at(-1);
+  const changeDiagnostics: Diagnostic[] = [];
+  let changeContext: Awaited<ReturnType<typeof resolveChangeContext>> = null;
+  try {
+    changeContext = await resolveChangeContext(root, { maintenance: true });
+  } catch (cause) {
+    const message = cause instanceof Error ? cause.message : String(cause);
+    const known = /^(CHANGE_GENERATION_PHASE|CHANGE_GENERATION_MIXED):\s*(.*)$/.exec(message);
+    if (!known) throw cause;
+    changeDiagnostics.push({
+      code: known[1]!,
+      severity: 'error',
+      message: known[2]!,
+    });
+  }
+  const inactiveChangeId = changeContext?.generation === null ? changeContext.changeId : null;
+  const generationInactive = inactiveChangeId !== null;
+  const approvals = config && changeDiagnostics.length === 0 && !generationInactive
+    ? await validateApprovals(root, config.approval)
+    : null;
+  const changeRecord = changeContext
+    ? changeEvidence?.changes.find((entry) => entry.changeId === changeContext.changeId)
+    : undefined;
   const change = changeRecord ? summarizeChangeGeneration(changeRecord) : null;
-  const generationReady = !changeRecord
-    || (activeChangeGeneration(changeRecord) !== null && changeRecord.phases.quality !== undefined);
+  if (change && changeRecord) {
+    try {
+      const pending = await unprojectedPhaseCheckpointSummaries(root, changeRecord);
+      for (const generation of change.generations) {
+        generation.unprojectedPhaseCheckpoints = pending.filter((entry) =>
+          entry.generation === generation.generation);
+      }
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : String(cause);
+      const invalid = /^CHANGE_CHECKPOINT_JOURNAL_INVALID:\s*(.*)$/.exec(message);
+      if (!invalid) throw cause;
+      changeDiagnostics.push({
+        code: 'CHANGE_CHECKPOINT_JOURNAL_INVALID',
+        severity: 'error',
+        message: invalid[1]!,
+      });
+    }
+  }
+  const generationReady = changeDiagnostics.length === 0 && (!changeRecord
+    || (activeChangeGeneration(changeRecord) !== null && changeRecord.phases.quality !== undefined));
   const artifacts = {
     requirements: paths.filter((p) => /^\.musubix\/features\/[^/]+\/requirements\.md$/.test(p)).length,
     designs: paths.filter((p) => /^\.musubix\/features\/[^/]+\/design\.md$/.test(p)).length,
@@ -729,8 +773,15 @@ export async function projectStatus(root: string): Promise<{
     generatedAt = evidence.generatedAt ?? null;
   }
   if (status === 'pass' && approvals?.valid === false) status = 'stale';
-  const workflow = await validateWorkflow(root);
-  const { workflowWaivers, workflowWaiverDiagnostics } = deriveWorkflowWaiverAudit(workflow.workflowWaiverContext);
+  let workflowAudit: ReturnType<typeof deriveWorkflowWaiverAudit> = {
+    workflowWaivers: [],
+    workflowWaiverDiagnostics: [],
+  };
+  if (changeDiagnostics.length === 0 && !generationInactive) {
+    const workflow = await validateWorkflow(root);
+    workflowAudit = deriveWorkflowWaiverAudit(workflow.workflowWaiverContext);
+  }
+  const { workflowWaivers, workflowWaiverDiagnostics } = workflowAudit;
   const [waivers, changeWaiverDiagnostics] = await Promise.all([activeWaivers(root), waiverEvidenceDiagnostics(root)]);
   const waiverDiagnostics = [...changeWaiverDiagnostics, ...workflowWaiverDiagnostics];
   return {
@@ -739,6 +790,7 @@ export async function projectStatus(root: string): Promise<{
     codeGraph,
     approvals,
     change,
+    changeDiagnostics,
     gate: {
       status,
       generatedAt,
@@ -747,7 +799,13 @@ export async function projectStatus(root: string): Promise<{
     waivers,
     workflowWaivers,
     waiverDiagnostics,
-    next: !initialized
+    next: changeDiagnostics.some((diagnostic) => diagnostic.code === 'CHANGE_GENERATION_MIXED')
+      ? ['Review .musubix/changes and leave exactly one CHANGE document with status: active.']
+      : changeDiagnostics.some((diagnostic) => diagnostic.code === 'CHANGE_GENERATION_PHASE')
+        ? ['Restore .musubix/evidence/changes.json for the active CHANGE before continuing.']
+        : generationInactive
+          ? [`musubix5 change-record ${inactiveChangeId} impact --reopen`]
+      : !initialized
       ? ['musubix5 init']
       : approvals && !approvals.valid
         ? approvals.domains

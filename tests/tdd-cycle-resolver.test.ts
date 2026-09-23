@@ -124,4 +124,71 @@ describe('TDD cycle resolver', () => {
       'green-status-not-passed',
     ]));
   });
+
+  /**
+   * @id TEST-M5-TDD-APPROVAL-SUPERSESSION-001
+   * @verifies REQ-M5-LIFECYCLE-005 REQ-M5-TDD-003
+   */
+  it('TEST-M5-TDD-APPROVAL-SUPERSESSION-001 preserves a cycle after a later requirements checkpoint', async () => {
+    const initialRequirements = phase('implementation', 1);
+    const supersedingRequirements = phase('implementation', 100);
+    const change: ChangeRecord = {
+      changeId: 'CHANGE-0003',
+      generation: 5,
+      activeGeneration: 5,
+      requirementIds: ['REQ-M5-TDD-003'],
+      requirementsHistory: [initialRequirements, supersedingRequirements],
+      phases: {
+        requirements: supersedingRequirements,
+        design: phase('implementation', 101),
+      },
+      tddBatches: [batch([10, 20, 30])],
+    };
+    const supersededApprovalCycle = cycle('before-supersession', 5, 25);
+    supersededApprovalCycle.changeId = 'CHANGE-0003';
+    supersededApprovalCycle.generation = 5;
+    const evidence: TddEvidence = {
+      schemaVersion: 1,
+      cycles: [supersededApprovalCycle],
+    };
+    const { selectCurrentTddCycle } =
+      await import('../packages/analysis/src/tdd-cycle-resolver.js');
+
+    expect(selectCurrentTddCycle(change, 'REQ-M5-TDD-003', evidence).selected)
+      .toMatchObject({
+        batchTerminalOrder: 30,
+        cycle: { cycleId: 'before-supersession' },
+      });
+  });
+
+  /**
+   * @id TEST-M5-TDD-DESIGN-PREDECESSOR-001
+   * @verifies REQ-M5-LIFECYCLE-005 REQ-M5-TDD-003
+   */
+  it('TEST-M5-TDD-DESIGN-PREDECESSOR-001 rejects a cycle that predates its contemporaneous design checkpoint', async () => {
+    const change: ChangeRecord = {
+      changeId: 'CHANGE-0003',
+      generation: 5,
+      activeGeneration: 5,
+      requirementIds: ['REQ-M5-TDD-003'],
+      requirementsHistory: [phase('implementation', 1)],
+      designHistory: [phase('implementation', 8), phase('implementation', 100)],
+      phases: {
+        requirements: phase('implementation', 1),
+        design: phase('implementation', 100),
+      },
+      tddBatches: [batch([10, 20, 30])],
+    };
+    const preDesignCycle = cycle('pre-design', 5, 25);
+    preDesignCycle.changeId = 'CHANGE-0003';
+    preDesignCycle.generation = 5;
+    const evidence: TddEvidence = {
+      schemaVersion: 1,
+      cycles: [preDesignCycle],
+    };
+    const { selectCurrentTddCycle } =
+      await import('../packages/analysis/src/tdd-cycle-resolver.js');
+
+    expect(selectCurrentTddCycle(change, 'REQ-M5-TDD-003', evidence).selected).toBeNull();
+  });
 });
