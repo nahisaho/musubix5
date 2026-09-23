@@ -2,7 +2,7 @@
 schemaVersion: 1
 id: CHANGE-0002
 summary: Implement the clean musubix5 compatibility and architecture foundation
-status: in-progress
+status: completed
 ---
 # CHANGE-0002: musubix5-clean-foundation
 
@@ -460,11 +460,13 @@ supersedes generation-9 candidate
 supersedes generation-12 candidate
 `9880e6af45952a3bb1635cc75e9593379c356ebf`, and the generation-15 candidate
 supersedes generation-13 candidate
-`906db8cc3f8bca6bcc75debd67d9fa06af9c845b`. The unpublished remote and local
-`v0.1.1` tag currently pointing at that generation-13 candidate must be deleted
-and recreated at the generation-15 candidate. Its tag, release manifest, GitHub Release, and npm
-package publication are distinct from all prior candidates and require fresh
-evidence and explicit authorization.
+`906db8cc3f8bca6bcc75debd67d9fa06af9c845b`. Before publication, the
+unpublished remote and local `v0.1.1` tag pointed at that generation-13
+candidate and required authorized replacement at the generation-15 candidate.
+That replacement completed in run `35800422180`; `v0.1.1` is now published and
+immutable. It must not be deleted or recreated without a new generation and
+new explicit authorization. Its tag, release manifest, GitHub Release, and npm
+package publication are distinct from all prior candidates.
 
 Preserving the immutable `v0.1.0` tag also preserves its historical workflow
 and authorization records in old reachable commits. Those records grant no
@@ -530,7 +532,49 @@ descendant and remain reachable from that branch. Pushing that candidate, the
 separate post-candidate evidence commit, and the release tag are distinct
 external operations requiring explicit human authorization.
 
-The protected `npm-publish` environment exists with two protection rules.
-`NPM_TOKEN` is not currently configured there, so npm publication remains
-blocked until a repository administrator adds the environment secret without
-exposing it in repository content or conversation logs.
+The protected `npm-publish` environment exists with two protection rules. Its
+initial `NPM_TOKEN` environment-secret value was empty, causing runs
+`35801993103` and `35802466592` to fail closed before publication. A non-empty
+token was then configured without exposing it in repository content or
+conversation logs and was used successfully by run `35802788128`.
+
+## Generation 15 terminal outcome
+
+Generation 15 candidate
+`9d453357c8b0bf6daaa32b00ac1aa94cc3e7bfe1` passed the five-job external
+candidate matrix in run `35796376857`. Release approval
+`5fa163b504c9029994db5b6aa55802ec3514c5bbc9c4cea1f8af2387afd8ecd0`
+was recorded for that candidate and all required local quality checks passed.
+
+The unpublished `v0.1.1` tag was replaced at the Generation 15 candidate.
+Tag-push validation and reproducible bundle creation passed in run
+`35800422180`. GitHub Release creation passed in run `35801413611`, producing
+the stable, non-prerelease `v0.1.1` Release and eight assets:
+`attestation-public.pem`, `attestation-unsigned.json`, `attestation.json`,
+`attestation.sig`, `musubix5-0.1.1.tgz`, `release-context.json`,
+`sbom.cdx.json`, and `SHA256SUMS`.
+
+The first npm workflow dispatch, run `35801934204`, was rejected before job
+execution because `main` did not satisfy the protected environment's `v*` tag
+policy. Runs `35801993103` and `35802466592` reached candidate, Release,
+attestation, approval, and authorization verification but stopped before
+publication because the environment secret was empty. These failures produced
+no npm package.
+
+After the environment secret was manually corrected, run `35802788128`
+authenticated to npm, published the exact GitHub Release tarball, and verified
+registry integrity. `musubix5@0.1.1` is published with
+`dist.integrity`
+`sha512-7q7LnS7NjnypHaKamytoIc00r3xc2+AnX8BcZMIdkzBo3hnocz09LFYw6CWbx8TC3TWIG4B2+FnKHPHyVVSyJw==`,
+which exactly matches the SHA-512 SRI computed from the Release tarball. No
+manual reconciliation is required.
+
+This terminal update is post-candidate history on the default branch. It does
+not alter candidate `9d453357c8b0bf6daaa32b00ac1aa94cc3e7bfe1`, the
+`v0.1.1` tag, GitHub Release assets, or the published npm tarball, and it does
+not establish or require a new release candidate.
+
+`v0.1.1` is terminal and must not be dispatched again. The GitHub Release
+workflow would fail closed because the Release already exists, and npm rejects
+republishing an existing version. The Generation 15 authorization records must
+not be reused for another operation.
