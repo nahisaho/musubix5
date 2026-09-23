@@ -206657,6 +206657,35 @@
           "approvalManifestSha256": "0474824e749d06dcdb32c9d848dc7b4ae3034ab0b04d58c3b004908dc73ac32b",
           "requirementsOrdinal": 1,
           "order": 1541
+        },
+        "design": {
+          "phase": "design",
+          "recordedAt": "2026-09-23T15:55:11.111Z",
+          "fingerprints": {
+            "impact": "b0ee636094439f0d53a5fd49549d074cd906488e0664c1c068607d793fb64939",
+            "requirements": "b0d9701dd8171d02dd5e7caefc07c85b7bece672f0f50116334e122f7dfa9426",
+            "design": "cffd8490dfac8f8c7adb1554a83f792e8c9393e98397711de81b7be887e41f5d",
+            "implementation": "305c7d2a52c758dcdb5a819781412c686f63ad2b8e8d30c425d2c289589304a9",
+            "tests": "609456683c6478a52467fee59fa246d4427d368ade962d374aaf20edcaef5f33",
+            "tdd": "1a92391cb2cbfa785e67e4346d71c592f1e5cc00407ec2bea2eb46d7da15c21b",
+            "requirementImplementations": {
+              "REQ-M5-REL020-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-REL020-002": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-REL020-003": {
+                "paths": [],
+                "fingerprints": {}
+              }
+            }
+          },
+          "approvalManifestSha256": "4f23e15aea5a42386fed7f6db15982fa36072a1c22dad0d3a66194d7caec85dc",
+          "designOrdinal": 1,
+          "order": 1542
         }
       },
       "generationHistory": [
