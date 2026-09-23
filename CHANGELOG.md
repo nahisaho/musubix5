@@ -2,6 +2,21 @@
 
 All notable changes to musubix5 are documented in this file.
 
+## 0.2.0
+
+### Added
+
+- Approval-bound parallel development through `sdd-parallel-dispatch`,
+  `sdd-agent-assignment`, and `sdd-integration-verification`.
+- Persisted requirement-batch plans, assignment attempts, provisional
+  integration verification, candidate-divergence checks, and deterministic
+  integration evidence.
+
+### Release process
+
+- Version `0.2.0` preserves candidate-bound validation, separately authorized
+  GitHub Release creation, and exact-tarball npm publication.
+
 ## 0.1.1
 
 ### Added

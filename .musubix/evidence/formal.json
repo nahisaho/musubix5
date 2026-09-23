@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-23T14:59:19.326Z",
-  "totalRequirements": 82,
+  "generatedAt": "2026-09-23T16:11:34.588Z",
+  "totalRequirements": 85,
   "modeledRequirements": 0,
   "modeledFraction": 0,
   "result": {
@@ -99,7 +99,10 @@
       "REQ-M5-PARALLEL-014",
       "REQ-M5-PARALLEL-015",
       "REQ-M5-PARALLEL-016",
-      "REQ-M5-PARALLEL-017"
+      "REQ-M5-PARALLEL-017",
+      "REQ-M5-REL020-001",
+      "REQ-M5-REL020-002",
+      "REQ-M5-REL020-003"
     ],
     "diagnostics": [
       {
@@ -511,6 +514,21 @@
         "code": "FORMAL_UNSUPPORTED",
         "severity": "warning",
         "message": "REQ-M5-PARALLEL-017 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-REL020-001 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-REL020-002 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-REL020-003 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
       }
     ],
     "consistency": "unknown",
@@ -526,6 +544,7 @@
   },
   "fingerprints": {
     ".musubix/features/musubix5-clean-foundation/requirements.md": "acad145405b899cc10cb97e05d45b253a865852ef5ada5f857a9ad593a8cd6dc",
-    ".musubix/features/parallel-agent-development/requirements.md": "ff106781090ca42d511610d6957c59fb9fde7ede002ca86da64018b2285dae1a"
+    ".musubix/features/parallel-agent-development/requirements.md": "ff106781090ca42d511610d6957c59fb9fde7ede002ca86da64018b2285dae1a",
+    ".musubix/features/release-0-2-0/requirements.md": "9a21b40b82cd44ffc0a7975583be3e309b1541ec29e78e8eac22eb74f6eb7acf"
   }
 }

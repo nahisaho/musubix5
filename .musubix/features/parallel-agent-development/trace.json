@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-23T15:55:08.358Z",
+  "generatedAt": "2026-09-23T16:11:29.670Z",
   "nodes": [
     {
       "id": "CODE-M5-NPM-PUBLISH-WORKFLOW-YAML-001",
@@ -1249,61 +1249,61 @@
       "id": "CODE-M5-RELEASE-CREATION-TARGET-001",
       "kind": "code",
       "path": "packages/analysis/src/release-workflow.ts",
-      "line": 164
+      "line": 165
     },
     {
       "id": "CODE-M5-NPM-PUBLISH-POLICY-001",
       "kind": "code",
       "path": "packages/analysis/src/release-workflow.ts",
-      "line": 191
+      "line": 192
     },
     {
       "id": "CODE-M5-NPM-CLI-INVOCATION-001",
       "kind": "code",
       "path": "packages/analysis/src/release-workflow.ts",
-      "line": 217
+      "line": 218
     },
     {
       "id": "CODE-M5-RELEASE-DOCUMENTATION-001",
       "kind": "code",
       "path": "packages/analysis/src/release-workflow.ts",
-      "line": 316
+      "line": 317
     },
     {
       "id": "CODE-M5-RELEASE-WORKFLOW-001",
       "kind": "code",
       "path": "packages/analysis/src/release-workflow.ts",
-      "line": 367
+      "line": 368
     },
     {
       "id": "CODE-M5-RELEASE-CONTEXT-001",
       "kind": "code",
       "path": "packages/analysis/src/release-workflow.ts",
-      "line": 411
+      "line": 412
     },
     {
       "id": "CODE-M5-RELEASE-ATTESTATION-IDENTITY-001",
       "kind": "code",
       "path": "packages/analysis/src/release-workflow.ts",
-      "line": 484
+      "line": 485
     },
     {
       "id": "CODE-M5-RELEASE-REGISTRY-QUERY-001",
       "kind": "code",
       "path": "packages/analysis/src/release-workflow.ts",
-      "line": 519
+      "line": 520
     },
     {
       "id": "CODE-M5-RELEASE-ASSET-VALIDATION-001",
       "kind": "code",
       "path": "packages/analysis/src/release-workflow.ts",
-      "line": 556
+      "line": 557
     },
     {
       "id": "CODE-M5-PACKAGED-RELEASE-DOCUMENTATION-001",
       "kind": "code",
       "path": "packages/analysis/src/release-workflow.ts",
-      "line": 640
+      "line": 641
     },
     {
       "id": "CODE-M5-APPROVAL-002",
@@ -1399,31 +1399,31 @@
       "id": "CODE-M5-PARALLEL-INTEGRATION-TRACE-001",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 302
+      "line": 303
     },
     {
       "id": "CODE-M5-PARALLEL-CLI-001",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 370
+      "line": 371
     },
     {
       "id": "CODE-M5-BOOTSTRAP-CLI-001",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 1228
+      "line": 1229
     },
     {
       "id": "CODE-M5-CLI-ERROR-ENVELOPE-001",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 1287
+      "line": 1288
     },
     {
       "id": "CODE-M5-CLI-BIN-ENTRY-001",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 1311
+      "line": 1312
     },
     {
       "id": "CODE-M5-COMPAT-006",
@@ -2152,6 +2152,24 @@
       "line": 5
     },
     {
+      "id": "TEST-M5-REL020-VERSION-001",
+      "kind": "test",
+      "path": "tests/release-0-2-0.test.ts",
+      "line": 25
+    },
+    {
+      "id": "TEST-M5-REL020-RELEASE-001",
+      "kind": "test",
+      "path": "tests/release-0-2-0.test.ts",
+      "line": 75
+    },
+    {
+      "id": "TEST-M5-REL020-PUBLISH-001",
+      "kind": "test",
+      "path": "tests/release-0-2-0.test.ts",
+      "line": 143
+    },
+    {
       "id": "TEST-M5-APPROVAL-CANDIDATE-TREE-001",
       "kind": "test",
       "path": "tests/release-candidate-tree.test.ts",
@@ -2514,7 +2532,17 @@
     },
     {
       "from": "CODE-M5-NPM-PUBLISH-WORKFLOW-YAML-001",
+      "to": "REQ-M5-REL020-003",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-NPM-PUBLISH-WORKFLOW-YAML-001",
       "to": "DES-M5-021",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-NPM-PUBLISH-WORKFLOW-YAML-001",
+      "to": "DES-M5-REL020-003",
       "relation": "implements"
     },
     {
@@ -2524,7 +2552,17 @@
     },
     {
       "from": "CODE-M5-RELEASE-WORKFLOW-YAML-001",
+      "to": "REQ-M5-REL020-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-WORKFLOW-YAML-001",
       "to": "DES-M5-020",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-WORKFLOW-YAML-001",
+      "to": "DES-M5-REL020-002",
       "relation": "implements"
     },
     {
@@ -5924,6 +5962,11 @@
     },
     {
       "from": "CODE-M5-RELEASE-TARGET-LOOKUP-001",
+      "to": "REQ-M5-REL020-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-TARGET-LOOKUP-001",
       "to": "DES-M5-020",
       "relation": "implements"
     },
@@ -5933,6 +5976,11 @@
       "relation": "implements"
     },
     {
+      "from": "CODE-M5-RELEASE-TARGET-LOOKUP-001",
+      "to": "DES-M5-REL020-002",
+      "relation": "implements"
+    },
+    {
       "from": "CODE-M5-RELEASE-CREATION-TARGET-001",
       "to": "REQ-M5-RELEASE-003",
       "relation": "implements"
@@ -5949,7 +5997,17 @@
     },
     {
       "from": "CODE-M5-NPM-PUBLISH-POLICY-001",
+      "to": "REQ-M5-REL020-003",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-NPM-PUBLISH-POLICY-001",
       "to": "DES-M5-021",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-NPM-PUBLISH-POLICY-001",
+      "to": "DES-M5-REL020-003",
       "relation": "implements"
     },
     {
@@ -5979,7 +6037,27 @@
     },
     {
       "from": "CODE-M5-RELEASE-WORKFLOW-001",
+      "to": "REQ-M5-REL020-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-WORKFLOW-001",
+      "to": "REQ-M5-REL020-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-WORKFLOW-001",
       "to": "DES-M5-020",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-WORKFLOW-001",
+      "to": "DES-M5-REL020-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-WORKFLOW-001",
+      "to": "DES-M5-REL020-002",
       "relation": "implements"
     },
     {
@@ -6039,7 +6117,17 @@
     },
     {
       "from": "CODE-M5-RELEASE-ASSET-VALIDATION-001",
+      "to": "REQ-M5-REL020-003",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-ASSET-VALIDATION-001",
       "to": "DES-M5-021",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-ASSET-VALIDATION-001",
+      "to": "DES-M5-REL020-003",
       "relation": "implements"
     },
     {
@@ -6279,7 +6367,17 @@
     },
     {
       "from": "CODE-M5-COMPAT-001",
+      "to": "REQ-M5-REL020-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-COMPAT-001",
       "to": "DES-M5-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-COMPAT-001",
+      "to": "DES-M5-REL020-001",
       "relation": "implements"
     },
     {
@@ -7863,6 +7961,21 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-REL020-VERSION-001",
+      "to": "REQ-M5-REL020-001",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-REL020-RELEASE-001",
+      "to": "REQ-M5-REL020-002",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-REL020-PUBLISH-001",
+      "to": "REQ-M5-REL020-003",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-APPROVAL-CANDIDATE-TREE-001",
       "to": "REQ-M5-APPROVAL-007",
       "relation": "verifies"
@@ -8256,8 +8369,8 @@
   "diagnostics": [],
   "fingerprints": {
     ".github/workflows/candidate-gate.yml": "ae238d30cab2aa79f68e9897fd17f5a02f86018dacc46308190cd248533439c2",
-    ".github/workflows/npm-publish.yml": "18948d88bbaa52c0a9dde3c8f19119dcfc1370ae24f7e26ef47f9008905c61fe",
-    ".github/workflows/release.yml": "15a7a951698cffae56078897eb3f92008d80901c003d19828566065e4543edf0",
+    ".github/workflows/npm-publish.yml": "da2d3033a6717350ed55b27f9cf320843f3a4ae9123698dc74faea206a6dd6dd",
+    ".github/workflows/release.yml": "ab235f4b0ff90d4d5a5c60e83b9969ad3a3b497e4ce81ba57d500032ac80e594",
     ".musubix/decisions/ADR-0002.md": "9f41d752530613cf6cc3ab6798709567e85650e5b97426dfca4147840eb35684",
     ".musubix/decisions/ADR-0003.md": "342a6a8e30c367684b02ee907f0f6bc3aef3b8ff6a08005148f43411f3885b7d",
     ".musubix/decisions/ADR-0004.md": "837623189c1605b24040bcf40db42de65f06fb1f3f47911068a8b4558ca5856f",
@@ -8317,7 +8430,7 @@
     "packages/analysis/src/quality-policy.ts": "0ba33ac06b4762e0f398e04fd6c8975c7db6380f20080fc3dc89a701759fcd89",
     "packages/analysis/src/release-manifest.ts": "e0be5c37e24dafab86606f15e48e40704794c9dd5ad19f150fc3386d554e6e39",
     "packages/analysis/src/release-operation-guard.ts": "3eb0edb8a82dde1085fbb1f00869bf527003e37c28344fbb997fbb4ed044c318",
-    "packages/analysis/src/release-workflow.ts": "56d79d8d7dbd56bac08d2facd181c2717520fcd73225edac90f302af68d689e3",
+    "packages/analysis/src/release-workflow.ts": "4b5a211d8f8b4e233dc14c0326df2c8662f399b80a36cb3f017ff4792d2a7376",
     "packages/analysis/src/run-local-workspace.ts": "351ae9df02dfab13b58ae86f7619d68885457093a7a4b33c4070807d52324007",
     "packages/analysis/src/scaffold-artifact.ts": "8734de778f121421b3fcfbf5263611bfcffc94cf63248ef3f127459bdfa4f692",
     "packages/analysis/src/tdd-cycle-resolver.ts": "9098bc74830c1907492da8e08c9fa806550a135554fe41b37998bb344ffffc78",
@@ -8330,7 +8443,7 @@
     "packages/analysis/src/workflow.ts": "9d0e551e55dc7865d1e82f7e2a4d4e7d8db8846f0b584fd512cf19f5d0a0964c",
     "packages/analysis/src/workspace-manager.ts": "9c5cf8b137be42914e79784a7a5414ba48eb26d454e5a07df24eb264f5757576",
     "packages/cli/src/install.ts": "4b33a24e19958e2c88af806dc1261f4f4a74d6e56cb9fe95c0dabf7cc20cef7f",
-    "packages/cli/src/main.ts": "75370b9b1b9c93ca9cfd0a294091c489bd91596c79a4935b040e095fd14fe67f",
+    "packages/cli/src/main.ts": "f1401256565e850633ba47099d6f0cf73e242ca1fd6b21fd1c2e549d3a79ebe5",
     "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
     "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
     "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
@@ -8400,12 +8513,13 @@
     "tests/published-bin-contract.test.ts": "1d493ba16d76cba71fe9f148e62fff0fa55f068dd28cf5391c2f18200ae56745",
     "tests/quality-readiness.test.ts": "4ef772be4a0795abd460ccb79ccc6639da2b69baf47f6226f3e6e00d030101ec",
     "tests/quality-supersession.test.ts": "fdb955ff0f5bde92ce83477c6cfe156f6961026aaae556c81b55948790a1d420",
+    "tests/release-0-2-0.test.ts": "9695e8436ad8be6819e50413d826ba3632cfa22598ed68bdac293cfb7ef7476a",
     "tests/release-candidate-tree.test.ts": "d821c78605a00d9ee30117efec5e801dfe305223c84d1197881a95e40f11d237",
     "tests/release-context-generation13.test.ts": "800607beb805a87fd4251a4c8611543b7749114c70bf75bc2c88ce2a6765901f",
     "tests/release-creation-target-generation15.test.ts": "a9fc76911b2c44c9c3a5e9060149efc550418921084522c6765be712a8f11278",
     "tests/release-evidence-policy.test.ts": "4cc0d16219dfb98f580a4453b6584173381dd50a3124204587db26b2f65aeafa",
     "tests/release-generation5-boundary.test.ts": "60a1ab6ff9c553582829da851b4f237c5f87c5e7b1a30e609361aa0610a78416",
-    "tests/release-generation5.test.ts": "4d25d8588864f02aad610db56494911099b96c39b2156d67708de22d41124268",
+    "tests/release-generation5.test.ts": "fe2d89524a903cb40eaaf0c8b05959056ee433011fe5e3d32fa7729325102ff2",
     "tests/release-manifest-scope.test.ts": "4832787fe1e6c62c36fc2051aec9e6033970bb167d73c727d8009bfc9efea523",
     "tests/release-operation-cli-error.test.ts": "d80005044f2bc6e96caca1d63672f0d1e5e335e244842eba2978906d6977b092",
     "tests/release-operation-guard.test.ts": "1f5184e20c3179a69730a3da421fc0e33aa5c1f7fe4ff5a2c917a974467e5918",
@@ -8413,7 +8527,7 @@
     "tests/release-review-fixes.test.ts": "3e380aa84d4291d45c1e3dbbe4b4b0212cc5708517c35bae1b1032ce30912d8d",
     "tests/release-target-http-generation15.test.ts": "78df7ecede1d750caa90b96e22aed311a39e6373e445ac10b8e77fe68e5628b1",
     "tests/release-workflow-hardening.test.ts": "379dad4ed04b2080bb1cb19ce94558a20b3a07c2894f1a209e8c92caf9b3d5f3",
-    "tests/release-workflow.test.ts": "1d1a1f516218eb5bcd3a50a485127985c40235d7b71201b370c1ffb2256db279",
+    "tests/release-workflow.test.ts": "b04c0a7afbad7d39599b4dc1f51afa673dc99c6c69385d67eb694b26d45ab2a2",
     "tests/repository-identity-generation12.test.ts": "15c05bdb4e79de6ed827b4e5732e3c685f2b9650c4613047d485d7d4194f0fdc",
     "tests/repository-identity-workflows.test.ts": "f830e7b9d3ce9882bc3cc7a39d6cb19ff1a6c7a539df0e30164aaf631a1d051f",
     "tests/repository-identity.test.ts": "805c2e53cccec5b657c7d58c5b438029f6874f75919ba84b12ae3b538d7df73d",

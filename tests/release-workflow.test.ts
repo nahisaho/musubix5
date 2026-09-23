@@ -13,10 +13,10 @@ describe('release workflow', () => {
       validateReleaseVersions,
     } = await import('../packages/analysis/src/release-workflow.js');
     const root = resolve(import.meta.dirname, '..');
-    const versions = await validateReleaseVersions(root, 'v0.1.1');
+    const versions = await validateReleaseVersions(root, 'v0.2.0');
     expect(versions).toMatchObject({
-      releaseTag: 'v0.1.1',
-      version: '0.1.1',
+      releaseTag: 'v0.2.0',
+      version: '0.2.0',
       valid: true,
     });
     expect(versions.paths).toEqual(expect.arrayContaining([

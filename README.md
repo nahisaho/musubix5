@@ -1,6 +1,6 @@
 # musubix5
 
-**0.1.1 · GitHub Copilot CLI only · Node.js ≥20 · TypeScript · MIT**
+**0.2.0 · GitHub Copilot CLI only · Node.js ≥20 · TypeScript · MIT**
 
 [日本語](README-ja.md)
 
@@ -120,7 +120,7 @@ and test it, and configure real check commands before expecting the gate to pass
 
 ## Upgrade
 
-The `upgrade` command is included in musubix5 0.1.1. Its
+The `upgrade` command is included in musubix5 0.2.0. Its
 compatibility contract is based on the command introduced in musubix3 0.1.14.
 Check published musubix5 versions with `npm view musubix5 versions`.
 
