@@ -822,6 +822,16 @@ function integrationStatusAcceptable(result: ProcessResult): boolean {
   }
 }
 
+export function formatIntegrationVerificationFailure(
+  name: string,
+  command: string,
+  args: string[],
+  result: Pick<ProcessResult, 'stdout' | 'stderr'>,
+): string {
+  const detail = result.stderr.trim() || result.stdout.trim() || 'no command output';
+  return `${name}: ${detail} (${command} ${args.join(' ')})`;
+}
+
 async function runIntegrationCliCheck(
   localCli: string,
   args: string[],
@@ -855,7 +865,7 @@ async function runIntegrationCliCheck(
   if (!acceptable) {
     domain(
       'PARALLEL_INTEGRATION_VERIFICATION_FAILED',
-      `${process.execPath} ${commandArgs.join(' ')} failed: ${result.stderr.trim() || result.stdout.trim()}`,
+      formatIntegrationVerificationFailure(name, process.execPath, commandArgs, result),
     );
   }
 }

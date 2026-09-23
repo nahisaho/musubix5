@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-23T13:49:01.055Z",
+  "generatedAt": "2026-09-23T13:58:50.560Z",
   "nodes": [
     {
       "id": "CODE-M5-NPM-PUBLISH-WORKFLOW-YAML-001",
@@ -1102,19 +1102,19 @@
       "id": "CODE-M5-PARALLEL-RUNTIME-PLAN-001",
       "kind": "code",
       "path": "packages/analysis/src/parallel-runtime.ts",
-      "line": 1247
+      "line": 1257
     },
     {
       "id": "CODE-M5-PARALLEL-RUNTIME-ASSIGNMENT-001",
       "kind": "code",
       "path": "packages/analysis/src/parallel-runtime.ts",
-      "line": 1371
+      "line": 1381
     },
     {
       "id": "CODE-M5-PARALLEL-RUNTIME-INTEGRATION-001",
       "kind": "code",
       "path": "packages/analysis/src/parallel-runtime.ts",
-      "line": 1721
+      "line": 1731
     },
     {
       "id": "CODE-M5-PARALLEL-PLAN-001",
@@ -1816,19 +1816,19 @@
       "id": "TEST-M5-PARALLEL-INTEGRATION-CONTROL-EVIDENCE-001",
       "kind": "test",
       "path": "tests/parallel-final-findings-generation5.test.ts",
-      "line": 369
+      "line": 384
     },
     {
       "id": "TEST-M5-PARALLEL-FULL-SUCCESS-001",
       "kind": "test",
       "path": "tests/parallel-final-findings-generation5.test.ts",
-      "line": 406
+      "line": 421
     },
     {
       "id": "TEST-M5-PARALLEL-RUNTIME-EIGHT-WRITERS-001",
       "kind": "test",
       "path": "tests/parallel-final-findings-generation5.test.ts",
-      "line": 428
+      "line": 443
     },
     {
       "id": "TEST-M5-PARALLEL-OWNERSHIP-HISTORY-001",
@@ -8105,7 +8105,7 @@
     "packages/analysis/src/mutation.ts": "87fcc7a0ef44b43a093c941319d7d6d600314d3ca2c4d94abddcb6c247c1dd9b",
     "packages/analysis/src/native-approval.ts": "bd6bba0231389ada6758213a90be9a6cfde96e45e89dc9776d9d4e46e2951c53",
     "packages/analysis/src/order.ts": "712ef698e5136da577602a9e603cbd59fe84f237ccda712cdcc9d2c6dd2335aa",
-    "packages/analysis/src/parallel-runtime.ts": "f6afa2a4c26094249602cdc503ea12fdf040f9ac53cf9792ecb8fbcdae2b7b54",
+    "packages/analysis/src/parallel-runtime.ts": "d518f7d8970d9d2f8d2956ec96edfe167b877d4aeafd0630f089d612475490c4",
     "packages/analysis/src/parallel-tdd-evidence.ts": "5968a550696b4f93c70bfd322f18afcf70f5e8dc04b888241fc76acc94a116ea",
     "packages/analysis/src/parallel.ts": "ac698520f8a60dcae907c4da7ec6bf53d920003a6db3ab8470d04252bdabcdae",
     "packages/analysis/src/performance.ts": "a51c388499c57f177ebc4a6d5a160d7fb07550626b24a9c987b6b0d17e96ebe7",
@@ -8182,7 +8182,7 @@
     "tests/package-contract.test.ts": "3536d366dd871d09d1e6633b14f54354aed82349f3269de119cfcba40354dd1c",
     "tests/parallel-consumer-policy-generation5.test.ts": "075446948f66ad29d4aa87a3fd94cfd7de49787a2cf0c153ec1c1047f444d00a",
     "tests/parallel-development.test.ts": "6d49970e05e0cac6f500c06ac75f4bd4dd7fcab1810b29c9fb41fd89733a0383",
-    "tests/parallel-final-findings-generation5.test.ts": "a069921b6748bf138644d266eb875560a17c7bb7cdbf5cbf6a1ad4c8d8bd86fd",
+    "tests/parallel-final-findings-generation5.test.ts": "83ad91f15e5828da5ddf11c6bc55cf5fc63355a7836b5b9104ea8b9fd81e2688",
     "tests/parallel-ownership-history-generation5.test.ts": "5cc0f366a22059d1eafe81d4f22ad41e68b5ecdffa6accf6f824b00835e6311b",
     "tests/parallel-quality-regressions.test.ts": "78d184810a9dfab27f2c36cbbd8d8bb88f2ab3e9545ae7f86629fcb43d56ae97",
     "tests/parallel-release-blockers-generation5.test.ts": "8739007ad5fbe19451cf1e6e2abba2265f1c1435a35e9e05164e927360bbefdc",

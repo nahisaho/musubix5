@@ -347,6 +347,21 @@ describe('CHANGE-0003 generation 5 final parallel findings', () => {
   it('TEST-M5-PARALLEL-REAL-GATE-SUCCESS-001 verifies provisional assignment TDD through the real integration gate', async () => {
     const { fixture } = await createSplitRootLifecycleFixture({ stubCli: false });
     const runtime = await import('../packages/analysis/src/parallel-runtime.js');
+    const formatVerificationFailure = (
+      runtime as unknown as Record<string, unknown>
+    ).formatIntegrationVerificationFailure;
+    expect(formatVerificationFailure).toBeTypeOf('function');
+    expect((formatVerificationFailure as (
+      name: string,
+      command: string,
+      args: string[],
+      result: { stdout: string; stderr: string },
+    ) => string)(
+      'gate-changed',
+      process.execPath,
+      ['cli.js', 'gate'],
+      { stdout: 'gate detail', stderr: '' },
+    )).toContain('gate-changed: gate detail');
     const plan = await runtime.createParallelPlan(fixture.root, fixture.planFile);
     await runtime.prepareParallelPlanRuntime(fixture.root, plan.planId);
     const instruction = await runtime.issueParallelAssignmentInstruction(fixture.root, plan.planId, 'core');
@@ -355,15 +370,15 @@ describe('CHANGE-0003 generation 5 final parallel findings', () => {
     await recordChangePhase(fixture.root, 'CHANGE-0003', 'quality', ['REQ-M5-PARALLEL-004']);
     await runtime.startParallelIntegration(fixture.root, plan.planId);
 
-    await expect(runtime.verifyParallelIntegration(fixture.root, plan.planId))
-      .resolves.toMatchObject({
-        integration: { state: 'verified' },
-        verification: {
-          checks: expect.arrayContaining([
-            expect.objectContaining({ name: 'gate-changed' }),
-          ]),
-        },
-      });
+    const outcome = await runtime.verifyParallelIntegration(fixture.root, plan.planId);
+    expect(outcome).toMatchObject({
+      integration: { state: 'verified' },
+      verification: {
+        checks: expect.arrayContaining([
+          expect.objectContaining({ name: 'gate-changed' }),
+        ]),
+      },
+    });
   });
 
   /** @id TEST-M5-PARALLEL-INTEGRATION-CONTROL-EVIDENCE-001
