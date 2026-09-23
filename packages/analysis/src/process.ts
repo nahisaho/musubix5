@@ -19,7 +19,7 @@ export type Runner = (command: string, args: string[], options: {
 
 export function resolveProcessCommand(command: string, platform: NodeJS.Platform = process.platform): string {
   if (platform !== 'win32' || !/^(?:npm|npx)$/i.test(command)) return command;
-  return `${command}.cmd`;
+  return `${command.toLowerCase()}.cmd`;
 }
 
 /** @id CODE-M5-PROCESS-WINDOWS-001
@@ -57,9 +57,12 @@ export function resolvePortableNpmInvocation(
   platform: NodeJS.Platform = process.platform,
   nodeExecutable: string = process.execPath,
 ): { command: string; args: string[] } {
+  if (matrixOs?.toLowerCase() === 'windows' && process.env.npm_execpath) {
+    return { command: nodeExecutable, args: [process.env.npm_execpath, ...args] };
+  }
   return resolveNpmInvocation(
     args,
-    matrixOs === 'windows' ? 'win32' : platform,
+    matrixOs?.toLowerCase() === 'windows' ? 'win32' : platform,
     nodeExecutable,
   );
 }

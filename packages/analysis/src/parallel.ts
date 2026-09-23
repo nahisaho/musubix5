@@ -1,5 +1,8 @@
-import { resolve } from 'node:path';
-import { digest } from './files.js';
+import { realpath } from 'node:fs/promises';
+import {
+  basename, dirname, parse, resolve,
+} from 'node:path';
+import { digest, portable } from './files.js';
 
 export const PARALLEL_DIAGNOSTICS = [
   'PARALLEL_PLAN_EXISTS',
@@ -34,6 +37,23 @@ export interface ParallelAssignment {
   dependsOn: string[];
   ownedPaths: string[];
   focusedCommands: ParallelFocusedCommand[];
+}
+
+function parallelPlanPathSlug(planId: string): string {
+  const identity = planId.replace(/^parallel-plan:/, '');
+  return `parallel-plan-${/^[a-f0-9]{64}$/i.test(identity) ? identity.slice(0, 20) : identity}`;
+}
+
+export async function canonicalWorkspacePath(path: string): Promise<string> {
+  const absolute = resolve(path);
+  try {
+    return await realpath(absolute);
+  } catch (cause) {
+    if (!['ENOENT', 'ENOTDIR'].includes((cause as NodeJS.ErrnoException).code ?? '')) throw cause;
+    const parent = dirname(absolute);
+    if (parent === absolute || parent === parse(absolute).root) return absolute;
+    return resolve(await canonicalWorkspacePath(parent), basename(absolute));
+  }
 }
 
 export interface AuthoredParallelPlan {
@@ -354,12 +374,12 @@ export function parallelWorkspacePaths(
   assignmentId: string,
   attempt: number,
 ): { assignmentBranch: string; assignmentWorktree: string; heartbeatPath: string } {
-  const planSlug = planId.replace(/^parallel-plan:/, 'parallel-plan-');
+  const planSlug = parallelPlanPathSlug(planId);
   const base = resolve(gitCommonDirectory, 'musubix5', 'workspaces', changeId, 'parallel', planSlug);
   return {
     assignmentBranch: `musubix5/${changeId}/${planSlug}/${assignmentId}/attempt-${attempt}`,
-    assignmentWorktree: resolve(base, 'assignments', assignmentId, `attempt-${attempt}`),
-    heartbeatPath: resolve(base, 'heartbeats', `${assignmentId}-attempt-${attempt}.json`),
+    assignmentWorktree: portable(resolve(base, 'assignments', assignmentId, `attempt-${attempt}`)),
+    heartbeatPath: portable(resolve(base, 'heartbeats', `${assignmentId}-attempt-${attempt}.json`)),
   };
 }
 
@@ -370,8 +390,8 @@ export function verificationWorkspacePath(
   assignmentId: string,
   attempt: number,
 ): string {
-  const planSlug = planId.replace(/^parallel-plan:/, 'parallel-plan-');
-  return resolve(
+  const planSlug = parallelPlanPathSlug(planId);
+  return portable(resolve(
     gitCommonDirectory,
     'musubix5',
     'workspaces',
@@ -381,7 +401,7 @@ export function verificationWorkspacePath(
     'verification',
     assignmentId,
     `attempt-${attempt}`,
-  );
+  ));
 }
 
 export function verificationWorkspaceIdentity(input: {
@@ -400,7 +420,7 @@ export function verificationWorkspaceIdentity(input: {
     input.assignmentId,
     input.attempt,
   );
-  const path = `${base}-${input.reportedHead}`;
+  const path = `${base}-${input.reportedHead.slice(0, 16)}`;
   return {
     path,
     recovery: input.existing === 'missing'

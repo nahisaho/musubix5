@@ -1,3 +1,8 @@
+import {
+  mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { relative, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 type ParallelModule = typeof import('../packages/analysis/src/parallel.js');
@@ -12,6 +17,57 @@ function requiredFunction<T extends (...args: never[]) => unknown>(
 }
 
 describe('parallel runtime regressions', () => {
+  /** @id TEST-M5-PARALLEL-CROSS-PLATFORM-WORKTREE-001
+   * @verifies REQ-M5-WORKTREE-001 REQ-M5-PARALLEL-004 REQ-M5-PARALLEL-010 REQ-M5-PARALLEL-012
+   */
+  it('TEST-M5-PARALLEL-CROSS-PLATFORM-WORKTREE-001 bounds managed paths and canonicalizes filesystem aliases', async () => {
+    const parallel = await import('../packages/analysis/src/parallel.js');
+    const gitCommonDirectory = resolve(
+      'C:/Users/runneradmin/AppData/Local/Temp/musubix5-parallel-runtime-abcdefgh/.git',
+    );
+    const planId = `parallel-plan:${'a'.repeat(64)}`;
+    const assignment = parallel.parallelWorkspacePaths(
+      gitCommonDirectory,
+      'CHANGE-0003',
+      planId,
+      'assignment-with-long-name',
+      1,
+    );
+    const verification = parallel.verificationWorkspaceIdentity({
+      gitCommonDirectory,
+      changeId: 'CHANGE-0003',
+      planId,
+      assignmentId: 'assignment-with-long-name',
+      attempt: 1,
+      reportedHead: 'b'.repeat(40),
+      existing: 'missing',
+    });
+    expect(relative(gitCommonDirectory, assignment.assignmentWorktree).length)
+      .toBeLessThanOrEqual(125);
+    expect(relative(gitCommonDirectory, verification.path).length)
+      .toBeLessThanOrEqual(145);
+    expect(assignment.assignmentBranch.length).toBeLessThanOrEqual(100);
+
+    const canonicalWorkspacePath = requiredFunction<
+      (path: string) => Promise<string>
+    >(parallel, 'canonicalWorkspacePath');
+    const directory = mkdtempSync(resolve(tmpdir(), 'musubix5-path-alias-'));
+    const actual = resolve(directory, 'actual');
+    const alias = resolve(directory, 'alias');
+    mkdirSync(actual);
+    symlinkSync(actual, alias, 'dir');
+    const file = resolve(actual, 'file');
+    writeFileSync(file, 'not a directory\n');
+    try {
+      await expect(canonicalWorkspacePath(alias))
+        .resolves.toBe(await canonicalWorkspacePath(actual));
+      await expect(canonicalWorkspacePath(resolve(file, 'child')))
+        .resolves.toBe(resolve(file, 'child'));
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
   /** @id TEST-M5-PARALLEL-RETRY-002
    * @verifies REQ-M5-PARALLEL-015
    */

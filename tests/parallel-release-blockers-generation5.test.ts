@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { once } from 'node:events';
-import { existsSync, rmSync } from 'node:fs';
+import { existsSync, rmSync, symlinkSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -149,9 +149,38 @@ describe('CHANGE-0003 generation 5 release blocker regressions', () => {
   /** @id TEST-M5-PARALLEL-WORKSPACE-PARTIAL-COPY-001
    * @verifies REQ-M5-WORKTREE-001 REQ-M5-PARALLEL-009 REQ-M5-PARALLEL-010
    */
-  it('TEST-M5-PARALLEL-WORKSPACE-PARTIAL-COPY-001 restores workspace state after overlay copy failure', async () => {
+  it('TEST-M5-PARALLEL-WORKSPACE-PARTIAL-COPY-001 canonicalizes workspace aliases and restores state after overlay copy failure', async () => {
     const fixture = await createParallelFixture();
     fixtures.push(fixture);
+    const alias = `${fixture.root}-alias`;
+    symlinkSync(fixture.root, alias, process.platform === 'win32' ? 'junction' : 'dir');
+    const aliasResult = spawnSync(process.execPath, [
+      resolve(repositoryRoot(), 'dist/packages/cli/src/main.js'),
+      'graph',
+      'gate',
+      '--root',
+      fixture.root,
+      '--workspace',
+      alias,
+      '--json',
+    ], { encoding: 'utf8' });
+    rmSync(alias, { force: true });
+    expect(aliasResult.status, aliasResult.stderr || aliasResult.stdout).toBe(0);
+    const missingWorkspace = `${fixture.root}-missing`;
+    const missingResult = spawnSync(process.execPath, [
+      resolve(repositoryRoot(), 'dist/packages/cli/src/main.js'),
+      'graph',
+      'gate',
+      '--root',
+      fixture.root,
+      '--workspace',
+      missingWorkspace,
+      '--json',
+    ], { encoding: 'utf8' });
+    rmSync(missingWorkspace, { recursive: true, force: true });
+    expect(missingResult.status, missingResult.stderr || missingResult.stdout).toBe(0);
+    if (process.platform === 'win32') return;
+
     const workspace = `${fixture.root}-partial-overlay`;
     git(fixture.root, ['worktree', 'add', '--detach', workspace, fixture.baseCommit]);
     extraWorktrees.push({ root: fixture.root, path: workspace });

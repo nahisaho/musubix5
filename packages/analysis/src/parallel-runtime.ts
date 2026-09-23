@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import {
   buildAssignmentTddCommands,
   buildIntegrationProvenance,
+  canonicalWorkspacePath,
   assertIntegrationReopenable,
   classifyCandidateHandoff,
   cleanupEligibility,
@@ -619,9 +620,9 @@ async function assertPlanBaseDescendsFromBaseline(
 
 async function registeredWorktreePaths(root: string): Promise<Set<string>> {
   const output = await git(root, ['worktree', 'list', '--porcelain']);
-  return new Set(output.split(/\r?\n/)
+  return new Set(await Promise.all(output.split(/\r?\n/)
     .filter((line) => line.startsWith('worktree '))
-    .map((line) => resolve(line.slice('worktree '.length))));
+    .map((line) => canonicalWorkspacePath(line.slice('worktree '.length)))));
 }
 
 async function requirePlan(
@@ -1070,7 +1071,9 @@ async function validateAssignmentTdd(
       || cycle.parallel.planId !== plan.planId
       || cycle.parallel.assignmentId !== assignment.id
       || cycle.parallel.attempt !== attempt.attempt
-      || cycle.parallel.worktree !== attempt.worktree
+      || !cycle.parallel.worktree
+      || !attempt.worktree
+      || resolve(cycle.parallel.worktree) !== resolve(attempt.worktree)
       || cycle.parallel.startCommit !== attempt.startCommit) {
       domain(
         'PARALLEL_RESULT_UNVERIFIED',
@@ -1188,10 +1191,10 @@ function integrationPaths(
     attempt,
   ).assignmentWorktree;
   const base = resolve(assignmentPath, '..', '..', '..');
-  const slug = plan.planId.replace(/^parallel-plan:/, 'parallel-plan-');
+  const slug = basename(resolve(assignmentPath, '..', '..', '..'));
   return {
     branch: `musubix5/${plan.binding.changeId}/${slug}/integration/attempt-${attempt}`,
-    worktree: resolve(base, 'integration', `attempt-${attempt}`),
+    worktree: portable(resolve(base, 'integration', `attempt-${attempt}`)),
   };
 }
 
@@ -1292,6 +1295,10 @@ export async function createParallelPlan(
     const registered = await registeredWorktreePaths(root);
     const staleWithWorktrees: string[] = [];
     for (const stalePlan of store.plans.filter((plan) => stalePlanIds.has(plan.planId))) {
+      const canonicalBinding = {
+        ...binding,
+        gitCommonDirectory: await canonicalWorkspacePath(binding.gitCommonDirectory),
+      };
       const paths = [
         ...store.attempts.filter((attempt) => attempt.planId === stalePlan.planId)
           .map((attempt) => attempt.worktree),
@@ -1303,8 +1310,14 @@ export async function createParallelPlan(
           store.attempts.filter((attempt) => attempt.planId === stalePlan.planId),
         ),
       ];
-      staleWithWorktrees.push(...paths.filter((path): path is string =>
-        !!path && registered.has(resolve(path)) && isUnderManagedRoot(path, binding, stalePlan)));
+      for (const path of paths) {
+        if (!path) continue;
+        const canonicalPath = await canonicalWorkspacePath(path);
+        if (registered.has(canonicalPath)
+          && isUnderManagedRoot(canonicalPath, canonicalBinding, stalePlan)) {
+          staleWithWorktrees.push(path);
+        }
+      }
     }
     if (staleWithWorktrees.length) {
       domain('PARALLEL_STALE_WORKTREES_PRESENT', 'stale managed worktrees must be cleaned before plan creation.');

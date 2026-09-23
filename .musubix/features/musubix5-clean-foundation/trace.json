@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-23T12:27:48.963Z",
+  "generatedAt": "2026-09-23T13:13:34.128Z",
   "nodes": [
     {
       "id": "CODE-M5-NPM-PUBLISH-WORKFLOW-YAML-001",
@@ -1102,37 +1102,37 @@
       "id": "CODE-M5-PARALLEL-RUNTIME-PLAN-001",
       "kind": "code",
       "path": "packages/analysis/src/parallel-runtime.ts",
-      "line": 1244
+      "line": 1247
     },
     {
       "id": "CODE-M5-PARALLEL-RUNTIME-ASSIGNMENT-001",
       "kind": "code",
       "path": "packages/analysis/src/parallel-runtime.ts",
-      "line": 1358
+      "line": 1371
     },
     {
       "id": "CODE-M5-PARALLEL-RUNTIME-INTEGRATION-001",
       "kind": "code",
       "path": "packages/analysis/src/parallel-runtime.ts",
-      "line": 1708
+      "line": 1721
     },
     {
       "id": "CODE-M5-PARALLEL-PLAN-001",
       "kind": "code",
       "path": "packages/analysis/src/parallel.ts",
-      "line": 178
+      "line": 198
     },
     {
       "id": "CODE-M5-PARALLEL-ASSIGNMENT-001",
       "kind": "code",
       "path": "packages/analysis/src/parallel.ts",
-      "line": 346
+      "line": 366
     },
     {
       "id": "CODE-M5-PARALLEL-INTEGRATION-001",
       "kind": "code",
       "path": "packages/analysis/src/parallel.ts",
-      "line": 590
+      "line": 610
     },
     {
       "id": "CODE-M5-PLANNER-001",
@@ -1342,37 +1342,37 @@
       "id": "CODE-M5-COMPAT-001",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 199
+      "line": 209
     },
     {
       "id": "CODE-M5-PARALLEL-INTEGRATION-TRACE-001",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 292
+      "line": 302
     },
     {
       "id": "CODE-M5-PARALLEL-CLI-001",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 360
+      "line": 370
     },
     {
       "id": "CODE-M5-BOOTSTRAP-CLI-001",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 1218
+      "line": 1228
     },
     {
       "id": "CODE-M5-CLI-ERROR-ENVELOPE-001",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 1277
+      "line": 1287
     },
     {
       "id": "CODE-M5-CLI-BIN-ENTRY-001",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 1301
+      "line": 1311
     },
     {
       "id": "CODE-M5-COMPAT-006",
@@ -1810,25 +1810,25 @@
       "id": "TEST-M5-PARALLEL-REAL-GATE-SUCCESS-001",
       "kind": "test",
       "path": "tests/parallel-final-findings-generation5.test.ts",
-      "line": 343
+      "line": 344
     },
     {
       "id": "TEST-M5-PARALLEL-INTEGRATION-CONTROL-EVIDENCE-001",
       "kind": "test",
       "path": "tests/parallel-final-findings-generation5.test.ts",
-      "line": 368
+      "line": 369
     },
     {
       "id": "TEST-M5-PARALLEL-FULL-SUCCESS-001",
       "kind": "test",
       "path": "tests/parallel-final-findings-generation5.test.ts",
-      "line": 405
+      "line": 406
     },
     {
       "id": "TEST-M5-PARALLEL-RUNTIME-EIGHT-WRITERS-001",
       "kind": "test",
       "path": "tests/parallel-final-findings-generation5.test.ts",
-      "line": 427
+      "line": 428
     },
     {
       "id": "TEST-M5-PARALLEL-OWNERSHIP-HISTORY-001",
@@ -1876,13 +1876,13 @@
       "id": "TEST-M5-PARALLEL-CONSUMER-CLI-001",
       "kind": "test",
       "path": "tests/parallel-release-blockers-generation5.test.ts",
-      "line": 181
+      "line": 210
     },
     {
       "id": "TEST-M5-PARALLEL-HANDOFF-EVIDENCE-DIRTY-001",
       "kind": "test",
       "path": "tests/parallel-release-blockers-generation5.test.ts",
-      "line": 204
+      "line": 233
     },
     {
       "id": "TEST-M5-TDD-SPLIT-ROOT-FINGERPRINT-001",
@@ -1963,64 +1963,70 @@
       "line": 296
     },
     {
+      "id": "TEST-M5-PARALLEL-CROSS-PLATFORM-WORKTREE-001",
+      "kind": "test",
+      "path": "tests/parallel-runtime-regression.test.ts",
+      "line": 20
+    },
+    {
       "id": "TEST-M5-PARALLEL-RETRY-002",
       "kind": "test",
       "path": "tests/parallel-runtime-regression.test.ts",
-      "line": 15
+      "line": 71
     },
     {
       "id": "TEST-M5-PARALLEL-SPLIT-ROOT-001",
       "kind": "test",
       "path": "tests/parallel-runtime-regression.test.ts",
-      "line": 26
+      "line": 82
     },
     {
       "id": "TEST-M5-PARALLEL-DETACHED-VERIFY-001",
       "kind": "test",
       "path": "tests/parallel-runtime-regression.test.ts",
-      "line": 60
+      "line": 116
     },
     {
       "id": "TEST-M5-PARALLEL-FENCING-001",
       "kind": "test",
       "path": "tests/parallel-runtime-regression.test.ts",
-      "line": 86
+      "line": 142
     },
     {
       "id": "TEST-M5-PARALLEL-PROVENANCE-001",
       "kind": "test",
       "path": "tests/parallel-runtime-regression.test.ts",
-      "line": 111
+      "line": 167
     },
     {
       "id": "TEST-M5-PARALLEL-STALE-CLEANUP-001",
       "kind": "test",
       "path": "tests/parallel-runtime-regression.test.ts",
-      "line": 141
+      "line": 197
     },
     {
       "id": "TEST-M5-PARALLEL-LIFECYCLE-MAPPING-001",
       "kind": "test",
       "path": "tests/parallel-runtime-regression.test.ts",
-      "line": 160
+      "line": 216
     },
     {
       "id": "TEST-M5-PARALLEL-WORKTREE-SAFETY-001",
       "kind": "test",
       "path": "tests/parallel-runtime-regression.test.ts",
-      "line": 180
+      "line": 236
     },
     {
       "id": "TEST-M5-PARALLEL-INTEGRATION-SEMANTICS-002",
       "kind": "test",
       "path": "tests/parallel-runtime-regression.test.ts",
-      "line": 200
+      "line": 256
     },
     {
       "id": "TEST-M5-PARALLEL-RUNTIME-CONCURRENCY-001",
       "kind": "test",
       "path": "tests/parallel-runtime-regression.test.ts",
-      "line": 218
+      "line": 274
     },
     {
       "id": "TEST-M5-PARALLEL-SCAFFOLD-PROVISION-001",
@@ -2362,7 +2368,7 @@
       "id": "TEST-M5-WORKFLOW-DECLARATION-CORRECTION-CLI-ERROR-001",
       "kind": "test",
       "path": "tests/workflow-declaration-correction-cli-errors.test.ts",
-      "line": 132
+      "line": 134
     },
     {
       "id": "TEST-M5-WORKFLOW-DECLARATION-CORRECTION-WAIVER-001",
@@ -2404,19 +2410,19 @@
       "id": "TEST-M5-WORKFLOW-DECLARATION-CORRECTION-001",
       "kind": "test",
       "path": "tests/workflow-declaration-correction.test.ts",
-      "line": 33
+      "line": 37
     },
     {
       "id": "TEST-M5-WORKFLOW-DECLARATION-CORRECTION-CLI-001",
       "kind": "test",
       "path": "tests/workflow-declaration-correction.test.ts",
-      "line": 132
+      "line": 136
     },
     {
       "id": "TEST-M5-WORKFLOW-DECLARATION-CORRECTION-SCHEMA-001",
       "kind": "test",
       "path": "tests/workflow-declaration-correction.test.ts",
-      "line": 261
+      "line": 271
     },
     {
       "id": "TEST-M5-EVIDENCE-006",
@@ -7286,6 +7292,26 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-PARALLEL-CROSS-PLATFORM-WORKTREE-001",
+      "to": "REQ-M5-WORKTREE-001",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-PARALLEL-CROSS-PLATFORM-WORKTREE-001",
+      "to": "REQ-M5-PARALLEL-004",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-PARALLEL-CROSS-PLATFORM-WORKTREE-001",
+      "to": "REQ-M5-PARALLEL-010",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-PARALLEL-CROSS-PLATFORM-WORKTREE-001",
+      "to": "REQ-M5-PARALLEL-012",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-PARALLEL-RETRY-002",
       "to": "REQ-M5-PARALLEL-015",
       "relation": "verifies"
@@ -8069,12 +8095,12 @@
     "packages/analysis/src/mutation.ts": "87fcc7a0ef44b43a093c941319d7d6d600314d3ca2c4d94abddcb6c247c1dd9b",
     "packages/analysis/src/native-approval.ts": "bd6bba0231389ada6758213a90be9a6cfde96e45e89dc9776d9d4e46e2951c53",
     "packages/analysis/src/order.ts": "712ef698e5136da577602a9e603cbd59fe84f237ccda712cdcc9d2c6dd2335aa",
-    "packages/analysis/src/parallel-runtime.ts": "471e7f4a88212bf46f2149347647463e94c7af3f27f8b73afa11284d32207264",
+    "packages/analysis/src/parallel-runtime.ts": "eefcfdbf1b2d950f53ae0260c0d6b9aeca80b1effd775fa608a0e632ded48f04",
     "packages/analysis/src/parallel-tdd-evidence.ts": "5968a550696b4f93c70bfd322f18afcf70f5e8dc04b888241fc76acc94a116ea",
-    "packages/analysis/src/parallel.ts": "15de35318ca8621b146ac8f2b7503d16af95b5634a935d7f54385d0a5a85c926",
+    "packages/analysis/src/parallel.ts": "a9c16e00fcb6b5467b054b6543398fcf2d1ea0516d0fc75167fe38fef8019934",
     "packages/analysis/src/performance.ts": "a51c388499c57f177ebc4a6d5a160d7fb07550626b24a9c987b6b0d17e96ebe7",
     "packages/analysis/src/planner-output.ts": "c649e484d064c2fc5078bcbc21a08e49746feae179e26de99d92bae17ffe9a5c",
-    "packages/analysis/src/process.ts": "1e020bfa5d42a5f8c74efd601582b45f4d4afb1ae4be8cc71a9f38577eaf6097",
+    "packages/analysis/src/process.ts": "675e76428f4e78e631fe1cbf9cddee298c93576d43fc63a5e977ff044b32d5d4",
     "packages/analysis/src/quality-policy.ts": "0ba33ac06b4762e0f398e04fd6c8975c7db6380f20080fc3dc89a701759fcd89",
     "packages/analysis/src/release-manifest.ts": "e0be5c37e24dafab86606f15e48e40704794c9dd5ad19f150fc3386d554e6e39",
     "packages/analysis/src/release-operation-guard.ts": "3eb0edb8a82dde1085fbb1f00869bf527003e37c28344fbb997fbb4ed044c318",
@@ -8091,7 +8117,7 @@
     "packages/analysis/src/workflow.ts": "9d0e551e55dc7865d1e82f7e2a4d4e7d8db8846f0b584fd512cf19f5d0a0964c",
     "packages/analysis/src/workspace-manager.ts": "9c5cf8b137be42914e79784a7a5414ba48eb26d454e5a07df24eb264f5757576",
     "packages/cli/src/install.ts": "4b33a24e19958e2c88af806dc1261f4f4a74d6e56cb9fe95c0dabf7cc20cef7f",
-    "packages/cli/src/main.ts": "3af0760aa5b638b29a99b9329fc3bc2088120e8aef3773672bf946ad3f79e8c1",
+    "packages/cli/src/main.ts": "75370b9b1b9c93ca9cfd0a294091c489bd91596c79a4935b040e095fd14fe67f",
     "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
     "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
     "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
@@ -8145,13 +8171,13 @@
     "tests/package-contract.test.ts": "3536d366dd871d09d1e6633b14f54354aed82349f3269de119cfcba40354dd1c",
     "tests/parallel-consumer-policy-generation5.test.ts": "075446948f66ad29d4aa87a3fd94cfd7de49787a2cf0c153ec1c1047f444d00a",
     "tests/parallel-development.test.ts": "6d49970e05e0cac6f500c06ac75f4bd4dd7fcab1810b29c9fb41fd89733a0383",
-    "tests/parallel-final-findings-generation5.test.ts": "6258ca446f259ddf5a2f40c5219722080dc7a27bc2a9df0f5a2b270d6d213175",
+    "tests/parallel-final-findings-generation5.test.ts": "a069921b6748bf138644d266eb875560a17c7bb7cdbf5cbf6a1ad4c8d8bd86fd",
     "tests/parallel-ownership-history-generation5.test.ts": "5cc0f366a22059d1eafe81d4f22ad41e68b5ecdffa6accf6f824b00835e6311b",
     "tests/parallel-quality-regressions.test.ts": "78d184810a9dfab27f2c36cbbd8d8bb88f2ab3e9545ae7f86629fcb43d56ae97",
-    "tests/parallel-release-blockers-generation5.test.ts": "64ff851cc11a6e9c317607343a5eda3c7460448b8da8f9226f784813087219fb",
+    "tests/parallel-release-blockers-generation5.test.ts": "8739007ad5fbe19451cf1e6e2abba2265f1c1435a35e9e05164e927360bbefdc",
     "tests/parallel-review-regressions.test.ts": "b0ddb63c6f2a4fc41dd7b959b971c4cff8a2cc87f665a5ca2e42652b6cfc5423",
     "tests/parallel-runtime-lifecycle-generation5.test.ts": "66a6fb7e09b6ac620d30cc4c92f9c1fcbfdf79dab9c9109cca7cfa97314b9ea0",
-    "tests/parallel-runtime-regression.test.ts": "76ca8591362119c654a0dfdb47a4bbec88c8b3bf53a04b52753743795c0c7fdc",
+    "tests/parallel-runtime-regression.test.ts": "ebf08cf56639f7dac7c851a820419b4cbbbac5a8e4505b9da8b116b275a5b084",
     "tests/parallel-scaffold-policy-generation5.test.ts": "e66329e655a000b3b7131a74415223f5b903ea40f258d6a40169fcc407de9aae",
     "tests/parallel-skill-contract-generation5.test.ts": "7f923e5b793a8f45d2f6a3701a78167d5bf1db4649f03dffc0e4f4b98dc05001",
     "tests/planner-retry-identity.test.ts": "ee672f87e7528154f1842e7d0acdc70bfed742378119bb26be9e526bf6819b91",
@@ -8183,9 +8209,9 @@
     "tests/tdd-generation-scope.test.ts": "92f90da7113769a0d900bd24665a5665d08e61e39fc7c3df7913629ad634e35a",
     "tests/trace-namespace.test.ts": "ace3b8880a0dbc1b143108986c63f292a7e19acff1a72055cbb5015204488a6c",
     "tests/workflow-change-owner.test.ts": "3bdbbc5fb5b497b120ce17aa938faab01b6b4fef48027d387982178141471f59",
-    "tests/workflow-declaration-correction-cli-errors.test.ts": "6ce992069e3501924640338d0b4319337923655e539210bfd6a1d6b8bc386ee2",
+    "tests/workflow-declaration-correction-cli-errors.test.ts": "2e2a2da3eba02ec20cad9200987b4f43db959cd38711e3a8a327788978dac019",
     "tests/workflow-declaration-correction-regressions.test.ts": "4a5f75009254776b002102e4878d8767f31471974e75c4a0fa7905f6d9d75df6",
-    "tests/workflow-declaration-correction.test.ts": "c42073d5c0dd55a4c3aacc0d711d5ac5311d3c44549f472ca66df9461075c5ee",
+    "tests/workflow-declaration-correction.test.ts": "ee71bf770c3b6e6656e20776a7ab775ae795aee1957d311335fe918d8da4b628",
     "tests/workflow-generation-reconciliation.test.ts": "897e85fd1cdb51b09310b14ba038e6b46cd0ef9230239de0d23f95fd17e30152",
     "tests/workspace-isolation.test.ts": "2b2fb7376f1834916cc56b244fea870efa6ae40b78164a5c35b5ccb3db9ab923",
     "tests/workspace-ownership.test.ts": "29a82dab0567a09e186c127b8f25fe33a73d7a4943154acb01566382ac66744c",

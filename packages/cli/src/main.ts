@@ -105,7 +105,17 @@ async function withWorkspaceRoot<T>(
   const controlRoot = resolve(rootOption);
   if (workspaceOption === undefined) return action(controlRoot);
   const workspace = resolve(workspaceOption);
-  if (workspace === controlRoot) return action(controlRoot);
+  let sameWorkspace = workspace === controlRoot;
+  if (!sameWorkspace) {
+    try {
+      sameWorkspace = realpathSync(workspace) === realpathSync(controlRoot);
+    } catch (cause) {
+      if ((cause as NodeJS.ErrnoException).code !== 'ENOENT') throw cause;
+    }
+  }
+  if (sameWorkspace) {
+    return action(controlRoot);
+  }
   const controlState = resolve(controlRoot, '.musubix');
   const workspaceState = resolve(workspace, '.musubix');
   const backupRoot = await mkdtemp(resolve(dirname(workspace), '.musubix5-workspace-state-'));

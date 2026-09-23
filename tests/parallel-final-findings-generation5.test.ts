@@ -174,7 +174,7 @@ async function createSplitRootLifecycleFixture(options: { stubCli?: boolean } = 
   ].join('\n'));
   if (options.stubCli !== false) {
     writeFixtureFile(fixture.root, 'dist/packages/cli/src/main.js', [
-      "import { appendFileSync, existsSync, readFileSync } from 'node:fs';",
+      "import { appendFileSync, existsSync, readFileSync, realpathSync } from 'node:fs';",
       "import { resolve } from 'node:path';",
       `const controlRoot = ${JSON.stringify(fixture.root)};`,
       `const log = ${JSON.stringify(commandLog)};`,
@@ -186,8 +186,9 @@ async function createSplitRootLifecycleFixture(options: { stubCli?: boolean } = 
       "appendFileSync(log, `${JSON.stringify({ kind: 'check', args, cwd: process.cwd(), root, workspace })}\\n`);",
       "const evidence = root && existsSync(resolve(root, '.musubix/evidence/tdd.json'));",
       "const green = workspace && readFileSync(resolve(workspace, 'packages/core/value.ts'), 'utf8').includes('green');",
+      "const samePath = (left, right) => left && right && realpathSync(left) === realpathSync(right);",
       "if (args[0] === 'status') console.log(JSON.stringify({ initialized: true, gate: { status: 'fail', ready: false } }));",
-      "process.exit(root === controlRoot && workspace === resolve(process.cwd()) && evidence && green ? 0 : 1);",
+      "process.exit(samePath(root, controlRoot) && samePath(workspace, process.cwd()) && evidence && green ? 0 : 1);",
       '',
     ].join('\n'));
   }

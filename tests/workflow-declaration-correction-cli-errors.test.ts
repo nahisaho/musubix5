@@ -9,6 +9,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 
 import { defaultConfig } from '../packages/analysis/src/config.js';
 import { digest } from '../packages/analysis/src/files.js';
+import { resolvePortableNpmInvocation } from '../packages/analysis/src/process.js';
 
 const repositoryRoot = fileURLToPath(new URL('..', import.meta.url));
 const binary = resolve(repositoryRoot, 'dist/packages/cli/src/main.js');
@@ -115,7 +116,8 @@ function run(root: string, code: string, recordedAt: string) {
 }
 
 beforeAll(() => {
-  execFileSync('npm', ['run', 'build'], { cwd: repositoryRoot, stdio: 'pipe' });
+  const npm = resolvePortableNpmInvocation(['run', 'build'], 'Windows');
+  execFileSync(npm.command, npm.args, { cwd: repositoryRoot, stdio: 'pipe' });
 });
 
 afterEach(() => {
@@ -134,6 +136,7 @@ describe('workflow declaration correction CLI errors', () => {
    * @verifies REQ-M5-COMPAT-013
    */
   it('TEST-M5-WORKFLOW-DECLARATION-CORRECTION-CLI-ERROR-001 maps unsupported codes and malformed timestamps to CLI_ERROR exit 2', () => {
+    expect(resolvePortableNpmInvocation([], 'Windows').command).toBe(process.execPath);
     const root = fixture();
     const unsupported = run(root, 'WORKFLOW_SKILL_NOT_INVOKED', '2026-09-23T00:00:03.000Z');
     const malformed = run(root, 'WORKFLOW_INVOCATION_REUSED', 'not-a-timestamp');
