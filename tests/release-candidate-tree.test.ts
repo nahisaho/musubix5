@@ -55,6 +55,15 @@ describe('release candidate tree approval', () => {
 
     const workspace = await import('../packages/analysis/src/workspace-manager.js');
     const approval = await import('../packages/analysis/src/approval.js');
+    const releaseCandidateChangeId = (
+      approval as unknown as Record<string, unknown>
+    ).releaseCandidateChangeId;
+    expect(releaseCandidateChangeId).toBeTypeOf('function');
+    expect((releaseCandidateChangeId as (
+      requested: string | undefined,
+      active: { changeId: string } | null,
+    ) => string | undefined)(undefined, { changeId: 'CHANGE-0002' }))
+      .toBe('CHANGE-0002');
     await workspace.persistCandidateSnapshot(root, 'CHANGE-0002');
     const manifest = await approval.approvalManifest(root, 'release');
 

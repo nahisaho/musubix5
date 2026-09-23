@@ -82,6 +82,13 @@ export function approvalPath(stage: ApprovalStage, domain?: string): string {
 const featureRequirementsPattern = /^\.musubix\/features\/([^/]+)\/requirements\.md$/;
 const featureDesignPattern = /^\.musubix\/features\/([^/]+)\/design\.md$/;
 
+export function releaseCandidateChangeId(
+  requestedChangeId: string | undefined,
+  activeChange: { changeId: string } | null,
+): string | undefined {
+  return requestedChangeId ?? activeChange?.changeId;
+}
+
 export async function approvalManifest(
   root: string,
   stage: ApprovalStage,
@@ -136,7 +143,10 @@ export async function approvalManifest(
     };
   }
   if (stage === 'release') {
-    const content = await buildReleaseCandidateContent(root, releaseChangeId);
+    const content = await buildReleaseCandidateContent(
+      root,
+      releaseCandidateChangeId(releaseChangeId, activeChange),
+    );
     const hasChangeEvidence = await exists(within(root, '.musubix/evidence/changes.json'));
     if (hasChangeEvidence && (!activeChange || activeChange.changeId !== content.changeId)) {
       throw new Error('CHANGE_GENERATION_INCOMPLETE: release approval requires the matching active CHANGE generation.');
