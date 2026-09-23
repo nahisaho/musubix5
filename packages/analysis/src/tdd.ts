@@ -151,10 +151,19 @@ function collectStatements(node: ts.Node, out: ts.Statement[]): void {
   ts.forEachChild(node, (child) => collectStatements(child, out));
 }
 
+export function sourceLineStartOffset(text: string, line: number): number {
+  let offset = 0;
+  for (let current = 1; current < line; current += 1) {
+    const newline = text.indexOf('\n', offset);
+    if (newline < 0) return text.length;
+    offset = newline + 1;
+  }
+  return offset;
+}
+
 async function testFingerprint(root: string, test: TraceNode): Promise<string> {
   const text = await readText(root, test.path);
-  const lines = text.split(/\r?\n/);
-  const start = lines.slice(0, Math.max(0, test.line - 1)).join('\n').length + (test.line > 1 ? 1 : 0);
+  const start = sourceLineStartOffset(text, test.line);
   if (isSource(test.path)) {
     const source = ts.createSourceFile(test.path, text, ts.ScriptTarget.Latest, true);
     const statements: ts.Statement[] = [];

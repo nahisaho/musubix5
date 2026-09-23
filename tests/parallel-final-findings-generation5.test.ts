@@ -362,6 +362,15 @@ describe('CHANGE-0003 generation 5 final parallel findings', () => {
       ['cli.js', 'gate'],
       { stdout: 'gate detail', stderr: '' },
     )).toContain('gate-changed: gate detail');
+    const tdd = await import('../packages/analysis/src/tdd.js');
+    const sourceLineStartOffset = (
+      tdd as unknown as Record<string, unknown>
+    ).sourceLineStartOffset;
+    expect(sourceLineStartOffset).toBeTypeOf('function');
+    expect((sourceLineStartOffset as (text: string, line: number) => number)(
+      'first\r\nsecond\r\n',
+      2,
+    )).toBe(7);
     const plan = await runtime.createParallelPlan(fixture.root, fixture.planFile);
     await runtime.prepareParallelPlanRuntime(fixture.root, plan.planId);
     const instruction = await runtime.issueParallelAssignmentInstruction(fixture.root, plan.planId, 'core');

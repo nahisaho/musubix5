@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-23T13:58:50.560Z",
+  "generatedAt": "2026-09-23T14:08:29.869Z",
   "nodes": [
     {
       "id": "CODE-M5-NPM-PUBLISH-WORKFLOW-YAML-001",
@@ -1099,22 +1099,28 @@
       "line": 318
     },
     {
+      "id": "CODE-M5-PARALLEL-INTEGRATION-DIAGNOSTIC-001",
+      "kind": "code",
+      "path": "packages/analysis/src/parallel-runtime.ts",
+      "line": 825
+    },
+    {
       "id": "CODE-M5-PARALLEL-RUNTIME-PLAN-001",
       "kind": "code",
       "path": "packages/analysis/src/parallel-runtime.ts",
-      "line": 1257
+      "line": 1261
     },
     {
       "id": "CODE-M5-PARALLEL-RUNTIME-ASSIGNMENT-001",
       "kind": "code",
       "path": "packages/analysis/src/parallel-runtime.ts",
-      "line": 1381
+      "line": 1385
     },
     {
       "id": "CODE-M5-PARALLEL-RUNTIME-INTEGRATION-001",
       "kind": "code",
       "path": "packages/analysis/src/parallel-runtime.ts",
-      "line": 1731
+      "line": 1735
     },
     {
       "id": "CODE-M5-PARALLEL-PLAN-001",
@@ -1816,19 +1822,19 @@
       "id": "TEST-M5-PARALLEL-INTEGRATION-CONTROL-EVIDENCE-001",
       "kind": "test",
       "path": "tests/parallel-final-findings-generation5.test.ts",
-      "line": 384
+      "line": 393
     },
     {
       "id": "TEST-M5-PARALLEL-FULL-SUCCESS-001",
       "kind": "test",
       "path": "tests/parallel-final-findings-generation5.test.ts",
-      "line": 421
+      "line": 430
     },
     {
       "id": "TEST-M5-PARALLEL-RUNTIME-EIGHT-WRITERS-001",
       "kind": "test",
       "path": "tests/parallel-final-findings-generation5.test.ts",
-      "line": 443
+      "line": 452
     },
     {
       "id": "TEST-M5-PARALLEL-OWNERSHIP-HISTORY-001",
@@ -5232,6 +5238,16 @@
       "relation": "implements"
     },
     {
+      "from": "CODE-M5-PARALLEL-INTEGRATION-DIAGNOSTIC-001",
+      "to": "REQ-M5-PARALLEL-010",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-PARALLEL-INTEGRATION-DIAGNOSTIC-001",
+      "to": "DES-M5-PARALLEL-007",
+      "relation": "implements"
+    },
+    {
       "from": "CODE-M5-PARALLEL-RUNTIME-PLAN-001",
       "to": "REQ-M5-PARALLEL-001",
       "relation": "implements"
@@ -8105,7 +8121,7 @@
     "packages/analysis/src/mutation.ts": "87fcc7a0ef44b43a093c941319d7d6d600314d3ca2c4d94abddcb6c247c1dd9b",
     "packages/analysis/src/native-approval.ts": "bd6bba0231389ada6758213a90be9a6cfde96e45e89dc9776d9d4e46e2951c53",
     "packages/analysis/src/order.ts": "712ef698e5136da577602a9e603cbd59fe84f237ccda712cdcc9d2c6dd2335aa",
-    "packages/analysis/src/parallel-runtime.ts": "d518f7d8970d9d2f8d2956ec96edfe167b877d4aeafd0630f089d612475490c4",
+    "packages/analysis/src/parallel-runtime.ts": "1a15dbea2c162a9682773a36d130a92edd7f196bee22875a0ecb1a6a5935d13e",
     "packages/analysis/src/parallel-tdd-evidence.ts": "5968a550696b4f93c70bfd322f18afcf70f5e8dc04b888241fc76acc94a116ea",
     "packages/analysis/src/parallel.ts": "ac698520f8a60dcae907c4da7ec6bf53d920003a6db3ab8470d04252bdabcdae",
     "packages/analysis/src/performance.ts": "a51c388499c57f177ebc4a6d5a160d7fb07550626b24a9c987b6b0d17e96ebe7",
@@ -8118,7 +8134,7 @@
     "packages/analysis/src/run-local-workspace.ts": "351ae9df02dfab13b58ae86f7619d68885457093a7a4b33c4070807d52324007",
     "packages/analysis/src/scaffold-artifact.ts": "8734de778f121421b3fcfbf5263611bfcffc94cf63248ef3f127459bdfa4f692",
     "packages/analysis/src/tdd-cycle-resolver.ts": "9098bc74830c1907492da8e08c9fa806550a135554fe41b37998bb344ffffc78",
-    "packages/analysis/src/tdd.ts": "d66453af28bf27e3ed20c8112d816cb9d3ab0536ad49350bac8816b7d834c8ed",
+    "packages/analysis/src/tdd.ts": "2dc961c55055b1ff6c4c46fdc52a9e73ed6e6eb4243ca9072f2094ac013931ed",
     "packages/analysis/src/test-report.ts": "c4389c1a73b8ff61beae2061c1eaaeeadc4c5cc529befc059111ea5430d602c4",
     "packages/analysis/src/trace.ts": "270f0348e850d2eb8de81802bc0206f32acdc9b86556bf6cad76dc481799bfa2",
     "packages/analysis/src/workflow-correction.ts": "63fddf07315b8af34b7a96a542c68f82eee5ba8a321795a24bafe1ca8033e2f6",
@@ -8182,7 +8198,7 @@
     "tests/package-contract.test.ts": "3536d366dd871d09d1e6633b14f54354aed82349f3269de119cfcba40354dd1c",
     "tests/parallel-consumer-policy-generation5.test.ts": "075446948f66ad29d4aa87a3fd94cfd7de49787a2cf0c153ec1c1047f444d00a",
     "tests/parallel-development.test.ts": "6d49970e05e0cac6f500c06ac75f4bd4dd7fcab1810b29c9fb41fd89733a0383",
-    "tests/parallel-final-findings-generation5.test.ts": "83ad91f15e5828da5ddf11c6bc55cf5fc63355a7836b5b9104ea8b9fd81e2688",
+    "tests/parallel-final-findings-generation5.test.ts": "1cf97d5ed60cd7bd90af68635cbbd65aac0304e975c836ed89b8712f50b08531",
     "tests/parallel-ownership-history-generation5.test.ts": "5cc0f366a22059d1eafe81d4f22ad41e68b5ecdffa6accf6f824b00835e6311b",
     "tests/parallel-quality-regressions.test.ts": "78d184810a9dfab27f2c36cbbd8d8bb88f2ab3e9545ae7f86629fcb43d56ae97",
     "tests/parallel-release-blockers-generation5.test.ts": "8739007ad5fbe19451cf1e6e2abba2265f1c1435a35e9e05164e927360bbefdc",

@@ -822,6 +822,10 @@ function integrationStatusAcceptable(result: ProcessResult): boolean {
   }
 }
 
+/** @id CODE-M5-PARALLEL-INTEGRATION-DIAGNOSTIC-001
+ * @implements REQ-M5-PARALLEL-010
+ * @design DES-M5-PARALLEL-007
+ */
 export function formatIntegrationVerificationFailure(
   name: string,
   command: string,
