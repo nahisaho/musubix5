@@ -18462,6 +18462,51 @@
         "diagnostics": [],
         "order": 1524
       }
+    },
+    {
+      "cycleId": "87e80f67-aca2-420a-96ad-1df0d9843212",
+      "changeId": "CHANGE-0003",
+      "generation": 5,
+      "requirementId": "REQ-M5-PARALLEL-010",
+      "testId": "TEST-M5-PARALLEL-REAL-GATE-SUCCESS-001",
+      "testPath": "tests/parallel-final-findings-generation5.test.ts",
+      "commandName": "test",
+      "red": {
+        "phase": "red",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "failed",
+        "reportSha256": "017ac33efe634364d365e96ebc1e1d5f1fbc9bc4105317b7485e1b318af1f578",
+        "commandSha256": "b1941bb0486416744cb31cbbae031260ef3b989d74b9c2404f3591f99653a474",
+        "outputSha256": "b0c4b55fdcd9b136abe7268c52337a756419364958b9bb04094dfbb1cad46690",
+        "exitCode": 1,
+        "durationMs": 2856,
+        "testFingerprint": "796692ce892ce426a6894a20c94b8b05bc112f0051e07fcc5b58b265afeceaff",
+        "sourceFingerprint": "051ae1539aeaf0daee5177153e84b85afdb14817a3e92de2a0ff3023d529b56e",
+        "executionId": "ecc4f9ad-09d9-4247-9e18-a1d97526e73e",
+        "recordedAt": "2026-09-23T14:14:25.764Z",
+        "diagnostics": [],
+        "order": 1527
+      },
+      "green": {
+        "phase": "green",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "passed",
+        "reportSha256": "4d148423ad608c39d22dfcc69dc5dfe1c695b47312e03dc67a595f89cc8ab49a",
+        "commandSha256": "b1941bb0486416744cb31cbbae031260ef3b989d74b9c2404f3591f99653a474",
+        "outputSha256": "b0c4b55fdcd9b136abe7268c52337a756419364958b9bb04094dfbb1cad46690",
+        "exitCode": 0,
+        "durationMs": 7817,
+        "testFingerprint": "796692ce892ce426a6894a20c94b8b05bc112f0051e07fcc5b58b265afeceaff",
+        "sourceFingerprint": "8a02203ebdbd3cda7a646c0ffe01cdb23acd862eb828c95f90a95fec817ae97d",
+        "executionId": "4d0f8287-88e3-4ecb-804a-161f64222df3",
+        "recordedAt": "2026-09-23T14:14:56.027Z",
+        "diagnostics": [],
+        "order": 1530
+      }
     }
   ],
   "chain": [
@@ -29428,6 +29473,34 @@
       "phaseEvidenceSha256": "93cd9c4cb81673c64be5129b7f253cd2cfe2ffdf97258f454f901ad0004727d1",
       "previousSha256": "2df286a425552bea45bccf3ed6cd0c5183103432c164421ac0955ee8aad0c691",
       "recordSha256": "9dd68f3abc21a002c36d974f5d60b45b6059da7764dbc6a103162601c2a19dbc"
+    },
+    {
+      "sequence": 830,
+      "cycleId": "87e80f67-aca2-420a-96ad-1df0d9843212",
+      "changeId": "CHANGE-0003",
+      "generation": 5,
+      "requirementId": "REQ-M5-PARALLEL-010",
+      "testId": "TEST-M5-PARALLEL-REAL-GATE-SUCCESS-001",
+      "testPath": "tests/parallel-final-findings-generation5.test.ts",
+      "commandName": "test",
+      "phase": "red",
+      "phaseEvidenceSha256": "9755b0d25ca8264a06f6ef22e9ede7f25eb6fb89b3814d0d10cc95d64eecd3a9",
+      "previousSha256": "9dd68f3abc21a002c36d974f5d60b45b6059da7764dbc6a103162601c2a19dbc",
+      "recordSha256": "1e810bd98493cf69798c01367ae817ffec858b8cb2ed7cf7c166ddeb1d65a000"
+    },
+    {
+      "sequence": 831,
+      "cycleId": "87e80f67-aca2-420a-96ad-1df0d9843212",
+      "changeId": "CHANGE-0003",
+      "generation": 5,
+      "requirementId": "REQ-M5-PARALLEL-010",
+      "testId": "TEST-M5-PARALLEL-REAL-GATE-SUCCESS-001",
+      "testPath": "tests/parallel-final-findings-generation5.test.ts",
+      "commandName": "test",
+      "phase": "green",
+      "phaseEvidenceSha256": "359473cd81d4371b2570030751dee7b73cf9f871e912484ad33478d3da33a142",
+      "previousSha256": "1e810bd98493cf69798c01367ae817ffec858b8cb2ed7cf7c166ddeb1d65a000",
+      "recordSha256": "30e4f9fe007f7296576641a49fda8082a5fce9d1ff48fb40f1888514334bf456"
     }
   ]
 }

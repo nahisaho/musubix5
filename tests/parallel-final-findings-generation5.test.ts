@@ -371,6 +371,13 @@ describe('CHANGE-0003 generation 5 final parallel findings', () => {
       'first\r\nsecond\r\n',
       2,
     )).toBe(7);
+    const canonicalTestFingerprintText = (
+      tdd as unknown as Record<string, unknown>
+    ).canonicalTestFingerprintText;
+    expect(canonicalTestFingerprintText).toBeTypeOf('function');
+    expect((canonicalTestFingerprintText as (text: string) => string)(
+      'first\r\nsecond\rthird',
+    )).toBe('first\nsecond\nthird');
     const plan = await runtime.createParallelPlan(fixture.root, fixture.planFile);
     await runtime.prepareParallelPlanRuntime(fixture.root, plan.planId);
     const instruction = await runtime.issueParallelAssignmentInstruction(fixture.root, plan.planId, 'core');

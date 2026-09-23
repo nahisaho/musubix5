@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-23T14:08:29.869Z",
+  "generatedAt": "2026-09-23T14:16:09.977Z",
   "nodes": [
     {
       "id": "CODE-M5-NPM-PUBLISH-WORKFLOW-YAML-001",
@@ -1279,6 +1279,12 @@
       "line": 107
     },
     {
+      "id": "CODE-M5-TDD-EOL-FINGERPRINT-001",
+      "kind": "code",
+      "path": "packages/analysis/src/tdd.ts",
+      "line": 164
+    },
+    {
       "id": "CODE-M5-WORKFLOW-DECLARATION-CORRECTION-001",
       "kind": "code",
       "path": "packages/analysis/src/workflow-correction.ts",
@@ -1822,19 +1828,19 @@
       "id": "TEST-M5-PARALLEL-INTEGRATION-CONTROL-EVIDENCE-001",
       "kind": "test",
       "path": "tests/parallel-final-findings-generation5.test.ts",
-      "line": 393
+      "line": 400
     },
     {
       "id": "TEST-M5-PARALLEL-FULL-SUCCESS-001",
       "kind": "test",
       "path": "tests/parallel-final-findings-generation5.test.ts",
-      "line": 430
+      "line": 437
     },
     {
       "id": "TEST-M5-PARALLEL-RUNTIME-EIGHT-WRITERS-001",
       "kind": "test",
       "path": "tests/parallel-final-findings-generation5.test.ts",
-      "line": 452
+      "line": 459
     },
     {
       "id": "TEST-M5-PARALLEL-OWNERSHIP-HISTORY-001",
@@ -5918,6 +5924,21 @@
       "relation": "implements"
     },
     {
+      "from": "CODE-M5-TDD-EOL-FINGERPRINT-001",
+      "to": "REQ-M5-TDD-003",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-TDD-EOL-FINGERPRINT-001",
+      "to": "REQ-M5-PARALLEL-010",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-TDD-EOL-FINGERPRINT-001",
+      "to": "DES-M5-PARALLEL-006",
+      "relation": "implements"
+    },
+    {
       "from": "CODE-M5-WORKFLOW-DECLARATION-CORRECTION-001",
       "to": "REQ-M5-EVIDENCE-006",
       "relation": "implements"
@@ -8134,7 +8155,7 @@
     "packages/analysis/src/run-local-workspace.ts": "351ae9df02dfab13b58ae86f7619d68885457093a7a4b33c4070807d52324007",
     "packages/analysis/src/scaffold-artifact.ts": "8734de778f121421b3fcfbf5263611bfcffc94cf63248ef3f127459bdfa4f692",
     "packages/analysis/src/tdd-cycle-resolver.ts": "9098bc74830c1907492da8e08c9fa806550a135554fe41b37998bb344ffffc78",
-    "packages/analysis/src/tdd.ts": "2dc961c55055b1ff6c4c46fdc52a9e73ed6e6eb4243ca9072f2094ac013931ed",
+    "packages/analysis/src/tdd.ts": "58a864050dd5353fc105c6460969d9c75065b58917e8083dbc9f2f7911b499a6",
     "packages/analysis/src/test-report.ts": "c4389c1a73b8ff61beae2061c1eaaeeadc4c5cc529befc059111ea5430d602c4",
     "packages/analysis/src/trace.ts": "270f0348e850d2eb8de81802bc0206f32acdc9b86556bf6cad76dc481799bfa2",
     "packages/analysis/src/workflow-correction.ts": "63fddf07315b8af34b7a96a542c68f82eee5ba8a321795a24bafe1ca8033e2f6",
@@ -8198,7 +8219,7 @@
     "tests/package-contract.test.ts": "3536d366dd871d09d1e6633b14f54354aed82349f3269de119cfcba40354dd1c",
     "tests/parallel-consumer-policy-generation5.test.ts": "075446948f66ad29d4aa87a3fd94cfd7de49787a2cf0c153ec1c1047f444d00a",
     "tests/parallel-development.test.ts": "6d49970e05e0cac6f500c06ac75f4bd4dd7fcab1810b29c9fb41fd89733a0383",
-    "tests/parallel-final-findings-generation5.test.ts": "1cf97d5ed60cd7bd90af68635cbbd65aac0304e975c836ed89b8712f50b08531",
+    "tests/parallel-final-findings-generation5.test.ts": "f454175e9d0ed64574942cd8fc77ffe93c42f2f6efc6e19271130475b3d4b7dc",
     "tests/parallel-ownership-history-generation5.test.ts": "5cc0f366a22059d1eafe81d4f22ad41e68b5ecdffa6accf6f824b00835e6311b",
     "tests/parallel-quality-regressions.test.ts": "78d184810a9dfab27f2c36cbbd8d8bb88f2ab3e9545ae7f86629fcb43d56ae97",
     "tests/parallel-release-blockers-generation5.test.ts": "8739007ad5fbe19451cf1e6e2abba2265f1c1435a35e9e05164e927360bbefdc",

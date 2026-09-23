@@ -161,6 +161,14 @@ export function sourceLineStartOffset(text: string, line: number): number {
   return offset;
 }
 
+/** @id CODE-M5-TDD-EOL-FINGERPRINT-001
+ * @implements REQ-M5-TDD-003 REQ-M5-PARALLEL-010
+ * @design DES-M5-PARALLEL-006
+ */
+export function canonicalTestFingerprintText(text: string): string {
+  return text.replace(/\r\n?/g, '\n');
+}
+
 async function testFingerprint(root: string, test: TraceNode): Promise<string> {
   const text = await readText(root, test.path);
   const start = sourceLineStartOffset(text, test.line);
@@ -169,12 +177,16 @@ async function testFingerprint(root: string, test: TraceNode): Promise<string> {
     const statements: ts.Statement[] = [];
     collectStatements(source, statements);
     const declaration = statements.find((statement) => statement.getStart(source) >= start);
-    if (declaration) return digest(text.slice(start, declaration.end).trim());
+    if (declaration) {
+      return digest(canonicalTestFingerprintText(text.slice(start, declaration.end)).trim());
+    }
   }
   const lineEnd = text.indexOf('\n', start);
   const searchFrom = lineEnd < 0 ? text.length : lineEnd + 1;
   const next = text.slice(searchFrom).search(/^[ \t]*(?:\/\*+|\/\/|#).*?@id\s+TEST-/m);
-  return digest(text.slice(start, next < 0 ? text.length : searchFrom + next).trim());
+  return digest(canonicalTestFingerprintText(
+    text.slice(start, next < 0 ? text.length : searchFrom + next),
+  ).trim());
 }
 
 // The pre-REQ-TDD-FINGERPRINT-SCOPING-001 algorithm (top-level statements
