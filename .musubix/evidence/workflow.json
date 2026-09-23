@@ -1083,13 +1083,47 @@
       "phase": "complete",
       "status": "completed",
       "recordedAt": "2026-09-23T11:12:25.505Z"
+    },
+    {
+      "skill": "sdd-integration-verification",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0003",
+      "generation": 5,
+      "requirementIds": [
+        "REQ-M5-COMPAT-013",
+        "REQ-M5-EVIDENCE-006",
+        "REQ-M5-LIFECYCLE-005",
+        "REQ-M5-PARALLEL-001",
+        "REQ-M5-PARALLEL-002",
+        "REQ-M5-PARALLEL-003",
+        "REQ-M5-PARALLEL-004",
+        "REQ-M5-PARALLEL-005",
+        "REQ-M5-PARALLEL-006",
+        "REQ-M5-PARALLEL-007",
+        "REQ-M5-PARALLEL-008",
+        "REQ-M5-PARALLEL-009",
+        "REQ-M5-PARALLEL-010",
+        "REQ-M5-PARALLEL-011",
+        "REQ-M5-PARALLEL-012",
+        "REQ-M5-PARALLEL-013",
+        "REQ-M5-PARALLEL-014",
+        "REQ-M5-PARALLEL-015",
+        "REQ-M5-PARALLEL-016",
+        "REQ-M5-PARALLEL-017",
+        "REQ-M5-TDD-003",
+        "REQ-M5-WORKTREE-001"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-09-23T14:54:00.823Z"
     }
   ],
   "verification": {
     "mode": "compatible",
-    "sourceSha256": "46cb3e79f52e953e0eff301faded5dca7847f08ff480db5a912fa02a31da03f8",
-    "eventsSha256": "3af616b2f20f62cfb180f3c1f3c104c796ec55b205dfb9fa59cc6eefe1f6d1bc",
-    "verifiedAt": "2026-09-23T12:21:36.809Z",
+    "sourceSha256": "b005ae123d0811f67b30702fe638a423a692be542ff8f38f35abcb75cb146782",
+    "eventsSha256": "cd4774bcd60a209a3a2b860f3ba4a3f9d705ce711bf5b7601e8b14057ce941f9",
+    "verifiedAt": "2026-09-23T14:57:16.077Z",
     "invocations": [
       {
         "skill": "sdd-change",
@@ -1208,6 +1242,83 @@
         "toolCallId": "call_Xtw9aTSBAsdCQljZoDhaoChg",
         "invokedAt": "2026-09-23T06:32:37.031Z",
         "completedAt": "2026-09-23T06:32:37.046Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-requirements",
+        "toolCallId": "call_Pby4boKmKZ8WIbU63RmEYeIS",
+        "invokedAt": "2026-09-23T07:55:27.267Z",
+        "completedAt": "2026-09-23T07:55:27.284Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-design",
+        "toolCallId": "call_MUtosHa4dJA7NTDs3VqnCBD8",
+        "invokedAt": "2026-09-23T08:54:00.276Z",
+        "completedAt": "2026-09-23T08:54:00.290Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-requirements",
+        "toolCallId": "call_yp2ZtNn98E0EURICAq2smneR",
+        "invokedAt": "2026-09-23T10:01:27.270Z",
+        "completedAt": "2026-09-23T10:01:27.284Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-design",
+        "toolCallId": "call_xtjeoSggBw4SF6JMSupMaNBW",
+        "invokedAt": "2026-09-23T10:44:58.274Z",
+        "completedAt": "2026-09-23T10:44:58.284Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-requirements",
+        "toolCallId": "call_lBcDn6DsV4jukZdnWt63xbXc",
+        "invokedAt": "2026-09-23T10:59:27.548Z",
+        "completedAt": "2026-09-23T10:59:27.557Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-design",
+        "toolCallId": "call_xJq6M3GEklbMnZT3tePLyW1p",
+        "invokedAt": "2026-09-23T11:05:26.589Z",
+        "completedAt": "2026-09-23T11:05:26.599Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-implementation",
+        "toolCallId": "call_dcxhzwISOBzCEPWYL8F7uuZ0",
+        "invokedAt": "2026-09-23T11:12:30.173Z",
+        "completedAt": "2026-09-23T11:12:30.186Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-quality",
+        "toolCallId": "call_F2axunva0nUOHLx5IrJKUiC7",
+        "invokedAt": "2026-09-23T12:29:01.722Z",
+        "completedAt": "2026-09-23T12:29:01.741Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-integration-verification",
+        "toolCallId": "call_LuGknvDbIxmDtBspRfda8qn1",
+        "invokedAt": "2026-09-23T12:35:57.601Z",
+        "completedAt": "2026-09-23T12:35:57.658Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-quality",
+        "toolCallId": "call_TMHukv9iD81GCF7dNy9TBs5W",
+        "invokedAt": "2026-09-23T14:53:19.321Z",
+        "completedAt": "2026-09-23T14:53:19.334Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-implementation",
+        "toolCallId": "call_H5Vg8I1MKSvt63QQFM0ySA1P",
+        "invokedAt": "2026-09-23T14:53:22.115Z",
+        "completedAt": "2026-09-23T14:53:22.126Z",
         "status": "completed"
       }
     ]

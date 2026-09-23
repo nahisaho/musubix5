@@ -1,17 +1,20 @@
 {
   "schemaVersion": 1,
   "stage": "release",
-  "changeId": "CHANGE-0002",
-  "generation": 15,
+  "changeId": "CHANGE-0003",
+  "generation": 5,
   "artifacts": {
     ".gitattributes": "d60f352d0db1404c70afb4bb8b2ca3fd1c610572aa40720e8a0b7baa7885418c",
     ".github/plugin/marketplace.json": "8ab1fc0555241b771f08406d2d729b189c672de08da684d10af2dcd3ce97e047",
+    ".github/skills/sdd-agent-assignment/SKILL.md": "a92acc1af27365d13272c1b0a65f84d29fa5f582f1eb2a450da05ff8920c31a1",
     ".github/skills/sdd-change/SKILL.md": "043787ee6ccc065cf9b397905f033074b291832745350efb96bbfcb783b5221b",
     ".github/skills/sdd-design/SKILL.md": "d7665156ac3c4116ef9ff2ecb91be9337caee21976420d92881e38bfb5439429",
     ".github/skills/sdd-formal-codegraph/SKILL.md": "fd874e867289b3751eda8b94a4f0deb1b0d7eadf839414504d27bc2a1cef57ac",
     ".github/skills/sdd-implementation/SKILL.md": "8c43335af2b7cb9412f02bdb041d11d80b11293564bca2a0073b34c9078eabd7",
+    ".github/skills/sdd-integration-verification/SKILL.md": "13e3cb7f5647fbab569ac3cf8a7cc0a01efea5de00166ad92d61542196a51e60",
     ".github/skills/sdd-issue-report/SKILL.md": "9653843582e1d048de68eccffb30d5b99460d5272c038f4ebd687b0c508c5601",
     ".github/skills/sdd-knowledge/SKILL.md": "69711171d070c41d8f366e12dd19db953b6f1255dd1970a0db077f9a906d75e4",
+    ".github/skills/sdd-parallel-dispatch/SKILL.md": "0acfa44e191b94a30d573164cec0a85e94cc1c1eecf9d27c4b0a9af0ac37b27b",
     ".github/skills/sdd-quality/SKILL.md": "b9451e41ce6598ca90284a7b439aa3a8b98cf4c47f5e90659754b6dfe8c5f712",
     ".github/skills/sdd-requirements/SKILL.md": "c5d07dcc445c38b8b79c1144934b12c575189a02b0999aa57cf85abcf825b59a",
     ".github/skills/sdd-traceability/SKILL.md": "923c6c8915f3c2464cc2732392cbf2675485070fd5a78b2a502ef4aaa4852cdd",
@@ -19,7 +22,8 @@
     ".github/workflows/npm-publish.yml": "18948d88bbaa52c0a9dde3c8f19119dcfc1370ae24f7e26ef47f9008905c61fe",
     ".github/workflows/release.yml": "15a7a951698cffae56078897eb3f92008d80901c003d19828566065e4543edf0",
     ".gitignore": "2aef1f7c42b87aef99f447d1563b8a5a8432979881ff1db2edc52c02623b0753",
-    ".musubix/changes/CHANGE-0002.md": "daa29c0fcc3309d3ef29c90ee2c94f4cfef16431084a278b64c7d96cce093e75",
+    ".musubix/changes/CHANGE-0002.md": "314b6441c0be6a484ffc354e3585fde0019b78b42ee28e2e18ea06be4790495e",
+    ".musubix/changes/CHANGE-0003.md": "dfbb706fe0db278e90538e84c001438ca6f1a5c8bf34b9bae8946902b2da355d",
     ".musubix/config.json": "85a99c721866821ef6c49f27b9b83ee802a7ea020f769d573bdce7347b0a11b3",
     ".musubix/constitution.md": "f8b47fdc486f395bab05223a94821b145cf8df70ffde2c838a28f8d71fe0fa92",
     ".musubix/decisions/ADR-0002.md": "9f41d752530613cf6cc3ab6798709567e85650e5b97426dfca4147840eb35684",
@@ -32,15 +36,20 @@
     ".musubix/decisions/ADR-0009.md": "5e38a2e75f754b89ad51bcb242ad6994e36393c41c53630f2d6dd76e67d8294e",
     ".musubix/decisions/ADR-0010.md": "3f132b55b97896d15e1d156353993cdedf24700c877b1cf221da9cfc2a988f87",
     ".musubix/decisions/ADR-0011.md": "f2d22f767bd150f1b2f9afa30803918aa0304a3b5d743029a25a34a05d41ec04",
-    ".musubix/evidence/approvals/design.json": "9c1344e7bf939ca64d083656d40e202db77b1134965f638a2edbd5dc57265a2e",
-    ".musubix/evidence/approvals/requirements.json": "4fe0a17049175bad3c260ad485046f9a2a735872381325258928f69aa774ca2d",
-    ".musubix/evidence/changes.json": "22d35d2db524475bb69abdb50685386641b7bc60ecd554d4c9b0d3be87863617",
-    ".musubix/evidence/order.json": "a188585b8c7b70b2363aad2b7d4317a48e9d0b9849051c6cfceb5440a7af3b18",
-    ".musubix/evidence/release/gates/macos-node22.json": "3e05cec2bc9cb3cf7858f09d2af93891ce14e2bebbadd350793d933f8747e23c",
-    ".musubix/evidence/release/gates/ubuntu-node20.json": "b68eecc203122bdcfd5379675dd12e40c6be1a4cd2d06e369b5da7cff041125a",
-    ".musubix/evidence/release/gates/ubuntu-node22.json": "af704f010493c48fec51136dbd2e2e83f1f0dba57166051615469979664f23fe",
-    ".musubix/evidence/release/gates/ubuntu-node24.json": "b585fde1db624d8a9a0aee7a86451e841a8c511cc113a4aa31909aa34b9a1fb7",
-    ".musubix/evidence/release/gates/windows-node22.json": "80d19891428d2c5cdedace52819da37ccc31b924ade09d61092e913c75492142",
+    ".musubix/decisions/ADR-0012.md": "777d22a07352d2fec4cac676f0dac75e27b4e66716c964d7ba7c1c9c1bdf81ca",
+    ".musubix/decisions/ADR-0013.md": "0c360dce20c0bded889a70a5bb276f8338405225941e7c088a2b3b108db4fcf4",
+    ".musubix/decisions/ADR-0014.md": "40e01d0f00c5743332d253722c7f62e8e8cf2f99101398bd3cb7900cb2e1f013",
+    ".musubix/decisions/ADR-0015.md": "832a1f63e6d8ab44a5c9cbda6679029e9a45f39a8a8bb6446563c41dccdf34d5",
+    ".musubix/evidence/approvals/design.json": "1f087cd268593de783fd21c8816948904d45a63074d41089180147ad4e511aea",
+    ".musubix/evidence/approvals/requirements.json": "3fb2c924a0d4d17cdb826464ef38db8ba090faaafc2ba6726864575de513d597",
+    ".musubix/evidence/bootstrap/change-0003-resolver-bootstrap.json": "a391c5a3e90518792c43443b1835c6d76989909ae17d539b99bd83c551a3e15d",
+    ".musubix/evidence/changes.json": "cfa2fb39801577e7ec68066e4fb29c1deab3c6410920310f922d1ab87db95063",
+    ".musubix/evidence/order.json": "4e52e4cd670a0d419238221fa31c81b5c0f9a6c0c69239fb79761a0fe49d66eb",
+    ".musubix/evidence/release/gates/macos-node22.json": "15b7fc35accc340fb22c4fe47899736afffe69a59f6aaa2c8e0a781b64315e24",
+    ".musubix/evidence/release/gates/ubuntu-node20.json": "b3feee742ee848ab09e82af286bdb0e17ca49c59fa94800e153be920097dbe0a",
+    ".musubix/evidence/release/gates/ubuntu-node22.json": "d4dca21a36445d5bce79a897934be12fb2a8a0c9cfade7efe3c337340e67a79a",
+    ".musubix/evidence/release/gates/ubuntu-node24.json": "41b9e146d8b8283ef299a41737aef2618ac88e2faeef547978d19660ae969651",
+    ".musubix/evidence/release/gates/windows-node22.json": "42cea2775ea9ebaeaa4ebb6fd36a3243675255145be78902af1a83c9d902ddcb",
     ".musubix/evidence/release/operations/CHANGE-0002-v0.1.0-push.json": "80c9e44f4852211a9dca3f874f45952e4c338dda6a9925ec4ed741512255715b",
     ".musubix/evidence/release/operations/CHANGE-0002-v0.1.0-release.json": "4c9a5cf15bbe2da8e1971ab759db07049e870a4c4dd3ff3ace287002cdb980df",
     ".musubix/evidence/release/operations/CHANGE-0002-v0.1.0-tag.json": "b188df52e449c9156a1ebc48206182550da13f615195ecc740b5ae42faf2def5",
@@ -50,13 +59,26 @@
     ".musubix/evidence/release/operations/CHANGE-0002-v0.1.1-g13-push.json": "4e5ce41a9183f5c58aa5d7e553112845e3e51e62820e4915d440989db95b6e23",
     ".musubix/evidence/release/operations/CHANGE-0002-v0.1.1-g13-release.json": "07062d8987c4e35c198f7bc78c504721be71f5c6259a89f861e281a4248c8a01",
     ".musubix/evidence/release/operations/CHANGE-0002-v0.1.1-g13-tag.json": "26f821e420e4badb478af91e744c22b1185d0ad0579520fbc569e783a9739d0b",
+    ".musubix/evidence/release/operations/CHANGE-0002-v0.1.1-g15-publish.json": "64e127c995075bd9b9cb5e3d2dcd04e846dc7906e01ac9e1d10532399b22f24d",
+    ".musubix/evidence/release/operations/CHANGE-0002-v0.1.1-g15-push.json": "c51cec58d1579f438f989a385a8c72aca5d2041bc6741798e76efa363c4377b0",
+    ".musubix/evidence/release/operations/CHANGE-0002-v0.1.1-g15-release.json": "4ef8d9dd1b5a2c75f2c24eb8161a92ddf03db7279aa1031860306b15e1ec7210",
+    ".musubix/evidence/release/operations/CHANGE-0002-v0.1.1-g15-tag-push.json": "31fa6eac72b81be5620608e0105a509728e4cd31cb8297dd77c1c0712f84d3d8",
+    ".musubix/evidence/release/operations/CHANGE-0002-v0.1.1-g15-tag.json": "13880b2c48a934438283d6c624b2ce6115616ed5d9c7afcb8ecd60b233e6c097",
     ".musubix/evidence/release/operations/CHANGE-0002-v0.1.1-push.json": "4aa036d9ce947dc3035c3f7d63ee536ceb7676a4b606bf1ad7df9332a7af5b40",
     ".musubix/evidence/release/operations/CHANGE-0002-v0.1.1-release.json": "cfd4506aa57a86803d40329cae102ca58b888f9b24bbe1a72d861498242eceb2",
     ".musubix/evidence/release/operations/CHANGE-0002-v0.1.1-tag.json": "be6cd9f3fb4d032abfd172e250e7178e07a15449a9e97d5f746087f44d08e694",
-    ".musubix/evidence/tdd.json": "d7347117f83649c84ad10baac2bf635ad25fc8924b3a48da021277b9217a3f0c",
-    ".musubix/evidence/workflow.json": "97e576490b2021c8360fcf63cf5ac4a8fdfdeb262962c468060cb2bcc8ef5518",
-    ".musubix/features/musubix5-clean-foundation/design.md": "54a7cde749c713d4f85b23bce6174b0d4a8fc7b2d6e4d2fc11f0cf4aaed6ecea",
-    ".musubix/features/musubix5-clean-foundation/requirements.md": "1e82698205a347e851d9b672d9453f9113abd4cc0df7167cd4573ba6654b7c38",
+    ".musubix/evidence/run/change-0003-workflow-safe.jsonl": "3022aabb0a238c3b9a4bc72a38c570520f2bdeda8708c9410556041074e38357",
+    ".musubix/evidence/run/workflow-20abff3a.jsonl": "3022aabb0a238c3b9a4bc72a38c570520f2bdeda8708c9410556041074e38357",
+    ".musubix/evidence/run/workflow-c0338040.jsonl": "71dc9c2082d460301aa3ab0e322b92707367e8847cebb2128f3de51820806554",
+    ".musubix/evidence/run/workflow-c3f4c5fb.jsonl": "74f1a8f4468acab71cdae0cf1b15ff678bfe3119920ca4a7bf465ef5a1a5d5c6",
+    ".musubix/evidence/tdd.json": "603fd79abec4af9f0d8d8b1a3dde3be8d925107eb7de4b9e647388c4fbcf8b7d",
+    ".musubix/evidence/workflow-declaration-corrections.json": "6538599283a5226b416754ee9ff1da49e15d9edda1c1d23dbd461163b2140191",
+    ".musubix/evidence/workflow-waivers.json": "54426d7c94cc9d0763821076fb83d5b2c7bc4dc2c74c9bd529c3f34f02ddf19c",
+    ".musubix/evidence/workflow.json": "93d835939f5209bd81c8c57a441a1586a94c1310b71b6a3b79116c108e7e1834",
+    ".musubix/features/musubix5-clean-foundation/design.md": "d74909f43a23fca1445e0a4a75f22b7c6c648002966330904d970bdfad759bb5",
+    ".musubix/features/musubix5-clean-foundation/requirements.md": "acad145405b899cc10cb97e05d45b253a865852ef5ada5f857a9ad593a8cd6dc",
+    ".musubix/features/parallel-agent-development/design.md": "b82140e2728a3f4744486bffa126199b51b4df3f81851fdbee56662eaae2849d",
+    ".musubix/features/parallel-agent-development/requirements.md": "ff106781090ca42d511610d6957c59fb9fde7ede002ca86da64018b2285dae1a",
     ".musubix/journal/normal/000000000001.json": "8e1ba592bfe78a39450b0fef9d486045838a22ab25f0542c38c98a73fdb238df",
     ".musubix/journal/normal/000000000002.json": "1758a754ca63f905573007b8cb27a8565418940f5564ff710954ccb4fe7103f6",
     ".musubix/journal/normal/000000000003.json": "99c5683fba1119b7dc70dc23a8b6aade70eb3ccb92e0262c5fd72478608df570",
@@ -95,19 +117,43 @@
     ".musubix/journal/normal/000000000036.json": "1fbebd5e1c87d1fd5f1526dbff53eb3a7a7cacd697c337f09ff1f8c9de08897b",
     ".musubix/journal/normal/000000000037.json": "68c72a740f60f57a9eda759a564d6a240d8d3d6a6a75602513de6662ac766f83",
     ".musubix/journal/normal/000000000038.json": "3f56b5936b0a543d177bd91e84bfb84bf5e326e1727bc5e97f75dc98cded23bd",
-    "CHANGELOG.md": "610a82188c7441701eca4ec9d449ebf7aac992cb9320856c02961aed7f7e170a",
+    ".musubix/journal/normal/000000000039.json": "c507b92f7f448f5acbb3ac9d11fcad790f134de5f86ce10808ba3ebb1244ee6e",
+    ".musubix/journal/normal/000000000040.json": "2ecdf48ece052d241b59bd99d7f3cd11365b723e4e0845ae849af89ab213c548",
+    ".musubix/journal/normal/000000000041.json": "b587ae949b33508a52ca2101d274b1ea2fb6d560ad5275bf847b0a8b02ce7f0c",
+    ".musubix/journal/normal/000000000042.json": "b7b00d295c7ae4b45d4c8ddd1c2c932ee4782a280eecf4b95348517e6bd0165c",
+    ".musubix/journal/normal/000000000043.json": "53ffaad7ee72f89b60b7f926d8ecccb8ba53e68d737e2d4f660b90f486de2c3a",
+    ".musubix/journal/normal/000000000044.json": "4f4d6407445d6d4b844b76fb03ded0d777841fca9b35715e33019b29628ce136",
+    ".musubix/journal/normal/000000000045.json": "1506a1c7dee2049c022935f6feec489e6befcb7f2dbd557c3bd100e93adbaa91",
+    ".musubix/journal/normal/000000000046.json": "a9053b6cd2d87902c50c9b39f360f0f34faef78d7c25c584054b4d367cb8a45b",
+    ".musubix/journal/normal/000000000047.json": "ef59be3d56b237626a4b9284d4d45ca738decc5154a168693c3bcbddd7e62eb6",
+    ".musubix/journal/normal/000000000048.json": "44901bba2a3ac8d49cb497aedc6efa7be0c2c8f5626db4d0810fe604d761ee6c",
+    ".musubix/journal/normal/000000000049.json": "d8e62b237ea5a365376b16b793bcad3e8c93b3030d6540cae6d8fc714d213ffd",
+    ".musubix/journal/normal/000000000050.json": "64a2b87000efe2294b330808a1b8d2f531032dac381a65d32ce3ba30cd8d1e80",
+    ".musubix/journal/normal/000000000051.json": "f3b61e1b7ccbad124ee1123e9a93b471aa3755e28ffd8a2d967b9db33cdccbfc",
+    ".musubix/journal/normal/000000000052.json": "54423eca754c0de121a00c4c265ba2a965b0018d13b40265b243a2eae9f3791c",
+    ".musubix/journal/normal/000000000053.json": "16069ae871c7ce05c144241cc4bede30ef3e72783673f8891c3e16f4776a0096",
+    ".musubix/journal/normal/000000000054.json": "1e82608fa00a6145fcdf708de6f31d341a5cd4a851022c12a8ee48c9e0dca8a3",
+    ".musubix/journal/normal/000000000055.json": "f9d163409654c469458d13f84a455e6f6bc152627199b701bac7ba52c14be73e",
+    ".musubix/journal/normal/000000000056.json": "f3b4a337011428466db9243862e769471a351393ad182ce2598ac4ef7244d94f",
+    ".musubix/journal/normal/000000000057.json": "b46629af887f5887a521000ee33257c2c332f2fc5e800661f645c11f1d994f2b",
+    ".musubix/journal/normal/000000000058.json": "c1685a8a6b1edb6abf9468d4f180899f0bc3fc5699366e5c7a13f4eada403b63",
+    ".musubix/journal/normal/000000000059.json": "a691cd4096541c8cb6f325d8cffd3befb580e2c3eac03cbb1aff73b1a013d6fc",
+    ".musubix/journal/normal/000000000060.json": "f8ed5e377f56be60b2e143cb788d6fc0b88f0efb68bb55b4fb728660e4ce20fc",
+    ".musubix/journal/normal/000000000061.json": "e4f0934f889a89ea6017014bfbc699ef8b6b37dc207ac54ff5b0f20d0a86078c",
+    ".musubix/journal/normal/000000000062.json": "82c36a126d56c0eb60818c0586a45883f20ddd2b06ece3f4d5c739a1f5f35ec3",
+    "CHANGELOG.md": "461d0cd09b6a77e17031b26b33b6674ed4b052e58cc9f230d7726928b6c7c6b6",
     "LICENSE": "3363377bb6dce0fc69aff81727073c71f93a9dcfce3d42c7f64bcebef644b726",
-    "README-ja.md": "8971eda432c37a036726123b9e7ab65349653ce78ab0b01d8644ba532836ba37",
-    "README.md": "cfdbcd1e07b20b6e4e7fb8ccca7b7b231a44e6c9a17a0d73410ee28e7ec50616",
+    "README-ja.md": "34fce9ad24857b03ff1c93e0eb49071304ebcdf3049841daa4c56972de702f4a",
+    "README.md": "be9c76b71ac77cccee0401990abc78421d0de1170223a1887084326ba4cb7dc3",
     "assets/ADR-0001.md": "07d68c567d75e9ec88f554114f8df4d1259a82cf45fd6567c65c3fc9db7090f0",
     "assets/constitution.md": "f8b47fdc486f395bab05223a94821b145cf8df70ffde2c838a28f8d71fe0fa92",
-    "assets/design.md": "abcbee85062b3a7f06d0f1034abe89fe27d911abf8397f98024249f60eb8a9de",
+    "assets/design.md": "123dd9fa139e777847012c3218c3fe0a50758771107e5a81144584e8bc601917",
     "assets/requirements.md": "f6ce0617c425a351ac1995a50b37a8b7f6c5b3e8ea2d6087d0898d4fde40f5ed",
     "docs/architecture/musubix5-components.md": "bbcb265cfa59ccfcb8045edb0dd74d209daf75d242538d87fa5e2fdf87d33b1e",
     "docs/baseline/musubix3-v0.1.18-cli-help.json": "675ceaf3fb693488bfcf3da0a9db475b666164db4c304ded0a2524ce09a4ede0",
     "docs/baseline/musubix3-v0.1.18-empty-commands.json": "9d8e9b1ba94cafc0c8bc90fe5dfdcf9f99262b45687072b86f946b8a532ad32b",
     "docs/initial-architecture-assessment.md": "e96eecc4c9e31f7194f762c4b1e7b4f2010195d99187c08aefdd0e7b7d2e83d1",
-    "docs/migration-guide.md": "6a24b68700b5357367a05da1b0a8c7daac823ea5bc6e8353fc6ecf367f8b8a62",
+    "docs/migration-guide.md": "c0ba68200cce959a8e45863541a4c1cb459cee253995baded90f643f8039f26a",
     "package-lock.json": "d3afc742f5e9a9d0fc7b87fa47c65eda4494adb3e5ff6a1adf96eb60f3c839c7",
     "package.json": "eb541778f0bc15fda9c59a8c6b2a40646a3344ad44d7adf9505c6c4dbd8452b0",
     "packages/analysis/package.json": "a0657092bcc8aa37b5c5f225e69496d1769d7d1b849b0f245b78ea57675329df",
@@ -116,51 +162,55 @@
     "packages/analysis/src/approval-domains.ts": "56363d8d7fe0158df596a09abf2688f439815c38dd582fd5970c1bb30e6c5994",
     "packages/analysis/src/approval-normative.ts": "18fea120444b05d5ef507985e221f4e6a739e1a7d65e468b992e8c6467979904",
     "packages/analysis/src/approval-record.ts": "4cbf3b904c71f54c860b774a8946fa92b92b695f0fd348e55e9bdaaae8a6a761",
-    "packages/analysis/src/approval.ts": "28528528bc76939843b38332e3531f48507b4b75909483a0387922be32331dc2",
+    "packages/analysis/src/approval.ts": "e778d8eeffa6c93b14bfe822f054a4618e4a42a1e756630d60b322f3311429f4",
     "packages/analysis/src/attestation.ts": "c1875e4a1e2082c851ea422da460e1e853d4d5d0935a7e120af6ea78b2866095",
     "packages/analysis/src/bootstrap-runner.ts": "4167b10f413af1cdc39858f16f94110e407b7778ca8c09d8c0179e497f52550e",
     "packages/analysis/src/budget-ledger.ts": "c7e4fa74032e066491708685359ca7115ab34c44a0d2af18337bd15a4da25590",
     "packages/analysis/src/candidate-gate.ts": "b4196f64c2b0a31d71218849a792a8d0686d12bc3514e44382ca8b461c534974",
     "packages/analysis/src/canonical.ts": "a055b09b2b56e39a40ae3999043c2c241e2de30c0a746cf4ec182e246de2ecc3",
-    "packages/analysis/src/change-evidence.ts": "f94dec07f075e91e3425ef83cb2c23424be43db0e55ca33598d10a5c257417a6",
-    "packages/analysis/src/change-generation.ts": "868f199cb4671b18c803b8a23db7b2a4432ed205e7b73ad5fa0ade8debfdb8d1",
+    "packages/analysis/src/change-evidence.ts": "4af7011893b055e014a1af8d301935a0ca3791cacc1a45f982a3068e457d1d12",
+    "packages/analysis/src/change-generation.ts": "f97f773b39665aee35b81556c54beed0b2bb5c11fa770456753c0fc93bb5d3e2",
     "packages/analysis/src/change-waiver.ts": "1b880c29a16080445f324265e0da067dd8537e64cb42f360369fd2a1eda0f9c3",
-    "packages/analysis/src/change.ts": "2a7baddf94376de9f05c495e9b2c6c76412f9e8b3e4bcf154e7bbe39c1e44229",
+    "packages/analysis/src/change.ts": "c8357d94650b431c8c7cc13dbb2a1039da2af365a8845e6eef3dd29c7afb3da8",
     "packages/analysis/src/compatibility-oracle.ts": "83aac1ddcf29d0ff7d76a8e05c9be9dfa1911f94c1ec960145578c43f2b32d98",
     "packages/analysis/src/config.ts": "b75dacf7bce0e58eaa465a32a6181e75d3492a1dafb4cbb5e09cc9220f9ffcba",
     "packages/analysis/src/evidence-registry.ts": "41bdd3f05c91734baf22cccf5289a9906eae30bfd1356236bc98c96be47da660",
     "packages/analysis/src/files.ts": "7a8cad4ffb34c910bf056fc431d177b72ef3814d0811cada2509a129ae910c0d",
     "packages/analysis/src/formal.ts": "9f5622983fed80c1e7c141cc7c7dcd217447e5c2edd39e64877db052a57b730b",
-    "packages/analysis/src/gate.ts": "661e066d5749b2220901f98df98aad5218bc38e692b071b2d290b2975a6f7eb6",
+    "packages/analysis/src/gate.ts": "d5c99e7bcb5bed53c577b82741f743832ca01397f8ec931e025f26243b166d85",
     "packages/analysis/src/graph.ts": "448a2ebb4aa9f8b5a3b8a3ca7fbe06b51dd0a38f8c69830f6717947bda050a23",
-    "packages/analysis/src/index.ts": "a677ba412953268ade6ff2796ee6c16e3d78050c57b3f2964e6bfec825998be2",
-    "packages/analysis/src/journal.ts": "e197eedb49e6182381a600d6c2eb17a95efade935b64c2c8203a5ea368e9d523",
+    "packages/analysis/src/index.ts": "a023078b9461fa83b0f565cb9f80eb6b525c6028854f87f4bee20f3c2587ed1e",
+    "packages/analysis/src/journal.ts": "a852798a86b2fe5ec38f32e827df64e45a37ba0dfa870fd3a513b605307094f6",
     "packages/analysis/src/knowledge.ts": "31313a4519c711ac98648313059359daf69959403e39deb1509dea90840182b4",
     "packages/analysis/src/lifecycle.ts": "6dfcd2fd1915ea8edbc8d611da3d35aadd8a09581796c029e83d41a2a6fc7fc2",
     "packages/analysis/src/model-correspondence.ts": "30d993a8198f8b5aaad2e69e5711c47410195ce16dd3de1813df363a32a253ff",
     "packages/analysis/src/mutation.ts": "87fcc7a0ef44b43a093c941319d7d6d600314d3ca2c4d94abddcb6c247c1dd9b",
     "packages/analysis/src/native-approval.ts": "bd6bba0231389ada6758213a90be9a6cfde96e45e89dc9776d9d4e46e2951c53",
     "packages/analysis/src/order.ts": "712ef698e5136da577602a9e603cbd59fe84f237ccda712cdcc9d2c6dd2335aa",
+    "packages/analysis/src/parallel-runtime.ts": "1a15dbea2c162a9682773a36d130a92edd7f196bee22875a0ecb1a6a5935d13e",
+    "packages/analysis/src/parallel-tdd-evidence.ts": "5968a550696b4f93c70bfd322f18afcf70f5e8dc04b888241fc76acc94a116ea",
+    "packages/analysis/src/parallel.ts": "ac698520f8a60dcae907c4da7ec6bf53d920003a6db3ab8470d04252bdabcdae",
     "packages/analysis/src/performance.ts": "a51c388499c57f177ebc4a6d5a160d7fb07550626b24a9c987b6b0d17e96ebe7",
     "packages/analysis/src/planner-output.ts": "c649e484d064c2fc5078bcbc21a08e49746feae179e26de99d92bae17ffe9a5c",
-    "packages/analysis/src/process.ts": "d112fdcfc069366eb4f5326c2db58e61621cf0bad9760757bf4deff708ded2a4",
+    "packages/analysis/src/process.ts": "675e76428f4e78e631fe1cbf9cddee298c93576d43fc63a5e977ff044b32d5d4",
     "packages/analysis/src/quality-policy.ts": "0ba33ac06b4762e0f398e04fd6c8975c7db6380f20080fc3dc89a701759fcd89",
     "packages/analysis/src/release-manifest.ts": "e0be5c37e24dafab86606f15e48e40704794c9dd5ad19f150fc3386d554e6e39",
     "packages/analysis/src/release-operation-guard.ts": "3eb0edb8a82dde1085fbb1f00869bf527003e37c28344fbb997fbb4ed044c318",
     "packages/analysis/src/release-workflow.ts": "56d79d8d7dbd56bac08d2facd181c2717520fcd73225edac90f302af68d689e3",
     "packages/analysis/src/run-local-workspace.ts": "351ae9df02dfab13b58ae86f7619d68885457093a7a4b33c4070807d52324007",
     "packages/analysis/src/scaffold-artifact.ts": "8734de778f121421b3fcfbf5263611bfcffc94cf63248ef3f127459bdfa4f692",
-    "packages/analysis/src/tdd-cycle-resolver.ts": "7d38cfb73227acb507d830bf85ecb87ac7cb2274ba432ba964fe17d99fef30dc",
-    "packages/analysis/src/tdd.ts": "34951bb744b6c0d2bd00c7aba34ed3999b104577b2811b194aec14136f7ad3e7",
+    "packages/analysis/src/tdd-cycle-resolver.ts": "9098bc74830c1907492da8e08c9fa806550a135554fe41b37998bb344ffffc78",
+    "packages/analysis/src/tdd.ts": "58a864050dd5353fc105c6460969d9c75065b58917e8083dbc9f2f7911b499a6",
     "packages/analysis/src/test-report.ts": "c4389c1a73b8ff61beae2061c1eaaeeadc4c5cc529befc059111ea5430d602c4",
     "packages/analysis/src/trace.ts": "270f0348e850d2eb8de81802bc0206f32acdc9b86556bf6cad76dc481799bfa2",
-    "packages/analysis/src/workflow-types.ts": "725625b0ebb1fc9a727d5947d16f239eb3e9b7306021e13aa4d8a2c3b4773f75",
+    "packages/analysis/src/workflow-correction.ts": "63fddf07315b8af34b7a96a542c68f82eee5ba8a321795a24bafe1ca8033e2f6",
+    "packages/analysis/src/workflow-types.ts": "4fa0d85248bd9373eed4dc7043f1320c9b918f08fc8874dd982c528876b74783",
     "packages/analysis/src/workflow-waiver.ts": "77a93cc41b1a917bf08f8a26eacafc0ce32edcf3b3d90a2b5ccca5d792d014ac",
-    "packages/analysis/src/workflow.ts": "61f981ac17f57fb4d3d80977da7105ac3c0c2cd93e706f41f4f879aaf0f0235a",
+    "packages/analysis/src/workflow.ts": "9d0e551e55dc7865d1e82f7e2a4d4e7d8db8846f0b584fd512cf19f5d0a0964c",
     "packages/analysis/src/workspace-manager.ts": "9c5cf8b137be42914e79784a7a5414ba48eb26d454e5a07df24eb264f5757576",
     "packages/cli/package.json": "34bd745e071d441e1a36de6a73f1ce4c66c85a7fe7a6c0b4218ab924592bd5e1",
-    "packages/cli/src/install.ts": "a9a632f460500bd54c562f252e147f2a1d9e2520efb23f9fa76602141b076a20",
-    "packages/cli/src/main.ts": "479edd859d92d4e81ae881381905591d8f5b4a8ba0f7fd1e8dd48866fc71cd58",
+    "packages/cli/src/install.ts": "4b33a24e19958e2c88af806dc1261f4f4a74d6e56cb9fe95c0dabf7cc20cef7f",
+    "packages/cli/src/main.ts": "75370b9b1b9c93ca9cfd0a294091c489bd91596c79a4935b040e095fd14fe67f",
     "packages/domain/package.json": "341a4a952550ebefe3f38e42e326647cd4ef7f488522a0419b96ce8cd008fe8c",
     "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
     "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
@@ -169,8 +219,9 @@
     "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
     "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34",
     "plugin.json": "0047f8c6f6482ef399d936a34b46b3f3c0c18c217f15d41066f5001aa7641b00",
-    "scripts/check-package.mjs": "8323b1d6990ddbf78fa21d7df010c081a1c4d397fd4b7152e8c8e1d2f14af1ad",
+    "scripts/check-package.mjs": "b817a08296efb0f2f90be012df55c598f59aaaf5230c8501c1af02b900546593",
     "scripts/smoke-package.mjs": "b5f69bc4c0109632acdd266717695065dbce04e4d7f8d543eb164c1596a1568c",
+    "tests/active-change-context.test.ts": "2db451f99fee47c7c75bb462ce0f04b4c808b87ab0174c95c0d54be05d878a37",
     "tests/approval-boundary-resume.test.ts": "7bf02bd5b510b0e3d47c1830dfbb03434bcec3bf8778ea9bd5788edd2e097379",
     "tests/approval-boundary.test.ts": "ec0a7eb3e0a6c7cb0b9d0b63e50275318c72aa7b972865e1affdf04aa592e3d1",
     "tests/approval-contract-diagnostics.test.ts": "95c6702d27555bc0532c35edc716082cab221a61562d9c18058b02fc48ae4f73",
@@ -189,12 +240,14 @@
     "tests/candidate-gate.test.ts": "cbba3d51e70b9d39806b039914426ceb142016b5ed37a702df29b2fef216a90b",
     "tests/candidate-snapshot-repository-binding.test.ts": "17b1d63cacfb98061293bae8c4fb1218cc27f5576b1c67e73d529b511a936b28",
     "tests/change-completeness-current.test.ts": "0c57842880dd7f10cabdae01c8f9f5a5cbdf19f1ce19c3fd0d39deddd35c3ca6",
-    "tests/change-current-evidence.test.ts": "5f2fcad4c6b9181159fb5eb5576991fe5987e02897779463b1fe0b7186321c13",
+    "tests/change-current-evidence.test.ts": "c99fdd1c6899a96367bcd99714871aff4fef962d2996b85d19c85d7fd1503bec",
     "tests/change-generation-binding.test.ts": "8ee76fba7e222d5c1d109d4ba333d7c9007461ac1cb5caea80ec068bb8ad1d56",
+    "tests/change-generation-cli-status.test.ts": "b16497a2c1cee1ea17ba19392698158b87369444a0d43d9c7cf794d1f1623f4e",
     "tests/change-generation-resume.test.ts": "e760d9c55ed2fe3a67d21151df509da479a0487c9ffd0934b98b99956491a06d",
     "tests/change-generation.test.ts": "acad6bc9e438dd793a0018f8ccd66b7580850d081a4f032c23960df7912a7284",
     "tests/change-lease.test.ts": "90f359b766b40a5a70854148cc20115915fb127514c27bd13dcff9f03eaa256b",
-    "tests/cli-help-contract.test.ts": "e89e70f2af90c98e632687895dd29aace3817ca63ad5e92d881cbea93dba37fb",
+    "tests/change-phase-checkpoint-operation.test.ts": "7a7f9611adbf133697e8d4c9485c39b4ec9300834283a998ae6f625027b10612",
+    "tests/cli-help-contract.test.ts": "9528757483a6eab996a9084561f83259b130e00a15fb3bf45a1a8de762d08d74",
     "tests/cli-json-error-contract.test.ts": "db96b3a7986394c7ba941b495795ff9cb181063f744b1cabb378b1762a37c099",
     "tests/compatibility-oracle.test.ts": "246a1fb3090c0377d72feece8e578b9608bbb86cf75cdca3ae316956860adc90",
     "tests/cross-change-candidate-branch.test.ts": "cb340d1c22862a88654df138166f9d880b49d77aef6ba7efec607cbc61588740",
@@ -202,7 +255,9 @@
     "tests/evidence-identity.test.ts": "3467588120ed4b23c73dd5f0aff0be4b3ff83d38867ff18beda6bcceae98a899",
     "tests/evidence-kinds.test.ts": "b1a624757dcaaaf9431a0dfa245e358139d6566b07de2566477a2dd81ae0be65",
     "tests/evidence-supersession.test.ts": "aa73654e0e5bc737b9ed6725b4091648e9b9d7978a4d466a01506612c2d58bc7",
-    "tests/journal-order.test.ts": "a06616c2cfdae956db2b611de5edc0337b4468cfc94ca3e9ca305f2bef67918c",
+    "tests/fixtures/parallel-runtime-fixture.ts": "e3eebc948e666a306f6ee4bd5cdbf661c6ef992be7cbf968540556a801ac1637",
+    "tests/helpers/journal-order-sentinel.ts": "4202b2775d671925f346eadf6ff8b5a54cfa8134842197f3952eed9842c5b3b1",
+    "tests/journal-order.test.ts": "57aea384a29f75a18367c088662dd856aa2bbebf5cd0b9fd45416988e49601a0",
     "tests/lifecycle-resume.test.ts": "05f7a3f30acf4b0b628e1c068d17c28cb248508fa2e9523c51e6455c4bd2e6ed",
     "tests/lifecycle-state-machine.test.ts": "5cbae549161c93fb5943575d9e0ba974d716f53ca2600ef8e6e07586622a0d33",
     "tests/native-approval.test.ts": "d0525f378f3fb655b6716c0847ddfba37f6e1dc3d3fd42e5d97ce0c1e218a9f0",
@@ -210,13 +265,24 @@
     "tests/npm-release-target-http-generation15.test.ts": "a59571ed29a6d620f114d99e8624ff062cd699ee2eb64d42d2cfacd4fe2b5e94",
     "tests/package-archive.test.ts": "16e4bc787ae283e9a51534ac2f864fb5e0110e126dcb67399a1ce5dfcfd3a0e9",
     "tests/package-contract.test.ts": "3536d366dd871d09d1e6633b14f54354aed82349f3269de119cfcba40354dd1c",
+    "tests/parallel-consumer-policy-generation5.test.ts": "075446948f66ad29d4aa87a3fd94cfd7de49787a2cf0c153ec1c1047f444d00a",
+    "tests/parallel-development.test.ts": "6d49970e05e0cac6f500c06ac75f4bd4dd7fcab1810b29c9fb41fd89733a0383",
+    "tests/parallel-final-findings-generation5.test.ts": "f454175e9d0ed64574942cd8fc77ffe93c42f2f6efc6e19271130475b3d4b7dc",
+    "tests/parallel-ownership-history-generation5.test.ts": "5cc0f366a22059d1eafe81d4f22ad41e68b5ecdffa6accf6f824b00835e6311b",
+    "tests/parallel-quality-regressions.test.ts": "78d184810a9dfab27f2c36cbbd8d8bb88f2ab3e9545ae7f86629fcb43d56ae97",
+    "tests/parallel-release-blockers-generation5.test.ts": "8739007ad5fbe19451cf1e6e2abba2265f1c1435a35e9e05164e927360bbefdc",
+    "tests/parallel-review-regressions.test.ts": "b0ddb63c6f2a4fc41dd7b959b971c4cff8a2cc87f665a5ca2e42652b6cfc5423",
+    "tests/parallel-runtime-lifecycle-generation5.test.ts": "66a6fb7e09b6ac620d30cc4c92f9c1fcbfdf79dab9c9109cca7cfa97314b9ea0",
+    "tests/parallel-runtime-regression.test.ts": "96daf5a5d6155e357d5bd5b5053f966df697c95b7d9647275539818d9b01b45e",
+    "tests/parallel-scaffold-policy-generation5.test.ts": "e66329e655a000b3b7131a74415223f5b903ea40f258d6a40169fcc407de9aae",
+    "tests/parallel-skill-contract-generation5.test.ts": "7f923e5b793a8f45d2f6a3701a78167d5bf1db4649f03dffc0e4f4b98dc05001",
     "tests/planner-retry-identity.test.ts": "ee672f87e7528154f1842e7d0acdc70bfed742378119bb26be9e526bf6819b91",
     "tests/planner-validation.test.ts": "2af23c90768dfa6e74ac05922ec28c4eb9a0d674e730682e472ff14040387169",
     "tests/process-windows-command.test.ts": "e642aa6277313c47d894f2715f86986fb76c43039a82d960eaa2534c393b5182",
     "tests/published-bin-contract.test.ts": "1d493ba16d76cba71fe9f148e62fff0fa55f068dd28cf5391c2f18200ae56745",
     "tests/quality-readiness.test.ts": "4ef772be4a0795abd460ccb79ccc6639da2b69baf47f6226f3e6e00d030101ec",
     "tests/quality-supersession.test.ts": "fdb955ff0f5bde92ce83477c6cfe156f6961026aaae556c81b55948790a1d420",
-    "tests/release-candidate-tree.test.ts": "3d7e417b1ca4e6a161413a8d4ff048b0260a50b394a831676fbd1047892fe374",
+    "tests/release-candidate-tree.test.ts": "d821c78605a00d9ee30117efec5e801dfe305223c84d1197881a95e40f11d237",
     "tests/release-context-generation13.test.ts": "800607beb805a87fd4251a4c8611543b7749114c70bf75bc2c88ce2a6765901f",
     "tests/release-creation-target-generation15.test.ts": "a9fc76911b2c44c9c3a5e9060149efc550418921084522c6765be712a8f11278",
     "tests/release-evidence-policy.test.ts": "4cc0d16219dfb98f580a4453b6584173381dd50a3124204587db26b2f65aeafa",
@@ -235,9 +301,13 @@
     "tests/repository-identity.test.ts": "805c2e53cccec5b657c7d58c5b438029f6874f75919ba84b12ae3b538d7df73d",
     "tests/run-local-workspace.test.ts": "b0071c5905412c1f846d854155fbd37b0f72c08db40a20405be71cbfc2f10561",
     "tests/tdd-batch-recording.test.ts": "e254e04461665d42877b747d038bf977f680a0c72255a03b5dfc471cca2f8ef8",
-    "tests/tdd-cycle-resolver.test.ts": "71baa72ea3d6648436f98f16fc57fda03a0c95ebc9d428ed8c0425349fc125ac",
+    "tests/tdd-cycle-resolver.test.ts": "e97858964eb27b9b5aa5108ae0b40cafe8ba5053cbc38aceec3a2069458ac885",
     "tests/tdd-generation-scope.test.ts": "92f90da7113769a0d900bd24665a5665d08e61e39fc7c3df7913629ad634e35a",
     "tests/trace-namespace.test.ts": "ace3b8880a0dbc1b143108986c63f292a7e19acff1a72055cbb5015204488a6c",
+    "tests/workflow-change-owner.test.ts": "3bdbbc5fb5b497b120ce17aa938faab01b6b4fef48027d387982178141471f59",
+    "tests/workflow-declaration-correction-cli-errors.test.ts": "2e2a2da3eba02ec20cad9200987b4f43db959cd38711e3a8a327788978dac019",
+    "tests/workflow-declaration-correction-regressions.test.ts": "4a5f75009254776b002102e4878d8767f31471974e75c4a0fa7905f6d9d75df6",
+    "tests/workflow-declaration-correction.test.ts": "ee71bf770c3b6e6656e20776a7ab775ae795aee1957d311335fe918d8da4b628",
     "tests/workflow-generation-reconciliation.test.ts": "897e85fd1cdb51b09310b14ba038e6b46cd0ef9230239de0d23f95fd17e30152",
     "tests/workspace-isolation.test.ts": "2b2fb7376f1834916cc56b244fea870efa6ae40b78164a5c35b5ccb3db9ab923",
     "tests/workspace-ownership.test.ts": "29a82dab0567a09e186c127b8f25fe33a73d7a4943154acb01566382ac66744c",
@@ -247,26 +317,26 @@
   },
   "projection": {
     "repositoryId": "repository:e5297915dd33125e52ca4d9d5a00250e33a221401bd38b066934730c6948ecae",
-    "changeId": "CHANGE-0002",
-    "generation": 15,
-    "candidateCommit": "9d453357c8b0bf6daaa32b00ac1aa94cc3e7bfe1",
-    "gateInputFingerprint": "678e46159c510c1214e657442f5f04ef4ff934931b6173c72205e526357ec1ec"
+    "changeId": "CHANGE-0003",
+    "generation": 5,
+    "candidateCommit": "d30f519b056715f02c4c02b1b33fd9f5d6389a2f",
+    "gateInputFingerprint": "976035e3613b78c0221aa6828d147b20d0ddef2069d8da2c048f81b77001d3e8"
   },
   "exclusions": [
     {
       "path": ".musubix/evidence/approvals/release.json",
       "reason": "release-self-reference",
-      "sha256": "12f2c4d5b92580b6d4043972459ace0384e6948cf644eb527f81e8c40373f7fd"
+      "sha256": "67dfced23e21e1ba9d2f1a919eb431dcc445d87a865b77c658bfd79197a52e1f"
     },
     {
       "path": ".musubix/evidence/formal.json",
       "reason": "gate-self-reference",
-      "sha256": "a362479e218731714edb9ab8e60b4af6cb8fb46f6ef54b4b5170c72eb58bd867"
+      "sha256": "42f5197900f7d0a5bec00e705e485831a2ae3bb57e6c5759e1006f8b07ab62a7"
     },
     {
       "path": ".musubix/evidence/model-correspondence.json",
       "reason": "gate-self-reference",
-      "sha256": "2467b7b2777907d9068a7becd287800e7a4f37d38a6828243e56ff6d286da839"
+      "sha256": "d1b0582d645076b45ecf3847a19eb468a8399c942de7c06ad0629be5daee2ff2"
     },
     {
       "path": ".musubix/evidence/native/test/TEST-M5-APPROVAL-001.json",
@@ -306,7 +376,7 @@
     {
       "path": ".musubix/evidence/native/test/TEST-M5-APPROVAL-CANDIDATE-TREE-001.json",
       "reason": "gate-self-reference",
-      "sha256": "00588b996dd7000ed2e2dee7eb023c61f03c834d5aab5d6f139715eafeb46953"
+      "sha256": "c20fd46e6a667e7e417b5d0b7917180b71e9d8e9b92fba7cd2ef9b5e7a33174d"
     },
     {
       "path": ".musubix/evidence/native/test/TEST-M5-APPROVAL-NATIVE-CANDIDATE-TREE-001.json",
@@ -376,7 +446,7 @@
     {
       "path": ".musubix/evidence/native/test/TEST-M5-COMPAT-001.json",
       "reason": "gate-self-reference",
-      "sha256": "43a461b7891928538700822fe4b4820dc1587f77357db059cccc7d757c184346"
+      "sha256": "a891b5f8a1ee02843ebb43dccd22196ea0c6cbcee92ede0515ee7e509153dc02"
     },
     {
       "path": ".musubix/evidence/native/test/TEST-M5-COMPAT-003.json",
@@ -466,7 +536,7 @@
     {
       "path": ".musubix/evidence/native/test/TEST-M5-EVIDENCE-CURRENT-001.json",
       "reason": "gate-self-reference",
-      "sha256": "b36388db98fa06482f538db6f35c17ae935ef3e8bbf8ebea40012b9eaaf1bed8"
+      "sha256": "9bdd7d8c55d63540b92c357e4e8028c849ddf964b79c6be2dc612c5ab1d38fd0"
     },
     {
       "path": ".musubix/evidence/native/test/TEST-M5-EVIDENCE-TRACE-001.json",
@@ -481,7 +551,7 @@
     {
       "path": ".musubix/evidence/native/test/TEST-M5-LIFECYCLE-002.json",
       "reason": "gate-self-reference",
-      "sha256": "4f221b404833895990d65978537bcb4501c9afb149f6e81b7e410e38b0d7a837"
+      "sha256": "68da91c0ae0780ac46886898217e452f1a7b0d5472b3feda6bae6f488f06bb4a"
     },
     {
       "path": ".musubix/evidence/native/test/TEST-M5-LIFECYCLE-003.json",
@@ -499,9 +569,274 @@
       "sha256": "f5e2e23463e8a46a831f0a9e26b4da59ad3d2b67555b8de43de9dbd52d535bf8"
     },
     {
+      "path": ".musubix/evidence/native/test/TEST-M5-LIFECYCLE-CONTEXT-002.json",
+      "reason": "gate-self-reference",
+      "sha256": "741e96b3578890cddf87de6d9fe1bda13f21302224b6aa4e159decb06a622140"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-LIFECYCLE-LEGACY-DOCUMENT-STATUS-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "fc72c40bd3ee6f70b3169668a4b3d5a77daa9c42a289ad26a87b1948ec5e221e"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-LIFECYCLE-MIXED-ERROR-MAPPING-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "6024294785a8a3b513dd34273c243b779119f47acc1be97478f4a8dc335660e5"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-LIFECYCLE-PHASE-CHECKPOINT-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "af36963e6d8b276d57a10bbe45ec363407c8e3b155870afde35a10f64eda9d1e"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-LIFECYCLE-PHASE-CHECKPOINT-ABANDON-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "f3106f9c8509730434c2bffa9f26aaa75673df3d8ff491ad695d276facbfef84"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-LIFECYCLE-PHASE-CHECKPOINT-ORDER-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "4cdcc5000b2760c231c8998b7579239644b7d5120ac9c5e7ed4030ab168032bb"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-LIFECYCLE-PHASE-CHECKPOINT-PENDING-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "39c4fa302a6c814f145d1922bcd25186c8730f04eafef697280ad8f8efc2336f"
+    },
+    {
       "path": ".musubix/evidence/native/test/TEST-M5-LIFECYCLE-REOPEN-RESUME-001.json",
       "reason": "gate-self-reference",
       "sha256": "61d41d003ce0114155abff443b771fd61c593d9068adaf26a52eab7c280fd4bb"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-LIFECYCLE-STATUS-ABANDONED-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "4b0645d1531fdec8e31b9f53b0147dcefaf77c41398eb57f8e3fba98bda418d1"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-LIFECYCLE-STATUS-EXIT-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "0c43276587316a8f17540c8cd14975ca708df4aa9e6650cce55e70139199fc36"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-LIFECYCLE-STATUS-RECOVERY-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "5a35590cdb0bd5b0ec5195aba702385864c976002c660767b405cab65df8d60e"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-LIFECYCLE-STATUS-SELECTION-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "04aa473b2fb41e82d1bd91ce2bc82bd9f85fb62dc31933a9ecd708902154f64c"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-ASSIGNMENT-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "96b851e60ad75e16bd3c64fde6659afa126317a2a2b0e3bc9efc0d795a8a7ee1"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-CANDIDATE-DIVERGED-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "426b2667f01b9007be007d96ec93d21257c692d803429371e93f3f8698c728b6"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-CLI-CONCURRENCY-002.json",
+      "reason": "gate-self-reference",
+      "sha256": "0958bdced6340a418c7830af2aaa4812b9409461a5520824c238a6ce5f605ffa"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-CONSUMER-CLI-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "dd3b016b1b92aba4aa98eba221d50d1540fa92e03eb87a14e5e52f1116e3ff9b"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-CONSUMER-POLICY-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "a8971714df0649c6e7efa51b1b11b7e30411ed33a4bc0b12d567327e588042eb"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-CONSUMER-POLICY-DIAGNOSTIC-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "fda3db70f835793119b7a8834a48eb2e2b2c2fcc4e0ac2739417ec6feea92bb6"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-CROSS-PLATFORM-WORKTREE-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "2b3c63028c9404c467dfead539e21f2401c53e6beba2efdcfc7aa77dff2d5f40"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-DETACHED-CLEANUP-ERROR-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "5b9350ac3399d01a13cc8562cdeeaa29c5a2506a0647cf402284cbb86b0be8a2"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-DETACHED-VERIFY-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "c1404650084daf61a061a4c71e8a40a273467cb551ada9eb74915edf9d9da1db"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-DUPLICATE-COMMIT-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "53bcd6ba9ea26f3474bd794174bed9de04eeba043a7f48abae59bbcf173d58f5"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-FENCING-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "6dbf04d31b8444c36aa6675ce73251a997452d021c9b21fc3a1f72645e417faf"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-FULL-SUCCESS-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "9e89d3c7014fcc0fc3ca91d0c9845061a96dbc94713392dac6d9bd43c7586476"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-GRAPH-ACYCLIC-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "d2edb496bdbd9a15c0e7550acd071284dcd3e27b2fa7399342f78709836e0801"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-HANDOFF-EVIDENCE-DIRTY-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "66a3a0047eaa42a19d7af0ae13ed7dcc63dba9406921d102b32afc8e168d1678"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-INTEGRATION-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "7a256bf5fffe016422c873730c036e2add3ed31fbeb5e9ddf4e5a2d230401c96"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-INTEGRATION-CONTROL-EVIDENCE-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "ff2940fc9078e3f2029e943204b2d82caf0de941692cd722edd65e37133c678c"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-INTEGRATION-GATE-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "466474d02f7206f4e086fdb491c487819730d0a3f5f238c5f1b1a2e6c800f4eb"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-INTEGRATION-REOPEN-003.json",
+      "reason": "gate-self-reference",
+      "sha256": "0b44b14b45dc10673a02f49f9b416c047854230baa6dacf41f6ed74326702e88"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-INTEGRATION-SEMANTICS-002.json",
+      "reason": "gate-self-reference",
+      "sha256": "d94bef97914204214f0bfbec70e58b79ea0c376058a3c9e39ec57e56e2d7a36a"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-JOURNAL-CRASH-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "53fd9860f2be31bcee7404157f7b8e7770097e5f84007d762c3b2feded4b545e"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-LATEST-BATCH-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "3d347209e8c0524a40af35dd88c6cc9969b932d89924e506c20c1e2622cca193"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-LIFECYCLE-MAPPING-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "306a1e44c2f89e1f50b696496ef0eb4afa88b51e89473ed80b79b2d621e137eb"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-OWNERSHIP-DISJOINT-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "c2837064cd6cc21ad8642f75a799bc8b2d2575c2eb63bec4d0e6c5c44cefdf58"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-OWNERSHIP-GLOB-OVERLAP-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "d95fb057aa105c502bc5b2ae25d842f13390e3e5dd0533c63b7b1ae710cbf67f"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-OWNERSHIP-HISTORY-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "f1e2c55a12f2916a45f03f62d1d829a209686f20fb5fc3b9918799926f80c4a8"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-OWNERSHIP-SUFFIX-DISJOINT-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "81758e09d77a257169988d3ff52289a0d208cfe1212df2d26f5945f588a02257"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-PLAN-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "e5780bd9fee430f29e1303d90acc996fc1118f4a8649d407b39eee41c6282959"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-POLICY-OWNERSHIP-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "5ee7a2f786a4e3ff9d8de5b4ee497d33973781b92e9cf8f5f1642fa625bf33e4"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-PROVENANCE-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "ea4f954d8bcb6bb40cebf2dca4a6d3e0843ecfc93d347909d18a10d82369dd26"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-REAL-GATE-SUCCESS-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "4d148423ad608c39d22dfcc69dc5dfe1c695b47312e03dc67a595f89cc8ab49a"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-RELEASE-NONPASS-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "9f73a26e9125e21c60f7d6b80704d464408fb37e76bc16468a75c976a83ff2c2"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-RETRY-002.json",
+      "reason": "gate-self-reference",
+      "sha256": "d96c3d81db1930fb0a1af55d51e29b89845b02d9d66dbba7c122ec7587bff4dd"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-SCAFFOLD-PROVISION-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "74e786a9ebaa0bd0eb873d7929fcb3ebd2c27976c131a59cdaf9e5e99619bb94"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-SKILL-CONCURRENCY-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "e9e4f942eb861630359938ea0b2adef126c90d9370801126128fe785ddabb49e"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-SKILLS-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "76e3a0dd787c9cbe05beee8d199c2619e08e1c21e744bd00f09ff829cc845b7d"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-SPLIT-ROOT-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "32ccc4e9c997667c94a6a5bba9e496590fda3afe7859ae3f6009e54db79a66cb"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-STALE-CLEANUP-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "bfa80960c2e46c2bbb6322a088b6e93c7ad3eeafe1f2450f2ade941a2a5805bd"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-TDD-PROVENANCE-BINDING-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "29808cb72ace4e625f9fb17910348892c4b9bc9f6361f10f7b09237fe2de735a"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-VERIFY-WORKSPACE-IDENTITY-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "fe14987bac0fdbface1200fd278f0c728acad0cb6013fab262f686c92fe3c74f"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-WORKSPACE-OVERLAY-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "95524e74d776d2aed23b1f2eb88b7e8f0ee134752313584596039e4b61f5960b"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-WORKSPACE-PARTIAL-COPY-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "1aa838609ed9cdad9a3e24a5b83dd8b4c66336b94c622c3ef6f9c3fe35c66bc0"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-PARALLEL-WORKTREE-SAFETY-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "d99aded576da4652da1c0faedaeed73f6083c2fbd1be47d8ba938583bcea6515"
     },
     {
       "path": ".musubix/evidence/native/test/TEST-M5-PLANNER-001.json",
@@ -724,6 +1059,86 @@
       "sha256": "7005aa129a54aeedc1492e69c206e451a49a0ab9ec3d2dbf8865b42d9b03ce34"
     },
     {
+      "path": ".musubix/evidence/native/test/TEST-M5-TDD-APPROVAL-SUPERSESSION-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "fab36828c0b293f6168ab4afa608acd035a7d1f79f0523c8f43fddc089b893e7"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-TDD-DESIGN-PREDECESSOR-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "3e1682dd5080a08d1f2711cacb5917de5bb91260cae06b65e40b7db68f03745d"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-TDD-NORMAL-ROOT-TRACE-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "bd46a420d2a8cf5de0661aa0ca551d8fe8d59142a943d5ad1189aac4f66217c1"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-TDD-SPLIT-ROOT-FINGERPRINT-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "5cc6c682056f7134cb32cabd304901b9606107c47e5e70f5fc7c6471b18a63ad"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-WORKFLOW-CHANGE-OWNER-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "d9f85d81ae87a73c3cc1620e2d064b81f49d471d6a03ac3430a9d806c8604f94"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-WORKFLOW-CHANGE-OWNER-CONFLICT-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "fc58bad8901648d1e86cf9dcc5c5846a6cfa571ac39df69a668899d76a51de9c"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-WORKFLOW-DECLARATION-CORRECTION-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "ed97e01266896a11b8d5687147c4a0276432e30a3609089a626303d23d6b2015"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-WORKFLOW-DECLARATION-CORRECTION-CLI-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "bb63297e0bee6d0b8c348d84b2e4d8f3183aca895f50e3bd610ac2db1f8ac7a0"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-WORKFLOW-DECLARATION-CORRECTION-CLI-ERROR-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "7a67757b165caca52b940025a6974e2b9af10e330ecd0b2643ba6dd10adab173"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-WORKFLOW-DECLARATION-CORRECTION-POLICY-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "58b5e51f4594d482ca863e7ef5fb5d83b87ec78d338e895fcac01eda5a8697c9"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-WORKFLOW-DECLARATION-CORRECTION-RECOVERY-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "1f021e14495d70d0ba6d6ea2055cc4d4acac4bb9b1072282c708529de4eaa7cd"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-WORKFLOW-DECLARATION-CORRECTION-SCHEMA-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "07d2aca39ed8d20b50f9be96ccdc278274d295e16221775686f6613350817cdf"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-WORKFLOW-DECLARATION-CORRECTION-SCOPE-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "3462def86f250cae5da25e5195e7ca0beb49f69521f4671a450f9ecee3a23c18"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-WORKFLOW-DECLARATION-CORRECTION-VALIDATION-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "c606df9eb0fd9792a58ddfbb7f4d2a230a21b53ffdbff4a1d6980d450525b8c6"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-WORKFLOW-DECLARATION-CORRECTION-WAIVER-001.json",
+      "reason": "gate-self-reference",
+      "sha256": "d2f825b266f6cf178c833d0b288468fa3f0fc5d51c553a5b1d7c445907c83876"
+    },
+    {
+      "path": ".musubix/evidence/native/test/TEST-M5-WORKFLOW-DECLARATION-CORRECTION-WAIVER-002.json",
+      "reason": "gate-self-reference",
+      "sha256": "0681739097e36276f23188a401351bfc80093cd5cf22276fc8c548cfc9d31326"
+    },
+    {
       "path": ".musubix/evidence/native/test/TEST-M5-WORKTREE-001.json",
       "reason": "gate-self-reference",
       "sha256": "31c86c4fe8604bad17ad76ec4a7c7067a093a40f05b5cf9b70b2a2ef7e876807"
@@ -761,22 +1176,27 @@
     {
       "path": ".musubix/evidence/native/test/aggregate.json",
       "reason": "gate-self-reference",
-      "sha256": "5f6bea3640f9143d4dff0a3059f2c1fd176982528dff843c3d79ff81f40cfe2a"
+      "sha256": "8920258125100722a19cc4581172b61afc0786a8b885b6c41c60b98d465ba1c3"
     },
     {
       "path": ".musubix/evidence/performance.json",
       "reason": "gate-self-reference",
-      "sha256": "29a34df13e6bcb2148b3bd9454034f8b561a286001c0810146aaf56ce69e920f"
+      "sha256": "466984360d32d1693fbfda1ee3de20c41e1a6d56382e967cebd3cdaa0f9bd8c0"
     },
     {
       "path": ".musubix/evidence/quality.json",
       "reason": "gate-self-reference",
-      "sha256": "ded053dd56b091765daaa667c868f800d5857fa7fda34d82d0b760f509bcdd17"
+      "sha256": "e74f7356579b860c60723393ceb0aec358ee1de1a8f32aa72e0d9d5c747ad8c0"
     },
     {
       "path": ".musubix/features/musubix5-clean-foundation/trace.json",
       "reason": "generated-trace",
-      "sha256": "a2dc5b9425e3d41a1df4d96fe71b79d1c90cfdb6212705cdcb0cc1d03075158c"
+      "sha256": "eb627a7f754ade74df61d2fcf7a17b1608c9dfc9e2836d0149ab7789695968b9"
+    },
+    {
+      "path": ".musubix/features/parallel-agent-development/trace.json",
+      "reason": "generated-trace",
+      "sha256": "eb627a7f754ade74df61d2fcf7a17b1608c9dfc9e2836d0149ab7789695968b9"
     },
     {
       "path": "docs/history/pre-change-0002/ADR-0001.md",
@@ -819,7 +1239,7 @@
       "sha256": "9fe4f134e7c0d2633ccd3b2bd66464254f72ba51fad07191d4295280f7af9e0e"
     }
   ],
-  "artifactSha256": "5fa163b504c9029994db5b6aa55802ec3514c5bbc9c4cea1f8af2387afd8ecd0",
+  "artifactSha256": "cbdf3cebed4a5646b4cfab9e002e19a01b8b5c6f1ec78e03048a5f545de66026",
   "approver": "@nahisaho",
-  "approvedAt": "2026-09-22T23:34:53.799Z"
+  "approvedAt": "2026-09-23T14:45:18.902Z"
 }
