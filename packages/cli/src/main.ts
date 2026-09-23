@@ -207,11 +207,12 @@ function pathQuery(root: string, query: string): string {
 }
 
 /** @id CODE-M5-COMPAT-001
- * @implements REQ-M5-COMPAT-001
- * @design DES-M5-002
+ * @implements REQ-M5-COMPAT-001 REQ-M5-REL020-001
+ * @design DES-M5-002 DES-M5-REL020-001
  */
 export function createProgram(): Command {
-  const program = new Command().name('musubix5').description('Evidence-driven SDD for GitHub Copilot CLI / 根拠に基づく仕様駆動開発').version('0.1.1');
+  const version = '0.2.0';
+  const program = new Command().name('musubix5').description('Evidence-driven SDD for GitHub Copilot CLI / 根拠に基づく仕様駆動開発').version(version);
   program.exitOverride();
   common(program.command('init').alias('install').description('Install repository skills and SDD artifacts (preserves existing files)'))
     .option('--dry-run', 'Preview without writing').option('--force', 'Replace bundled, managed paths only')

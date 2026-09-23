@@ -2,7 +2,7 @@
 schemaVersion: 1
 id: CHANGE-0003
 summary: Add parallel worktree development with native Copilot subagents
-status: active
+status: completed
 ---
 # CHANGE-0003: parallel-agent-development
 

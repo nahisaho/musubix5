@@ -107,7 +107,7 @@ describe('release generation 5', () => {
    * @id TEST-M5-RELEASE-003-GEN5-001
    * @verifies REQ-M5-RELEASE-003
    */
-  it('TEST-M5-RELEASE-003-GEN5-001 creates only a sealed GitHub Release for v0.1.1', async () => {
+  it('TEST-M5-RELEASE-003-GEN5-001 creates only a sealed GitHub Release for v0.2.0', async () => {
     const {
       releaseContextBytes,
       releaseContextDigest,
@@ -115,8 +115,8 @@ describe('release generation 5', () => {
       validateReleaseVersions,
     } = await import('../packages/analysis/src/release-workflow.js');
     const root = resolve(import.meta.dirname, '..');
-    const versions = await validateReleaseVersions(root, 'v0.1.1');
-    expect(versions.version).toBe('0.1.1');
+    const versions = await validateReleaseVersions(root, 'v0.2.0');
+    expect(versions.version).toBe('0.2.0');
 
     const context = {
       schemaVersion: 'release-context-v1' as const,
@@ -184,8 +184,8 @@ describe('release generation 5', () => {
 
     await expect(validateReleaseVersions(
       resolve(import.meta.dirname, '..'),
-      'v0.1.1',
-    )).resolves.toMatchObject({ valid: true, version: '0.1.1' });
+      'v0.2.0',
+    )).resolves.toMatchObject({ valid: true, version: '0.2.0' });
   });
 
   /**

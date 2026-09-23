@@ -112,12 +112,13 @@ export function parseReleaseTargetApiResponse(
 }
 
 /** @id CODE-M5-RELEASE-TARGET-LOOKUP-001
- * @implements REQ-M5-RELEASE-003 REQ-M5-RELEASE-004
- * @design DES-M5-020 DES-M5-021
+ * @implements REQ-M5-RELEASE-003 REQ-M5-RELEASE-004 REQ-M5-REL020-002
+ * @design DES-M5-020 DES-M5-021 DES-M5-REL020-002
  */
 export function classifyReleaseTargetLookup(
   input: ReleaseTargetLookupInput,
 ): ReleaseTargetLookupClassification {
+  const expectedTag = input.expectedTag;
   const classifyRelease = (
     release: ReleaseTargetLookupInput['exact']['release'],
   ): ReleaseTargetLookupClassification => {
@@ -127,7 +128,7 @@ export function classifyReleaseTargetLookup(
       || release.tagName.length === 0
       || typeof release.draft !== 'boolean'
       || typeof release.prerelease !== 'boolean'
-      || (input.expectedTag !== undefined && release.tagName !== input.expectedTag)
+      || (expectedTag !== undefined && release.tagName !== expectedTag)
     ) {
       return 'lookup-failed';
     }
@@ -144,10 +145,10 @@ export function classifyReleaseTargetLookup(
   }
   if (!input.enumeration) return 'absent';
   if (!input.enumeration.complete) return 'lookup-failed';
-  const releases = input.expectedTag === undefined
+  const releases = expectedTag === undefined
     ? input.enumeration.releases
     : input.enumeration.releases.filter(
-      (release) => release.tagName === input.expectedTag,
+      (release) => release.tagName === expectedTag,
     );
   if (releases.length === 0) return 'absent';
   if (releases.some(
@@ -189,8 +190,8 @@ export function releaseTransportPolicy(): {
 }
 
 /** @id CODE-M5-NPM-PUBLISH-POLICY-001
- * @implements REQ-M5-RELEASE-004
- * @design DES-M5-021
+ * @implements REQ-M5-RELEASE-004 REQ-M5-REL020-003
+ * @design DES-M5-021 DES-M5-REL020-003
  */
 export function npmPublishTransportPolicy(): {
   workflow: '.github/workflows/npm-publish.yml';
@@ -365,8 +366,8 @@ export async function readReleaseDocumentation(root: string): Promise<ReleaseDoc
 }
 
 /** @id CODE-M5-RELEASE-WORKFLOW-001
- * @implements REQ-M5-RELEASE-003
- * @design DES-M5-020
+ * @implements REQ-M5-RELEASE-003 REQ-M5-REL020-001 REQ-M5-REL020-002
+ * @design DES-M5-020 DES-M5-REL020-001 DES-M5-REL020-002
  */
 export async function validateReleaseVersions(
   root: string,
@@ -554,8 +555,8 @@ function checksumEntries(checksums: string): Map<string, string> {
 }
 
 /** @id CODE-M5-RELEASE-ASSET-VALIDATION-001
- * @implements REQ-M5-RELEASE-004
- * @design DES-M5-021
+ * @implements REQ-M5-RELEASE-004 REQ-M5-REL020-003
+ * @design DES-M5-021 DES-M5-REL020-003
  */
 export function validateReleaseAssetManifest(
   releaseTag: string,
