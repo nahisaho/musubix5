@@ -4,7 +4,7 @@ import { mkdir, open, readFile, rename, unlink } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { error, type Diagnostic } from '../../domain/src/index.js';
 import { loadConfig } from './config.js';
-import { activeChangeContext, type ActiveChangeContext } from './change-generation.js';
+import { activeChangeContext, resolveChangeContext, type ActiveChangeContext } from './change-generation.js';
 import { digest, exists, safePath, writeJson } from './files.js';
 import {
   CURRENT_SNAPSHOT_VERSION, WORKFLOW_WAIVABLE_CODES, WORKFLOW_WAIVER_PATH, authoritativeIndex, buildWorkflowWaiverContext,
@@ -17,8 +17,10 @@ import {
   loadWorkflow, workflowVerificationLimits,
   type WorkflowEvent, type WorkflowManifest, type WorkflowSanitizationResult, type WorkflowVerificationOptions,
 } from './workflow-types.js';
+import { loadWorkflowDeclarationCorrectionContext } from './workflow-correction.js';
 
 export * from './workflow-types.js';
+export { recordWorkflowDeclarationCorrection } from './workflow-correction.js';
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const starts = new Set(['tool.execution_start', 'tool.execution_started', 'tool_use']);
@@ -46,11 +48,27 @@ function eventsSha256(events: WorkflowEvent[]): string {
 export async function recordWorkflow(
   root: string,
   event: Omit<WorkflowEvent, 'version' | 'recordedAt' | 'commandSha256'> & { command?: string },
+  options: { changeId?: string } = {},
 ): Promise<WorkflowManifest> {
   if (!/^[a-z0-9-]+$/.test(event.skill)) throw new Error('Workflow skill must be a lowercase kebab-case identifier.');
   if (!/^[a-z0-9-]+$/.test(event.phase)) throw new Error('Workflow phase must be a lowercase kebab-case identifier.');
   const current = await loadWorkflow(root) ?? { schemaVersion: 1, events: [] };
-  const change = await activeChangeContext(root);
+  const change = options.changeId
+    ? await resolveWorkflowChangeContext(root, options.changeId)
+    : await activeChangeContext(root);
+  if (!change) {
+    throw new Error('CHANGE_GENERATION_PHASE: no active CHANGE generation exists for workflow ownership.');
+  }
+  const persistedOwner = current.events
+    .filter((entry) => entry.changeId !== undefined)
+    .at(-1);
+  if (options.changeId && persistedOwner?.changeId !== undefined
+    && (persistedOwner.changeId !== change.changeId
+      || (persistedOwner.generation ?? 1) !== change.generation)) {
+    throw new Error(
+      `WORKFLOW_CHANGE_MISMATCH: explicit CHANGE ${change.changeId} conflicts with persisted workflow ownership ${persistedOwner.changeId} generation ${persistedOwner.generation ?? 1}.`,
+    );
+  }
   delete current.verification;
   current.events.push({
     skill: event.skill,
@@ -65,6 +83,22 @@ export async function recordWorkflow(
   });
   await writeJson(root, '.musubix/evidence/workflow.json', current);
   return current;
+}
+
+/** @id CODE-M5-WORKFLOW-CHANGE-OWNER-001
+ * @implements REQ-M5-EVIDENCE-006 REQ-M5-PARALLEL-017
+ * @design DES-M5-018 DES-M5-PARALLEL-001 DES-M5-PARALLEL-009
+ */
+async function resolveWorkflowChangeContext(root: string, changeId: string): Promise<ActiveChangeContext> {
+  const selected = await resolveChangeContext(root, { changeId });
+  if (!selected || selected.documentStatus !== 'active' || selected.generation === null) {
+    throw new Error(`CHANGE_GENERATION_PHASE: CHANGE ${changeId} is not eligible for workflow ownership.`);
+  }
+  return {
+    changeId: selected.changeId,
+    generation: selected.generation,
+    requirementIds: selected.requirementIds,
+  };
 }
 
 /** @id CODE-M5-WORKFLOW-GENERATION-001
@@ -722,6 +756,8 @@ export async function validateLoadedWorkflow(
   const activeEvents = workflow ? activeWorkflowEvents(workflow, change) : [];
   const present = activeEvents.length > 0;
   const rawDiagnostics: Diagnostic[] = [];
+  const correctionContext = await loadWorkflowDeclarationCorrectionContext(root, workflow);
+  rawDiagnostics.push(...correctionContext.diagnostics);
   if (workflow?.events.length && activeEvents.length) {
     if (!workflow.verification) {
       rawDiagnostics.push(error('WORKFLOW_INVOCATION_UNVERIFIED', 'Workflow declarations have not been reconciled with a Copilot session log.'));
@@ -773,6 +809,7 @@ export async function validateLoadedWorkflow(
       const previousIndexBySkill = new Map<string, number>();
       for (const { event, index: eventIndex } of activeEvents) {
         if (event.status !== 'completed') continue;
+        if (correctionContext.correctedIndices.has(eventIndex)) continue;
         const scope = declarationScope(workflow, event, eventIndex);
         const recordedAt = timestampMs(event.recordedAt);
         const previousIndex = previousIndexBySkill.get(event.skill) ?? -1;
@@ -830,7 +867,7 @@ export async function validateLoadedWorkflow(
   const diagnostics = rawDiagnostics.map((diagnostic) => waivedWorkflowDiagnostic(workflowWaiverContext, diagnostic));
   return {
     present,
-    verified: !diagnostics.length,
+    verified: !diagnostics.some((diagnostic) => diagnostic.severity === 'error'),
     events: activeEvents.length,
     skills: new Set(activeEvents.map(({ event }) => event.skill)).size,
     diagnostics,
@@ -901,6 +938,15 @@ export async function recordWorkflowWaiver(
   }
   if (!resolveEvent(workflow, skill, phase, recordedAt, index)) {
     throw new Error(linkageReason(workflow, skill, phase, recordedAt, index));
+  }
+  const correctedTarget = validated.diagnostics.find((diagnostic) =>
+    diagnostic.code === 'WORKFLOW_DECLARATION_SUPERSEDED'
+    && diagnostic.skill === skill
+    && diagnostic.phase === phase
+    && diagnostic.declarationRecordedAt === recordedAt
+    && (index === undefined || diagnostic.index === index));
+  if (correctedTarget) {
+    throw new Error('WORKFLOW_DECLARATION_CORRECTION_INVALID: corrected workflow declarations cannot receive waivers.');
   }
   const diagnosticScope = { skill, phase, declarationRecordedAt: recordedAt, ...(index === undefined ? {} : { index }) };
   const matchingDiagnostic = validated.diagnostics.find((diagnostic) =>

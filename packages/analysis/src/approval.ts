@@ -82,6 +82,13 @@ export function approvalPath(stage: ApprovalStage, domain?: string): string {
 const featureRequirementsPattern = /^\.musubix\/features\/([^/]+)\/requirements\.md$/;
 const featureDesignPattern = /^\.musubix\/features\/([^/]+)\/design\.md$/;
 
+export function releaseCandidateChangeId(
+  requestedChangeId: string | undefined,
+  activeChange: { changeId: string } | null,
+): string | undefined {
+  return requestedChangeId ?? activeChange?.changeId;
+}
+
 export async function approvalManifest(
   root: string,
   stage: ApprovalStage,
@@ -136,7 +143,10 @@ export async function approvalManifest(
     };
   }
   if (stage === 'release') {
-    const content = await buildReleaseCandidateContent(root, releaseChangeId);
+    const content = await buildReleaseCandidateContent(
+      root,
+      releaseCandidateChangeId(releaseChangeId, activeChange),
+    );
     const hasChangeEvidence = await exists(within(root, '.musubix/evidence/changes.json'));
     if (hasChangeEvidence && (!activeChange || activeChange.changeId !== content.changeId)) {
       throw new Error('CHANGE_GENERATION_INCOMPLETE: release approval requires the matching active CHANGE generation.');
@@ -215,6 +225,17 @@ export async function loadApproval(root: string, stage: ApprovalStage, domain?: 
   return value as ApprovalEvidence;
 }
 
+export function classifyReleaseApprovalDiagnostic(code: string): boolean {
+  return [
+    'APPROVAL_CANDIDATE_UNAVAILABLE',
+    'CHANGE_GENERATION_INCOMPLETE',
+    'RELEASE_GATE_EVIDENCE_MISSING',
+    'RELEASE_GATE_EVIDENCE_STALE',
+    'RELEASE_GATE_CANDIDATE_MISMATCH',
+    'RELEASE_CANDIDATE_TREE_MISMATCH',
+  ].includes(code);
+}
+
 /** @id CODE-M5-APPROVAL-GATE-DIAGNOSTIC-001
  * @implements REQ-M5-RELEASE-002
  * @design DES-M5-019
@@ -243,13 +264,7 @@ export async function validateApprovalStage(
     } catch (manifestCause) {
       const message = manifestCause instanceof Error ? manifestCause.message : String(manifestCause);
       const code = message.split(':', 1)[0]!;
-      const releaseDiagnostic = stage === 'release' && [
-        'APPROVAL_CANDIDATE_UNAVAILABLE',
-        'RELEASE_GATE_EVIDENCE_MISSING',
-        'RELEASE_GATE_EVIDENCE_STALE',
-        'RELEASE_GATE_CANDIDATE_MISMATCH',
-        'RELEASE_CANDIDATE_TREE_MISMATCH',
-      ].includes(code);
+      const releaseDiagnostic = stage === 'release' && classifyReleaseApprovalDiagnostic(code);
       if (!releaseDiagnostic) {
         throw manifestCause;
       }
@@ -278,13 +293,7 @@ export async function validateApprovalStage(
   } catch (cause) {
     const message = cause instanceof Error ? cause.message : String(cause);
     const code = message.split(':', 1)[0]!;
-    const releaseDiagnostic = stage === 'release' && [
-      'APPROVAL_CANDIDATE_UNAVAILABLE',
-      'RELEASE_GATE_EVIDENCE_MISSING',
-      'RELEASE_GATE_EVIDENCE_STALE',
-      'RELEASE_GATE_CANDIDATE_MISMATCH',
-      'RELEASE_CANDIDATE_TREE_MISMATCH',
-    ].includes(code);
+    const releaseDiagnostic = stage === 'release' && classifyReleaseApprovalDiagnostic(code);
     if (!releaseDiagnostic) throw cause;
     const diagnostics = [error(code, message, path)];
     const diagnosticSha256 = sha256(canonicalBytes({

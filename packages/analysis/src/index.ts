@@ -44,6 +44,8 @@ export * from './model-correspondence.js';
 export * from './order.js';
 export * from './change.js';
 export * from './change-generation.js';
+export * from './parallel.js';
+export * from './parallel-runtime.js';
 export * from './candidate-gate.js';
 export * from './change-waiver.js';
 export * from './workflow-waiver.js';

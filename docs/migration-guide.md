@@ -97,6 +97,143 @@ musubix5 adds explicit `bootstrap run`, `bootstrap resume`, and
 invoked by normal commands, and cannot produce normal approval, quality, or
 release authority.
 
+## Parallel development extensions
+
+musubix5 adds the top-level `parallel` command with plan, preparation,
+assignment, status, integration, handoff, and cleanup groups. Parallel plans
+are bound to one active CHANGE generation and use managed assignment,
+detached-verification, and integration worktrees below the repository's Git
+common directory. Assignment worktrees do not write `.musubix/**`; TDD runners
+may execute in an assignment worktree while evidence is recorded at the
+control repository root through the added `tdd red`, `tdd green`, and
+`tdd refactor` workspace and parallel-provenance options.
+
+Integration records consumed assignment ranges as provisional provenance,
+runs the complete configured verification set in the integration worktree,
+and promotes provenance to verified only after every required check passes.
+Candidate handoff remains fast-forward-only. Existing Skills are preserved;
+the three parallel-development Skills are additive.
+
+`parallel status --change-id <id>` and targeted stale cleanup accept a known
+active, abandoned, or completed CHANGE for maintenance visibility. They never
+make a generation current and never grant evidence credit. Stale cleanup
+retains branches, removes only clean managed worktrees belonging to stale
+plans, preserves active plans, and appends only the non-credit maintenance
+record associated with the selected historical generation.
+
+## Workflow declaration correction extension
+
+musubix5 adds `workflow declaration supersede` for the narrow case where a
+completed workflow declaration was accidentally recorded again, the later
+declaration currently reports declaration-scoped `WORKFLOW_INVOCATION_REUSED`,
+and the lowest-positioned identical canonical declaration is bound to an unused
+completed Skill invocation by current persisted workflow-verification
+evidence. The command does not delete or rewrite the declaration and is not a
+waiver. It appends a CHANGE-lease- and fencing-protected correction that
+identifies the later duplicate and canonical declaration by absolute event
+position and digest.
+
+Only a declaration-scoped `WORKFLOW_INVOCATION_REUSED` may be corrected. The
+canonical declaration must have been independently bound to an unused
+completed invocation when the correction is recorded. During later
+reconciliation, the corrected duplicate consumes no invocation and does not
+advance the Skill cursor; it is reported as informational audited superseded
+history. Corrections are stored in a separate append-only correction store, not
+in `workflow.events`, so declaration positions, declaration digests, and the
+verified workflow-events head do not change when a correction is appended. For
+three or more identical declarations, each later duplicate needs its own
+correction and all corrections use the lowest-positioned canonical declaration.
+A corrected declaration cannot later receive a workflow waiver. Duplicate
+identity is version- and provenance-scoped, so a cross-version or
+cross-provenance repetition requires abandoning and reopening the generation.
+Declarations without explicitly persisted CHANGE, generation, and requirement
+ownership, sole missing declarations, failed or incomplete invocations,
+cross-CHANGE or cross-generation declarations, transcript-level duplicate
+events, and declarations already covered by a current waiver remain
+non-correctable.
+
+`WORKFLOW_BINDING_MISSING` remains the companion declaration diagnostic when a
+completed declaration cannot bind an invocation. A valid correction suppresses
+that code only for the corrected duplicate together with its
+`WORKFLOW_INVOCATION_REUSED`; canonical and unrelated declarations retain their
+normal diagnostics.
+
+## CHANGE ownership and implicit generation selection
+
+`workflow-record` adds `--change-id <id>` so a declaration can be bound to one
+specific active CHANGE generation. The stored declaration includes that
+CHANGE, generation, and requirement ownership. Unknown or conflicting explicit
+owners fail with `WORKFLOW_CHANGE_MISMATCH`; known but completed, abandoned, or
+otherwise ineligible owners fail with `CHANGE_GENERATION_PHASE`. Omitting the
+option remains valid only when ownership is unambiguous.
+
+Implicit generation-bound commands now select the sole CHANGE document whose
+frontmatter has `status: active`. Completed CHANGE documents remain historical
+and are excluded from implicit selection. A legacy CHANGE document with no
+`status` remains active when its persisted chronology has a positive active
+generation without terminal full-set quality, a null active generation after
+abandonment, or no generation chronology yet; it is treated as completed after
+terminal full-set quality with no later active or abandoned generation.
+Selection never rewrites the document.
+If more than one document is active, stateful commands and gate fail with
+`CHANGE_GENERATION_MIXED` until repository authors set `status: completed` on
+each finished document and leave exactly one active document; `status` remains
+read-only, exits zero, reports the diagnostic, and keeps `ready: false`. An
+active document may temporarily have a null generation after abandonment;
+status reports the abandoned history and the reopen command while pass-producing
+operations remain blocked.
+
+## Generation abandon and reopen extension
+
+`change generation abandon <change-id> --reason <text> --approver <name>
+--confirm` preserves the incomplete generation as non-current history and
+leaves no active generation. Missing confirmation or malformed usage is
+`CLI_ERROR`; an ineligible lifecycle state is `CHANGE_GENERATION_PHASE`.
+Approvals, TDD, pass-producing evidence, and phase recording remain blocked
+until `change-record <change-id> impact --reopen` creates or resumes the next
+generation.
+
+Both abandon and reopen validate lifecycle eligibility before acquiring the
+CHANGE lease, revalidate after acquisition, reconcile all journaled checkpoints
+for the departing generation, and only then snapshot or abandon it. During the
+no-active-generation interval, gate exits 1, status exits 0 with `ready: false`,
+and explicitly targeted parallel status or branch-retaining stale cleanup
+remains available only as non-credit maintenance.
+
+## Same-generation approval checkpoint extension
+
+When a requirements or design approval becomes stale inside an active
+generation, recording the newly approved phase appends a superseding lifecycle
+checkpoint and retains the earlier checkpoint as history. Supply
+`--operation-id <id>` matching `^[a-z0-9][a-z0-9-]{0,63}$`; the option is
+rejected for the initial checkpoint and required only for supersession. Replay
+is scoped by CHANGE, generation, phase, and operation ID, and is checked under
+the CHANGE lease after journal-only recovery but before current-state
+validation. Exact replay therefore returns the persisted success even after
+projection; divergent reuse or a distinct operation against a still-current
+checkpoint returns `CHANGE_GENERATION_DUPLICATE`.
+
+The public semantic phase key remains
+`change:<changeId>:g<N>:<phase>`. The normal-journal idempotency key is
+`change-phase-checkpoint:<changeId>:g<generation>:<phase>:<operationId>`, and
+the record persists its approval head, requirement IDs, fingerprints, ordinal,
+semantic/evidence-order keys, timestamp, and fencing token. Recovery uses only
+those persisted inputs. Invalid checkpoint journal evidence reports
+`CHANGE_CHECKPOINT_JOURNAL_INVALID`; gate fails while status remains readable
+with `ready: false`. The evidence-order ledger uses
+`requirements:<n>` or `design:<n>` after ordinal 1, and `changes.json` exposes
+`requirementsHistory`, `designHistory`, `requirementsOrdinal`, and
+`designOrdinal`, with operation IDs on superseding checkpoints.
+Ordinal-1 checkpoints omit the `operationId` key entirely; they do not persist
+`null`, an empty string, or a generated placeholder. Cross-phase
+checks use the greatest predecessor checkpoint whose order is less than the
+dependent record, so later approval checkpoints do not retroactively reorder
+existing TDD batches. Gate and status always include
+`unprojectedPhaseCheckpoints`, including an empty array; pending entries are
+informational unless their journal evidence is invalid. Reopen snapshots these
+history fields with the completed generation, clears them from the new active
+generation, and restarts ordinals at 1.
+
 ## Release operation authorization
 
 Release approval does not authorize publication, tag creation, or pushing to a

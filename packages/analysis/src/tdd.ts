@@ -1,4 +1,5 @@
 import { unlink } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import ts from 'typescript';
 import { error, type Diagnostic } from '../../domain/src/index.js';
 import { loadConfig, commandCwd } from './config.js';
@@ -9,6 +10,7 @@ import { adapterInvocation, clearAdapterOutput, mergeAdapterArgs, normalizeAdapt
 import { appendEvidenceOrder, evidenceOrderRecord, inspectEvidenceOrder, type validateEvidenceOrderLog } from './order.js';
 import { requireApproval, resolveRequirementDomain } from './approval.js';
 import { activeChangeContext } from './change-generation.js';
+import { classifyParallelTddEvidence } from './parallel-tdd-evidence.js';
 import { parseMusubixTestReport, type MusubixTestReport } from './test-report.js';
 export { parseMusubixTestReport, type MusubixTestReport } from './test-report.js';
 
@@ -61,6 +63,13 @@ export interface TddCycle {
   testId: string;
   testPath: string;
   commandName: string;
+  parallel?: {
+    planId: string;
+    assignmentId: string;
+    attempt: number;
+    worktree: string;
+    startCommit: string;
+  };
   red: TddPhaseEvidence;
   green?: TddPhaseEvidence;
   refactor?: TddPhaseEvidence;
@@ -77,6 +86,7 @@ export interface TddChainRecord {
   testId: string;
   testPath: string;
   commandName: string;
+  parallel?: TddCycle['parallel'];
   phase: TddChainPhase;
   phaseEvidenceSha256: string;
   previousSha256: string | null;
@@ -114,6 +124,7 @@ function appendChainRecord(evidence: TddEvidence, cycle: TddCycle, phase: TddCha
     testId: cycle.testId,
     testPath: cycle.testPath,
     commandName: cycle.commandName,
+    ...(cycle.parallel ? { parallel: cycle.parallel } : {}),
     phase,
     phaseEvidenceSha256: digest(JSON.stringify(phaseEvidence)),
     previousSha256: previous?.recordSha256 ?? null,
@@ -140,21 +151,42 @@ function collectStatements(node: ts.Node, out: ts.Statement[]): void {
   ts.forEachChild(node, (child) => collectStatements(child, out));
 }
 
+export function sourceLineStartOffset(text: string, line: number): number {
+  let offset = 0;
+  for (let current = 1; current < line; current += 1) {
+    const newline = text.indexOf('\n', offset);
+    if (newline < 0) return text.length;
+    offset = newline + 1;
+  }
+  return offset;
+}
+
+/** @id CODE-M5-TDD-EOL-FINGERPRINT-001
+ * @implements REQ-M5-TDD-003 REQ-M5-PARALLEL-010
+ * @design DES-M5-PARALLEL-006
+ */
+export function canonicalTestFingerprintText(text: string): string {
+  return text.replace(/\r\n?/g, '\n');
+}
+
 async function testFingerprint(root: string, test: TraceNode): Promise<string> {
   const text = await readText(root, test.path);
-  const lines = text.split(/\r?\n/);
-  const start = lines.slice(0, Math.max(0, test.line - 1)).join('\n').length + (test.line > 1 ? 1 : 0);
+  const start = sourceLineStartOffset(text, test.line);
   if (isSource(test.path)) {
     const source = ts.createSourceFile(test.path, text, ts.ScriptTarget.Latest, true);
     const statements: ts.Statement[] = [];
     collectStatements(source, statements);
     const declaration = statements.find((statement) => statement.getStart(source) >= start);
-    if (declaration) return digest(text.slice(start, declaration.end).trim());
+    if (declaration) {
+      return digest(canonicalTestFingerprintText(text.slice(start, declaration.end)).trim());
+    }
   }
   const lineEnd = text.indexOf('\n', start);
   const searchFrom = lineEnd < 0 ? text.length : lineEnd + 1;
   const next = text.slice(searchFrom).search(/^[ \t]*(?:\/\*+|\/\/|#).*?@id\s+TEST-/m);
-  return digest(text.slice(start, next < 0 ? text.length : searchFrom + next).trim());
+  return digest(canonicalTestFingerprintText(
+    text.slice(start, next < 0 ? text.length : searchFrom + next),
+  ).trim());
 }
 
 // The pre-REQ-TDD-FINGERPRINT-SCOPING-001 algorithm (top-level statements
@@ -370,7 +402,24 @@ export async function runTddPhase(
   requirementId: string,
   commandName: string,
   runner: Runner = runProcess,
+  workspace = root,
+  parallel?: {
+    planId: string;
+    assignmentId: string;
+    attempt: number;
+    worktree: string;
+    startCommit: string;
+  },
 ): Promise<TddPhaseEvidence> {
+  if (parallel) {
+    if (!/^parallel-plan:[a-f0-9]{64}$/.test(parallel.planId)
+      || !/^[a-z0-9][a-z0-9-]{0,63}$/.test(parallel.assignmentId)
+      || !Number.isInteger(parallel.attempt) || parallel.attempt < 1
+      || !/^[a-f0-9]{40}$/.test(parallel.startCommit)
+      || resolve(parallel.worktree) !== resolve(workspace)) {
+      throw new Error('PARALLEL_TDD_UNCONSUMED: invalid parallel TDD recording identity.');
+    }
+  }
   const config = await loadConfig(root);
   if (phase === 'red') {
     const domain = await resolveRequirementDomain(root, config.approval, requirementId);
@@ -385,7 +434,7 @@ export async function runTddPhase(
     for (const name of config.tdd.redPreflightCommands) {
       const preflight = config.commands.find((entry) => entry.name === name)!;
       const execution = await runner(preflight.command, preflight.args, {
-        cwd: commandCwd(root, preflight),
+        cwd: commandCwd(workspace, preflight),
         timeoutMs: preflight.timeoutMs,
       });
       if (execution.status !== 'completed' || execution.exitCode !== 0) {
@@ -393,13 +442,13 @@ export async function runTddPhase(
       }
     }
   }
-  const trace = await buildTrace(root);
+  const trace = await buildTrace(workspace, resolve(workspace) === resolve(root));
   const test = trace.nodes.find((node) => node.kind === 'test' && node.id === testId);
   if (!test) throw new Error(`Annotated test ID not found: ${testId}`);
   if (!trace.edges.some((edge) => edge.from === testId && edge.to === requirementId && edge.relation === 'verifies')) {
     throw new Error(`${testId} does not verify ${requirementId}.`);
   }
-  const currentFingerprint = await testFingerprint(root, test);
+  const currentFingerprint = await testFingerprint(workspace, test);
   const activeChange = await activeChangeContext(root);
   const evidence: TddEvidence = await loadTddEvidence(root) ?? { schemaVersion: 1, cycles: [], chain: [] };
   if (evidence.cycles.some((cycle) =>
@@ -426,12 +475,15 @@ export async function runTddPhase(
       && (previous.changeId !== activeChange.changeId || previous.generation !== activeChange.generation)) {
       throw new Error('CHANGE_GENERATION_MIXED: TDD phases cannot cross CHANGE generations.');
     }
+    if (JSON.stringify(previous.parallel ?? null) !== JSON.stringify(parallel ?? null)) {
+      throw new Error('PARALLEL_TDD_UNCONSUMED: TDD phases must use the same parallel assignment identity.');
+    }
   }
   const adapter = command.adapter ? adapterInvocation(command.adapter, command.name, testId, test.path) : null;
   const reportPath = command.tddReport
     ? render(command.tddReport.path, testId, test.path, '')
     : adapter!.reportPath;
-  const reportAbsolute = await safePath(root, reportPath);
+  const reportAbsolute = await safePath(workspace, reportPath);
   if (adapter) await clearAdapterOutput(adapter, reportAbsolute);
   else if (await exists(reportAbsolute)) await unlink(reportAbsolute);
   const targetedArgs = command.tddArgs
@@ -441,7 +493,10 @@ export async function runTddPhase(
   const args = command.adapter
     ? mergeAdapterArgs(command.adapter, configuredArgs, targetedArgs)
     : [...configuredArgs, ...targetedArgs];
-  const execution = await runner(command.command, args, { cwd: commandCwd(root, command), timeoutMs: command.timeoutMs });
+  const execution = await runner(command.command, args, {
+    cwd: commandCwd(workspace, command),
+    timeoutMs: command.timeoutMs,
+  });
   const output = `${execution.stdout}\n${execution.stderr}`;
   const diagnostics: Diagnostic[] = [];
   let reportText: string | null = null;
@@ -449,7 +504,7 @@ export async function runTddPhase(
   if (adapter) {
     reportText = await readAdapterOutput(adapter, reportAbsolute, execution.stdout);
   } else if (await exists(reportAbsolute)) {
-    reportText = await readText(root, reportPath);
+    reportText = await readText(workspace, reportPath);
   }
   if (reportText === null) {
     diagnostics.push(error('TDD_REPORT_MISSING', `${testId} did not produce a fresh structured TDD report.`, reportPath));
@@ -478,7 +533,7 @@ export async function runTddPhase(
   if (!Number.isSafeInteger(execution.durationMs) || execution.durationMs < 0) {
     diagnostics.push(error('TDD_DURATION_INVALID', `${phase} produced an invalid execution duration; archive the invalid evidence and regenerate this cycle from a clean Red baseline.`));
   }
-  const currentSourceFingerprint = await sourceFingerprint(root, test.path, [reportPath]);
+  const currentSourceFingerprint = await sourceFingerprint(workspace, test.path, [reportPath]);
   if (phase === 'green' && previous?.red.sourceFingerprint === currentSourceFingerprint) {
     diagnostics.push(error('TDD_GREEN_WITHOUT_SOURCE_CHANGE', `${testId} has no non-test project change between Red and Green.`, test.path));
   }
@@ -552,6 +607,7 @@ export async function runTddPhase(
       testId,
       testPath: test.path,
       commandName,
+      ...(parallel ? { parallel } : {}),
       red: result,
     };
     evidence.cycles.push(cycle);
@@ -568,7 +624,10 @@ export async function runTddPhase(
   return result;
 }
 
-export async function validateTddEvidence(root: string): Promise<{
+export async function validateTddEvidence(
+  root: string,
+  purpose = 'readiness',
+): Promise<{
   present: boolean; valid: boolean; diagnostics: Diagnostic[]; cycles: number;
   voided: Array<{ testId: string; cycleId: string; void: { approver: string; reason: string; recordedAt: string } }>;
 }> {
@@ -616,6 +675,7 @@ export async function validateTddEvidence(root: string): Promise<{
           || record.testId !== cycle.testId
           || record.testPath !== cycle.testPath
           || record.commandName !== cycle.commandName
+          || JSON.stringify(record.parallel ?? null) !== JSON.stringify(cycle.parallel ?? null)
           || record.phaseEvidenceSha256 !== digest(JSON.stringify(phaseEvidence))) {
           diagnostics.push(error('TDD_CHAIN_PAYLOAD_MISMATCH', `${cycle.testId}:${phase} does not match its immutable TDD chain record.`, cycle.testPath));
         }
@@ -669,13 +729,25 @@ export async function validateTddEvidence(root: string): Promise<{
     const verifiedTests = trace.edges
       .filter((edge) => edge.relation === 'verifies' && edge.to === requirement.id)
       .map((edge) => edge.from);
-    const covered = evidence.cycles.some((cycle) =>
-      activeCycle(cycle)
-      &&
-      cycle.requirementId === requirement.id
-      && verifiedTests.includes(cycle.testId)
-      && cycle.red.valid
-      && cycle.green?.valid);
+    let covered = false;
+    for (const cycle of evidence.cycles) {
+      if (!activeCycle(cycle)
+        || cycle.requirementId !== requirement.id
+        || !verifiedTests.includes(cycle.testId)
+        || !cycle.red.valid
+        || !cycle.green?.valid) continue;
+      const provenance = await classifyParallelTddEvidence(root, {
+        changeId: cycle.changeId ?? activeChange?.changeId ?? '',
+        generation: cycle.generation ?? activeChange?.generation ?? 1,
+        requirementId: requirement.id,
+        cycleId: cycle.cycleId ?? null,
+        purpose,
+      });
+      if (provenance !== 'PARALLEL_TDD_UNCONSUMED') {
+        covered = true;
+        break;
+      }
+    }
     if (!covered) {
       diagnostics.push(error(
         'TDD_REQUIREMENT_UNCOVERED',

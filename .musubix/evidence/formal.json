@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-22T23:48:28.990Z",
-  "totalRequirements": 65,
+  "generatedAt": "2026-09-23T14:59:19.326Z",
+  "totalRequirements": 82,
   "modeledRequirements": 0,
   "modeledFraction": 0,
   "result": {
@@ -82,7 +82,24 @@
       "REQ-M5-RELEASE-001",
       "REQ-M5-RELEASE-003",
       "REQ-M5-RELEASE-004",
-      "REQ-M5-RELEASE-002"
+      "REQ-M5-RELEASE-002",
+      "REQ-M5-PARALLEL-001",
+      "REQ-M5-PARALLEL-002",
+      "REQ-M5-PARALLEL-003",
+      "REQ-M5-PARALLEL-004",
+      "REQ-M5-PARALLEL-005",
+      "REQ-M5-PARALLEL-006",
+      "REQ-M5-PARALLEL-007",
+      "REQ-M5-PARALLEL-008",
+      "REQ-M5-PARALLEL-009",
+      "REQ-M5-PARALLEL-010",
+      "REQ-M5-PARALLEL-011",
+      "REQ-M5-PARALLEL-012",
+      "REQ-M5-PARALLEL-013",
+      "REQ-M5-PARALLEL-014",
+      "REQ-M5-PARALLEL-015",
+      "REQ-M5-PARALLEL-016",
+      "REQ-M5-PARALLEL-017"
     ],
     "diagnostics": [
       {
@@ -409,6 +426,91 @@
         "code": "FORMAL_UNSUPPORTED",
         "severity": "warning",
         "message": "REQ-M5-RELEASE-002 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-PARALLEL-001 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-PARALLEL-002 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-PARALLEL-003 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-PARALLEL-004 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-PARALLEL-005 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-PARALLEL-006 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-PARALLEL-007 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-PARALLEL-008 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-PARALLEL-009 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-PARALLEL-010 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-PARALLEL-011 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-PARALLEL-012 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-PARALLEL-013 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-PARALLEL-014 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-PARALLEL-015 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-PARALLEL-016 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-PARALLEL-017 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
       }
     ],
     "consistency": "unknown",
@@ -423,6 +525,7 @@
     }
   },
   "fingerprints": {
-    ".musubix/features/musubix5-clean-foundation/requirements.md": "1e82698205a347e851d9b672d9453f9113abd4cc0df7167cd4573ba6654b7c38"
+    ".musubix/features/musubix5-clean-foundation/requirements.md": "acad145405b899cc10cb97e05d45b253a865852ef5ada5f857a9ad593a8cd6dc",
+    ".musubix/features/parallel-agent-development/requirements.md": "ff106781090ca42d511610d6957c59fb9fde7ede002ca86da64018b2285dae1a"
   }
 }

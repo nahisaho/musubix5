@@ -8,17 +8,22 @@ import {
   appendEvidenceOrder, evidenceOrderRecord, inspectEvidenceOrder,
   type EvidenceOrderRecord,
 } from './order.js';
+import { approvalManifest, loadApproval, type ApprovalStage } from './approval.js';
+import { canonicalBytes } from './canonical.js';
 import { loadChangeWaiverEvidence, buildWaiverContext, diagnosticDetail, errorFor, reportWaiverEvidenceDiagnostics, waivedDiagnostic } from './change-waiver.js';
 import {
   abandonChangeGeneration, activeChangeGeneration, batchFor, batchForRecording, batchKey, changePhases, effectiveBatches,
   generationOrderPhase,
-  loadChangeEvidence, nextBatchScopeId, nextQualityOrdinal, qualityFingerprintPreviouslyRecorded,
-  reopenChangeGeneration, supersedeQualityPhase,
+  selectCurrentChangeTddCycle,
+  loadChangeEvidence, nextBatchScopeId, nextPhaseCheckpointOrdinal, nextQualityOrdinal,
+  qualityFingerprintPreviouslyRecorded, reopenChangeGeneration, supersedeApprovedPhase, supersedeQualityPhase,
   type ChangeCompleteness, type ChangeEvidence, type ChangeFingerprints, type ChangePhase,
-  type ChangePhaseEvidence, type ChangeRecord, type ChangeTddBatch,
+  type ChangePhaseEvidence, type ChangeRecord, type ChangeTddBatch, type SupersedingPhase,
 } from './change-evidence.js';
-import { selectCurrentTddCycle } from './tdd-cycle-resolver.js';
-import { acquireChangeLease, assertChangeLeaseCurrent, releaseChangeLease } from './journal.js';
+import {
+  acquireChangeLease, appendJournalRecord, assertChangeLeaseCurrent, loadJournalRecords, releaseChangeLease,
+  type JournalRecord,
+} from './journal.js';
 
 export * from './change-evidence.js';
 
@@ -92,6 +97,220 @@ async function currentFingerprints(root: string, changeId: string, requirementId
 const tddBatchPhases = ['red', 'implementation', 'green'] as const;
 type TddBatchPhase = typeof tddBatchPhases[number];
 const singularPhases = ['impact', 'requirements', 'design', 'quality'] as const;
+const phaseCheckpointOperationId = /^[a-z0-9][a-z0-9-]{0,63}$/;
+
+interface PhaseCheckpointPayload {
+  schemaVersion: 1;
+  changeId: string;
+  generation: number;
+  phase: SupersedingPhase;
+  operationId: string;
+  ordinal: number;
+  approvalManifestSha256: string;
+  requirementIds: string[];
+  fingerprints: ChangeFingerprints;
+  semanticPhaseKey: string;
+  orderPhaseKey: string;
+  recordedAt: string;
+  fencingToken: number;
+}
+
+interface PhaseCheckpointRecord extends JournalRecord {
+  kind: 'change-phase-checkpoint';
+  payload: PhaseCheckpointPayload;
+}
+
+function phaseCheckpointIdempotencyKey(
+  changeId: string,
+  generation: number,
+  phase: SupersedingPhase,
+  operationId: string,
+): string {
+  return `change-phase-checkpoint:${changeId}:g${generation}:${phase}:${operationId}`;
+}
+
+function checkpointSemanticPhaseKey(changeId: string, generation: number, phase: SupersedingPhase): string {
+  return `change:${changeId}:g${generation}:${phase}`;
+}
+
+function validFingerprints(value: unknown): value is ChangeFingerprints {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const fingerprints = value as Partial<ChangeFingerprints>;
+  return ['impact', 'requirements', 'design', 'implementation', 'tests', 'tdd']
+    .every((field) => typeof fingerprints[field as keyof ChangeFingerprints] === 'string');
+}
+
+function invalidCheckpointJournal(message: string): never {
+  throw new Error(`CHANGE_CHECKPOINT_JOURNAL_INVALID: ${message}`);
+}
+
+async function phaseCheckpointRecords(root: string): Promise<PhaseCheckpointRecord[]> {
+  let records: JournalRecord[];
+  try {
+    records = await loadJournalRecords(root);
+  } catch (cause) {
+    invalidCheckpointJournal(cause instanceof Error ? cause.message : String(cause));
+  }
+  const result: PhaseCheckpointRecord[] = [];
+  const keys = new Set<string>();
+  const operations = new Map<string, PhaseCheckpointPayload>();
+  const ordinals = new Set<string>();
+  for (const record of records) {
+    if (record.kind !== 'change-phase-checkpoint') continue;
+    const payload = record.payload as Partial<PhaseCheckpointPayload>;
+    if (record.stream !== 'normal'
+      || record.schemaVersion !== 1
+      || payload.schemaVersion !== 1
+      || typeof payload.changeId !== 'string'
+      || payload.changeId !== record.changeId
+      || !Number.isInteger(payload.generation) || Number(payload.generation) < 1
+      || !['requirements', 'design'].includes(String(payload.phase))
+      || typeof payload.operationId !== 'string' || !phaseCheckpointOperationId.test(payload.operationId)
+      || !Number.isInteger(payload.ordinal) || Number(payload.ordinal) < 2
+      || typeof payload.approvalManifestSha256 !== 'string'
+      || !/^[a-f0-9]{64}$/.test(payload.approvalManifestSha256)
+      || !Array.isArray(payload.requirementIds)
+      || payload.requirementIds.some((id) => typeof id !== 'string' || !ids.requirement.test(id))
+      || JSON.stringify(payload.requirementIds) !== JSON.stringify([...new Set(payload.requirementIds)].sort())
+      || !validFingerprints(payload.fingerprints)
+      || typeof payload.semanticPhaseKey !== 'string'
+      || typeof payload.orderPhaseKey !== 'string'
+      || typeof payload.recordedAt !== 'string'
+      || new Date(payload.recordedAt).toISOString() !== payload.recordedAt
+      || !Number.isInteger(payload.fencingToken) || Number(payload.fencingToken) < 1) {
+      invalidCheckpointJournal(`journal record ${record.order} has a malformed phase-checkpoint payload.`);
+    }
+    const typed = payload as PhaseCheckpointPayload;
+    const expectedKey = phaseCheckpointIdempotencyKey(
+      typed.changeId, typed.generation, typed.phase, typed.operationId,
+    );
+    if (record.idempotencyKey !== expectedKey
+      || typed.semanticPhaseKey !== checkpointSemanticPhaseKey(typed.changeId, typed.generation, typed.phase)
+      || typed.orderPhaseKey !== `${typed.phase}:${typed.ordinal}`) {
+      invalidCheckpointJournal(`journal record ${record.order} has inconsistent derived phase-checkpoint fields.`);
+    }
+    if (keys.has(record.idempotencyKey)) {
+      invalidCheckpointJournal(`derived idempotency key ${record.idempotencyKey} appears more than once.`);
+    }
+    keys.add(record.idempotencyKey);
+    const operationScope = `${typed.changeId}\0${typed.generation}\0${typed.phase}\0${typed.operationId}`;
+    const priorOperation = operations.get(operationScope);
+    if (priorOperation && !canonicalBytes(priorOperation).equals(canonicalBytes(typed))) {
+      invalidCheckpointJournal(`scoped operation ${typed.operationId} has divergent persisted payloads.`);
+    }
+    operations.set(operationScope, typed);
+    const ordinalScope = `${typed.changeId}\0${typed.generation}\0${typed.phase}\0${typed.ordinal}`;
+    if (ordinals.has(ordinalScope)) {
+      invalidCheckpointJournal(`phase ordinal ${typed.ordinal} appears more than once.`);
+    }
+    ordinals.add(ordinalScope);
+    result.push(record as PhaseCheckpointRecord);
+  }
+  return result;
+}
+
+async function currentApprovalSha256(root: string, stage: SupersedingPhase): Promise<string> {
+  const current = await approvalManifest(root, stage as ApprovalStage);
+  const evidence = await loadApproval(root, stage as ApprovalStage);
+  if (!evidence || evidence.artifactSha256 !== current.artifactSha256
+    || evidence.changeId !== current.changeId || evidence.generation !== current.generation) {
+    throw new Error(`CHANGE_GENERATION_PHASE: current ${stage} approval is required.`);
+  }
+  return current.artifactSha256;
+}
+
+function phaseCheckpointProjected(
+  change: ChangeRecord,
+  phase: SupersedingPhase,
+  operationId: string,
+): boolean {
+  const history = phase === 'requirements' ? change.requirementsHistory : change.designHistory;
+  return change.phases[phase]?.operationId === operationId
+    || (history ?? []).some((entry) => entry.operationId === operationId);
+}
+
+function historicalPhaseCheckpointProjected(
+  change: ChangeRecord,
+  generation: number,
+  phase: SupersedingPhase,
+  operationId: string,
+): boolean {
+  if (generation === (change.generation ?? 1)) {
+    return phaseCheckpointProjected(change, phase, operationId);
+  }
+  const historical = change.generationHistory?.find((entry) => entry.generation === generation);
+  if (!historical) return false;
+  const history = phase === 'requirements'
+    ? historical.requirementsHistory
+    : historical.designHistory;
+  return historical.phases[phase]?.operationId === operationId
+    || (history ?? []).some((entry) => entry.operationId === operationId);
+}
+
+export async function unprojectedPhaseCheckpointSummaries(
+  root: string,
+  change: ChangeRecord,
+): Promise<Array<{
+  generation: number;
+  phase: SupersedingPhase;
+  operationId: string;
+  ordinal: number;
+  journalOrder: number;
+}>> {
+  const records = await phaseCheckpointRecords(root);
+  return records
+    .filter((record) => record.payload.changeId === change.changeId
+      && !historicalPhaseCheckpointProjected(
+        change,
+        record.payload.generation,
+        record.payload.phase,
+        record.payload.operationId,
+      ))
+    .map((record) => ({
+      generation: record.payload.generation,
+      phase: record.payload.phase,
+      operationId: record.payload.operationId,
+      ordinal: record.payload.ordinal,
+      journalOrder: record.order,
+    }));
+}
+
+async function recoverPhaseCheckpoints(
+  root: string,
+  evidence: ChangeEvidence,
+  change: ChangeRecord,
+  generation: number,
+  records: PhaseCheckpointRecord[],
+): Promise<void> {
+  let changed = false;
+  for (const record of records.filter((entry) =>
+    entry.payload.changeId === change.changeId && entry.payload.generation === generation)) {
+    const payload = record.payload;
+    if (phaseCheckpointProjected(change, payload.phase, payload.operationId)) continue;
+    const orderPhase = generationOrderPhase(generation, payload.orderPhaseKey);
+    const inspected = await inspectEvidenceOrder(root);
+    if (!inspected.valid) invalidCheckpointJournal('monotonic evidence order is invalid.');
+    let order = evidenceOrderRecord(inspected.records, 'change', change.changeId, orderPhase);
+    if (!order) {
+      order = await appendEvidenceOrder(root, {
+        kind: 'change',
+        entityId: change.changeId,
+        phase: orderPhase,
+      });
+    }
+    const candidate: ChangePhaseEvidence = {
+      phase: payload.phase,
+      order: order.sequence,
+      recordedAt: payload.recordedAt,
+      fingerprints: payload.fingerprints,
+      approvalManifestSha256: payload.approvalManifestSha256,
+      operationId: payload.operationId,
+    };
+    supersedeApprovedPhase(change, payload.phase, candidate, payload.ordinal);
+    changed = true;
+  }
+  if (changed) await writeJson(root, '.musubix/evidence/changes.json', evidence);
+}
 
 async function changeDocumentRequirementIds(root: string, changeId: string): Promise<string[]> {
   const source = await readText(root, `.musubix/changes/${changeId}.md`);
@@ -159,15 +378,157 @@ function unchangedRejection(
   return null;
 }
 
+function checkpointCallerInputsEqual(
+  payload: PhaseCheckpointPayload,
+  approvalManifestSha256: string,
+  requirementIds: string[],
+  fingerprints: ChangeFingerprints,
+): boolean {
+  return payload.approvalManifestSha256 === approvalManifestSha256
+    && canonicalBytes(payload.requirementIds).equals(canonicalBytes(requirementIds))
+    && canonicalBytes(payload.fingerprints).equals(canonicalBytes(fingerprints));
+}
+
+async function recordSupersedingApprovedPhase(
+  root: string,
+  changeId: string,
+  phase: SupersedingPhase,
+  requirementIds: string[],
+  operationId: string | undefined,
+  dryRun: boolean,
+): Promise<ChangeEvidence | null> {
+  const lease = await acquireChangeLease(root, changeId);
+  try {
+    const evidence = await loadChangeEvidence(root);
+    const change = evidence?.changes.find((entry) => entry.changeId === changeId);
+    if (!evidence || !change) return null;
+    const generation = activeChangeGeneration(change);
+    if (generation === null) throw new Error('CHANGE_GENERATION_PHASE: no active generation; reopen impact is required.');
+    const records = await phaseCheckpointRecords(root);
+    await recoverPhaseCheckpoints(root, evidence, change, generation, records);
+    const current = change.phases[phase];
+    if (!current) {
+      if (operationId !== undefined) {
+        throw new Error(`CLI_ERROR: --operation-id is not accepted for the initial ${phase} checkpoint.`);
+      }
+      return null;
+    }
+    const documentRequirementIds = await changeDocumentRequirementIds(root, changeId);
+    const normalizedRequirementIds = [...new Set(requirementIds)].sort();
+    if (!sameRequirementSet(change.requirementIds, documentRequirementIds)
+      || !sameRequirementSet(normalizedRequirementIds, documentRequirementIds)) {
+      throw new Error('CHANGE_GENERATION_REQUIREMENTS: phase requirement IDs must exactly match the CHANGE document.');
+    }
+    const approvalManifestSha256 = await currentApprovalSha256(root, phase);
+    const fingerprints = await currentFingerprints(root, changeId, change.requirementIds);
+    if (operationId !== undefined) {
+      const persisted = records.find((record) =>
+        record.payload.changeId === changeId
+        && record.payload.generation === generation
+        && record.payload.phase === phase
+        && record.payload.operationId === operationId);
+      if (persisted) {
+        if (!checkpointCallerInputsEqual(
+          persisted.payload, approvalManifestSha256, normalizedRequirementIds, fingerprints,
+        )) {
+          throw new Error(`CHANGE_GENERATION_DUPLICATE: ${changeId}:${phase}:${operationId} is bound to different input.`);
+        }
+        return evidence;
+      }
+    }
+    const relevantFingerprint = phase === 'requirements'
+      ? fingerprints.requirements
+      : fingerprints.design;
+    const currentRelevantFingerprint = phase === 'requirements'
+      ? current.fingerprints.requirements
+      : current.fingerprints.design;
+    const currentCheckpoint = current.approvalManifestSha256 === approvalManifestSha256
+      && currentRelevantFingerprint === relevantFingerprint;
+    if (currentCheckpoint) {
+      throw new Error(`CHANGE_GENERATION_DUPLICATE: ${changeId}:${phase} is already current.`);
+    }
+    if (operationId === undefined) {
+      throw new Error(`CLI_ERROR: --operation-id is required to supersede ${changeId}:${phase}.`);
+    }
+    const ordinal = nextPhaseCheckpointOrdinal(change, phase);
+    const payload: PhaseCheckpointPayload = {
+      schemaVersion: 1,
+      changeId,
+      generation,
+      phase,
+      operationId,
+      ordinal,
+      approvalManifestSha256,
+      requirementIds: normalizedRequirementIds,
+      fingerprints,
+      semanticPhaseKey: checkpointSemanticPhaseKey(changeId, generation, phase),
+      orderPhaseKey: `${phase}:${ordinal}`,
+      recordedAt: new Date().toISOString(),
+      fencingToken: lease.fencingToken,
+    };
+    if (dryRun) {
+      const preview = structuredClone(evidence);
+      const previewChange = preview.changes.find((entry) => entry.changeId === changeId)!;
+      supersedeApprovedPhase(previewChange, phase, {
+        phase,
+        recordedAt: payload.recordedAt,
+        fingerprints,
+        approvalManifestSha256,
+        operationId,
+      }, ordinal);
+      return preview;
+    }
+    await assertChangeLeaseCurrent(lease);
+    try {
+      await appendJournalRecord(root, {
+        stream: 'normal',
+        changeId,
+        kind: 'change-phase-checkpoint',
+        idempotencyKey: phaseCheckpointIdempotencyKey(changeId, generation, phase, operationId),
+        payload,
+      });
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : String(cause);
+      if (!message.startsWith('JOURNAL_IDEMPOTENCY_CONFLICT:')) throw cause;
+      const refreshed = await phaseCheckpointRecords(root);
+      const persisted = refreshed.find((record) =>
+        record.idempotencyKey === phaseCheckpointIdempotencyKey(changeId, generation, phase, operationId));
+      if (persisted && checkpointCallerInputsEqual(
+        persisted.payload, approvalManifestSha256, normalizedRequirementIds, fingerprints,
+      )) {
+        await recoverPhaseCheckpoints(root, evidence, change, generation, refreshed);
+        return evidence;
+      }
+      throw new Error(`CHANGE_GENERATION_DUPLICATE: ${changeId}:${phase}:${operationId} is bound to different input.`);
+    }
+    await assertChangeLeaseCurrent(lease);
+    const refreshed = await phaseCheckpointRecords(root);
+    await recoverPhaseCheckpoints(root, evidence, change, generation, refreshed);
+    return evidence;
+  } finally {
+    await releaseChangeLease(lease);
+  }
+}
+
 export async function recordChangePhase(
   root: string,
   changeId: string,
   phase: ChangePhase,
   requirementIds: string[],
-  options: { allowUnchanged?: boolean; dryRun?: boolean; reopen?: boolean } = {},
+  options: {
+    allowUnchanged?: boolean;
+    dryRun?: boolean;
+    reopen?: boolean;
+    operationId?: string;
+  } = {},
 ): Promise<ChangeEvidence> {
   if (!/^CHANGE-\d+$/.test(changeId)) throw new Error('Change ID must match CHANGE-<digits>.');
   if (!changePhases.includes(phase)) throw new Error('Unknown change phase.');
+  if (options.operationId !== undefined
+    && (!phaseCheckpointOperationId.test(options.operationId)
+      || !['requirements', 'design'].includes(phase))) {
+    throw new Error('CLI_ERROR: --operation-id must match ^[a-z0-9][a-z0-9-]{0,63}$ and is accepted only for requirements or design.');
+  }
   if ((!options.reopen && !requirementIds.length) || requirementIds.some((id) => !ids.requirement.test(id))) {
     throw new Error('At least one valid REQ-* ID is required.');
   }
@@ -178,6 +539,16 @@ export async function recordChangePhase(
     throw new Error('CLI_ERROR: --reopen is accepted only for impact.');
   }
   if (options.reopen) {
+    const preflightEvidence = await loadChangeEvidence(root);
+    const preflightChange = preflightEvidence?.changes.find((entry) => entry.changeId === changeId);
+    if (!preflightEvidence || !preflightChange) {
+      throw new Error('CHANGE_GENERATION_PHASE: reopen requires an existing CHANGE generation.');
+    }
+    const preflightActive = activeChangeGeneration(preflightChange);
+    if (preflightActive !== null && !preflightChange.phases.quality
+      && !(preflightChange.phases.impact && Object.keys(preflightChange.phases).length === 1)) {
+      throw new Error('CHANGE_GENERATION_PHASE: an incomplete generation must be abandoned before reopen.');
+    }
     const lease = await acquireChangeLease(root, changeId);
     try {
       const evidence = await loadChangeEvidence(root);
@@ -189,6 +560,16 @@ export async function recordChangePhase(
       const requestedRequirementIds = requirementIds.length ? [...new Set(requirementIds)].sort() : documentRequirementIds;
       if (!sameRequirementSet(requestedRequirementIds, documentRequirementIds)) {
         throw new Error('CHANGE_GENERATION_REQUIREMENTS: requirement IDs must exactly match the CHANGE document.');
+      }
+      const departingGeneration = activeChangeGeneration(change);
+      if (departingGeneration !== null) {
+        await recoverPhaseCheckpoints(
+          root,
+          evidence,
+          change,
+          departingGeneration,
+          await phaseCheckpointRecords(root),
+        );
       }
       const reopened = reopenChangeGeneration(change, documentRequirementIds);
       if (reopened.resumed) return evidence;
@@ -215,6 +596,17 @@ export async function recordChangePhase(
     } finally {
       await releaseChangeLease(lease);
     }
+  }
+  if (phase === 'requirements' || phase === 'design') {
+    const superseded = await recordSupersedingApprovedPhase(
+      root,
+      changeId,
+      phase,
+      requirementIds,
+      options.operationId,
+      options.dryRun === true,
+    );
+    if (superseded) return superseded;
   }
   const evidence = await loadChangeEvidence(root) ?? { schemaVersion: 1, changes: [] };
   if (evidence.changes.some((entry) =>
@@ -286,6 +678,12 @@ export async function recordChangePhase(
       recordedAt: new Date().toISOString(),
       fingerprints,
       ...(phase === 'requirements' && options.allowUnchanged ? { allowUnchanged: true } : {}),
+      ...(phase === 'requirements' || phase === 'design'
+        ? {
+          approvalManifestSha256: await currentApprovalSha256(root, phase),
+          ...(phase === 'requirements' ? { requirementsOrdinal: 1 } : { designOrdinal: 1 }),
+        }
+        : {}),
     };
     if (phase === 'quality' && qualityFingerprintPreviouslyRecorded(change, candidate.fingerprints)) {
       throw new Error(`CHANGE_QUALITY_UNCHANGED: ${changeId}:quality has no changed fingerprint to supersede.`);
@@ -370,6 +768,16 @@ export async function abandonPersistedChangeGeneration(
   changeId: string,
   authority: { reason: string; approver: string; confirm: boolean },
 ): Promise<ChangeEvidence> {
+  if (!authority.confirm || !authority.reason.trim() || !authority.approver.trim()) {
+    throw new Error('CLI_ERROR: generation abandon requires nonblank --reason, --approver, and --confirm.');
+  }
+  const preflightEvidence = await loadChangeEvidence(root);
+  const preflightChange = preflightEvidence?.changes.find((entry) => entry.changeId === changeId);
+  if (!preflightEvidence || !preflightChange
+    || activeChangeGeneration(preflightChange) === null
+    || preflightChange.phases.quality) {
+    throw new Error('CHANGE_GENERATION_PHASE: only an incomplete active generation can be abandoned.');
+  }
   const lease = await acquireChangeLease(root, changeId);
   try {
     const evidence = await loadChangeEvidence(root);
@@ -377,6 +785,17 @@ export async function abandonPersistedChangeGeneration(
     if (!evidence || !change) {
       throw new Error('CHANGE_GENERATION_PHASE: generation abandon requires an existing CHANGE.');
     }
+    const generation = activeChangeGeneration(change);
+    if (generation === null || change.phases.quality) {
+      throw new Error('CHANGE_GENERATION_PHASE: only an incomplete active generation can be abandoned.');
+    }
+    await recoverPhaseCheckpoints(
+      root,
+      evidence,
+      change,
+      generation,
+      await phaseCheckpointRecords(root),
+    );
     abandonChangeGeneration(change, authority);
     await assertChangeLeaseCurrent(lease);
     await writeJson(root, '.musubix/evidence/changes.json', evidence);
@@ -409,6 +828,17 @@ function collectRecordedAtEntries(change: ChangeRecord): { label: string; order:
         order: quality.order,
         recordedAt: quality.recordedAt,
       });
+    }
+    for (const phase of ['requirements', 'design'] as const) {
+      const history = phase === 'requirements' ? change.requirementsHistory : change.designHistory;
+      const field = phase === 'requirements' ? 'requirementsOrdinal' : 'designOrdinal';
+      for (const [index, item] of (history ?? []).entries()) {
+        candidates.push({
+          label: `${phase}:${item[field] ?? index + 1}`,
+          order: item.order,
+          recordedAt: item.recordedAt,
+        });
+      }
     }
   }
   const fullSetKey = batchKey(change.requirementIds);
@@ -454,7 +884,10 @@ function recordedAtOutOfOrderDiagnostics(change: ChangeRecord): Diagnostic[] {
  * @implements REQ-M5-EVIDENCE-005 REQ-M5-TDD-001 REQ-M5-TDD-002 REQ-M5-TDD-003 REQ-M5-TDD-004 REQ-M5-BOOTSTRAP-001 REQ-M5-BOOTSTRAP-002 REQ-M5-BOOTSTRAP-003 REQ-M5-BOOTSTRAP-004 REQ-M5-COMPAT-001 REQ-M5-COMPAT-013
  * @design DES-M5-007 DES-M5-011 DES-M5-013
  */
-export async function validateChangeEvidence(root: string): Promise<{
+export async function validateChangeEvidence(
+  root: string,
+  purpose = 'phase-validation',
+): Promise<{
   present: boolean;
   valid: boolean;
   changes: number;
@@ -481,6 +914,14 @@ export async function validateChangeEvidence(root: string): Promise<{
     };
   }
   const diagnostics: Diagnostic[] = [...waiverDiagnostics];
+  try {
+    await phaseCheckpointRecords(root);
+  } catch (cause) {
+    const message = cause instanceof Error ? cause.message : String(cause);
+    const invalid = /^CHANGE_CHECKPOINT_JOURNAL_INVALID:\s*(.*)$/.exec(message);
+    if (!invalid) throw cause;
+    diagnostics.push(error('CHANGE_CHECKPOINT_JOURNAL_INVALID', invalid[1]!));
+  }
   const order = waiverContext.order;
   diagnostics.push(...order.diagnostics);
   for (const changeId of documents) {
@@ -520,12 +961,38 @@ export async function validateChangeEvidence(root: string): Promise<{
           `${change.changeId}:${singularPhase} lacks monotonic order evidence; regenerate this change chronology.`,
           change.changeId, undefined, diagnosticDetail('CHANGE_ORDER_MIGRATION_REQUIRED', { phaseName: singularPhase })));
       } else if (item) {
-        const phaseKey = singularPhase === 'quality' && (item.qualityOrdinal ?? 1) > 1
-          ? `quality:${item.qualityOrdinal}`
-          : singularPhase;
+        const phaseOrdinal = singularPhase === 'requirements'
+          ? item.requirementsOrdinal ?? 1
+          : singularPhase === 'design'
+            ? item.designOrdinal ?? 1
+            : singularPhase === 'quality'
+              ? item.qualityOrdinal ?? 1
+              : 1;
+        const phaseKey = phaseOrdinal > 1 ? `${singularPhase}:${phaseOrdinal}` : singularPhase;
         const record = generationEvidenceOrderRecord(order.records, change, phaseKey);
         if (!record || record.sequence !== item.order) {
           diagnostics.push(error('CHANGE_ORDER_MISMATCH', `${change.changeId}:${singularPhase} does not match the monotonic evidence order log.`));
+        }
+      }
+      for (const phase of ['requirements', 'design'] as const) {
+        const history = phase === 'requirements' ? change.requirementsHistory : change.designHistory;
+        const ordinalField = phase === 'requirements' ? 'requirementsOrdinal' : 'designOrdinal';
+        for (const [index, item] of (history ?? []).entries()) {
+          const ordinal = item[ordinalField] ?? index + 1;
+          if (!Number.isInteger(item.order)) {
+            diagnostics.push(waivedDiagnostic(waiverContext, 'CHANGE_ORDER_MIGRATION_REQUIRED',
+              `${change.changeId}:${phase}:${ordinal} lacks monotonic order evidence; regenerate this change chronology.`,
+              change.changeId, undefined, diagnosticDetail('CHANGE_ORDER_MIGRATION_REQUIRED', { phaseName: phase })));
+            continue;
+          }
+          const phaseKey = ordinal > 1 ? `${phase}:${ordinal}` : phase;
+          const record = generationEvidenceOrderRecord(order.records, change, phaseKey);
+          if (!record || record.sequence !== item.order) {
+            diagnostics.push(error(
+              'CHANGE_ORDER_MISMATCH',
+              `${change.changeId}:${phaseKey} does not match the monotonic evidence order log.`,
+            ));
+          }
         }
       }
     }
@@ -550,9 +1017,15 @@ export async function validateChangeEvidence(root: string): Promise<{
       && change.phases.requirements.order <= change.phases.impact.order) {
       diagnostics.push(error('CHANGE_PHASE_ORDER', `${change.changeId}:requirements is not after impact.`));
     }
-    if (change.phases.design?.order !== undefined && change.phases.requirements?.order !== undefined
-      && change.phases.design.order <= change.phases.requirements.order) {
-      diagnostics.push(error('CHANGE_PHASE_ORDER', `${change.changeId}:design is not after requirements.`));
+    if (change.phases.design?.order !== undefined) {
+      const predecessor = [
+        ...(change.requirementsHistory ?? []),
+        ...(change.phases.requirements ? [change.phases.requirements] : []),
+      ].filter((entry) => entry.order !== undefined && entry.order < change.phases.design!.order!)
+        .sort((left, right) => right.order! - left.order!)[0];
+      if (!predecessor) {
+        diagnostics.push(error('CHANGE_PHASE_ORDER', `${change.changeId}:design has no preceding requirements checkpoint.`));
+      }
     }
     for (const batchPhase of tddBatchPhases) {
       const covered = new Set(batches.filter((batch) => batch[batchPhase]).flatMap((batch) => batch.requirementIds));
@@ -581,9 +1054,15 @@ export async function validateChangeEvidence(root: string): Promise<{
           diagnostics.push(error('CHANGE_ORDER_MISMATCH', `${change.changeId}:${batchPhase} does not match the monotonic evidence order log.`));
         }
       }
-      if (batch.red?.order !== undefined && change.phases.design?.order !== undefined
-        && batch.red.order <= change.phases.design.order) {
-        diagnostics.push(error('CHANGE_PHASE_ORDER', `${change.changeId}:red is not after design.`));
+      if (batch.red?.order !== undefined) {
+        const predecessor = [
+          ...(change.designHistory ?? []),
+          ...(change.phases.design ? [change.phases.design] : []),
+        ].filter((entry) => entry.order !== undefined && entry.order < batch.red!.order!)
+          .sort((left, right) => right.order! - left.order!)[0];
+        if (!predecessor) {
+          diagnostics.push(error('CHANGE_PHASE_ORDER', `${change.changeId}:red has no preceding design checkpoint.`));
+        }
       }
       if (batch.implementation?.order !== undefined && batch.red?.order !== undefined
         && batch.implementation.order <= batch.red.order) {
@@ -611,17 +1090,26 @@ export async function validateChangeEvidence(root: string): Promise<{
       diagnostics.push(waivedDiagnostic(waiverContext, 'CHANGE_DESIGN_UNCHANGED',
         `${change.changeId} did not change design after requirements.`, change.changeId, undefined, undefined));
     }
-    const selectedBatchScopes = new Set(change.requirementIds.flatMap((requirementId) => {
-      if (!tdd) return [];
-      const selected = selectCurrentTddCycle(change, requirementId, tdd).selected?.batch;
-      return selected ? [selected.scopeId ?? batchKey(selected.requirementIds)] : [];
-    }));
+    const selectedBatchScopes = new Set<string>();
+    if (tdd) {
+      for (const requirementId of change.requirementIds) {
+        const selected = (await selectCurrentChangeTddCycle(
+          root, change, requirementId, tdd, purpose,
+        )).selected?.batch;
+        if (selected) selectedBatchScopes.add(selected.scopeId ?? batchKey(selected.requirementIds));
+      }
+    }
     for (const batch of batches) {
       if (!selectedBatchScopes.has(batch.scopeId ?? batchKey(batch.requirementIds))) continue;
       const red = batch.red;
       const implementation = batch.implementation;
       const green = batch.green;
-      if (design && red && design.fingerprints.tests === red.fingerprints.tests) {
+      const designAtRed = red?.order === undefined ? undefined : [
+        ...(change.designHistory ?? []),
+        ...(change.phases.design ? [change.phases.design] : []),
+      ].filter((entry) => entry.order !== undefined && entry.order < red.order!)
+        .sort((left, right) => right.order! - left.order!)[0];
+      if (designAtRed && red && designAtRed.fingerprints.tests === red.fingerprints.tests) {
         diagnostics.push(waivedDiagnostic(waiverContext, 'CHANGE_TESTS_UNCHANGED',
           `${change.changeId} did not add or change tests before Red.`, change.changeId, undefined, diagnosticDetail('CHANGE_TESTS_UNCHANGED', { batch })));
       }
@@ -649,7 +1137,7 @@ export async function validateChangeEvidence(root: string): Promise<{
     diagnostics.push(...recordedAtOutOfOrderDiagnostics(change));
     for (const requirementId of change.requirementIds) {
       const resolution = tdd
-        ? selectCurrentTddCycle(change, requirementId, tdd)
+        ? await selectCurrentChangeTddCycle(root, change, requirementId, tdd, purpose)
         : { selected: null };
       const batch = resolution.selected?.batch ?? batchFor(batches, requirementId);
       const red = batch?.red;
@@ -678,7 +1166,10 @@ export async function validateChangeEvidence(root: string): Promise<{
  * @implements REQ-M5-EVIDENCE-004 REQ-M5-TDD-004 REQ-M5-QUALITY-001
  * @design DES-M5-007 DES-M5-011 DES-M5-015
  */
-export async function validateChangeCompleteness(root: string): Promise<{
+export async function validateChangeCompleteness(
+  root: string,
+  purpose = 'readiness',
+): Promise<{
   present: boolean;
   valid: boolean;
   changes: ChangeCompleteness[];
@@ -759,9 +1250,15 @@ export async function validateChangeCompleteness(root: string): Promise<{
       }
       const measurableAcceptance = hasMeasurableAcceptance(requirement?.acceptance ?? '');
       const resolution = tdd
-        ? selectCurrentTddCycle(change, requirementId, tdd)
-        : { selected: null };
+        ? await selectCurrentChangeTddCycle(root, change, requirementId, tdd, purpose)
+        : { selected: null, parallelStatus: null };
       const hasTdd = resolution.selected !== null;
+      if (resolution.parallelStatus === 'PARALLEL_TDD_UNCONSUMED') {
+        diagnostics.push(error(
+          'PARALLEL_TDD_UNCONSUMED',
+          `${change.changeId}:${requirementId} parallel TDD cycle is not consumed by verified integration provenance.`,
+        ));
+      }
       const checks = [
         [!!requirementNode && !!requirement && !!type, 'CHANGE_COMPLETENESS_REQUIREMENT', 'requirement'],
         [measurableAcceptance, 'CHANGE_COMPLETENESS_ACCEPTANCE', 'nonempty measurable Acceptance criteria'],

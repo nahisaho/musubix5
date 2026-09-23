@@ -182,7 +182,7 @@ export async function releaseChangeLease(lease: ChangeLease): Promise<void> {
   await releaseOrderLease(lease);
 }
 
-async function journalRecords(root: string): Promise<JournalRecord[]> {
+export async function loadJournalRecords(root: string): Promise<JournalRecord[]> {
   const records: JournalRecord[] = [];
   for (const stream of ['normal', 'bootstrap'] as const) {
     const directory = join(root, '.musubix', 'journal', stream);
@@ -213,13 +213,13 @@ async function journalRecords(root: string): Promise<JournalRecord[]> {
 }
 
 /** @id CODE-M5-LIFECYCLE-002
- * @implements REQ-M5-LIFECYCLE-002
+ * @implements REQ-M5-LIFECYCLE-002 REQ-M5-PARALLEL-011
  * @design DES-M5-004
  */
 export async function appendJournalRecord(root: string, input: JournalRecordInput): Promise<JournalRecord> {
   const lease = await acquireOrderLease(root);
   try {
-    const records = await journalRecords(root);
+    const records = await loadJournalRecords(root);
     const existing = records.find((record) => record.idempotencyKey === input.idempotencyKey);
     if (existing) {
       if (existing.stream !== input.stream
@@ -233,7 +233,7 @@ export async function appendJournalRecord(root: string, input: JournalRecordInpu
     const previous = records.at(-1);
     const payload = {
       schemaVersion: 1 as const,
-      order: (previous?.order ?? 0) + 1,
+      order: records.length + 1,
       ...input,
       previousSha256: previous?.recordSha256 ?? null,
     };
@@ -265,13 +265,13 @@ export async function appendJournalRecord(root: string, input: JournalRecordInpu
 }
 
 export async function verifyJournal(root: string): Promise<JournalRecord[]> {
-  return journalRecords(root);
+  return loadJournalRecords(root);
 }
 
 export async function loadJournalRecordByIdempotencyKey(
   root: string,
   idempotencyKey: string,
 ): Promise<JournalRecord | null> {
-  return (await journalRecords(root))
+  return (await loadJournalRecords(root))
     .find((record) => record.idempotencyKey === idempotencyKey) ?? null;
 }

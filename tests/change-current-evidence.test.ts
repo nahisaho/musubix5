@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 describe('current change evidence validation', () => {
   /**
    * @id TEST-M5-EVIDENCE-CURRENT-001
-   * @verifies REQ-M5-EVIDENCE-005 REQ-M5-TDD-001 REQ-M5-TDD-002 REQ-M5-TDD-003 REQ-M5-TDD-004 REQ-M5-BOOTSTRAP-001 REQ-M5-BOOTSTRAP-002 REQ-M5-BOOTSTRAP-003 REQ-M5-BOOTSTRAP-004 REQ-M5-COMPAT-001 REQ-M5-COMPAT-013
+   * @verifies REQ-M5-EVIDENCE-005 REQ-M5-LIFECYCLE-005 REQ-M5-TDD-001 REQ-M5-TDD-002 REQ-M5-TDD-003 REQ-M5-TDD-004 REQ-M5-BOOTSTRAP-001 REQ-M5-BOOTSTRAP-002 REQ-M5-BOOTSTRAP-003 REQ-M5-BOOTSTRAP-004 REQ-M5-COMPAT-001 REQ-M5-COMPAT-013
    */
   it('TEST-M5-EVIDENCE-CURRENT-001 ignores superseded invalid cycles and accepts concrete outcomes', async () => {
     const {
@@ -15,6 +15,7 @@ describe('current change evidence validation', () => {
     const validation = await validateChangeEvidence(root);
     const staleHistoryCodes = new Set([
       'CHANGE_TEST_CHANGED_AFTER_RED',
+      'CHANGE_TESTS_UNCHANGED',
       'CHANGE_ORDER_MIGRATION_REQUIRED',
     ]);
 
