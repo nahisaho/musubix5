@@ -1,3 +1,4 @@
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 describe('repository identity canonicalization', () => {
@@ -28,6 +29,19 @@ describe('repository identity canonicalization', () => {
     )).not.toBe(expected);
     expect(canonicalRepositoryIdentity(' \t\r\n', root)).toBe(
       canonicalRepositoryIdentity('', root),
+    );
+  });
+
+  /**
+   * @id TEST-M5-WORKTREE-REPOSITORY-IDENTITY-005
+   * @verifies REQ-M5-WORKTREE-001
+   */
+  it('TEST-M5-WORKTREE-REPOSITORY-IDENTITY-005 uses the absolute local repository root', async () => {
+    const { canonicalRepositoryIdentity } =
+      await import('../packages/analysis/src/canonical.js');
+
+    expect(canonicalRepositoryIdentity(undefined, '.')).toBe(
+      canonicalRepositoryIdentity(undefined, resolve('.')),
     );
   });
 

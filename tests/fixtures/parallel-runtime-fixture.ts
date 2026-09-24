@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 
@@ -75,7 +75,7 @@ export function writeParallelStore(root: string, store: Record<string, unknown>)
 }
 
 export async function createParallelFixture(options: FixtureOptions = {}): Promise<ParallelFixture> {
-  const root = mkdtempSync(join(tmpdir(), 'musubix5-parallel-runtime-'));
+  const root = mkdtempSync(join(realpathSync.native(tmpdir()), 'musubix5-parallel-runtime-'));
   const consumerDesignPath = options.consumerDesignPath ?? '.musubix/features/parallel-agent-development/design.md';
   const policySource = options.policySource
     ?? `# Consumer parallel design\n\nParallel-Policy: ${JSON.stringify(fixtureParallelPolicy)}\n`;
@@ -188,7 +188,6 @@ export async function createParallelFixture(options: FixtureOptions = {}): Promi
   git(root, ['config', 'user.name', 'Parallel Fixture']);
   git(root, ['config', 'user.email', 'parallel-fixture@example.invalid']);
   const baseCommit = commitAll(root, 'fixture baseline');
-  const repositoryRoot = git(root, ['rev-parse', '--show-toplevel']);
   await appendJournalRecord(root, {
     stream: 'normal',
     changeId: 'CHANGE-0003',
@@ -198,10 +197,10 @@ export async function createParallelFixture(options: FixtureOptions = {}): Promi
   });
 
   return {
-    root: repositoryRoot,
+    root,
     baseCommit,
     planFile: 'parallel-plan.json',
-    dispose: () => rmSync(repositoryRoot, resilientRemovalOptions),
+    dispose: () => rmSync(root, resilientRemovalOptions),
   };
 }
 

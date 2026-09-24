@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { resolve } from 'node:path';
 
 function compareUtf8(left: string, right: string): number {
   return Buffer.compare(Buffer.from(left, 'utf8'), Buffer.from(right, 'utf8'));
@@ -58,6 +59,6 @@ export function canonicalRepositoryIdentity(
   }
   const identity = trimmed
     ? canonicalGithubHttpsOrigin(trimmed) ?? trimmed
-    : repositoryRoot;
+    : resolve(repositoryRoot);
   return `repository:${sha256(canonicalBytes({ identity }))}`;
 }
