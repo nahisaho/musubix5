@@ -175,10 +175,11 @@ export function performanceEvidence(
   executions: PerformanceExecution[],
   runId: string,
 ): PerformanceEvidence {
-  const performanceTestIds = new Set(requirements.flatMap((requirement) =>
-    requirement.performance ? [requirement.performance.testId] : []));
+  const budgets = requirements.flatMap((requirement) =>
+    requirement.performance ? [requirement.performance] : []);
   const relevantExecutions = executions.filter((execution) =>
-    execution.tests.some((test) => performanceTestIds.has(test.id)));
+    execution.tests.some((test) => budgets.some((budget) =>
+      test.id === budget.testId && test.operations?.[budget.counter] !== undefined)));
   const observations = requirements.flatMap((requirement): PerformanceObservation[] => {
     const budget = requirement.performance;
     if (!budget) return [];
@@ -263,12 +264,18 @@ async function currentReport(
   root: string,
   command: CommandConfig,
   execution: PerformanceExecution,
+  reportRoot?: string,
 ): Promise<{ text: string; tests: TestResult[] } | null> {
-  const absolute = await safePath(root, execution.reportPath);
-  const invocation = command.adapter ? adapterInvocation(command.adapter, command.name) : null;
+  const invocation = command.adapter
+    ? adapterInvocation(command.adapter, command.name, undefined, undefined, reportRoot)
+    : null;
+  const reportPath = command.testReport && reportRoot
+    ? `${reportRoot}/${command.name}/aggregate.json`
+    : invocation?.reportPath ?? execution.reportPath;
+  const absolute = await safePath(root, reportPath);
   const text = invocation
     ? await readAdapterOutput(invocation, absolute, '')
-    : await exists(absolute) ? await readText(root, execution.reportPath) : null;
+    : await exists(absolute) ? await readText(root, reportPath) : null;
   if (text === null) return null;
   const report = command.testReport
     ? parseMusubixTestReport(text)
@@ -276,7 +283,7 @@ async function currentReport(
   return { text, tests: report.tests };
 }
 
-export async function validatePerformanceEvidence(root: string): Promise<{
+export async function validatePerformanceEvidence(root: string, reportRoot?: string): Promise<{
   present: boolean;
   valid: boolean;
   budgets: number;
@@ -341,7 +348,7 @@ export async function validatePerformanceEvidence(root: string): Promise<{
     }
     if (command && invocation) {
       try {
-        const current = await currentReport(root, command, execution);
+        const current = await currentReport(root, command, execution, reportRoot);
         if (!current || digest(current.text) !== execution.reportSha256) {
           diagnostics.push(error('PERFORMANCE_REPORT_TAMPERED', `${execution.reportPath} is missing or changed since the gate run.`, execution.reportPath));
         } else if (canonical(current.tests) !== canonical(execution.tests)) {

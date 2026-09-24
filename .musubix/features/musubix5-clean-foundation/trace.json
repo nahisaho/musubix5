@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-24T04:21:51.265Z",
+  "generatedAt": "2026-09-24T04:48:31.880Z",
   "nodes": [
     {
       "id": "CODE-M5-NPM-PUBLISH-WORKFLOW-YAML-001",
@@ -1131,7 +1131,7 @@
       "id": "CODE-M5-STATUS-GUIDANCE-001",
       "kind": "code",
       "path": "packages/analysis/src/gate.ts",
-      "line": 685
+      "line": 698
     },
     {
       "id": "CODE-M5-GRAPH-INCREMENTAL-001",
@@ -1995,13 +1995,13 @@
       "id": "TEST-M5-PARALLEL-GRAPH-ACYCLIC-001",
       "kind": "test",
       "path": "tests/parallel-quality-regressions.test.ts",
-      "line": 4
+      "line": 8
     },
     {
       "id": "TEST-M5-PARALLEL-RELEASE-NONPASS-001",
       "kind": "test",
       "path": "tests/parallel-quality-regressions.test.ts",
-      "line": 19
+      "line": 23
     },
     {
       "id": "TEST-M5-PARALLEL-LATEST-BATCH-001",
@@ -8622,13 +8622,13 @@
     "packages/analysis/src/change-evidence.ts": "4af7011893b055e014a1af8d301935a0ca3791cacc1a45f982a3068e457d1d12",
     "packages/analysis/src/change-generation.ts": "f97f773b39665aee35b81556c54beed0b2bb5c11fa770456753c0fc93bb5d3e2",
     "packages/analysis/src/change-waiver.ts": "1b880c29a16080445f324265e0da067dd8537e64cb42f360369fd2a1eda0f9c3",
-    "packages/analysis/src/change.ts": "69a9e274c86eb1a52f5a5cf0a2017433c23d171ce95db273105203db6b363c99",
+    "packages/analysis/src/change.ts": "05556e6fa603d633291edd4a33331d5d8911b3270fc0a4926e4eb328ff836e69",
     "packages/analysis/src/compatibility-oracle.ts": "83aac1ddcf29d0ff7d76a8e05c9be9dfa1911f94c1ec960145578c43f2b32d98",
     "packages/analysis/src/config.ts": "b75dacf7bce0e58eaa465a32a6181e75d3492a1dafb4cbb5e09cc9220f9ffcba",
     "packages/analysis/src/evidence-registry.ts": "41bdd3f05c91734baf22cccf5289a9906eae30bfd1356236bc98c96be47da660",
     "packages/analysis/src/files.ts": "7a8cad4ffb34c910bf056fc431d177b72ef3814d0811cada2509a129ae910c0d",
     "packages/analysis/src/formal.ts": "9f5622983fed80c1e7c141cc7c7dcd217447e5c2edd39e64877db052a57b730b",
-    "packages/analysis/src/gate.ts": "31c6e375cf5e79b81c0a977812fe0b0de3a9ab26a9ee7288e5de5838cefe9f80",
+    "packages/analysis/src/gate.ts": "0d5ae7baacde0e3086d65fd8e6a89f0119ba8ac75c91b13289d017cd183ffe22",
     "packages/analysis/src/graph.ts": "4de84f582a8da7ca24475354e0890600f34c7533f0c7af41346e879610ae4392",
     "packages/analysis/src/index.ts": "a023078b9461fa83b0f565cb9f80eb6b525c6028854f87f4bee20f3c2587ed1e",
     "packages/analysis/src/journal.ts": "a852798a86b2fe5ec38f32e827df64e45a37ba0dfa870fd3a513b605307094f6",
@@ -8641,7 +8641,7 @@
     "packages/analysis/src/parallel-runtime.ts": "1a15dbea2c162a9682773a36d130a92edd7f196bee22875a0ecb1a6a5935d13e",
     "packages/analysis/src/parallel-tdd-evidence.ts": "5968a550696b4f93c70bfd322f18afcf70f5e8dc04b888241fc76acc94a116ea",
     "packages/analysis/src/parallel.ts": "ac698520f8a60dcae907c4da7ec6bf53d920003a6db3ab8470d04252bdabcdae",
-    "packages/analysis/src/performance.ts": "a51c388499c57f177ebc4a6d5a160d7fb07550626b24a9c987b6b0d17e96ebe7",
+    "packages/analysis/src/performance.ts": "9eb0efa2eebbc95b86cf2c3bd10d59edbea90c936c017d736726e15ba84a698b",
     "packages/analysis/src/planner-output.ts": "c649e484d064c2fc5078bcbc21a08e49746feae179e26de99d92bae17ffe9a5c",
     "packages/analysis/src/process.ts": "675e76428f4e78e631fe1cbf9cddee298c93576d43fc63a5e977ff044b32d5d4",
     "packages/analysis/src/quality-policy.ts": "0ba33ac06b4762e0f398e04fd6c8975c7db6380f20080fc3dc89a701759fcd89",
@@ -8720,7 +8720,7 @@
     "tests/parallel-development.test.ts": "6d49970e05e0cac6f500c06ac75f4bd4dd7fcab1810b29c9fb41fd89733a0383",
     "tests/parallel-final-findings-generation5.test.ts": "f454175e9d0ed64574942cd8fc77ffe93c42f2f6efc6e19271130475b3d4b7dc",
     "tests/parallel-ownership-history-generation5.test.ts": "5cc0f366a22059d1eafe81d4f22ad41e68b5ecdffa6accf6f824b00835e6311b",
-    "tests/parallel-quality-regressions.test.ts": "1f65cad62645a694ffb39303f7bab87b9f957c5de3b78feb14e76b64bffa29d9",
+    "tests/parallel-quality-regressions.test.ts": "7a64abd524c6617ef9bcbcab3f9b1290c41942df79d52ebfc93be1da393b9d86",
     "tests/parallel-release-blockers-generation5.test.ts": "8739007ad5fbe19451cf1e6e2abba2265f1c1435a35e9e05164e927360bbefdc",
     "tests/parallel-review-regressions.test.ts": "b0ddb63c6f2a4fc41dd7b959b971c4cff8a2cc87f665a5ca2e42652b6cfc5423",
     "tests/parallel-runtime-lifecycle-generation5.test.ts": "66a6fb7e09b6ac620d30cc4c92f9c1fcbfdf79dab9c9109cca7cfa97314b9ea0",

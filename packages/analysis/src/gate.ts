@@ -240,18 +240,25 @@ export async function runGate(root: string, options: {
     summary: changes.present ? `${changes.changes} staged change(s) checked for ordered artifact and TDD evidence.` : 'No staged change chronology evidence is available.',
     diagnostics: changeDiagnostics,
   });
-  const completeness = await validateChangeCompleteness(root, tddPurpose);
-  const completenessDiagnostics = completeness.diagnostics.filter(scopedToFeature);
-  const completenessCheck: Evidence = {
-    name: 'change-completeness',
-    required: required('change-completeness') || hasChangeDocuments,
-    status: !completeness.present ? 'skipped' : (featureDir ? countErrors(completenessDiagnostics) === 0 : completeness.valid) ? 'pass' : 'fail',
-    summary: completeness.present
-      ? `${completeness.changes.filter((change) => change.valid).length}/${completeness.changes.length} staged change(s) have complete requirement, design, ADR, code, test, TDD and trace evidence.`
-      : 'No staged change evidence is available.',
-    diagnostics: completenessDiagnostics,
+  const completenessIndex = checks.length;
+  let completenessEvidence: Evidence | undefined;
+  const completenessCheck = async (performanceReportRoot?: string): Promise<Evidence> => {
+    const completeness = await validateChangeCompleteness(root, tddPurpose, performanceReportRoot);
+    const completenessDiagnostics = completeness.diagnostics.filter(scopedToFeature);
+    return {
+      name: 'change-completeness',
+      required: required('change-completeness') || hasChangeDocuments,
+      status: !completeness.present ? 'skipped' : (featureDir ? countErrors(completenessDiagnostics) === 0 : completeness.valid) ? 'pass' : 'fail',
+      summary: completeness.present
+        ? `${completeness.changes.filter((change) => change.valid).length}/${completeness.changes.length} staged change(s) have complete requirement, design, ADR, code, test, TDD and trace evidence.`
+        : 'No staged change evidence is available.',
+      diagnostics: completenessDiagnostics,
+    };
   };
-  checks.push(completenessCheck);
+  if (!matrixMode) {
+    completenessEvidence = await completenessCheck();
+    checks.push(completenessEvidence);
+  }
   const formalEvidence: FormalEvidence = {
     schemaVersion: 1,
     generatedAt: new Date().toISOString(),
@@ -459,7 +466,8 @@ export async function runGate(root: string, options: {
     diagnostics: identityDiagnostics,
   });
   if (!matrixMode) await writePerformanceEvidence(root, performanceExecutions, gateRunId);
-  const performance = await validatePerformanceEvidence(root);
+  const matrixReportRoot = matrixMode ? '.musubix/cache/matrix-native' : undefined;
+  const performance = await validatePerformanceEvidence(root, matrixReportRoot);
   checks.push({
     name: 'performance',
     required: required('performance') || performance.budgets > 0,
@@ -469,6 +477,10 @@ export async function runGate(root: string, options: {
       : `${performance.budgets} deterministic operation budget(s) checked.`,
     diagnostics: performance.diagnostics,
   });
+  if (matrixMode) {
+    completenessEvidence = await completenessCheck(matrixReportRoot);
+    checks.splice(completenessIndex, 0, completenessEvidence);
+  }
   if (!matrixMode && config.commands.some((command) => command.mutationReport)) {
     await writeMutationEvidence(root, mutationExecutions, gateRunId);
   }
@@ -499,13 +511,14 @@ export async function runGate(root: string, options: {
       : `${correspondence.coveredRequirements.length}/${correspondence.requirements} explicitly modeled requirement(s) correspond to current authoritative passing tests.`,
     diagnostics: correspondence.diagnostics,
   });
-  const refreshedCompleteness = await validateChangeCompleteness(root, tddPurpose);
+  const refreshedCompleteness = await validateChangeCompleteness(root, tddPurpose, matrixReportRoot);
   const refreshedCompletenessDiagnostics = refreshedCompleteness.diagnostics.filter(scopedToFeature);
-  completenessCheck.status = !refreshedCompleteness.present ? 'skipped' : (featureDir ? countErrors(refreshedCompletenessDiagnostics) === 0 : refreshedCompleteness.valid) ? 'pass' : 'fail';
-  completenessCheck.summary = refreshedCompleteness.present
+  if (!completenessEvidence) throw new Error('Change completeness evidence was not initialized.');
+  completenessEvidence.status = !refreshedCompleteness.present ? 'skipped' : (featureDir ? countErrors(refreshedCompletenessDiagnostics) === 0 : refreshedCompleteness.valid) ? 'pass' : 'fail';
+  completenessEvidence.summary = refreshedCompleteness.present
     ? `${refreshedCompleteness.changes.filter((change) => change.valid).length}/${refreshedCompleteness.changes.length} staged change(s) have semantically complete evidence.`
     : 'No staged change evidence is available.';
-  completenessCheck.diagnostics = refreshedCompletenessDiagnostics;
+  completenessEvidence.diagnostics = refreshedCompletenessDiagnostics;
   const attestation = await verifyEvidenceAttestation(
     root,
     config.attestation,

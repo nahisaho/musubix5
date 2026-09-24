@@ -1170,6 +1170,7 @@ export async function validateChangeEvidence(
 export async function validateChangeCompleteness(
   root: string,
   purpose = 'readiness',
+  performanceReportRoot?: string,
 ): Promise<{
   present: boolean;
   valid: boolean;
@@ -1201,7 +1202,7 @@ export async function validateChangeCompleteness(
   for (const path of (await files(root)).filter((entry) => /^\.musubix\/features\/[^/]+\/design\.md$/.test(entry))) {
     for (const component of validateDesign(await readText(root, path), path).value) designsById.set(component.id, component);
   }
-  const performance = await validatePerformanceEvidence(root);
+  const performance = await validatePerformanceEvidence(root, performanceReportRoot);
   const changes: ChangeCompleteness[] = [];
   for (const change of evidence.changes) {
     const diagnosticStart = diagnostics.length;
