@@ -21,6 +21,7 @@ export const requiredCandidateGateCommands = [
   'typecheck',
   'build',
   'test',
+  'codegraph-tests',
   'compatibility',
   'pack-check',
   'pack-smoke',
