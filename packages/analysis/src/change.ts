@@ -95,6 +95,14 @@ async function currentFingerprints(root: string, changeId: string, requirementId
   };
 }
 
+export async function currentChangeFingerprints(
+  root: string,
+  changeId: string,
+  requirementIds: string[],
+): Promise<ChangeFingerprints> {
+  return currentFingerprints(root, changeId, requirementIds);
+}
+
 const tddBatchPhases = ['red', 'implementation', 'green'] as const;
 type TddBatchPhase = typeof tddBatchPhases[number];
 const singularPhases = ['impact', 'requirements', 'design', 'quality'] as const;

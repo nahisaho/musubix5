@@ -73,7 +73,7 @@ jobs:
               echo "RELEASE_TAG_CANDIDATE_MISMATCH: dispatch workflow ref must be the release tag" >&2
               exit 1
             }
-            [[ "$EVIDENCE_COMMIT" =~ ^[0-9a-f]{40}$ ]] || {
+            [[ "$EVIDENCE_COMMIT" =~ ^[0-9a-f]{40,64}$ ]] || {
               echo "RELEASE_TAG_CANDIDATE_MISMATCH: evidence_commit must be a full lowercase SHA" >&2
               exit 1
             }

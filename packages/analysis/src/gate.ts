@@ -10,7 +10,7 @@ import { validateTddEvidence } from './tdd.js';
 import { parseMusubixTestReport, type MusubixTestReport } from './test-report.js';
 import {
   activeChangeGeneration, loadChangeEvidence, summarizeChangeGeneration, unprojectedPhaseCheckpointSummaries,
-  validateChangeCompleteness, validateChangeEvidence,
+  currentChangeFingerprints, validateChangeCompleteness, validateChangeEvidence,
   type ChangeGenerationSummary,
 } from './change.js';
 import { resolveChangeContext } from './change-generation.js';
@@ -32,9 +32,10 @@ import {
 } from './model-correspondence.js';
 import { verifyEvidenceAttestation, type AttestationVerificationOptions } from './attestation.js';
 import {
-  domainOwning, domainsConfigured, resolveDomains, validateApprovals, validateApprovalsForFeatureGate,
-  type ApprovalValidation,
+  domainOwning, domainsConfigured, loadApproval, resolveDomains, validateApprovals, validateApprovalsForFeatureGate,
+  type ApprovalStageValidation, type ApprovalValidation,
 } from './approval.js';
+import { listCandidateSnapshotRecords } from './workspace-manager.js';
 import { requiredCommandDiagnostics } from './quality-policy.js';
 
 export interface GateReport {
@@ -712,6 +713,15 @@ export async function projectStatus(root: string): Promise<{
   workflowWaivers: Array<{ skill: string; phase: string; declarationRecordedAt: string; index?: number; code: string; approver: string; reason: string; waiverRecordedAt: string }>;
   waiverDiagnostics: Diagnostic[];
 }> {
+  const candidateCreateRecovery = (
+    stage: ApprovalStageValidation,
+    activeChangeId: string | undefined,
+  ): string[] => stage.diagnostics.some((diagnostic) =>
+    diagnostic.code === 'APPROVAL_CANDIDATE_MISSING')
+    && candidateCreatePreconditionsCurrent
+    && activeChangeId
+    ? [`musubix5 candidate-snapshot create ${activeChangeId}`]
+    : [];
   const paths = await files(root);
   const initialized = paths.includes('.musubix/config.json');
   const config = initialized ? await loadConfig(root) : null;
@@ -760,6 +770,75 @@ export async function projectStatus(root: string): Promise<{
   }
   const generationReady = changeDiagnostics.length === 0 && (!changeRecord
     || (activeChangeGeneration(changeRecord) !== null && changeRecord.phases.quality !== undefined));
+  const nonReleaseApprovalStages = approvals?.domains
+    ? approvals.domains.flatMap((domain) => domain.stages)
+    : approvals?.stages.filter((stage) => stage.stage !== 'release') ?? [];
+  let candidateCreatePreconditionsCurrent = false;
+  if (changeContext && changeRecord?.phases.quality
+    && nonReleaseApprovalStages.length > 0
+    && nonReleaseApprovalStages.every((stage) => stage.status === 'approved')) {
+    const requirementIds = [...changeRecord.requirementIds].sort();
+    const fingerprints = await currentChangeFingerprints(
+      root,
+      changeContext.changeId,
+      requirementIds,
+    );
+    candidateCreatePreconditionsCurrent =
+      JSON.stringify(changeRecord.phases.quality.fingerprints) === JSON.stringify(fingerprints);
+  }
+  const candidateRecoveryActions: string[] = [];
+  if (changeContext && changeContext.generation !== null) {
+    let live: Awaited<ReturnType<typeof listCandidateSnapshotRecords>> = [];
+    try {
+      live = (await listCandidateSnapshotRecords(root))
+        .filter((snapshot) => snapshot.changeId === changeContext!.changeId
+          && !snapshot.deleted
+          && snapshot.repositoryStatus === 'match');
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : String(cause);
+      if (message.startsWith('APPROVAL_CANDIDATE_UNAVAILABLE:')) {
+        changeDiagnostics.push({
+          code: 'APPROVAL_CANDIDATE_UNAVAILABLE',
+          severity: 'error',
+          message,
+        });
+      } else if (!message.startsWith('WORKSPACE_GIT_FAILED:')) {
+        throw cause;
+      }
+    }
+    if (live.length > 1) {
+      candidateRecoveryActions.push('musubix5 candidate-snapshot list');
+      candidateRecoveryActions.push(...live
+        .sort((left, right) => left.order - right.order)
+        .map((snapshot) =>
+          `musubix5 candidate-snapshot delete ${snapshot.snapshotId} --deleted-by <name> --confirm`));
+    } else if (live.length === 1) {
+      const snapshot = live[0]!;
+      const replacementRequired = snapshot.legacy
+        || snapshot.generation !== changeContext.generation
+        || snapshot.commitStatus === 'unreachable'
+        || !candidateCreatePreconditionsCurrent;
+      if (replacementRequired) {
+        const release = await loadApproval(root, 'release');
+        const candidateCommit = release?.projection && typeof release.projection === 'object'
+          ? (release.projection as Record<string, unknown>).candidateCommit
+          : undefined;
+        if (release?.changeId === snapshot.changeId && candidateCommit === snapshot.commit) {
+          candidateRecoveryActions.push(
+            `musubix5 change-record ${snapshot.changeId} impact --reopen`,
+          );
+        }
+        candidateRecoveryActions.push(
+          `musubix5 candidate-snapshot delete ${snapshot.snapshotId} --deleted-by <name> --confirm`,
+        );
+        if (candidateCreatePreconditionsCurrent) {
+          candidateRecoveryActions.push(
+            `musubix5 candidate-snapshot create ${snapshot.changeId}`,
+          );
+        }
+      }
+    }
+  }
   const artifacts = {
     requirements: paths.filter((p) => /^\.musubix\/features\/[^/]+\/requirements\.md$/.test(p)).length,
     designs: paths.filter((p) => /^\.musubix\/features\/[^/]+\/design\.md$/.test(p)).length,
@@ -830,15 +909,25 @@ export async function projectStatus(root: string): Promise<{
                 `musubix5 approval record ${stage.stage} --approver <name> --artifact-sha256 <approved-hash> --domain ${d.name} --confirm`,
               ])),
             ...(approvals.release && approvals.release.status !== 'approved' && (approvals.release.required || approvals.release.present)
-              ? ['musubix5 approval prepare release', 'musubix5 approval record release --approver <name> --artifact-sha256 <approved-hash> --confirm']
+              ? [
+                ...candidateRecoveryActions,
+                ...candidateCreateRecovery(approvals.release, changeContext?.changeId),
+                'musubix5 approval prepare release',
+                'musubix5 approval record release --approver <name> --artifact-sha256 <approved-hash> --confirm',
+              ]
               : []),
           ]
-          : approvals.stages.filter((stage) =>
-            stage.status !== 'approved' && (stage.required || stage.present))
-            .flatMap((stage) => [
-              `musubix5 approval prepare ${stage.stage}`,
-              `musubix5 approval record ${stage.stage} --approver <name> --artifact-sha256 <approved-hash> --confirm`,
-            ])
+          : [
+            ...approvals.stages.filter((stage) =>
+              stage.status !== 'approved' && (stage.required || stage.present))
+              .flatMap((stage) => [
+                ...(stage.stage === 'release'
+                  ? [...candidateRecoveryActions, ...candidateCreateRecovery(stage, changeContext?.changeId)]
+                  : []),
+                `musubix5 approval prepare ${stage.stage}`,
+                `musubix5 approval record ${stage.stage} --approver <name> --artifact-sha256 <approved-hash> --confirm`,
+              ]),
+          ]
         : status !== 'pass' ? ['musubix5 trace build', 'musubix5 gate'] : [],
   };
 }

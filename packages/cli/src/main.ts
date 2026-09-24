@@ -17,7 +17,7 @@ import {
   attestationSigningPayload, createUnsignedAttestation, githubOidcAudience, verifyEvidenceAttestation,
   mutationDoctor, mutationIdentity, validateMutationEvidence, validateModelCorrespondenceEvidence, within,
   approvalManifest, approvalStages, formatApprovalManifestText, recordApproval, requireApproval, requireDomainOption, requireValidateDomainOption, resolveDesignFileDomain, resolveNamedDomain,
-  validateApprovals, validateApprovalsForDomain, type ApprovalStage,
+  loadApproval, validateApprovalStage, validateApprovals, validateApprovalsForDomain, type ApprovalStage,
   scaffoldCommands, scaffoldRequirements, scaffoldDesign,
   recordChangeWaiver, recordWorkflowWaiver, recordAllWorkflowWaivers, recordWorkflowDeclarationCorrection,
   bootstrapRun, bootstrapResume, bootstrapStatus, executeBootstrapFileOperation,
@@ -32,6 +32,10 @@ import {
   retryParallelAssignment, startParallelIntegration, validateParallelPlanFile,
   verifyParallelIntegration,
   parallelExitCode,
+  currentChangeFingerprints, deleteCandidateSnapshot, listCandidateSnapshotRecords, loadChangeEvidence,
+  persistCandidateSnapshot, showCandidateSnapshotRecord,
+  resolveChangeContext,
+  type CandidateSnapshotStructuralProjection,
 } from '../../analysis/src/index.js';
 
 const compatibleWorkflowSanitizationDescription =
@@ -87,6 +91,203 @@ async function parallelAction(
     else console.error(`${code}: ${detail}`);
     process.exitCode = parallelExitCode(code);
   }
+}
+
+async function candidateSnapshotAction(
+  json: boolean,
+  action: () => Promise<unknown>,
+): Promise<void> {
+  try {
+    output(await action(), json);
+  } catch (cause) {
+    const message = cause instanceof Error ? cause.message : String(cause);
+    const failure = /^(CLI_ERROR|APPROVAL_CANDIDATE_UNAVAILABLE|CANDIDATE_SNAPSHOT_[A-Z0-9_]+|CHANGE_GENERATION_[A-Z0-9_]+|CHANGE_CHECKPOINT_JOURNAL_INVALID|JOURNAL_IDEMPOTENCY_CONFLICT|LEASE_FENCED):\s*(.*)$/.exec(message);
+    if (!failure) throw cause;
+    const code = failure[1]!;
+    const detail = failure[2]!;
+    if (json) console.log(JSON.stringify({ error: { code, message: detail } }));
+    else console.error(`${code}: ${detail}`);
+    process.exitCode = code === 'CLI_ERROR' || code === 'APPROVAL_CANDIDATE_UNAVAILABLE' ? 2 : 1;
+  }
+}
+
+interface CandidateSnapshotProjectionEvaluation {
+  current: boolean;
+  requirementsApprovalStatus: 'approved' | 'missing' | 'stale' | 'not-current';
+  designApprovalStatus: 'approved' | 'missing' | 'stale' | 'not-current';
+  qualityStatus: 'current' | 'missing' | 'stale' | 'not-current';
+  candidateGateStatus: 'pass' | 'missing' | 'stale' | 'fail' | 'not-current';
+  releaseApprovalStatus: 'current' | 'missing' | 'stale' | 'not-current';
+  protected: boolean;
+}
+
+export function releaseApprovalSelectsSnapshot(
+  approval: { changeId?: string; generation?: number; projection?: unknown } | null,
+  snapshot: CandidateSnapshotStructuralProjection,
+): boolean {
+  if (!approval || approval.changeId !== snapshot.changeId
+    || !approval.projection || typeof approval.projection !== 'object') return false;
+  const projection = approval.projection as Record<string, unknown>;
+  const repositoryMatches = typeof projection.repositoryId !== 'string'
+    || projection.repositoryId === snapshot.repositoryId;
+  const generationMatches = snapshot.legacy
+    || approval.generation === undefined
+    || approval.generation === snapshot.generation;
+  return repositoryMatches
+    && generationMatches
+    && projection.candidateCommit === snapshot.commit;
+}
+
+export function composeCandidateSnapshotProjection(
+  snapshot: CandidateSnapshotStructuralProjection,
+  evaluation: CandidateSnapshotProjectionEvaluation,
+) {
+  const {
+    current,
+    requirementsApprovalStatus,
+    designApprovalStatus,
+    qualityStatus,
+    candidateGateStatus,
+    releaseApprovalStatus,
+  } = evaluation;
+  const basisCurrent = requirementsApprovalStatus === 'approved'
+    && designApprovalStatus === 'approved'
+    && qualityStatus === 'current';
+  const eligibilityStatus = snapshot.deleted
+    ? 'deleted' as const
+    : snapshot.conflicting
+      ? 'conflicting' as const
+      : snapshot.repositoryStatus === 'foreign'
+        ? 'foreign-repository' as const
+        : snapshot.commitStatus === 'unreachable'
+          ? 'unreachable' as const
+          : !basisCurrent || candidateGateStatus !== 'pass'
+            ? 'stale' as const
+            : 'eligible' as const;
+  const replacementRequired = !snapshot.deleted && snapshot.repositoryStatus === 'match'
+    && (snapshot.legacy || !current || snapshot.commitStatus === 'unreachable' || !basisCurrent);
+  return {
+    snapshotId: snapshot.snapshotId,
+    recordVersion: snapshot.recordVersion,
+    legacy: snapshot.legacy,
+    changeId: snapshot.changeId,
+    generation: snapshot.generation,
+    repositoryId: snapshot.repositoryId,
+    branch: snapshot.branch,
+    commit: snapshot.commit,
+    artifactManifestDigest: snapshot.artifactManifestDigest,
+    createdAt: snapshot.createdAt,
+    order: snapshot.order,
+    journalPath: snapshot.journalPath,
+    deleted: snapshot.deleted,
+    ...(snapshot.deletedAt === undefined ? {} : { deletedAt: snapshot.deletedAt }),
+    ...(snapshot.deletedBy === undefined ? {} : { deletedBy: snapshot.deletedBy }),
+    requirementsApprovalStatus,
+    designApprovalStatus,
+    qualityStatus,
+    candidateGateStatus,
+    commitStatus: snapshot.commitStatus,
+    repositoryStatus: snapshot.repositoryStatus,
+    releaseApprovalStatus,
+    eligibilityStatus,
+    replacementRequired,
+    protected: evaluation.protected,
+    guidance: snapshot.deleted
+      ? 'This snapshot is deleted history and cannot be selected for release.'
+      : replacementRequired
+        ? `Delete ${snapshot.snapshotId} when unprotected, then create the current candidate snapshot.`
+        : candidateGateStatus !== 'pass'
+          ? 'Run candidate-bound gates before release approval.'
+          : 'Snapshot is eligible for release approval.',
+  };
+}
+
+async function publicCandidateSnapshotProjection(
+  root: string,
+  snapshot: CandidateSnapshotStructuralProjection,
+) {
+  let context = null;
+  try {
+    context = await resolveChangeContext(root);
+  } catch {
+    context = null;
+  }
+  const current = !snapshot.legacy && !snapshot.deleted
+    && context?.changeId === snapshot.changeId
+    && context.generation === snapshot.generation;
+  let requirementsApprovalStatus: 'approved' | 'missing' | 'stale' | 'not-current' =
+    current ? 'missing' : 'not-current';
+  let designApprovalStatus: 'approved' | 'missing' | 'stale' | 'not-current' =
+    current ? 'missing' : 'not-current';
+  let qualityStatus: 'current' | 'missing' | 'stale' | 'not-current' =
+    current ? 'missing' : 'not-current';
+  let candidateGateStatus: 'pass' | 'missing' | 'stale' | 'fail' | 'not-current' =
+    current ? 'missing' : 'not-current';
+  if (current && context && await exists(within(root, '.musubix/config.json'))) {
+    const config = await loadConfig(root);
+    const approvals = await validateApprovals(root, config.approval);
+    const approvalStages = approvals.domains
+      ? approvals.domains.flatMap((domain) => domain.stages)
+      : approvals.stages.filter((stage) => stage.stage !== 'release');
+    const stageStatus = (stage: 'requirements' | 'design') => {
+      const matching = approvalStages.filter((entry) => entry.stage === stage);
+      if (matching.length === 0 || matching.every((entry) => !entry.present)) return 'missing' as const;
+      return matching.every((entry) => entry.status === 'approved')
+        ? 'approved' as const
+        : 'stale' as const;
+    };
+    requirementsApprovalStatus = stageStatus('requirements');
+    designApprovalStatus = stageStatus('design');
+    const evidence = await loadChangeEvidence(root);
+    const change = evidence?.changes.find((entry) =>
+      entry.changeId === snapshot.changeId && entry.activeGeneration === snapshot.generation);
+    const quality = change?.phases.quality;
+    if (quality && change) {
+      const requirementIds = [...change.requirementIds].sort();
+      const fingerprints = await currentChangeFingerprints(root, change.changeId, requirementIds);
+      qualityStatus = JSON.stringify(quality.fingerprints) === JSON.stringify(fingerprints)
+        ? 'current'
+        : 'stale';
+    }
+    const gateRecords = await loadCandidateGateResults(root);
+    const matchingGateRecords = gateRecords.filter((record) =>
+      record.changeId === snapshot.changeId
+      && record.generation === snapshot.generation
+      && record.candidateCommit === snapshot.commit);
+    if (matchingGateRecords.length > 0) {
+      const gateContext = await candidateGateContext(
+        root,
+        snapshot.changeId,
+        snapshot.generation!,
+        snapshot.commit,
+      );
+      const gate = validateCandidateGateSet(gateContext, gateRecords);
+      candidateGateStatus = gate.valid
+        ? 'pass'
+        : matchingGateRecords.some((record) => record.status !== 'pass' || !record.commandsPassed)
+          ? 'fail'
+          : gate.diagnostics.some((diagnostic) => diagnostic.code === 'RELEASE_GATE_EVIDENCE_MISSING')
+            ? 'missing'
+            : 'stale';
+    }
+  }
+  const releaseApproval = await loadApproval(root, 'release');
+  const selectedByReleaseApproval = releaseApprovalSelectsSnapshot(releaseApproval, snapshot);
+  const releaseApprovalStatus: 'current' | 'missing' | 'stale' | 'not-current' =
+    selectedByReleaseApproval
+      ? 'current'
+      : releaseApproval?.changeId === snapshot.changeId
+        ? releaseApproval.generation === snapshot.generation ? 'stale' : 'not-current'
+        : current ? 'missing' : 'not-current';
+  return composeCandidateSnapshotProjection(snapshot, {
+    current,
+    requirementsApprovalStatus,
+    designApprovalStatus,
+    qualityStatus,
+    candidateGateStatus,
+    releaseApprovalStatus,
+    protected: selectedByReleaseApproval,
+  });
 }
 
 function common(command: Command): Command {
@@ -1016,6 +1217,122 @@ export function createProgram(): Command {
       if (!options.confirm) throw new Error('Recording a change waiver requires --confirm.');
       const result = await recordChangeWaiver(resolve(options.root), changeId, code, options.requirement, options.detail, options.approver, options.reason);
       output(result, !!options.json, `WAIVER: PASS (${changeId}:${code}${options.requirement ? `:${options.requirement}` : ''}${options.detail ? `:${options.detail}` : ''})`);
+    });
+  const candidateSnapshot = program.command('candidate-snapshot')
+    .description('Create and inspect immutable candidate snapshot lifecycle evidence');
+  common(candidateSnapshot.command('create <change-id>'))
+    .action(async (changeId: string, options: { root: string; json?: boolean }) => {
+      await candidateSnapshotAction(!!options.json, async () => {
+        if (!/^CHANGE-\d+$/.test(changeId)) {
+          throw new Error('CLI_ERROR: change-id must match CHANGE-<digits>.');
+        }
+        const root = resolve(options.root);
+        return persistCandidateSnapshot(root, changeId, {
+          requireApprovals: async (evaluationRoot, context) => {
+            const config = await loadConfig(evaluationRoot);
+            const validation = await validateApprovals(evaluationRoot, config.approval);
+            const stages = validation.domains?.flatMap((domain) => domain.stages)
+              ?? validation.stages.filter((stage) => stage.stage !== 'release');
+            if (stages.some((stage) => stage.status !== 'approved')) {
+              throw new Error(
+                'CANDIDATE_SNAPSHOT_APPROVAL_STALE: requirements and design approvals must be current. '
+                + 'Run `musubix5 approval validate`.',
+              );
+            }
+            const generations = stages.flatMap((stage) =>
+              stage.evidence?.generation === undefined ? [] : [stage.evidence.generation]);
+            if (generations.some((generation) => generation !== context.generation)) {
+              throw new Error(
+                'CANDIDATE_SNAPSHOT_APPROVAL_STALE: requirements and design approvals belong to another generation. '
+                + 'Run `musubix5 approval validate`.',
+              );
+            }
+          },
+          requireQuality: async (evaluationRoot, context) => {
+            const evidence = await loadChangeEvidence(evaluationRoot);
+            const changeRecord = evidence?.changes.find((entry) => entry.changeId === context.changeId);
+            const quality = changeRecord?.phases.quality;
+            const requirementIds = [...context.requirementIds].sort();
+            if (!changeRecord || changeRecord.activeGeneration !== context.generation
+              || JSON.stringify([...changeRecord.requirementIds].sort()) !== JSON.stringify(requirementIds)
+              || !quality) {
+              throw new Error(
+                'CANDIDATE_SNAPSHOT_QUALITY_STALE: current terminal full-set quality evidence is required.',
+              );
+            }
+            const current = await currentChangeFingerprints(
+              evaluationRoot,
+              context.changeId,
+              requirementIds,
+            );
+            if (JSON.stringify(quality.fingerprints) !== JSON.stringify(current)) {
+              throw new Error(
+                'CANDIDATE_SNAPSHOT_QUALITY_STALE: current terminal full-set quality evidence is required.',
+              );
+            }
+          },
+        });
+      });
+    });
+  common(candidateSnapshot.command('list'))
+    .action(async (options: { root: string; json?: boolean }) => {
+      await candidateSnapshotAction(!!options.json, async () =>
+        Promise.all((await listCandidateSnapshotRecords(resolve(options.root)))
+          .map((snapshot) => publicCandidateSnapshotProjection(resolve(options.root), snapshot))));
+    });
+  common(candidateSnapshot.command('show <selector>'))
+    .action(async (selector: string, options: { root: string; json?: boolean }) => {
+      await candidateSnapshotAction(!!options.json, async () =>
+        publicCandidateSnapshotProjection(
+          resolve(options.root),
+          await showCandidateSnapshotRecord(resolve(options.root), selector),
+        ));
+    });
+  common(candidateSnapshot.command('delete <selector>'))
+    .requiredOption('--deleted-by <name>', 'Human actor retiring the snapshot')
+    .option('--confirm', 'Confirm the append-only audited deletion', false)
+    .action(async (
+      selector: string,
+      options: { root: string; json?: boolean; deletedBy: string; confirm?: boolean },
+    ) => {
+      await candidateSnapshotAction(!!options.json, async () => {
+        if (!options.confirm) throw new Error('CLI_ERROR: --confirm is required.');
+        return deleteCandidateSnapshot(resolve(options.root), selector, options.deletedBy, {
+          evaluateProtection: async (evaluationRoot, snapshot) => {
+            const config = await loadConfig(evaluationRoot);
+            const approval = await loadApproval(evaluationRoot, 'release');
+            const validation = await validateApprovalStage(
+              evaluationRoot,
+              'release',
+              config.approval,
+            );
+            const candidateCommit = approval
+              && approval.projection && typeof approval.projection === 'object'
+              ? (approval.projection as Record<string, unknown>).candidateCommit
+              : undefined;
+            const bindsSnapshot = validation.status === 'approved'
+              && releaseApprovalSelectsSnapshot(approval, snapshot);
+            const gateResults = await loadCandidateGateResults(evaluationRoot);
+            const invalidatedStates = [
+              ...(gateResults.some((record) => record.candidateCommit === snapshot.commit)
+                ? ['candidate-gate']
+                : []),
+              ...(approval && candidateCommit === snapshot.commit ? ['release-manifest'] : []),
+              ...(bindsSnapshot ? ['release-approval'] : []),
+            ];
+            return {
+              protected: bindsSnapshot,
+              releaseApprovalStatus: bindsSnapshot
+                ? 'current' as const
+                : approval ? 'stale' as const : 'missing' as const,
+              releaseApprovalArtifactSha256: bindsSnapshot && approval
+                ? approval.artifactSha256
+                : null,
+              invalidatedStates,
+            };
+          },
+        });
+      });
     });
   const approval = program.command('approval').description('Prepare, record and validate explicit artifact-bound human approvals');
   common(approval.command('prepare <stage>').description('Show the exact artifact manifest a human must review'))

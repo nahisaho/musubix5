@@ -454,12 +454,12 @@ export function validateReleaseContext(value: unknown): ReleaseContext {
   if (typeof context.releaseTag !== 'string' || !/^v[0-9A-Za-z][0-9A-Za-z._-]*$/.test(context.releaseTag)) {
     return releaseContextError('release tag is invalid.');
   }
-  if (typeof context.candidateCommit !== 'string' || !/^[a-f0-9]{40}$/.test(context.candidateCommit)) {
+  if (typeof context.candidateCommit !== 'string' || !/^[a-f0-9]{40,64}$/.test(context.candidateCommit)) {
     return releaseContextError('candidate commit is invalid.');
   }
   if (mode === 'dispatch'
     && (typeof context.evidenceCommit !== 'string'
-      || !/^[a-f0-9]{40}$/.test(context.evidenceCommit)
+      || !/^[a-f0-9]{40,64}$/.test(context.evidenceCommit)
       || typeof context.verifiedReleaseApprovalSha256 !== 'string'
       || !/^[a-f0-9]{64}$/.test(context.verifiedReleaseApprovalSha256))) {
     return releaseContextError('dispatch evidence binding is invalid.');

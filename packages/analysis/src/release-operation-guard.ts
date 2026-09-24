@@ -131,7 +131,7 @@ async function loadAuthorization(
   }
   if (value.schemaVersion !== 2
     || !['publish', 'release', 'tag', 'push'].includes(value.scope)
-    || !/^[a-f0-9]{40}$/.test(value.candidateCommit)
+    || !/^[a-f0-9]{40,64}$/.test(value.candidateCommit)
     || !/^[a-f0-9]{64}$/.test(value.releaseApprovalSha256)
     || !validReleaseTag(value.releaseTag)
     || !value.authorizer.trim()
@@ -159,7 +159,7 @@ export async function authorizeReleaseOperation(root: string, request: {
     throw new Error('RELEASE_OPERATION_CONFIRMATION_REQUIRED: explicit external-operation confirmation is required.');
   }
   if (!['publish', 'release', 'tag', 'push'].includes(request.scope)
-    || !/^[a-f0-9]{40}$/.test(request.candidateCommit)
+    || !/^[a-f0-9]{40,64}$/.test(request.candidateCommit)
     || !/^[a-f0-9]{64}$/.test(request.releaseApprovalSha256)
     || !validReleaseTag(request.releaseTag)
     || !request.authorizer.trim()) {

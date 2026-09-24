@@ -416,6 +416,7 @@ validation/gate or requested solver failure, **2** usage, I/O or malformed confi
 | `design validate <file>` | Fields, global requirement IDs, existing ADR references |
 | `design scaffold <slug>` | Create `.musubix/features/<slug>/design.md` from a fixed placeholder template; never overwrites an existing file, and does not require a pre-existing `requirements.md` |
 | `design c4 <file>` | Mermaid component/dependency diagram from explicit fields |
+| `candidate-snapshot create\|list\|show\|delete ...` | Persist one immutable candidate per CHANGE, inspect legacy/live/deleted provenance, and append protected audited deletion tombstones before replacement |
 | `approval prepare <requirements\|design\|release>` | Display the exact deterministic manifest and hash for human review |
 | `approval record <stage> --approver <name> --artifact-sha256 <hash> --confirm` | Record approval only if the reviewed hash is still current |
 | `approval validate` | Report each approval as approved, missing, or stale; never infer approval from validation |
@@ -703,6 +704,19 @@ Dispatch with a branch or tag ref whose tip is exactly the candidate commit;
 the verified `workflow_sha` claim is required to match that commit. Moving the
 ref after candidate selection requires a new candidate or restoring an
 authorized immutable ref before rerunning the workflow.
+Create the immutable binding only after recording terminal full-set quality,
+validating current requirements/design approvals, and committing both the
+resulting evidence and every candidate input so the worktree is clean:
+`musubix5 candidate-snapshot create <change-id>`. Commit the generated journal
+record without amending the candidate, inspect it with `candidate-snapshot
+show`, and then run the matrix from an immutable ref, such as a candidate tag,
+whose tip remains the persisted candidate commit. The expected post-candidate
+journal commit on the branch does not invalidate the snapshot, but that advanced
+branch tip cannot be used as the matrix dispatch ref. Use `candidate-snapshot list` to diagnose
+legacy, foreign, stale, or conflicting history. Replacing a live snapshot
+requires explicit `candidate-snapshot delete <selector> --deleted-by <name>
+--confirm`; a current release approval protects its snapshot until the CHANGE
+generation is reopened.
 Use `tdd.redPreflightCommands` to reference plain configured formatter commands;
 they must pass before Red captures the authoritative test fingerprint.
 Conventional `.venv` and `venv` Python environments containing a regular
@@ -1152,14 +1166,16 @@ sealed npm tarball, CycloneDX `npm sbom`, canonical `release-context.json`, and
 `SHA256SUMS`. A tag-push run performs validation and artifact production only:
 it never publishes npm or creates a GitHub Release. GitHub Release creation
 requires a separate manual dispatch from the same lightweight tag, a descendant
-full-SHA evidence commit, and an independently authorized `release` operation.
+40-to-64-character lowercase hexadecimal evidence commit, and an independently
+authorized `release` operation.
 The Release job intentionally has no protected environment; candidate-bound
 repository authorization, default-branch reachability, and replay checks are
 its human and integrity gates.
 
 Npm publication is a later, independent manual dispatch of
 `.github/workflows/npm-publish.yml` with `release_tag`, `evidence_commit`, and
-`publish_operation_id`. It runs in the protected `npm-publish` environment,
+`publish_operation_id`; `evidence_commit` uses the same 40-to-64-character
+lowercase hexadecimal object-ID rule. It runs in the protected `npm-publish` environment,
 downloads an existing stable GitHub Release, and re-verifies authorization,
 checksums, canonical release context, OIDC/Ed25519 attestation, approval
 ancestry, and packaged version. It then checks that the npm version is absent

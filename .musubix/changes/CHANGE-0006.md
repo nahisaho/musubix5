@@ -2,7 +2,7 @@
 schemaVersion: 1
 id: CHANGE-0006
 summary: Correct the approval recovery command
-status: active
+status: completed
 ---
 # CHANGE-0006: approval-command-guidance
 

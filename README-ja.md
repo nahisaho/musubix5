@@ -364,6 +364,7 @@ npx musubix5 tdd green TEST-EXAMPLE-002 --requirement REQ-EXAMPLE-002 --command 
 | `constitution validate [file]` | 版・原則・測定可能な規則の定義検査 |
 | `design validate <file>` | 必須項目・要求ID・既存ADRの参照検査 |
 | `design c4 <file>` | 明示的なコンポーネントと依存から Mermaid 図 |
+| `candidate-snapshot create\|list\|show\|delete ...` | CHANGEごとに1件の不変candidateを保存し、legacy/live/deleted履歴を確認し、置換前に保護された監査tombstoneを追記 |
 | `approval prepare <requirements\|design\|release>` | 人間が確認する決定的manifestとhashを表示 |
 | `approval record <stage> --approver <name> --artifact-sha256 <hash> --confirm` | 確認済みhashが現在も一致するときだけ承認を記録 |
 | `approval validate` | 各承認をapproved・missing・staleとして表示し、検証結果から承認を推測しない |
@@ -652,6 +653,16 @@ workflowはtipがcandidate commitそのものであるbranchまたはtag refを�
 dispatchします。検証済み`workflow_sha` claimもcandidate commitとの一致が必須です。
 候補選定後にrefを進めた場合は、新しいcandidateを作るか、明示的に認可された不変refを
 復元してから再実行します。
+terminal full-set qualityを記録し、requirements/design approvalがcurrentであることを
+検証して、生成されたevidenceとすべてのcandidate入力をcommitし、worktreeをcleanにした後に
+`musubix5 candidate-snapshot create <change-id>`で不変bindingを作成します。
+生成されたjournal recordはcandidateをamendせずにcommitし、
+`candidate-snapshot show`で確認してから、tipがpersist済みcandidate commitのままの
+candidate tag等の不変refからmatrixを実行します。branch上のpost-candidate journal
+commitはsnapshotを無効にしませんが、進んだbranch tipをmatrix dispatch refには使えません。
+legacy・foreign・stale・conflicting履歴は`candidate-snapshot list`で調査します。live snapshotの置換には
+`candidate-snapshot delete <selector> --deleted-by <name> --confirm`が必要です。
+current release approvalが選択したsnapshotはCHANGE generationをreopenするまで削除できません。
 `tdd.redPreflightCommands`にはformatter等のplain command名を指定でき、
 Redのtest fingerprintを取得する前に成功が必須です。
 通常ファイルの`pyvenv.cfg`を含む`.venv`と`venv`に加え、生成された
@@ -956,14 +967,16 @@ package/plugin versionの一致を検証し、Linux上のnative/formal suiteを�
 npm tarballを2回のclean build/packで比較し、CycloneDX SBOMとSHA256SUMSを含む
 sealed bundleとcanonicalな`release-context.json`を生成します。tag pushでは検証と
 artifact生成だけを行い、npm publishやGitHub Release作成は行いません。GitHub Release
-作成には、同じlightweight tagからの手動実行、候補の子孫であるfull-SHA evidence
-commit、および独立した`release` operation authorizationが必要です。Release jobは
+作成には、同じlightweight tagからの手動実行、候補の子孫である40〜64文字の
+lowercase hexadecimal evidence commit、および独立した`release` operation
+authorizationが必要です。Release jobは
 意図的に保護environmentを使用せず、candidate-boundなrepository authorization、
 default branch到達性、replay検査をhuman/integrity gateとします。
 
 npm publicationは、既存のstable GitHub Releaseに対して
 `.github/workflows/npm-publish.yml`を後から手動実行します。入力は`release_tag`、
-`evidence_commit`、`publish_operation_id`です。workflowは保護された`npm-publish`
+`evidence_commit`、`publish_operation_id`です。`evidence_commit`にも同じ40〜64文字の
+lowercase hexadecimal object-ID規則を適用します。workflowは保護された`npm-publish`
 environmentで実行され、既存のstable GitHub Releaseをdownloadして、authorization、
 checksum、canonical release context、OIDC/Ed25519 attestation、approval ancestry、
 package versionを再検証します。npm versionが未登録であることを確認してから、

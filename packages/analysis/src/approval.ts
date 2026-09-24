@@ -227,6 +227,7 @@ export async function loadApproval(root: string, stage: ApprovalStage, domain?: 
 
 export function classifyReleaseApprovalDiagnostic(code: string): boolean {
   return [
+    'APPROVAL_CANDIDATE_MISSING',
     'APPROVAL_CANDIDATE_UNAVAILABLE',
     'CHANGE_GENERATION_INCOMPLETE',
     'RELEASE_GATE_EVIDENCE_MISSING',
@@ -346,8 +347,8 @@ export async function readReleaseApprovalDigest(
   root: string,
   candidateCommit: string,
 ): Promise<string> {
-  if (!/^[a-f0-9]{40}$/.test(candidateCommit)) {
-    throw new Error('RELEASE_APPROVAL_CANDIDATE_MISMATCH: candidateCommit must be exactly 40 lowercase hexadecimal characters.');
+  if (!/^[a-f0-9]{40,64}$/.test(candidateCommit)) {
+    throw new Error('RELEASE_APPROVAL_CANDIDATE_MISMATCH: candidateCommit must be 40 to 64 lowercase hexadecimal characters.');
   }
   const config = await loadApprovalProjectionConfig(root);
   const validation = await validateApprovalStage(root, 'release', config.approval);

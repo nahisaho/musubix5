@@ -415,7 +415,7 @@ export async function runTddPhase(
     if (!/^parallel-plan:[a-f0-9]{64}$/.test(parallel.planId)
       || !/^[a-z0-9][a-z0-9-]{0,63}$/.test(parallel.assignmentId)
       || !Number.isInteger(parallel.attempt) || parallel.attempt < 1
-      || !/^[a-f0-9]{40}$/.test(parallel.startCommit)
+      || !/^[a-f0-9]{40,64}$/.test(parallel.startCommit)
       || resolve(parallel.worktree) !== resolve(workspace)) {
       throw new Error('PARALLEL_TDD_UNCONSUMED: invalid parallel TDD recording identity.');
     }

@@ -39,7 +39,62 @@ rejects `--domain`. Making an implicit default explicit does not change the
 hash, but changing a declared default does and requires renewed approval.
 
 Release approval reads the persisted candidate commit rather than mutable
-worktree files. It applies this closed first-match exclusion registry:
+worktree files. Create that immutable binding with:
+
+```bash
+# Record terminal full-set quality, validate approvals, then commit every
+# candidate input and resulting evidence change so the worktree is clean.
+CHANGE_ID=CHANGE-0123
+npx --no-install musubix5 candidate-snapshot create "$CHANGE_ID" --json
+# Commit the generated .musubix/journal/normal/<order>.json evidence without
+# amending the candidate, then run candidate-bound gates and prepare release.
+```
+
+Creation requires the named CHANGE to be the sole active CHANGE, current
+requirements/design approvals, terminal full-set quality, and a clean reachable
+owned branch. Its JSON reports a stable `snapshot-<12-digit-order>` ID,
+generation, repository/branch/commit, candidate-tree manifest digest, journal
+path, replay state, and guidance. Committing the journal does not change the
+candidate: QA is checked out at the persisted candidate commit.
+
+Inspect lifecycle state with:
+
+```bash
+npx --no-install musubix5 candidate-snapshot list --json
+npx --no-install musubix5 candidate-snapshot show "$CHANGE_ID" --json
+npx --no-install musubix5 candidate-snapshot show snapshot-000000000123 --json
+```
+
+Only one repository-matching live snapshot is allowed. To replace it, retire it
+explicitly and then create the new candidate:
+
+```bash
+npx --no-install musubix5 candidate-snapshot delete \
+  snapshot-000000000123 --deleted-by "$USER" --confirm --json
+npx --no-install musubix5 candidate-snapshot create "$CHANGE_ID" --json
+```
+
+Deletion appends a tombstone and never removes the creation record or Git
+commit. A snapshot selected by a current release approval is protected. For an
+active CHANGE, reopen its generation before retrying deletion. For a completed
+CHANGE, first make it the sole `status: active` document, then run
+`change-record <change-id> impact --reopen`.
+
+Legacy snapshot records remain listable/showable/deletable but project null
+generation, manifest digest, and creation time and require replacement before a
+new release approval. A legacy record selected by a valid historical release
+approval remains protected and cannot be deleted until that approval is made
+non-current through the same reopen procedure. Foreign records are visible but
+do not block a clone or fork from creating its repository-matching candidate.
+
+Git object IDs widened consistently across candidate snapshot persistence,
+approval candidate resolution, candidate-gate evidence, parallel/TDD start
+commits, release-operation records, release and npm workflow inputs, shell
+guards, ancestry checks, and attestation/context identities. Every changed
+boundary accepts only lowercase hexadecimal IDs from 40 through 64 characters;
+shorter, longer, uppercase, and non-hexadecimal values are rejected.
+
+The release manifest applies this closed first-match exclusion registry:
 
 | Precedence | Reason | Predicate |
 |---:|---|---|
@@ -61,14 +116,24 @@ Included blobs are displayed with raw SHA-256. Excluded blobs are displayed
 with reason and raw SHA-256, but excluded raw hashes are informational and do
 not enter the aggregate; their normalized path/reason pairs do.
 
-Manifest construction fails with classified diagnostics:
+Candidate lifecycle and manifest construction use these classified diagnostics:
 
 | Diagnostic | Meaning |
 |---|---|
 | `APPROVAL_DOMAIN_MISMATCH` | Missing, unexpected, colliding, or unknown domain |
 | `APPROVAL_NORMATIVE_MISSING` | Required normative path or referenced ADR is absent |
 | `APPROVAL_NORMATIVE_SYMLINK` | Normative path, ancestor, or other selected non-regular path is unsafe |
-| `APPROVAL_CANDIDATE_UNAVAILABLE` | Persisted release candidate commit is absent or unresolvable |
+| `APPROVAL_CANDIDATE_MISSING` | No non-deleted snapshot remains; run the reported `candidate-snapshot create` command |
+| `APPROVAL_CANDIDATE_UNAVAILABLE` | Live evidence is invalid, foreign-only, legacy, non-current-generation, conflicting, unreachable, or otherwise unresolvable; inspect and follow list/delete/create guidance |
+| `CANDIDATE_SNAPSHOT_MISSING` | `show` has no matching record, or a CHANGE-ID `delete` selector has no repository-matching creation record to delete or replay; an exact snapshot ID can resolve foreign-repository or unknown-CHANGE history |
+| `CANDIDATE_SNAPSHOT_CONFLICT` | More than one live record prevents CHANGE-ID selection or creation |
+| `CANDIDATE_SNAPSHOT_PROTECTED` | Current release approval protects the snapshot; reopen before deletion |
+| `CANDIDATE_SNAPSHOT_ALREADY_DELETED` | The snapshot was already deleted by a different actor |
+| `CANDIDATE_SNAPSHOT_APPROVAL_STALE` | Creation requires current requirements/design approval; run `musubix5 approval validate` |
+| `CANDIDATE_SNAPSHOT_QUALITY_STALE` | Creation requires current full-set quality evidence |
+| `JOURNAL_IDEMPOTENCY_CONFLICT` | The same candidate idempotency identity was reused with a different persisted branch or payload; inspect the existing snapshot and journal before retrying |
+| `CLI_ERROR` for candidate journal evidence | `create`/`delete` found malformed snapshot/tombstone evidence or a snapshot-attributable chain/order defect; `list`/`show` found any shared-journal defect and intentionally do not attribute it by record kind |
+| `CHANGE_CHECKPOINT_JOURNAL_INVALID` | Snapshot create/delete found a checkpoint-attributable shared-journal defect, or gate/status found any shared-chain defect; repair checkpoint/journal evidence before continuing |
 | `APPROVAL_PATH_ENCODING` | A selected path is not valid UTF-8 |
 | `APPROVAL_PATH_COLLISION` | Distinct paths normalize to the same NFC identity |
 | `APPROVAL_GITLINK_UNSUPPORTED` | Candidate tree contains a Gitlink/submodule |
@@ -243,8 +308,10 @@ authorization bound to the exact candidate.
 musubix5 adds `release-operation authorize`, `release-operation validate`, and
 `release-operation status`. New authorization records use schema version 2,
 support the closed scopes `publish`, `release`, `tag`, and `push`, and bind the
-exact 40-character candidate commit, release-approval SHA-256, release tag, and
-authorizer into their authorization digest. Schema-version-1 records remain
+full 40-to-64-character lowercase hexadecimal candidate object ID, release-
+approval SHA-256, release tag, and authorizer into their authorization digest.
+Uppercase and non-hexadecimal object IDs are rejected.
+Schema-version-1 records remain
 readable for historical status but cannot authorize workflow side effects.
 Release automation uses the candidate-built `validate` command against a
 separate post-candidate evidence checkout; it never trusts the approval digest

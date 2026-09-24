@@ -250,7 +250,7 @@ function parseCandidateGateResult(
     || !Number.isInteger(value.generation)
     || Number(value.generation) < 1
     || typeof value.candidateCommit !== 'string'
-    || !/^[0-9a-f]{40}$/i.test(value.candidateCommit)
+    || !/^[0-9a-f]{40,64}$/.test(value.candidateCommit)
     || typeof value.gateInputFingerprint !== 'string'
     || !/^[0-9a-f]{64}$/i.test(value.gateInputFingerprint)
     || !isApprovedJob(value.job)

@@ -38,6 +38,11 @@ describe('CLI help compatibility', () => {
           '  parallel                                         Coordinate approved parallel assignment worktrees and integration\n'
             + '  formal                                           Honest consistency checking of an explicit abstraction',
         );
+        expected = expected.replace(
+          '  approval                                         Prepare, record and validate explicit artifact-bound human approvals',
+          '  candidate-snapshot                               Create and inspect immutable candidate snapshot lifecycle evidence\n'
+            + '  approval                                         Prepare, record and validate explicit artifact-bound human approvals',
+        );
       } else if (snapshot.command === 'musubix3 workflow-sanitize') {
         expected = expected.replace(
           '  -h, --help           display help for command',
