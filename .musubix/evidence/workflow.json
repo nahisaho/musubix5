@@ -1371,13 +1371,49 @@
       "phase": "complete",
       "status": "completed",
       "recordedAt": "2026-09-24T15:54:38.508Z"
+    },
+    {
+      "skill": "sdd-implementation",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0007",
+      "generation": 4,
+      "requirementIds": [
+        "REQ-M5-COMPAT-013",
+        "REQ-M5-LIFECYCLE-005",
+        "REQ-M5-RELEASE-002",
+        "REQ-M5-WORKTREE-005",
+        "REQ-M5-WORKTREE-006",
+        "REQ-M5-WORKTREE-007"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-09-24T18:43:19.109Z"
+    },
+    {
+      "skill": "sdd-change",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0007",
+      "generation": 4,
+      "requirementIds": [
+        "REQ-M5-COMPAT-013",
+        "REQ-M5-LIFECYCLE-005",
+        "REQ-M5-RELEASE-002",
+        "REQ-M5-WORKTREE-005",
+        "REQ-M5-WORKTREE-006",
+        "REQ-M5-WORKTREE-007"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-09-24T18:43:20.410Z"
     }
   ],
   "verification": {
     "mode": "compatible",
-    "sourceSha256": "9346918b82945f648f4a168272aeecfefbf70548d19858beb38af0982db4375c",
-    "eventsSha256": "0cb9994f6ff7a53e1a68734fef4ca71ade79dd314f3ed06185334e4defc8ade1",
-    "verifiedAt": "2026-09-24T15:54:40.090Z",
+    "sourceSha256": "a4faded25bf4335479a3c3839a79281fd9f77a659bf283015aa6c848331af965",
+    "eventsSha256": "3332d3a389e42029cbedd63c7a2c3ab900b3845b50ec0d45c55728dc69dffc81",
+    "verifiedAt": "2026-09-24T18:46:04.485Z",
     "invocations": [
       {
         "skill": "sdd-change",

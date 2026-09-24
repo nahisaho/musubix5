@@ -176,18 +176,31 @@
       "order": 49
     },
     {
-      "schemaVersion": 1,
-      "target": {
-        "position": 73,
-        "declarationSha256": "0c2272c270abe08baf14519ed92a426dcadcd0faf5d9c68829cc232607c77f7b"
-      },
+      "approver": "@nahisaho",
       "canonical": {
-        "position": 66,
-        "declarationSha256": "4d8e838a09e1b031737dadeedf0ca7b054b39f07f5b9f0817a07e7818d222524"
+        "declarationSha256": "4d8e838a09e1b031737dadeedf0ca7b054b39f07f5b9f0817a07e7818d222524",
+        "position": 66
       },
-      "duplicateIdentitySha256": "820748ce8f1b0f83f357e12e929452a37609ef9746454c9e26270a47c46fb40d",
+      "canonicalInvocation": {
+        "completedAt": "2026-09-23T02:19:14.805Z",
+        "invokedAt": "2026-09-23T02:19:14.792Z",
+        "skill": "sdd-design",
+        "status": "completed",
+        "toolCallId": "call_cYYyXNFsaLkZw5ajr58Hmb2j"
+      },
       "changeId": "CHANGE-0003",
+      "correctedAt": "2026-09-23T12:21:56.726Z",
+      "correctionId": "WDC-EFEAB299272897F7A8876FB1",
+      "declarationRecordedAt": "2026-09-23T11:12:25.505Z",
+      "diagnostic": "WORKFLOW_INVOCATION_REUSED",
+      "duplicateIdentitySha256": "820748ce8f1b0f83f357e12e929452a37609ef9746454c9e26270a47c46fb40d",
       "generation": 5,
+      "idempotencyKey": "efeab299272897f7a8876fb12a52248e61c0d9e9cef553c35cf330663d06a9e0",
+      "phase": "complete",
+      "previousSha256": "59d01b552e967d78b6d61bed1e3d3c56cd47b0ee200e50a3436705a62b19caa4",
+      "reason": "Accidental duplicate design declaration; preserve the lowest canonical CHANGE-0003 generation-5 declaration.",
+      "recordingVerificationHead": "03337cf0affdd201e9ecfa17c3ad98389cc84c7ffaa7fcf62fd4082d315d822f",
+      "recordingVerificationMode": "compatible",
       "requirementIds": [
         "REQ-M5-COMPAT-013",
         "REQ-M5-EVIDENCE-006",
@@ -212,26 +225,55 @@
         "REQ-M5-TDD-003",
         "REQ-M5-WORKTREE-001"
       ],
+      "schemaVersion": 1,
       "skill": "sdd-design",
+      "target": {
+        "declarationSha256": "0c2272c270abe08baf14519ed92a426dcadcd0faf5d9c68829cc232607c77f7b",
+        "position": 73
+      },
+      "order": 50
+    },
+    {
+      "schemaVersion": 1,
+      "target": {
+        "position": 92,
+        "declarationSha256": "3092ac188dd3a573eced63d934c2663784b81e7c27779524303a70f02d9017be"
+      },
+      "canonical": {
+        "position": 90,
+        "declarationSha256": "bd4fd1cf1f3f70216a1859b3644b3bd5b780da8eaf05bb7693a7655dc412814c"
+      },
+      "duplicateIdentitySha256": "24f885215a16d646eb308b8afa248f49732edbd8f26fa7860aab8c5a474d202a",
+      "changeId": "CHANGE-0007",
+      "generation": 4,
+      "requirementIds": [
+        "REQ-M5-COMPAT-013",
+        "REQ-M5-LIFECYCLE-005",
+        "REQ-M5-RELEASE-002",
+        "REQ-M5-WORKTREE-005",
+        "REQ-M5-WORKTREE-006",
+        "REQ-M5-WORKTREE-007"
+      ],
+      "skill": "sdd-implementation",
       "phase": "complete",
-      "declarationRecordedAt": "2026-09-23T11:12:25.505Z",
+      "declarationRecordedAt": "2026-09-24T18:43:19.109Z",
       "diagnostic": "WORKFLOW_INVOCATION_REUSED",
       "canonicalInvocation": {
-        "skill": "sdd-design",
-        "toolCallId": "call_cYYyXNFsaLkZw5ajr58Hmb2j",
-        "invokedAt": "2026-09-23T02:19:14.792Z",
-        "completedAt": "2026-09-23T02:19:14.805Z",
+        "skill": "sdd-implementation",
+        "toolCallId": "call_zTdNp02K1qmv1vvMdoTMpXpe",
+        "invokedAt": "2026-09-24T15:22:08.413Z",
+        "completedAt": "2026-09-24T15:22:08.427Z",
         "status": "completed"
       },
-      "recordingVerificationHead": "03337cf0affdd201e9ecfa17c3ad98389cc84c7ffaa7fcf62fd4082d315d822f",
+      "recordingVerificationHead": "133078ba9f5201ce130b9d07b7f4e690d28e0e2a2c19774f8efa009f3b9bb120",
       "recordingVerificationMode": "compatible",
-      "approver": "@nahisaho",
-      "reason": "Accidental duplicate design declaration; preserve the lowest canonical CHANGE-0003 generation-5 declaration.",
-      "idempotencyKey": "efeab299272897f7a8876fb12a52248e61c0d9e9cef553c35cf330663d06a9e0",
-      "correctionId": "WDC-EFEAB299272897F7A8876FB1",
-      "correctedAt": "2026-09-23T12:21:56.726Z",
-      "previousSha256": "59d01b552e967d78b6d61bed1e3d3c56cd47b0ee200e50a3436705a62b19caa4",
-      "order": 50
+      "approver": "nahisaho",
+      "reason": "Accidental duplicate completion declaration recorded while finalizing CHANGE-0007; preserve the earlier verified declaration.",
+      "idempotencyKey": "945878446308bbc1ebb8b2deb70af67af4bcb638a9a80956b81d5e5b7eb7fbbb",
+      "correctionId": "WDC-945878446308BBC1EBB8B2DE",
+      "correctedAt": "2026-09-24T18:48:42.969Z",
+      "previousSha256": "31ea1128c0b40e641c0f0a785fa49b1341c453a4eb1e5bbd84bd20226e5640bf",
+      "order": 109
     }
   ]
 }
