@@ -208472,6 +208472,473 @@
           }
         }
       ]
+    },
+    {
+      "changeId": "CHANGE-0005",
+      "generation": 1,
+      "activeGeneration": 1,
+      "requirementIds": [
+        "REQ-M5-GRAPH-001",
+        "REQ-M5-GRAPH-002"
+      ],
+      "phases": {
+        "impact": {
+          "phase": "impact",
+          "recordedAt": "2026-09-24T00:35:23.739Z",
+          "fingerprints": {
+            "impact": "fe60d69715c1f0efbc93c90aaca38f208a7f49c84b68b7992a19d06a48f37332",
+            "requirements": "4a096af172c6bd9d729b9044f4b5148d674bf14babe32b118b58e3136c869f30",
+            "design": "cffd8490dfac8f8c7adb1554a83f792e8c9393e98397711de81b7be887e41f5d",
+            "implementation": "cfe743532a5cddfcfc1f047ef47aa5daaedccfc5a7fb3c4e778472961b001349",
+            "tests": "e95713236722d6de5c9169fd873e1dac52ba5991709addf2e8aa893e90e22038",
+            "tdd": "406487f0d0a05e51bed7bb8eae562024c1605897d59df4a1d4786c540ae3e6f7",
+            "requirementImplementations": {
+              "REQ-M5-GRAPH-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-GRAPH-002": {
+                "paths": [],
+                "fingerprints": {}
+              }
+            }
+          },
+          "order": 1574
+        },
+        "requirements": {
+          "phase": "requirements",
+          "order": 1577,
+          "recordedAt": "2026-09-24T01:15:18.149Z",
+          "fingerprints": {
+            "design": "8c8ddf43fab7d15d0ca79be671799a385e6c3a2ee972559cd945b45777474299",
+            "impact": "cc424713c2a10a17c606d732217cdf94ec9d1458ae6b5e9ed89f0733e0b2f1cb",
+            "implementation": "cfe743532a5cddfcfc1f047ef47aa5daaedccfc5a7fb3c4e778472961b001349",
+            "requirementImplementations": {
+              "REQ-M5-GRAPH-001": {
+                "fingerprints": {},
+                "paths": []
+              },
+              "REQ-M5-GRAPH-002": {
+                "fingerprints": {},
+                "paths": []
+              }
+            },
+            "requirements": "86a0217c11c1433e228ed659f19b6767a60dcf37d8c51727bc3497012d4f698c",
+            "tdd": "406487f0d0a05e51bed7bb8eae562024c1605897d59df4a1d4786c540ae3e6f7",
+            "tests": "e95713236722d6de5c9169fd873e1dac52ba5991709addf2e8aa893e90e22038"
+          },
+          "approvalManifestSha256": "875473e4d66b199126d55b5f60c15eb0d672270653118be46c24b91b840284ec",
+          "operationId": "manifest-state-clarification",
+          "requirementsOrdinal": 3
+        },
+        "design": {
+          "phase": "design",
+          "recordedAt": "2026-09-24T02:16:14.901Z",
+          "fingerprints": {
+            "impact": "cc424713c2a10a17c606d732217cdf94ec9d1458ae6b5e9ed89f0733e0b2f1cb",
+            "requirements": "86a0217c11c1433e228ed659f19b6767a60dcf37d8c51727bc3497012d4f698c",
+            "design": "45e02e5cce1a70f733eeee544dac556d0331688fa3a632952a7a42c0af601484",
+            "implementation": "cfe743532a5cddfcfc1f047ef47aa5daaedccfc5a7fb3c4e778472961b001349",
+            "tests": "e95713236722d6de5c9169fd873e1dac52ba5991709addf2e8aa893e90e22038",
+            "tdd": "406487f0d0a05e51bed7bb8eae562024c1605897d59df4a1d4786c540ae3e6f7",
+            "requirementImplementations": {
+              "REQ-M5-GRAPH-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-GRAPH-002": {
+                "paths": [],
+                "fingerprints": {}
+              }
+            }
+          },
+          "approvalManifestSha256": "0397b4c29b5233478f936f8986df9cfde43cad5f4bf80ef29e23d70073dce49c",
+          "designOrdinal": 1,
+          "order": 1578
+        },
+        "quality": {
+          "phase": "quality",
+          "recordedAt": "2026-09-24T03:28:56.002Z",
+          "fingerprints": {
+            "impact": "cc424713c2a10a17c606d732217cdf94ec9d1458ae6b5e9ed89f0733e0b2f1cb",
+            "requirements": "86a0217c11c1433e228ed659f19b6767a60dcf37d8c51727bc3497012d4f698c",
+            "design": "b300240d68dac5f62937ba9a49deaf4c0725d91ec1aa931d1c085597c5869475",
+            "implementation": "01086b68eb3c700ecf5efd3ecdb264454755c722e7cb09467144c6da2ad2c025",
+            "tests": "b707eaf2d5e30a86e8d7ccb255d3a68082653960a4bda6a3ed2631d93ecad4e7",
+            "tdd": "7cd9a848a9d7df1dc6a24b52138675bc977e3ff7cad78b53db711a40c0f104a6",
+            "requirementImplementations": {
+              "REQ-M5-GRAPH-001": {
+                "paths": [
+                  "packages/analysis/src/config.ts",
+                  "packages/analysis/src/files.ts",
+                  "packages/analysis/src/graph.ts",
+                  "packages/analysis/src/process.ts",
+                  "packages/domain/src/constitution.ts",
+                  "packages/domain/src/design.ts",
+                  "packages/domain/src/index.ts",
+                  "packages/domain/src/markdown.ts",
+                  "packages/domain/src/requirements.ts",
+                  "packages/domain/src/types.ts"
+                ],
+                "fingerprints": {
+                  "packages/analysis/src/config.ts": "b75dacf7bce0e58eaa465a32a6181e75d3492a1dafb4cbb5e09cc9220f9ffcba",
+                  "packages/analysis/src/files.ts": "b0783bfefb1f9503eae70edd1297332a51dfeec75b024c12add3dea786d846b4",
+                  "packages/analysis/src/graph.ts": "4de84f582a8da7ca24475354e0890600f34c7533f0c7af41346e879610ae4392",
+                  "packages/analysis/src/process.ts": "675e76428f4e78e631fe1cbf9cddee298c93576d43fc63a5e977ff044b32d5d4",
+                  "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                  "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
+                  "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                  "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                  "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                  "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                }
+              },
+              "REQ-M5-GRAPH-002": {
+                "paths": [
+                  "packages/analysis/src/config.ts",
+                  "packages/analysis/src/files.ts",
+                  "packages/analysis/src/graph.ts",
+                  "packages/analysis/src/process.ts",
+                  "packages/domain/src/constitution.ts",
+                  "packages/domain/src/design.ts",
+                  "packages/domain/src/index.ts",
+                  "packages/domain/src/markdown.ts",
+                  "packages/domain/src/requirements.ts",
+                  "packages/domain/src/types.ts"
+                ],
+                "fingerprints": {
+                  "packages/analysis/src/config.ts": "b75dacf7bce0e58eaa465a32a6181e75d3492a1dafb4cbb5e09cc9220f9ffcba",
+                  "packages/analysis/src/files.ts": "b0783bfefb1f9503eae70edd1297332a51dfeec75b024c12add3dea786d846b4",
+                  "packages/analysis/src/graph.ts": "4de84f582a8da7ca24475354e0890600f34c7533f0c7af41346e879610ae4392",
+                  "packages/analysis/src/process.ts": "675e76428f4e78e631fe1cbf9cddee298c93576d43fc63a5e977ff044b32d5d4",
+                  "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                  "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
+                  "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                  "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                  "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                  "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                }
+              }
+            }
+          },
+          "order": 1598,
+          "qualityOrdinal": 1
+        }
+      },
+      "requirementsHistory": [
+        {
+          "phase": "requirements",
+          "recordedAt": "2026-09-24T00:39:07.106Z",
+          "fingerprints": {
+            "impact": "fe60d69715c1f0efbc93c90aaca38f208a7f49c84b68b7992a19d06a48f37332",
+            "requirements": "4a096af172c6bd9d729b9044f4b5148d674bf14babe32b118b58e3136c869f30",
+            "design": "cffd8490dfac8f8c7adb1554a83f792e8c9393e98397711de81b7be887e41f5d",
+            "implementation": "cfe743532a5cddfcfc1f047ef47aa5daaedccfc5a7fb3c4e778472961b001349",
+            "tests": "e95713236722d6de5c9169fd873e1dac52ba5991709addf2e8aa893e90e22038",
+            "tdd": "406487f0d0a05e51bed7bb8eae562024c1605897d59df4a1d4786c540ae3e6f7",
+            "requirementImplementations": {
+              "REQ-M5-GRAPH-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-M5-GRAPH-002": {
+                "paths": [],
+                "fingerprints": {}
+              }
+            }
+          },
+          "allowUnchanged": true,
+          "approvalManifestSha256": "9e9eb7ab170a6545b0d41799275b8e98e2b6f4ac85234956caa3b4b77fa0b989",
+          "requirementsOrdinal": 1,
+          "order": 1575
+        },
+        {
+          "phase": "requirements",
+          "order": 1576,
+          "recordedAt": "2026-09-24T00:49:39.623Z",
+          "fingerprints": {
+            "design": "ea991555f3b129a80870c19cccbb29cbb308eebedf850338acd372962f0cdb1e",
+            "impact": "cc424713c2a10a17c606d732217cdf94ec9d1458ae6b5e9ed89f0733e0b2f1cb",
+            "implementation": "cfe743532a5cddfcfc1f047ef47aa5daaedccfc5a7fb3c4e778472961b001349",
+            "requirementImplementations": {
+              "REQ-M5-GRAPH-001": {
+                "fingerprints": {},
+                "paths": []
+              },
+              "REQ-M5-GRAPH-002": {
+                "fingerprints": {},
+                "paths": []
+              }
+            },
+            "requirements": "18649b715dfe31e0145506a242383d61220a69c80aa696384e725bf96987e5fe",
+            "tdd": "406487f0d0a05e51bed7bb8eae562024c1605897d59df4a1d4786c540ae3e6f7",
+            "tests": "e95713236722d6de5c9169fd873e1dac52ba5991709addf2e8aa893e90e22038"
+          },
+          "approvalManifestSha256": "6a6aa38ecba793993749f2b124e286608e1b5723a0fd332cf4c5ce5b69b0970b",
+          "operationId": "resolution-environment-amendment",
+          "requirementsOrdinal": 2
+        }
+      ],
+      "tddBatches": [
+        {
+          "scopeId": "REQ-M5-GRAPH-001",
+          "requirementIds": [
+            "REQ-M5-GRAPH-001"
+          ],
+          "red": {
+            "phase": "red",
+            "recordedAt": "2026-09-24T03:22:55.523Z",
+            "fingerprints": {
+              "impact": "cc424713c2a10a17c606d732217cdf94ec9d1458ae6b5e9ed89f0733e0b2f1cb",
+              "requirements": "86a0217c11c1433e228ed659f19b6767a60dcf37d8c51727bc3497012d4f698c",
+              "design": "b300240d68dac5f62937ba9a49deaf4c0725d91ec1aa931d1c085597c5869475",
+              "implementation": "82af63ecf5777ebe7dbba51687f807c5ca92a33a051361512f4206e480c11bc3",
+              "tests": "7e04b9d7681f7794a022a004c47abb8f7de580a2d9717aab6dad0f905af201c6",
+              "tdd": "7e5dc4709c9bf89de5f7639cfd9089fdcf238daacf3cf526408c8a040a2499b5",
+              "requirementImplementations": {
+                "REQ-M5-GRAPH-001": {
+                  "paths": [
+                    "packages/analysis/src/config.ts",
+                    "packages/analysis/src/files.ts",
+                    "packages/analysis/src/graph.ts",
+                    "packages/analysis/src/process.ts",
+                    "packages/domain/src/constitution.ts",
+                    "packages/domain/src/design.ts",
+                    "packages/domain/src/index.ts",
+                    "packages/domain/src/markdown.ts",
+                    "packages/domain/src/requirements.ts",
+                    "packages/domain/src/types.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/config.ts": "b75dacf7bce0e58eaa465a32a6181e75d3492a1dafb4cbb5e09cc9220f9ffcba",
+                    "packages/analysis/src/files.ts": "b0783bfefb1f9503eae70edd1297332a51dfeec75b024c12add3dea786d846b4",
+                    "packages/analysis/src/graph.ts": "d9af0f6b80ceee1462e0d118809b24146ce4ff989c6230700a574f22579ea4f9",
+                    "packages/analysis/src/process.ts": "675e76428f4e78e631fe1cbf9cddee298c93576d43fc63a5e977ff044b32d5d4",
+                    "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                    "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
+                    "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                    "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                    "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                    "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                  }
+                }
+              }
+            },
+            "order": 1586
+          },
+          "implementation": {
+            "phase": "implementation",
+            "recordedAt": "2026-09-24T03:23:01.860Z",
+            "fingerprints": {
+              "impact": "cc424713c2a10a17c606d732217cdf94ec9d1458ae6b5e9ed89f0733e0b2f1cb",
+              "requirements": "86a0217c11c1433e228ed659f19b6767a60dcf37d8c51727bc3497012d4f698c",
+              "design": "b300240d68dac5f62937ba9a49deaf4c0725d91ec1aa931d1c085597c5869475",
+              "implementation": "01086b68eb3c700ecf5efd3ecdb264454755c722e7cb09467144c6da2ad2c025",
+              "tests": "7e04b9d7681f7794a022a004c47abb8f7de580a2d9717aab6dad0f905af201c6",
+              "tdd": "7e5dc4709c9bf89de5f7639cfd9089fdcf238daacf3cf526408c8a040a2499b5",
+              "requirementImplementations": {
+                "REQ-M5-GRAPH-001": {
+                  "paths": [
+                    "packages/analysis/src/config.ts",
+                    "packages/analysis/src/files.ts",
+                    "packages/analysis/src/graph.ts",
+                    "packages/analysis/src/process.ts",
+                    "packages/domain/src/constitution.ts",
+                    "packages/domain/src/design.ts",
+                    "packages/domain/src/index.ts",
+                    "packages/domain/src/markdown.ts",
+                    "packages/domain/src/requirements.ts",
+                    "packages/domain/src/types.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/config.ts": "b75dacf7bce0e58eaa465a32a6181e75d3492a1dafb4cbb5e09cc9220f9ffcba",
+                    "packages/analysis/src/files.ts": "b0783bfefb1f9503eae70edd1297332a51dfeec75b024c12add3dea786d846b4",
+                    "packages/analysis/src/graph.ts": "4de84f582a8da7ca24475354e0890600f34c7533f0c7af41346e879610ae4392",
+                    "packages/analysis/src/process.ts": "675e76428f4e78e631fe1cbf9cddee298c93576d43fc63a5e977ff044b32d5d4",
+                    "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                    "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
+                    "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                    "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                    "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                    "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                  }
+                }
+              }
+            },
+            "order": 1587
+          },
+          "green": {
+            "phase": "green",
+            "recordedAt": "2026-09-24T03:23:12.770Z",
+            "fingerprints": {
+              "impact": "cc424713c2a10a17c606d732217cdf94ec9d1458ae6b5e9ed89f0733e0b2f1cb",
+              "requirements": "86a0217c11c1433e228ed659f19b6767a60dcf37d8c51727bc3497012d4f698c",
+              "design": "b300240d68dac5f62937ba9a49deaf4c0725d91ec1aa931d1c085597c5869475",
+              "implementation": "01086b68eb3c700ecf5efd3ecdb264454755c722e7cb09467144c6da2ad2c025",
+              "tests": "7e04b9d7681f7794a022a004c47abb8f7de580a2d9717aab6dad0f905af201c6",
+              "tdd": "a4300f011e33c8aae3616a2e937f128e038353fcaac183e6a8af9e21210736fc",
+              "requirementImplementations": {
+                "REQ-M5-GRAPH-001": {
+                  "paths": [
+                    "packages/analysis/src/config.ts",
+                    "packages/analysis/src/files.ts",
+                    "packages/analysis/src/graph.ts",
+                    "packages/analysis/src/process.ts",
+                    "packages/domain/src/constitution.ts",
+                    "packages/domain/src/design.ts",
+                    "packages/domain/src/index.ts",
+                    "packages/domain/src/markdown.ts",
+                    "packages/domain/src/requirements.ts",
+                    "packages/domain/src/types.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/config.ts": "b75dacf7bce0e58eaa465a32a6181e75d3492a1dafb4cbb5e09cc9220f9ffcba",
+                    "packages/analysis/src/files.ts": "b0783bfefb1f9503eae70edd1297332a51dfeec75b024c12add3dea786d846b4",
+                    "packages/analysis/src/graph.ts": "4de84f582a8da7ca24475354e0890600f34c7533f0c7af41346e879610ae4392",
+                    "packages/analysis/src/process.ts": "675e76428f4e78e631fe1cbf9cddee298c93576d43fc63a5e977ff044b32d5d4",
+                    "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                    "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
+                    "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                    "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                    "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                    "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                  }
+                }
+              }
+            },
+            "order": 1589
+          }
+        },
+        {
+          "scopeId": "REQ-M5-GRAPH-002",
+          "requirementIds": [
+            "REQ-M5-GRAPH-002"
+          ],
+          "red": {
+            "phase": "red",
+            "recordedAt": "2026-09-24T03:23:33.968Z",
+            "fingerprints": {
+              "impact": "cc424713c2a10a17c606d732217cdf94ec9d1458ae6b5e9ed89f0733e0b2f1cb",
+              "requirements": "86a0217c11c1433e228ed659f19b6767a60dcf37d8c51727bc3497012d4f698c",
+              "design": "b300240d68dac5f62937ba9a49deaf4c0725d91ec1aa931d1c085597c5869475",
+              "implementation": "0304e6f9651f8cd12f02f293a2064659a23cc049e7644cb6b4d46038febff0a8",
+              "tests": "7e04b9d7681f7794a022a004c47abb8f7de580a2d9717aab6dad0f905af201c6",
+              "tdd": "1c738114ffce403841c4a46a68f359959290995dc9f26c04ac03beb62fdd7774",
+              "requirementImplementations": {
+                "REQ-M5-GRAPH-002": {
+                  "paths": [
+                    "packages/analysis/src/config.ts",
+                    "packages/analysis/src/files.ts",
+                    "packages/analysis/src/graph.ts",
+                    "packages/analysis/src/process.ts",
+                    "packages/domain/src/constitution.ts",
+                    "packages/domain/src/design.ts",
+                    "packages/domain/src/index.ts",
+                    "packages/domain/src/markdown.ts",
+                    "packages/domain/src/requirements.ts",
+                    "packages/domain/src/types.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/config.ts": "b75dacf7bce0e58eaa465a32a6181e75d3492a1dafb4cbb5e09cc9220f9ffcba",
+                    "packages/analysis/src/files.ts": "b0783bfefb1f9503eae70edd1297332a51dfeec75b024c12add3dea786d846b4",
+                    "packages/analysis/src/graph.ts": "63f2cac74c1334c56332ded90cbdf9df97751ed84b0daa29340f509628c53dcb",
+                    "packages/analysis/src/process.ts": "675e76428f4e78e631fe1cbf9cddee298c93576d43fc63a5e977ff044b32d5d4",
+                    "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                    "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
+                    "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                    "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                    "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                    "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                  }
+                }
+              }
+            },
+            "order": 1591
+          },
+          "implementation": {
+            "phase": "implementation",
+            "recordedAt": "2026-09-24T03:23:46.130Z",
+            "fingerprints": {
+              "impact": "cc424713c2a10a17c606d732217cdf94ec9d1458ae6b5e9ed89f0733e0b2f1cb",
+              "requirements": "86a0217c11c1433e228ed659f19b6767a60dcf37d8c51727bc3497012d4f698c",
+              "design": "b300240d68dac5f62937ba9a49deaf4c0725d91ec1aa931d1c085597c5869475",
+              "implementation": "01086b68eb3c700ecf5efd3ecdb264454755c722e7cb09467144c6da2ad2c025",
+              "tests": "7e04b9d7681f7794a022a004c47abb8f7de580a2d9717aab6dad0f905af201c6",
+              "tdd": "1c738114ffce403841c4a46a68f359959290995dc9f26c04ac03beb62fdd7774",
+              "requirementImplementations": {
+                "REQ-M5-GRAPH-002": {
+                  "paths": [
+                    "packages/analysis/src/config.ts",
+                    "packages/analysis/src/files.ts",
+                    "packages/analysis/src/graph.ts",
+                    "packages/analysis/src/process.ts",
+                    "packages/domain/src/constitution.ts",
+                    "packages/domain/src/design.ts",
+                    "packages/domain/src/index.ts",
+                    "packages/domain/src/markdown.ts",
+                    "packages/domain/src/requirements.ts",
+                    "packages/domain/src/types.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/config.ts": "b75dacf7bce0e58eaa465a32a6181e75d3492a1dafb4cbb5e09cc9220f9ffcba",
+                    "packages/analysis/src/files.ts": "b0783bfefb1f9503eae70edd1297332a51dfeec75b024c12add3dea786d846b4",
+                    "packages/analysis/src/graph.ts": "4de84f582a8da7ca24475354e0890600f34c7533f0c7af41346e879610ae4392",
+                    "packages/analysis/src/process.ts": "675e76428f4e78e631fe1cbf9cddee298c93576d43fc63a5e977ff044b32d5d4",
+                    "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                    "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
+                    "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                    "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                    "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                    "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                  }
+                }
+              }
+            },
+            "order": 1592
+          },
+          "green": {
+            "phase": "green",
+            "recordedAt": "2026-09-24T03:24:00.651Z",
+            "fingerprints": {
+              "impact": "cc424713c2a10a17c606d732217cdf94ec9d1458ae6b5e9ed89f0733e0b2f1cb",
+              "requirements": "86a0217c11c1433e228ed659f19b6767a60dcf37d8c51727bc3497012d4f698c",
+              "design": "b300240d68dac5f62937ba9a49deaf4c0725d91ec1aa931d1c085597c5869475",
+              "implementation": "01086b68eb3c700ecf5efd3ecdb264454755c722e7cb09467144c6da2ad2c025",
+              "tests": "7e04b9d7681f7794a022a004c47abb8f7de580a2d9717aab6dad0f905af201c6",
+              "tdd": "fb0dc3e5fe5c795a4f3a5d893376a10d6371b683c9efbf6bfbb87c62c07f85c5",
+              "requirementImplementations": {
+                "REQ-M5-GRAPH-002": {
+                  "paths": [
+                    "packages/analysis/src/config.ts",
+                    "packages/analysis/src/files.ts",
+                    "packages/analysis/src/graph.ts",
+                    "packages/analysis/src/process.ts",
+                    "packages/domain/src/constitution.ts",
+                    "packages/domain/src/design.ts",
+                    "packages/domain/src/index.ts",
+                    "packages/domain/src/markdown.ts",
+                    "packages/domain/src/requirements.ts",
+                    "packages/domain/src/types.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/config.ts": "b75dacf7bce0e58eaa465a32a6181e75d3492a1dafb4cbb5e09cc9220f9ffcba",
+                    "packages/analysis/src/files.ts": "b0783bfefb1f9503eae70edd1297332a51dfeec75b024c12add3dea786d846b4",
+                    "packages/analysis/src/graph.ts": "4de84f582a8da7ca24475354e0890600f34c7533f0c7af41346e879610ae4392",
+                    "packages/analysis/src/process.ts": "675e76428f4e78e631fe1cbf9cddee298c93576d43fc63a5e977ff044b32d5d4",
+                    "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                    "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
+                    "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                    "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                    "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                    "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                  }
+                }
+              }
+            },
+            "order": 1594
+          }
+        }
+      ]
     }
   ]
 }

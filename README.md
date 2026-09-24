@@ -422,7 +422,7 @@ validation/gate or requested solver failure, **2** usage, I/O or malformed confi
 | `trace build` | Generate global trace snapshot and feature copies |
 | `trace check [--strict]` | Dangling IDs, stale inputs/paths, mandatory coverage |
 | `trace impact <id-or-path>` | Bidirectional breadth-first traversal with explanation paths |
-| `graph index [--changed]` | Compiler imports, declarations and best-effort call targets |
+| `graph index [--changed]` | Compiler imports, declarations and best-effort call targets. JSON adds `indexing.mode`, sorted changed/analyzed/reused paths, and a full-rebuild reason when applicable; text ends with `(incremental)` or `(full: <reason>)` |
 | `graph impact <symbol-or-path>` | Conservative reverse-import closure; `path#name` disambiguates |
 | `graph cycles` | Strongly connected components; exit 1 when cycles exist |
 | `graph gate` | Fresh index + architecture rule/cycle checks |
@@ -456,9 +456,15 @@ validation/gate or requested solver failure, **2** usage, I/O or malformed confi
 | `gate [--changed] [--feature <name>]` | Fresh full checks plus actual configured commands; persist evidence. `--feature` scopes requirements/design/trace/tdd/change-history/change-completeness checks to one feature as a diagnostic view; never a substitute for the repository-wide gate |
 | `status` | Artifact counts and readiness/staleness summary |
 
-`--changed` reads staged, unstaged, untracked and renamed/deleted paths from Git.
-It reports affected files but **conservatively recomputes all deterministic checks
-and executes all configured commands**. This avoids unsafe incremental skips.
+For `gate --changed` and `evidence refresh --changed`, Git supplies the staged,
+unstaged, untracked, renamed, and deleted paths shown as affected, but the
+commands **conservatively recompute all deterministic checks and execute every
+configured command**. `graph index --changed` is different: cache reuse is
+decided from source, declaration, configuration, lockfile, TypeScript-version,
+and consulted-manifest fingerprints rather than Git status. Its `changed` field
+is informational and becomes `null` with exit code 0 when Git metadata is
+unavailable. The CLI help phrase "refresh full graph" refers to producing a
+complete semantic graph, not to reanalyzing every source file.
 There is no daemon, polling loop or background service.
 Workflow evidence automatically requires `workflow`. TDD evidence automatically
 requires `tdd`; a `.musubix/changes/CHANGE-*.md` document additionally requires

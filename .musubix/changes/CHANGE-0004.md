@@ -2,7 +2,7 @@
 schemaVersion: 1
 id: CHANGE-0004
 summary: Release musubix5 0.2.0
-status: active
+status: completed
 ---
 # CHANGE-0004: release-0.2.0
 

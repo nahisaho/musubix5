@@ -171,7 +171,7 @@ export async function runGate(root: string, options: {
   const trace = await buildTrace(root, !matrixMode);
   const traceResult = await checkTrace(root, trace, true, config.thresholds);
   add('trace', requirementPaths.length > 0, traceResult.diagnostics.filter(scopedToFeature));
-  const graph = await indexGraph(root, !matrixMode);
+  const { graph } = await indexGraph(root, { persist: !matrixMode, refresh: false });
   const graphResult = graphGate(graph, config.architecture, config.codeGraph);
   add('graph', graph.files.length > 0, graphResult.diagnostics);
   const formalText = (await Promise.all(requirementPaths.map(async (path) =>

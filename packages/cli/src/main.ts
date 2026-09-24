@@ -9,8 +9,8 @@ import {
 } from '../../domain/src/index.js';
 
 import {
-  buildKnowledge, buildTrace, changedFiles, checkTrace, configLint, cycles, exists, files, formalCheck, graphGate,
-  graphImpact, indexGraph, loadConfig, loadGraph, loadTrace, portable, projectStatus, queryKnowledge,
+  buildKnowledge, buildTrace, checkTrace, configLint, cycles, exists, files, formalCheck, graphGate,
+  graphImpact, indexGraph, informationalChangedFiles, loadConfig, loadGraph, loadTrace, portable, projectStatus, queryKnowledge,
   formalDoctor, generateFormalArtifacts, readText, runGate, traceImpact, type Solver,
   abandonPersistedChangeGeneration, changePhases, recordChangePhase, recordWorkflow, runTddPhase, sanitizeWorkflowLogFile,
   validateTddEvidence, verifyWorkflowLogFile, migrateTddFingerprint, voidTddCycle, type ChangePhase, type TddPhase,
@@ -331,10 +331,17 @@ export function createProgram(): Command {
   common(graph.command('index')).option('--changed', 'Report changed files; conservatively refresh full graph')
     .action(async (options: { root: string; json?: boolean; changed?: boolean }) => {
       const root = resolve(options.root);
-      const changed = options.changed ? await changedFiles(root) : null;
-      const indexed = await indexGraph(root);
-      output({ ...indexed, changed }, !!options.json, `Graph: ${indexed.files.length} files, ${indexed.imports.length} imports, ${indexed.symbols.length} symbols.`);
-      if (indexed.diagnostics.some((d) => d.severity === 'error')) process.exitCode = 1;
+      const changed = options.changed ? await informationalChangedFiles(root) : null;
+      const indexed = await indexGraph(root, { persist: true, refresh: !!options.changed });
+      const suffix = indexed.indexing.mode === 'incremental'
+        ? 'incremental'
+        : `full: ${indexed.indexing.fullRebuildReason}`;
+      output(
+        { ...indexed.graph, changed, indexing: indexed.indexing },
+        !!options.json,
+        `Graph: ${indexed.graph.files.length} files, ${indexed.graph.imports.length} imports, ${indexed.graph.symbols.length} symbols (${suffix}).`,
+      );
+      if (indexed.graph.diagnostics.some((d) => d.severity === 'error')) process.exitCode = 1;
     });
   common(graph.command('impact <symbol-or-path>')).action(async (query: string, options: { root: string; json?: boolean }) => {
     const root = resolve(options.root);
@@ -352,7 +359,8 @@ export function createProgram(): Command {
     .action(async (options: { root: string; json?: boolean; workspace?: string }) => {
       const report = await withWorkspaceRoot(options.root, options.workspace, async (root) => {
         const config = await loadConfig(root);
-        return graphGate(await indexGraph(root), config.architecture, config.codeGraph);
+        const { graph: indexed } = await indexGraph(root, { persist: true, refresh: false });
+        return graphGate(indexed, config.architecture, config.codeGraph);
       });
       result(report, !!options.json);
   });
@@ -1295,7 +1303,7 @@ async function main(): Promise<void> {
   } catch (cause) {
     if (cause instanceof CommanderError && cause.exitCode === 0) return;
     const message = cause instanceof Error ? cause.message : String(cause);
-    const domainFailure = /^(CLI_ERROR|(?:PARALLEL_[A-Z0-9_]+)|CHANGE_GENERATION_[A-Z0-9_]+|CHANGE_CHECKPOINT_JOURNAL_INVALID|WORKFLOW_CHANGE_MISMATCH|WORKFLOW_DECLARATION_CORRECTION_INVALID|JOURNAL_IDEMPOTENCY_CONFLICT|LEASE_FENCED):\s*(.*)$/.exec(message);
+    const domainFailure = /^(CLI_ERROR|CACHE_WRITE_FAILED|(?:PARALLEL_[A-Z0-9_]+)|CHANGE_GENERATION_[A-Z0-9_]+|CHANGE_CHECKPOINT_JOURNAL_INVALID|WORKFLOW_CHANGE_MISMATCH|WORKFLOW_DECLARATION_CORRECTION_INVALID|JOURNAL_IDEMPOTENCY_CONFLICT|LEASE_FENCED):\s*(.*)$/.exec(message);
     if (domainFailure) {
       const [, code, detail] = domainFailure;
       if (process.argv.includes('--json')) console.log(JSON.stringify({ error: { code, message: detail } }));

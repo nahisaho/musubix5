@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-23T16:34:06.738Z",
-  "totalRequirements": 85,
+  "generatedAt": "2026-09-24T04:21:56.557Z",
+  "totalRequirements": 87,
   "modeledRequirements": 0,
   "modeledFraction": 0,
   "result": {
@@ -18,6 +18,8 @@
     "literals": [],
     "constraints": [],
     "unsupported": [
+      "REQ-M5-GRAPH-001",
+      "REQ-M5-GRAPH-002",
       "REQ-M5-COMPAT-001",
       "REQ-M5-COMPAT-002",
       "REQ-M5-COMPAT-003",
@@ -105,6 +107,16 @@
       "REQ-M5-REL020-003"
     ],
     "diagnostics": [
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-GRAPH-001 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-GRAPH-002 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
       {
         "code": "FORMAL_UNSUPPORTED",
         "severity": "warning",
@@ -543,6 +555,7 @@
     }
   },
   "fingerprints": {
+    ".musubix/features/codegraph-performance/requirements.md": "a5eb96722cea36c4fab7f81a09d992b1cbce62b154c7b85eab35199817d551e1",
     ".musubix/features/musubix5-clean-foundation/requirements.md": "acad145405b899cc10cb97e05d45b253a865852ef5ada5f857a9ad593a8cd6dc",
     ".musubix/features/parallel-agent-development/requirements.md": "ff106781090ca42d511610d6957c59fb9fde7ede002ca86da64018b2285dae1a",
     ".musubix/features/release-0-2-0/requirements.md": "9a21b40b82cd44ffc0a7975583be3e309b1541ec29e78e8eac22eb74f6eb7acf"

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "stage": "design",
-  "changeId": "CHANGE-0004",
-  "generation": 2,
+  "changeId": "CHANGE-0005",
+  "generation": 1,
   "artifacts": {
     ".musubix/constitution.md": "f8b47fdc486f395bab05223a94821b145cf8df70ffde2c838a28f8d71fe0fa92",
     ".musubix/decisions/ADR-0002.md": "9f41d752530613cf6cc3ab6798709567e85650e5b97426dfca4147840eb35684",
@@ -19,6 +19,9 @@
     ".musubix/decisions/ADR-0013.md": "0c360dce20c0bded889a70a5bb276f8338405225941e7c088a2b3b108db4fcf4",
     ".musubix/decisions/ADR-0014.md": "40e01d0f00c5743332d253722c7f62e8e8cf2f99101398bd3cb7900cb2e1f013",
     ".musubix/decisions/ADR-0015.md": "832a1f63e6d8ab44a5c9cbda6679029e9a45f39a8a8bb6446563c41dccdf34d5",
+    ".musubix/decisions/ADR-0016.md": "92d60ae029514e1d57feaea5783bfbb7d5a2637c8a2979d6f089905c3b73e731",
+    ".musubix/features/codegraph-performance/design.md": "3ddf90dbb97a753644deb0e4dd38adaa27420273390a27b241612ef84f4c9c97",
+    ".musubix/features/codegraph-performance/requirements.md": "a5eb96722cea36c4fab7f81a09d992b1cbce62b154c7b85eab35199817d551e1",
     ".musubix/features/musubix5-clean-foundation/design.md": "d74909f43a23fca1445e0a4a75f22b7c6c648002966330904d970bdfad759bb5",
     ".musubix/features/musubix5-clean-foundation/requirements.md": "acad145405b899cc10cb97e05d45b253a865852ef5ada5f857a9ad593a8cd6dc",
     ".musubix/features/parallel-agent-development/design.md": "b82140e2728a3f4744486bffa126199b51b4df3f81851fdbee56662eaae2849d",
@@ -59,6 +62,29 @@
         "adapter": "vitest",
         "required": true,
         "timeoutMs": 180000
+      },
+      {
+        "name": "codegraph-tests",
+        "command": "node",
+        "args": [
+          "scripts/run-codegraph-tests.mjs",
+          "--report",
+          "{reportPath}"
+        ],
+        "tddArgs": [
+          "--test-id",
+          "{testId}"
+        ],
+        "tddReport": {
+          "format": "musubix-json",
+          "path": ".musubix/cache/test-results/{testId}.json"
+        },
+        "testReport": {
+          "format": "musubix-json",
+          "path": ".musubix/cache/test-results/codegraph.json"
+        },
+        "required": true,
+        "timeoutMs": 300000
       },
       {
         "name": "compatibility",
@@ -141,7 +167,7 @@
     }
   },
   "exclusions": [],
-  "artifactSha256": "4f23e15aea5a42386fed7f6db15982fa36072a1c22dad0d3a66194d7caec85dc",
+  "artifactSha256": "95761a140786123cfb00f8c0122377e0dcc4f2bff3f4fc10e3906b6e6d93b569",
   "approver": "@nahisaho",
-  "approvedAt": "2026-09-23T15:55:06.967Z"
+  "approvedAt": "2026-09-24T02:31:27.575Z"
 }

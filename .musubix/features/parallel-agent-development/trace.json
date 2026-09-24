@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-23T16:34:02.339Z",
+  "generatedAt": "2026-09-24T04:21:51.265Z",
   "nodes": [
     {
       "id": "CODE-M5-NPM-PUBLISH-WORKFLOW-YAML-001",
@@ -109,6 +109,44 @@
       "kind": "adr",
       "path": ".musubix/decisions/ADR-0015.md",
       "line": 1
+    },
+    {
+      "id": "ADR-0016",
+      "kind": "adr",
+      "path": ".musubix/decisions/ADR-0016.md",
+      "line": 1
+    },
+    {
+      "id": "DES-M5-GRAPH-001",
+      "kind": "design",
+      "path": ".musubix/features/codegraph-performance/design.md",
+      "line": 9
+    },
+    {
+      "id": "DES-M5-GRAPH-002",
+      "kind": "design",
+      "path": ".musubix/features/codegraph-performance/design.md",
+      "line": 16
+    },
+    {
+      "id": "DES-M5-GRAPH-003",
+      "kind": "design",
+      "path": ".musubix/features/codegraph-performance/design.md",
+      "line": 24
+    },
+    {
+      "id": "REQ-M5-GRAPH-001",
+      "kind": "requirement",
+      "path": ".musubix/features/codegraph-performance/requirements.md",
+      "line": 13,
+      "mandatory": true
+    },
+    {
+      "id": "REQ-M5-GRAPH-002",
+      "kind": "requirement",
+      "path": ".musubix/features/codegraph-performance/requirements.md",
+      "line": 20,
+      "mandatory": true
     },
     {
       "id": "DES-M5-001",
@@ -1003,13 +1041,13 @@
       "id": "CODE-M5-CHANGE-CURRENT-001",
       "kind": "code",
       "path": "packages/analysis/src/change.ts",
-      "line": 883
+      "line": 884
     },
     {
       "id": "CODE-M5-QUALITY-COMPLETENESS-001",
       "kind": "code",
       "path": "packages/analysis/src/change.ts",
-      "line": 1165
+      "line": 1166
     },
     {
       "id": "CODE-M5-COMPAT-ORACLE-001",
@@ -1094,6 +1132,18 @@
       "kind": "code",
       "path": "packages/analysis/src/gate.ts",
       "line": 685
+    },
+    {
+      "id": "CODE-M5-GRAPH-INCREMENTAL-001",
+      "kind": "code",
+      "path": "packages/analysis/src/graph.ts",
+      "line": 566
+    },
+    {
+      "id": "CODE-M5-GRAPH-TRAVERSAL-001",
+      "kind": "code",
+      "path": "packages/analysis/src/graph.ts",
+      "line": 2077
     },
     {
       "id": "CODE-M5-LIFECYCLE-004",
@@ -1405,25 +1455,25 @@
       "id": "CODE-M5-PARALLEL-CLI-001",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 371
+      "line": 379
     },
     {
       "id": "CODE-M5-BOOTSTRAP-CLI-001",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 1229
+      "line": 1237
     },
     {
       "id": "CODE-M5-CLI-ERROR-ENVELOPE-001",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 1288
+      "line": 1296
     },
     {
       "id": "CODE-M5-CLI-BIN-ENTRY-001",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 1312
+      "line": 1320
     },
     {
       "id": "CODE-M5-COMPAT-006",
@@ -1712,6 +1762,60 @@
       "kind": "test",
       "path": "tests/cli-json-error-contract.test.ts",
       "line": 19
+    },
+    {
+      "id": "TEST-M5-GRAPH-INCREMENTAL-NOCHANGE-001",
+      "kind": "test",
+      "path": "tests/codegraph-incremental-regressions.test.ts",
+      "line": 33
+    },
+    {
+      "id": "TEST-M5-GRAPH-INCREMENTAL-FALLBACK-001",
+      "kind": "test",
+      "path": "tests/codegraph-incremental-regressions.test.ts",
+      "line": 61
+    },
+    {
+      "id": "TEST-M5-GRAPH-INCREMENTAL-GIT-001",
+      "kind": "test",
+      "path": "tests/codegraph-incremental-regressions.test.ts",
+      "line": 95
+    },
+    {
+      "id": "TEST-M5-GRAPH-CACHE-WRITE-001",
+      "kind": "test",
+      "path": "tests/codegraph-incremental-regressions.test.ts",
+      "line": 123
+    },
+    {
+      "id": "TEST-M5-GRAPH-INCREMENTAL-001",
+      "kind": "test",
+      "path": "tests/codegraph-performance.test.ts",
+      "line": 42
+    },
+    {
+      "id": "TEST-M5-GRAPH-TRAVERSAL-001",
+      "kind": "test",
+      "path": "tests/codegraph-performance.test.ts",
+      "line": 101
+    },
+    {
+      "id": "TEST-M5-GRAPH-CYCLES-001",
+      "kind": "test",
+      "path": "tests/codegraph-performance.test.ts",
+      "line": 148
+    },
+    {
+      "id": "TEST-M5-GRAPH-GATE-SCAN-001",
+      "kind": "test",
+      "path": "tests/codegraph-performance.test.ts",
+      "line": 169
+    },
+    {
+      "id": "TEST-M5-GRAPH-GATE-ORDER-001",
+      "kind": "test",
+      "path": "tests/codegraph-performance.test.ts",
+      "line": 209
     },
     {
       "id": "TEST-M5-COMPAT-ORACLE-001",
@@ -2584,6 +2688,46 @@
       "from": "CODE-M5-RELEASE-003-CONTEXT-VERIFY-001",
       "to": "DES-M5-020",
       "relation": "implements"
+    },
+    {
+      "from": "DES-M5-GRAPH-001",
+      "to": "REQ-M5-GRAPH-001",
+      "relation": "satisfies"
+    },
+    {
+      "from": "ADR-0016",
+      "to": "DES-M5-GRAPH-001",
+      "relation": "decides"
+    },
+    {
+      "from": "DES-M5-GRAPH-002",
+      "to": "REQ-M5-GRAPH-001",
+      "relation": "satisfies"
+    },
+    {
+      "from": "ADR-0016",
+      "to": "DES-M5-GRAPH-002",
+      "relation": "decides"
+    },
+    {
+      "from": "DES-M5-GRAPH-002",
+      "to": "DES-M5-GRAPH-001",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-GRAPH-003",
+      "to": "REQ-M5-GRAPH-002",
+      "relation": "satisfies"
+    },
+    {
+      "from": "ADR-0016",
+      "to": "DES-M5-GRAPH-003",
+      "relation": "decides"
+    },
+    {
+      "from": "DES-M5-GRAPH-003",
+      "to": "DES-M5-GRAPH-001",
+      "relation": "depends-on"
     },
     {
       "from": "DES-M5-001",
@@ -5353,6 +5497,31 @@
     {
       "from": "CODE-M5-STATUS-GUIDANCE-001",
       "to": "DES-M5-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-GRAPH-INCREMENTAL-001",
+      "to": "REQ-M5-GRAPH-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-GRAPH-INCREMENTAL-001",
+      "to": "DES-M5-GRAPH-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-GRAPH-INCREMENTAL-001",
+      "to": "DES-M5-GRAPH-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-GRAPH-TRAVERSAL-001",
+      "to": "REQ-M5-GRAPH-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-GRAPH-TRAVERSAL-001",
+      "to": "DES-M5-GRAPH-003",
       "relation": "implements"
     },
     {
@@ -6901,6 +7070,51 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-GRAPH-INCREMENTAL-NOCHANGE-001",
+      "to": "REQ-M5-GRAPH-001",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-GRAPH-INCREMENTAL-FALLBACK-001",
+      "to": "REQ-M5-GRAPH-001",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-GRAPH-INCREMENTAL-GIT-001",
+      "to": "REQ-M5-GRAPH-001",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-GRAPH-CACHE-WRITE-001",
+      "to": "REQ-M5-GRAPH-001",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-GRAPH-INCREMENTAL-001",
+      "to": "REQ-M5-GRAPH-001",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-GRAPH-TRAVERSAL-001",
+      "to": "REQ-M5-GRAPH-002",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-GRAPH-CYCLES-001",
+      "to": "REQ-M5-GRAPH-002",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-GRAPH-GATE-SCAN-001",
+      "to": "REQ-M5-GRAPH-002",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-GRAPH-GATE-ORDER-001",
+      "to": "REQ-M5-GRAPH-002",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-COMPAT-ORACLE-001",
       "to": "REQ-M5-COMPAT-002",
       "relation": "verifies"
@@ -8385,6 +8599,9 @@
     ".musubix/decisions/ADR-0013.md": "0c360dce20c0bded889a70a5bb276f8338405225941e7c088a2b3b108db4fcf4",
     ".musubix/decisions/ADR-0014.md": "40e01d0f00c5743332d253722c7f62e8e8cf2f99101398bd3cb7900cb2e1f013",
     ".musubix/decisions/ADR-0015.md": "832a1f63e6d8ab44a5c9cbda6679029e9a45f39a8a8bb6446563c41dccdf34d5",
+    ".musubix/decisions/ADR-0016.md": "92d60ae029514e1d57feaea5783bfbb7d5a2637c8a2979d6f089905c3b73e731",
+    ".musubix/features/codegraph-performance/design.md": "3ddf90dbb97a753644deb0e4dd38adaa27420273390a27b241612ef84f4c9c97",
+    ".musubix/features/codegraph-performance/requirements.md": "a5eb96722cea36c4fab7f81a09d992b1cbce62b154c7b85eab35199817d551e1",
     ".musubix/features/musubix5-clean-foundation/design.md": "d74909f43a23fca1445e0a4a75f22b7c6c648002966330904d970bdfad759bb5",
     ".musubix/features/musubix5-clean-foundation/requirements.md": "acad145405b899cc10cb97e05d45b253a865852ef5ada5f857a9ad593a8cd6dc",
     ".musubix/features/parallel-agent-development/design.md": "b82140e2728a3f4744486bffa126199b51b4df3f81851fdbee56662eaae2849d",
@@ -8405,14 +8622,14 @@
     "packages/analysis/src/change-evidence.ts": "4af7011893b055e014a1af8d301935a0ca3791cacc1a45f982a3068e457d1d12",
     "packages/analysis/src/change-generation.ts": "f97f773b39665aee35b81556c54beed0b2bb5c11fa770456753c0fc93bb5d3e2",
     "packages/analysis/src/change-waiver.ts": "1b880c29a16080445f324265e0da067dd8537e64cb42f360369fd2a1eda0f9c3",
-    "packages/analysis/src/change.ts": "c8357d94650b431c8c7cc13dbb2a1039da2af365a8845e6eef3dd29c7afb3da8",
+    "packages/analysis/src/change.ts": "69a9e274c86eb1a52f5a5cf0a2017433c23d171ce95db273105203db6b363c99",
     "packages/analysis/src/compatibility-oracle.ts": "83aac1ddcf29d0ff7d76a8e05c9be9dfa1911f94c1ec960145578c43f2b32d98",
     "packages/analysis/src/config.ts": "b75dacf7bce0e58eaa465a32a6181e75d3492a1dafb4cbb5e09cc9220f9ffcba",
     "packages/analysis/src/evidence-registry.ts": "41bdd3f05c91734baf22cccf5289a9906eae30bfd1356236bc98c96be47da660",
     "packages/analysis/src/files.ts": "7a8cad4ffb34c910bf056fc431d177b72ef3814d0811cada2509a129ae910c0d",
     "packages/analysis/src/formal.ts": "9f5622983fed80c1e7c141cc7c7dcd217447e5c2edd39e64877db052a57b730b",
-    "packages/analysis/src/gate.ts": "d5c99e7bcb5bed53c577b82741f743832ca01397f8ec931e025f26243b166d85",
-    "packages/analysis/src/graph.ts": "448a2ebb4aa9f8b5a3b8a3ca7fbe06b51dd0a38f8c69830f6717947bda050a23",
+    "packages/analysis/src/gate.ts": "31c6e375cf5e79b81c0a977812fe0b0de3a9ab26a9ee7288e5de5838cefe9f80",
+    "packages/analysis/src/graph.ts": "4de84f582a8da7ca24475354e0890600f34c7533f0c7af41346e879610ae4392",
     "packages/analysis/src/index.ts": "a023078b9461fa83b0f565cb9f80eb6b525c6028854f87f4bee20f3c2587ed1e",
     "packages/analysis/src/journal.ts": "a852798a86b2fe5ec38f32e827df64e45a37ba0dfa870fd3a513b605307094f6",
     "packages/analysis/src/knowledge.ts": "31313a4519c711ac98648313059359daf69959403e39deb1509dea90840182b4",
@@ -8443,7 +8660,7 @@
     "packages/analysis/src/workflow.ts": "9d0e551e55dc7865d1e82f7e2a4d4e7d8db8846f0b584fd512cf19f5d0a0964c",
     "packages/analysis/src/workspace-manager.ts": "9c5cf8b137be42914e79784a7a5414ba48eb26d454e5a07df24eb264f5757576",
     "packages/cli/src/install.ts": "4b33a24e19958e2c88af806dc1261f4f4a74d6e56cb9fe95c0dabf7cc20cef7f",
-    "packages/cli/src/main.ts": "f1401256565e850633ba47099d6f0cf73e242ca1fd6b21fd1c2e549d3a79ebe5",
+    "packages/cli/src/main.ts": "98664d942df30d7c9e2c062f20d25e78f55a37ce2790c3e7f22168805cf00d1e",
     "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
     "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
     "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
@@ -8451,6 +8668,7 @@
     "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
     "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34",
     "scripts/check-package.mjs": "b817a08296efb0f2f90be012df55c598f59aaaf5230c8501c1af02b900546593",
+    "scripts/run-codegraph-tests.mjs": "1d81f6857cc765c616b14121b4b3b9a1728a5d77f812ca49e24261fbc477feab",
     "scripts/smoke-package.mjs": "b5f69bc4c0109632acdd266717695065dbce04e4d7f8d543eb164c1596a1568c",
     "tests/active-change-context.test.ts": "2db451f99fee47c7c75bb462ce0f04b4c808b87ab0174c95c0d54be05d878a37",
     "tests/approval-boundary-resume.test.ts": "7bf02bd5b510b0e3d47c1830dfbb03434bcec3bf8778ea9bd5788edd2e097379",
@@ -8467,7 +8685,7 @@
     "tests/budget-reservation.test.ts": "f7ee772c7546cba05001013d89cfce0fd692096fc9062e4e7e7c7ad1732def7c",
     "tests/budget-usage.test.ts": "45bf344f884740b91adfaf18a41830a72a3095a314aa71193a8750186752689f",
     "tests/candidate-gate-eol.test.ts": "db72054d71bb5bb2cb986c7a5ccb7b31d714b6c863e5901fd7d1fe723e8a1ad4",
-    "tests/candidate-gate-trust.test.ts": "790c226c4b4c3a435e044a63f2740d1321796b55f1ea2b8bbbe6fee224e1eded",
+    "tests/candidate-gate-trust.test.ts": "2ec0753f4c985fadbcba891d88c161bdd41f507d6172d2668f0aac356ec4c6d0",
     "tests/candidate-gate.test.ts": "cbba3d51e70b9d39806b039914426ceb142016b5ed37a702df29b2fef216a90b",
     "tests/candidate-snapshot-repository-binding.test.ts": "17b1d63cacfb98061293bae8c4fb1218cc27f5576b1c67e73d529b511a936b28",
     "tests/change-completeness-current.test.ts": "0c57842880dd7f10cabdae01c8f9f5a5cbdf19f1ce19c3fd0d39deddd35c3ca6",
@@ -8480,6 +8698,8 @@
     "tests/change-phase-checkpoint-operation.test.ts": "7a7f9611adbf133697e8d4c9485c39b4ec9300834283a998ae6f625027b10612",
     "tests/cli-help-contract.test.ts": "9528757483a6eab996a9084561f83259b130e00a15fb3bf45a1a8de762d08d74",
     "tests/cli-json-error-contract.test.ts": "db96b3a7986394c7ba941b495795ff9cb181063f744b1cabb378b1762a37c099",
+    "tests/codegraph-incremental-regressions.test.ts": "cb0cb9d9675ec1336966ff448a3994a339a7950ef819e2b71db0e6dd8e14fbf4",
+    "tests/codegraph-performance.test.ts": "b6481920fb15944ddf64a29b4cf421fee1115abfa94497c9296d5f0aae05ae6d",
     "tests/compatibility-oracle.test.ts": "246a1fb3090c0377d72feece8e578b9608bbb86cf75cdca3ae316956860adc90",
     "tests/cross-change-candidate-branch.test.ts": "cb340d1c22862a88654df138166f9d880b49d77aef6ba7efec607cbc61588740",
     "tests/evidence-binding.test.ts": "17e118ccc2ae168913c6af833ac40deedeac84668522573c64286848c1207248",
@@ -8500,7 +8720,7 @@
     "tests/parallel-development.test.ts": "6d49970e05e0cac6f500c06ac75f4bd4dd7fcab1810b29c9fb41fd89733a0383",
     "tests/parallel-final-findings-generation5.test.ts": "f454175e9d0ed64574942cd8fc77ffe93c42f2f6efc6e19271130475b3d4b7dc",
     "tests/parallel-ownership-history-generation5.test.ts": "5cc0f366a22059d1eafe81d4f22ad41e68b5ecdffa6accf6f824b00835e6311b",
-    "tests/parallel-quality-regressions.test.ts": "78d184810a9dfab27f2c36cbbd8d8bb88f2ab3e9545ae7f86629fcb43d56ae97",
+    "tests/parallel-quality-regressions.test.ts": "1f65cad62645a694ffb39303f7bab87b9f957c5de3b78feb14e76b64bffa29d9",
     "tests/parallel-release-blockers-generation5.test.ts": "8739007ad5fbe19451cf1e6e2abba2265f1c1435a35e9e05164e927360bbefdc",
     "tests/parallel-review-regressions.test.ts": "b0ddb63c6f2a4fc41dd7b959b971c4cff8a2cc87f665a5ca2e42652b6cfc5423",
     "tests/parallel-runtime-lifecycle-generation5.test.ts": "66a6fb7e09b6ac620d30cc4c92f9c1fcbfdf79dab9c9109cca7cfa97314b9ea0",

@@ -370,7 +370,7 @@ npx musubix5 tdd green TEST-EXAMPLE-002 --requirement REQ-EXAMPLE-002 --command 
 | `trace build` | リポジトリ全体のグラフと機能別コピーを生成 |
 | `trace check [--strict]` | 未解決ID、陳腐化、必須要求の網羅性 |
 | `trace impact <id-or-path>` | 説明経路付きの双方向探索 |
-| `graph index [--changed]` | コンパイラによる依存・宣言・可能な呼び出し先 |
+| `graph index [--changed]` | コンパイラによる依存・宣言・可能な呼び出し先。JSON は `indexing.mode`、ソート済みの変更・解析・再利用パス、該当時の全再構築理由を追加し、テキスト末尾は `(incremental)` または `(full: <reason>)` |
 | `graph impact <symbol-or-path>` | 逆依存の推移閉包。`path#name` で曖昧さを回避 |
 | `graph cycles` | 強連結成分。循環ありなら終了コード1 |
 | `graph gate` | 最新グラフでアーキテクチャ規則を検査 |
@@ -404,9 +404,14 @@ npx musubix5 tdd green TEST-EXAMPLE-002 --requirement REQ-EXAMPLE-002 --command 
 | `gate [--changed] [--feature <name>]` | 検証・実コマンドを集約し品質根拠を保存。`--feature`は requirements/design/trace/tdd/change-history/change-completeness の検査を1機能へ限定する診断用途で、repository全体のgateの代替ではない |
 | `status` | 成果物数と準備状況・陳腐化を表示 |
 
-`--changed` は Git の staged/unstaged/untracked/rename/delete を収集し、
-変更・影響を表示します。**安全のため全検査と全設定コマンドを再実行**します。
-未実施検査を推測で成功扱いする差分最適化はありません。常駐プロセスもありません。
+`gate --changed` と `evidence refresh --changed` は Git の
+staged/unstaged/untracked/rename/delete を変更・影響表示に使いますが、
+**全決定的検査と全設定コマンドを安全側で再実行**します。
+`graph index --changed` は異なり、Git status ではなく、ソース・宣言・設定・
+lockfile・TypeScript版・参照manifestのfingerprintからキャッシュ再利用を判断します。
+`changed` は情報表示専用で、Git metadataを利用できない場合も終了コード0で
+`null`になります。CLI helpの「refresh full graph」は完全なsemantic graphを
+生成する意味であり、全sourceを再解析する意味ではありません。常駐プロセスはありません。
 workflow証拠があれば`workflow`、TDD証拠があれば`tdd`が自動的に必須になります。
 `.musubix/changes/CHANGE-*.md` があれば、`requiredChecks` の設定にかかわらず
 `tdd`、`change-history`、`change-completeness`がすべて必須になります。

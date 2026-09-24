@@ -6,7 +6,7 @@ describe('CHANGE-0003 quality regressions', () => {
    */
   it('TEST-M5-PARALLEL-GRAPH-ACYCLIC-001 keeps parallel TDD provenance dependencies acyclic', async () => {
     const { graphGate, indexGraph } = await import('../packages/analysis/src/graph.js');
-    const graph = await indexGraph('.', false);
+    const { graph } = await indexGraph('.', { persist: false, refresh: false });
     const result = graphGate(graph, { forbidCycles: true, rules: [] });
     expect(result.cycles).not.toContainEqual([
       'packages/analysis/src/change-evidence.ts',

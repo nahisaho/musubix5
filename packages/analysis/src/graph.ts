@@ -2,7 +2,8 @@ import ts from 'typescript';
 import { dirname, isAbsolute, posix, relative, resolve } from 'node:path';
 import { error, type Diagnostic } from '../../domain/src/index.js';
 import type { Config } from './config.js';
-import { FILE_READ_CONCURRENCY, files, isSource, isTraceSource, mapWithConcurrency, portable, readText, snapshot, writeJson } from './files.js';
+import { FILE_READ_CONCURRENCY, digest, exists, files, isSource, isTraceSource, mapWithConcurrency, portable, readText, snapshot, within, writeJson } from './files.js';
+import { runProcess, type Runner } from './process.js';
 
 export interface ImportEdge {
   from: string;
@@ -35,11 +36,683 @@ export interface CodeGraph {
   fingerprints: Record<string, string>;
 }
 
+export type CodeGraphFullRebuildReason =
+  | 'FULL_REQUESTED'
+  | 'CACHE_MISSING'
+  | 'CACHE_INVALID'
+  | 'ANALYSIS_VERSION_MISMATCH'
+  | 'CONFIG_CHANGED'
+  | 'DECLARATION_CHANGED'
+  | 'DELETED_FILES'
+  | 'ADDED_FILES';
+
+export interface CodeGraphIndexResult {
+  graph: CodeGraph;
+  indexing: {
+    mode: 'incremental' | 'full';
+    changedInputs: string[];
+    analyzedSourcePaths: string[];
+    reusedSourcePaths: string[];
+    fullRebuildReason?: CodeGraphFullRebuildReason;
+  };
+  operations: {
+    analyzedSourceFiles: number;
+    reusedSourceFiles: number;
+  };
+}
+
+export interface CodeGraphIndexOptions {
+  persist?: boolean;
+  refresh?: boolean;
+  runner?: Runner;
+  writer?: (root: string, path: string, value: unknown) => Promise<void>;
+  onSourceExtraction?: (event: {
+    path: string;
+    language: string;
+    phase: 'symbols' | 'relations';
+  }) => void;
+}
+
+export interface GraphOperationCounters {
+  forwardAdjacencyVisits: number;
+  reverseAdjacencyVisits: number;
+  completeImportScans: number;
+}
+
+export interface GraphAdjacency {
+  forward: Map<string, string[]>;
+  reverse: Map<string, string[]>;
+}
+
+interface CodeGraphPhaseUnit {
+  path: string;
+  language: string;
+  symbolsPhase: {
+    symbols: CodeGraph['symbols'];
+    diagnostics: Diagnostic[];
+    consultedManifests: string[];
+    declarations: Array<[string, string]>;
+  };
+  relationsPhase: {
+    imports: ImportEdge[];
+    calls: CodeGraph['calls'];
+    diagnostics: Diagnostic[];
+    consultedManifests: string[];
+  };
+}
+
+interface CodeGraphCache extends CodeGraph {
+  analysisVersion: string;
+  cacheContentHash: string;
+  declarationFingerprints: Record<string, string>;
+  resolutionEnvironment: {
+    typescriptVersion: string;
+    lockfiles: Record<string, string>;
+    manifests: Record<string, string>;
+  };
+  phaseUnits: CodeGraphPhaseUnit[];
+}
+
+interface ResolutionEnvironmentResult {
+  environment: CodeGraphCache['resolutionEnvironment'];
+  unreadableManifestPaths: string[];
+}
+
+interface GraphBuildResult {
+  graph: CodeGraph;
+  phaseUnits: CodeGraphPhaseUnit[];
+  analyzedSourcePaths: string[];
+  reusedSourcePaths: string[];
+}
+
+interface GraphBuildOptions {
+  prior?: CodeGraphCache;
+  analyzedSourcePaths?: string[];
+  onSourceExtraction?: CodeGraphIndexOptions['onSourceExtraction'];
+}
+
+const CODEGRAPH_ANALYZER_REVISION = 'm5-graph-001-phase-units-3';
+const LOCKFILES = ['package-lock.json', 'npm-shrinkwrap.json', 'pnpm-lock.yaml', 'yarn.lock'] as const;
+const ANALYSIS_VERSION = `${CODEGRAPH_ANALYZER_REVISION}:typescript-${ts.version}`;
+
 export async function graphInputs(root: string): Promise<string[]> {
   return (await files(root)).filter((p) => isTraceSource(p) || /(?:^|\/)(?:tsconfig[^/]*\.json|package\.json|go\.mod|pubspec\.yaml)$/.test(p));
 }
 
-export async function indexGraph(root: string, persist = true): Promise<CodeGraph> {
+export async function declarationInputs(root: string): Promise<string[]> {
+  return (await files(root)).filter((path) => /\.d\.(?:ts|cts|mts)$/.test(path));
+}
+
+export async function informationalChangedFiles(
+  root: string,
+  runner: Runner = runProcess,
+): Promise<string[] | null> {
+  const location = await runner('git', ['rev-parse', '--show-prefix'], { cwd: root, timeoutMs: 10_000 });
+  if (location.status !== 'completed' || location.exitCode !== 0) return null;
+  const prefix = location.stdout.replace(/\r?\n$/, '');
+  const result = await runner('git', ['status', '--porcelain=v1', '-z', '--untracked-files=all', '--', '.'], {
+    cwd: root,
+    timeoutMs: 10_000,
+  });
+  if (result.status !== 'completed' || result.exitCode !== 0) return null;
+  const entries = result.stdout.split('\0');
+  const paths = new Set<string>();
+  const add = (path: string): void => {
+    if (path.startsWith(prefix)) paths.add(path.slice(prefix.length));
+  };
+  for (let index = 0; index < entries.length; index += 1) {
+    const entry = entries[index];
+    if (!entry || entry.length < 4) continue;
+    add(entry.slice(3));
+    if (/[RC]/.test(entry.slice(0, 2))) {
+      const previous = entries[++index];
+      if (previous) add(previous);
+    }
+  }
+  return [...paths].sort();
+}
+
+async function resolutionEnvironment(
+  root: string,
+  priorManifestPaths: string[] = [],
+): Promise<ResolutionEnvironmentResult> {
+  const lockfiles: Record<string, string> = {};
+  for (const path of LOCKFILES) {
+    const absolute = within(root, path);
+    if (await exists(absolute)) lockfiles[path] = digest(await import('node:fs/promises').then(({ readFile }) => readFile(absolute)));
+  }
+  const manifests: Record<string, string> = {};
+  const unreadableManifestPaths: string[] = [];
+  for (const path of [...new Set(priorManifestPaths)].sort()) {
+    try {
+      const absolute = resolve(root, path);
+      manifests[path] = digest(await import('node:fs/promises').then(({ readFile }) => readFile(absolute)));
+    } catch (cause) {
+      if ((cause as NodeJS.ErrnoException).code === 'ENOENT') manifests[path] = 'absent';
+      else unreadableManifestPaths.push(path);
+    }
+  }
+  return {
+    environment: { typescriptVersion: ts.version, lockfiles, manifests },
+    unreadableManifestPaths,
+  };
+}
+
+function semanticGraph(cache: CodeGraph | CodeGraphCache): CodeGraph {
+  return {
+    schemaVersion: cache.schemaVersion,
+    generatedAt: cache.generatedAt,
+    files: cache.files,
+    unsupportedFiles: cache.unsupportedFiles,
+    imports: cache.imports,
+    entrypoints: cache.entrypoints,
+    symbols: cache.symbols,
+    calls: cache.calls,
+    diagnostics: cache.diagnostics,
+    fingerprints: cache.fingerprints,
+  };
+}
+
+function cacheContentHash(
+  cache: Omit<CodeGraphCache, 'cacheContentHash'> | CodeGraphCache,
+): string {
+  return digest(JSON.stringify({
+    semantic: {
+      schemaVersion: cache.schemaVersion,
+      files: cache.files,
+      unsupportedFiles: cache.unsupportedFiles,
+      imports: cache.imports,
+      entrypoints: cache.entrypoints,
+      symbols: cache.symbols,
+      calls: cache.calls,
+      diagnostics: cache.diagnostics,
+      fingerprints: cache.fingerprints,
+    },
+    analysisVersion: cache.analysisVersion,
+    declarationFingerprints: cache.declarationFingerprints,
+    resolutionEnvironment: cache.resolutionEnvironment,
+    phaseUnits: cache.phaseUnits,
+  }));
+}
+
+async function consultedPackageManifests(root: string, path: string, imports: ImportEdge[]): Promise<string[]> {
+  const result = new Set<string>();
+  for (const edge of imports) {
+    if (!edge.external || !edge.to.startsWith('npm:')) continue;
+    const specifier = edge.to.slice(4);
+    const segments = specifier.split('/');
+    const packageName = specifier.startsWith('@') ? segments.slice(0, 2).join('/') : segments[0]!;
+    let directory = dirname(path);
+    let logical = `node_modules/${packageName}/package.json`;
+    while (true) {
+      logical = directory === '.'
+        ? `node_modules/${packageName}/package.json`
+        : `${directory}/node_modules/${packageName}/package.json`;
+      try {
+        if (await exists(resolve(root, logical))) {
+          result.add(logical);
+          break;
+        }
+      } catch {
+        result.add(logical);
+        break;
+      }
+      if (directory === '.') {
+        result.add(logical);
+        break;
+      }
+      directory = dirname(directory);
+    }
+  }
+  return [...result].sort();
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+function validDiagnostic(value: unknown): value is Diagnostic {
+  if (!isRecord(value)) return false;
+  return typeof value.code === 'string'
+    && ['error', 'warning'].includes(String(value.severity))
+    && typeof value.message === 'string'
+    && (value.path === undefined || typeof value.path === 'string')
+    && (value.line === undefined || Number.isSafeInteger(value.line));
+}
+
+function validImportEdge(value: unknown): value is ImportEdge {
+  if (!isRecord(value)) return false;
+  return typeof value.from === 'string'
+    && typeof value.to === 'string'
+    && typeof value.specifier === 'string'
+    && ['import', 'export', 'dynamic', 'require', 'use', 'mod', 'include', 'using'].includes(String(value.kind))
+    && Number.isSafeInteger(value.line)
+    && typeof value.external === 'boolean';
+}
+
+function validSymbol(value: unknown): value is CodeSymbol {
+  if (!isRecord(value)) return false;
+  return typeof value.id === 'string'
+    && typeof value.name === 'string'
+    && typeof value.path === 'string'
+    && Number.isSafeInteger(value.line)
+    && typeof value.kind === 'string'
+    && (value.container === undefined || typeof value.container === 'string');
+}
+
+function validCall(value: unknown): value is CodeGraph['calls'][number] {
+  if (!isRecord(value)) return false;
+  return typeof value.path === 'string'
+    && Number.isSafeInteger(value.line)
+    && typeof value.expression === 'string'
+    && (value.target === null || typeof value.target === 'string');
+}
+
+function validEntrypoint(value: unknown): value is CodeGraph['entrypoints'][number] {
+  if (!isRecord(value)) return false;
+  return typeof value.manifest === 'string'
+    && typeof value.field === 'string'
+    && typeof value.path === 'string';
+}
+
+function validFingerprintRecord(value: unknown): value is Record<string, string> {
+  return isRecord(value) && Object.values(value).every((fingerprint) => typeof fingerprint === 'string');
+}
+
+function validSemanticGraph(value: unknown): value is CodeGraph {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const graph = value as Partial<CodeGraph>;
+  return graph.schemaVersion === 1
+    && typeof graph.generatedAt === 'string'
+    && Array.isArray(graph.files) && graph.files.every((path) => typeof path === 'string')
+    && Array.isArray(graph.unsupportedFiles) && graph.unsupportedFiles.every((path) => typeof path === 'string')
+    && Array.isArray(graph.imports) && graph.imports.every(validImportEdge)
+    && Array.isArray(graph.entrypoints) && graph.entrypoints.every(validEntrypoint)
+    && Array.isArray(graph.symbols) && graph.symbols.every(validSymbol)
+    && Array.isArray(graph.calls) && graph.calls.every(validCall)
+    && Array.isArray(graph.diagnostics) && graph.diagnostics.every(validDiagnostic)
+    && validFingerprintRecord(graph.fingerprints);
+}
+
+function validCurrentCache(value: unknown): value is CodeGraphCache {
+  if (!validSemanticGraph(value)) return false;
+  const cache = value as Partial<CodeGraphCache>;
+  if (!(typeof cache.analysisVersion === 'string'
+    && typeof cache.cacheContentHash === 'string'
+    && validFingerprintRecord(cache.declarationFingerprints)
+    && !!cache.resolutionEnvironment
+    && typeof cache.resolutionEnvironment.typescriptVersion === 'string'
+    && validFingerprintRecord(cache.resolutionEnvironment.lockfiles)
+    && validFingerprintRecord(cache.resolutionEnvironment.manifests)
+    && Array.isArray(cache.phaseUnits)
+    && cache.phaseUnits.every((unit) => !!unit
+      && typeof unit.path === 'string'
+      && typeof unit.language === 'string'
+      && !!unit.symbolsPhase
+      && Array.isArray(unit.symbolsPhase.symbols) && unit.symbolsPhase.symbols.every(validSymbol)
+      && Array.isArray(unit.symbolsPhase.diagnostics) && unit.symbolsPhase.diagnostics.every(validDiagnostic)
+      && Array.isArray(unit.symbolsPhase.consultedManifests)
+      && unit.symbolsPhase.consultedManifests.every((path) => typeof path === 'string')
+      && Array.isArray(unit.symbolsPhase.declarations)
+      && unit.symbolsPhase.declarations.every((entry) =>
+        Array.isArray(entry) && entry.length === 2
+        && typeof entry[0] === 'string' && typeof entry[1] === 'string')
+      && !!unit.relationsPhase
+      && Array.isArray(unit.relationsPhase.imports) && unit.relationsPhase.imports.every(validImportEdge)
+      && Array.isArray(unit.relationsPhase.calls) && unit.relationsPhase.calls.every(validCall)
+      && Array.isArray(unit.relationsPhase.diagnostics) && unit.relationsPhase.diagnostics.every(validDiagnostic)
+      && Array.isArray(unit.relationsPhase.consultedManifests)
+      && unit.relationsPhase.consultedManifests.every((path) => typeof path === 'string')))) return false;
+  const typed = cache as CodeGraphCache;
+  const unitKeys = typed.phaseUnits.map((unit) => `${unit.language}\0${unit.path}`);
+  const unitPaths = new Set(typed.phaseUnits.map((unit) => unit.path));
+  return new Set(unitKeys).size === unitKeys.length
+    && typed.phaseUnits.every((unit) => typed.files.includes(unit.path))
+    && typed.files.every((path) => unitPaths.has(path) && typeof typed.fingerprints[path] === 'string')
+    && cacheContentHash(typed) === typed.cacheContentHash;
+}
+
+function changedKeys(
+  previous: Record<string, string>,
+  current: Record<string, string>,
+): { added: string[]; deleted: string[]; modified: string[] } {
+  const added = Object.keys(current).filter((path) => !(path in previous)).sort();
+  const deleted = Object.keys(previous).filter((path) => !(path in current)).sort();
+  const modified = Object.keys(current).filter((path) => path in previous && current[path] !== previous[path]).sort();
+  return { added, deleted, modified };
+}
+
+function isGraphSourcePath(path: string): boolean {
+  return isSource(path) || /\.(?:rs|py|go|java|c|cc|cpp|h|hh|hpp|m|mm|cs|php|r|R|jl|kt|kts|rb|swift|dart|scala|ex|exs|hs|lua|zig|sol|fs|fsx|vb)$/.test(path);
+}
+
+function importerClosure(graph: CodeGraph, changed: string[]): string[] {
+  const reverse = new Map(graph.files.map((path) => [path, [] as string[]]));
+  for (const edge of graph.imports) {
+    if (!edge.external && reverse.has(edge.to)) reverse.get(edge.to)!.push(edge.from);
+  }
+  const result = new Set(changed);
+  const queue = [...changed];
+  for (let index = 0; index < queue.length; index += 1) {
+    for (const importer of reverse.get(queue[index]!) ?? []) {
+      if (result.has(importer)) continue;
+      result.add(importer);
+      queue.push(importer);
+    }
+  }
+  return [...result].sort();
+}
+
+function relationDependentPaths(graph: CodeGraph, changed: string[]): string[] {
+  const changedPaths = new Set(changed);
+  return [...new Set(graph.calls.flatMap((call) => {
+    if (!call.target) return [];
+    const separator = call.target.indexOf('#');
+    const targetPath = separator === -1 ? call.target : call.target.slice(0, separator);
+    return changedPaths.has(targetPath) ? [call.path] : [];
+  }))].sort();
+}
+
+async function requiresDeclarationFallback(
+  root: string,
+  paths: string[],
+  prior: CodeGraphCache,
+): Promise<boolean> {
+  for (const path of paths) {
+    const text = await readText(root, path);
+    if (/\.[cm]?[jt]sx?$/.test(path)) {
+      const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true);
+      if (!ts.isExternalModule(source) || /\bdeclare\s+global\b/.test(source.text)) return true;
+      continue;
+    }
+    const declarationProbe = declarationMapProbe(path, text);
+    if (!declarationProbe) continue;
+    const previous = prior.phaseUnits
+      .filter((unit) => unit.path === path && unit.language === declarationProbe.language)
+      .flatMap((unit) => unit.symbolsPhase.declarations)
+      .sort(([left], [right]) => left.localeCompare(right));
+    const current = declarationProbe.declarations.sort(([left], [right]) => left.localeCompare(right));
+    if (JSON.stringify(previous) !== JSON.stringify(current)) return true;
+  }
+  return false;
+}
+
+function declarationMapProbe(
+  path: string,
+  text: string,
+): { language: string; declarations: Array<[string, string]> } | null {
+  const graph: CodeGraph = {
+    schemaVersion: 1,
+    generatedAt: '',
+    files: [path],
+    unsupportedFiles: [],
+    imports: [],
+    entrypoints: [],
+    symbols: [],
+    calls: [],
+    diagnostics: [],
+    fingerprints: {},
+  };
+  const declarations = new Map<string, string>();
+  let language: string | null = null;
+  if (path.endsWith('.java')) {
+    language = 'java';
+    indexJavaSymbols(path, text, graph, declarations);
+  } else if (path.endsWith('.cs')) {
+    language = 'csharp';
+    indexCsharpSymbols(path, text, graph, declarations);
+  } else if (path.endsWith('.php')) {
+    language = 'php';
+    indexPhpSymbols(path, text, graph, declarations);
+  } else if (path.endsWith('.jl')) {
+    language = 'julia';
+    indexJuliaSymbols(path, text, graph, declarations);
+  } else if (/\.(?:kt|kts)$/.test(path)) {
+    language = 'kotlin';
+    indexKotlinSymbols(path, text, graph, declarations);
+  } else if (path.endsWith('.scala')) {
+    language = 'scala';
+    indexScalaSymbols(path, text, graph, declarations);
+  } else if (/\.(?:ex|exs)$/.test(path)) {
+    language = 'elixir';
+    indexElixirSymbols(path, text, graph, declarations);
+  } else if (path.endsWith('.hs')) {
+    language = 'haskell';
+    indexHaskellSymbols(path, text, graph, declarations);
+  } else if (/\.(?:fs|fsx)$/.test(path)) {
+    language = 'fsharp';
+    indexFsharpSymbols(path, text, graph, declarations);
+  } else if (path.endsWith('.vb')) {
+    language = 'vb';
+    indexVbSymbols(path, text, graph, declarations);
+  }
+  return language ? { language, declarations: [...declarations] } : null;
+}
+
+function symbolNamesProbe(path: string, text: string): string[] {
+  const graph: CodeGraph = {
+    schemaVersion: 1,
+    generatedAt: '',
+    files: [path],
+    unsupportedFiles: [],
+    imports: [],
+    entrypoints: [],
+    symbols: [],
+    calls: [],
+    diagnostics: [],
+    fingerprints: {},
+  };
+  const declarations = new Map<string, string>();
+  if (/\.[cm]?[jt]sx?$/.test(path)) {
+    const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true);
+    const visit = (node: ts.Node): void => {
+      if ((ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node)
+        || ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)
+        || ts.isEnumDeclaration(node) || ts.isVariableDeclaration(node)
+        || ts.isMethodDeclaration(node)) && node.name) {
+        graph.symbols.push({
+          id: '',
+          name: node.name.getText(source),
+          path,
+          line: 0,
+          kind: ts.SyntaxKind[node.kind],
+        });
+      }
+      ts.forEachChild(node, visit);
+    };
+    visit(source);
+  } else if (path.endsWith('.rs')) indexRustSymbols(path, text, graph);
+  else if (path.endsWith('.py')) indexPythonSymbols(path, text, graph);
+  else if (path.endsWith('.go')) indexGoSymbols(path, text, graph);
+  else if (path.endsWith('.java')) indexJavaSymbols(path, text, graph, declarations);
+  else if (/\.(?:c|cc|cpp|h|hh|hpp|m|mm)$/.test(path)) {
+    indexCppSymbols(path, text, graph);
+    indexObjectiveCSymbols(path, text, graph);
+  } else if (path.endsWith('.cs')) indexCsharpSymbols(path, text, graph, declarations);
+  else if (path.endsWith('.php')) indexPhpSymbols(path, text, graph, declarations);
+  else if (/\.(?:r|R)$/.test(path)) indexRSymbols(path, text, graph);
+  else if (path.endsWith('.jl')) indexJuliaSymbols(path, text, graph, declarations);
+  else if (/\.(?:kt|kts)$/.test(path)) indexKotlinSymbols(path, text, graph, declarations);
+  else if (path.endsWith('.rb')) indexRubySymbols(path, text, graph);
+  else if (path.endsWith('.swift')) indexSwiftSymbols(path, text, graph);
+  else if (path.endsWith('.dart')) indexDartSymbols(path, text, graph);
+  else if (path.endsWith('.scala')) indexScalaSymbols(path, text, graph, declarations);
+  else if (/\.(?:ex|exs)$/.test(path)) indexElixirSymbols(path, text, graph, declarations);
+  else if (path.endsWith('.hs')) indexHaskellSymbols(path, text, graph, declarations);
+  else if (path.endsWith('.lua')) indexLuaSymbols(path, text, graph);
+  else if (path.endsWith('.zig')) indexZigSymbols(path, text, graph);
+  else if (path.endsWith('.sol')) indexSoliditySymbols(path, text, graph);
+  else if (/\.(?:fs|fsx)$/.test(path)) indexFsharpSymbols(path, text, graph, declarations);
+  else if (path.endsWith('.vb')) indexVbSymbols(path, text, graph, declarations);
+  return graph.symbols.map((symbol) => symbol.name).sort();
+}
+
+async function changedGlobalSymbolNames(
+  root: string,
+  changedSources: string[],
+  prior: CodeGraphCache,
+): Promise<boolean> {
+  for (const path of changedSources) {
+    const previous = prior.phaseUnits
+      .filter((unit) => unit.path === path)
+      .flatMap((unit) => unit.symbolsPhase.symbols.map((symbol) => symbol.name))
+      .sort();
+    const current = symbolNamesProbe(path, await readText(root, path));
+    if (JSON.stringify(previous) !== JSON.stringify(current)) return true;
+  }
+  return false;
+}
+
+/** @id CODE-M5-GRAPH-INCREMENTAL-001
+ * @implements REQ-M5-GRAPH-001
+ * @design DES-M5-GRAPH-001 DES-M5-GRAPH-002
+ */
+export function indexGraph(root: string): Promise<CodeGraph>;
+export function indexGraph(root: string, persist: boolean): Promise<CodeGraph>;
+export function indexGraph(root: string, options: CodeGraphIndexOptions): Promise<CodeGraphIndexResult>;
+export async function indexGraph(
+  root: string,
+  options: CodeGraphIndexOptions | boolean = {},
+): Promise<CodeGraph | CodeGraphIndexResult> {
+  const legacyResult = typeof options === 'boolean' || arguments.length === 1;
+  const normalized: CodeGraphIndexOptions = typeof options === 'boolean'
+    ? { persist: options, refresh: false }
+    : options;
+  const persist = normalized.persist ?? true;
+  const refresh = normalized.refresh ?? false;
+  const writer = normalized.writer ?? writeJson;
+  const inputs = await graphInputs(root);
+  const inputFingerprints = await snapshot(root, inputs);
+  const declarations = await snapshot(root, await declarationInputs(root));
+  let prior: CodeGraphCache | null = null;
+  let reason: CodeGraphFullRebuildReason | undefined = refresh ? undefined : 'FULL_REQUESTED';
+  if (refresh) {
+    try {
+      const parsed = JSON.parse(await readText(root, '.musubix/cache/codegraph.json')) as unknown;
+      if (!validSemanticGraph(parsed)) reason = 'CACHE_INVALID';
+      else if ((parsed as Partial<CodeGraphCache>).analysisVersion !== ANALYSIS_VERSION
+        || (parsed as Partial<CodeGraphCache>).declarationFingerprints === undefined
+        || (parsed as Partial<CodeGraphCache>).resolutionEnvironment === undefined) reason = 'ANALYSIS_VERSION_MISMATCH';
+      else if (!validCurrentCache(parsed)) reason = 'CACHE_INVALID';
+      else prior = parsed;
+    } catch (cause) {
+      reason = (cause as NodeJS.ErrnoException).code === 'ENOENT' ? 'CACHE_MISSING' : 'CACHE_INVALID';
+    }
+  }
+  const priorManifests = prior?.phaseUnits.flatMap((unit) => [
+    ...unit.symbolsPhase.consultedManifests,
+    ...unit.relationsPhase.consultedManifests,
+  ]) ?? [];
+  const environmentResult = await resolutionEnvironment(root, priorManifests);
+  const environment = environmentResult.environment;
+  const inputChanges = changedKeys(prior?.fingerprints ?? {}, inputFingerprints);
+  const declarationChanges = changedKeys(prior?.declarationFingerprints ?? {}, declarations);
+  const lockChanges = changedKeys(prior?.resolutionEnvironment.lockfiles ?? {}, environment.lockfiles);
+  const manifestChanges = changedKeys(prior?.resolutionEnvironment.manifests ?? {}, environment.manifests);
+  const changedSources = inputChanges.modified.filter((path) => prior?.files.includes(path) || isGraphSourcePath(path));
+  const changedConfig = [
+    ...inputChanges.added,
+    ...inputChanges.deleted,
+    ...inputChanges.modified,
+  ].filter((path) => !isGraphSourcePath(path) && !prior?.files.includes(path));
+  const changedInputs = [...new Set([
+    ...inputChanges.added,
+    ...inputChanges.deleted,
+    ...inputChanges.modified,
+    ...declarationChanges.added,
+    ...declarationChanges.deleted,
+    ...declarationChanges.modified,
+    ...lockChanges.added,
+    ...lockChanges.deleted,
+    ...lockChanges.modified,
+    ...manifestChanges.added,
+    ...manifestChanges.deleted,
+    ...manifestChanges.modified,
+    ...environmentResult.unreadableManifestPaths,
+    ...(prior && prior.resolutionEnvironment.typescriptVersion !== environment.typescriptVersion ? ['@resolution/typescript'] : []),
+  ])].sort();
+  if (!reason && prior) {
+    if (environmentResult.unreadableManifestPaths.length
+      || changedConfig.length || lockChanges.added.length || lockChanges.deleted.length || lockChanges.modified.length
+      || manifestChanges.added.length || manifestChanges.deleted.length || manifestChanges.modified.length
+      || prior.resolutionEnvironment.typescriptVersion !== environment.typescriptVersion) reason = 'CONFIG_CHANGED';
+    else if (declarationChanges.added.length || declarationChanges.deleted.length || declarationChanges.modified.length
+      || await requiresDeclarationFallback(root, changedSources, prior)) reason = 'DECLARATION_CHANGED';
+    else if (inputChanges.deleted.some((path) => prior!.files.includes(path))) reason = 'DELETED_FILES';
+    else if (inputChanges.added.some(isGraphSourcePath)) reason = 'ADDED_FILES';
+  }
+  if (!reason && prior && changedInputs.length === 0) {
+    const result: CodeGraphIndexResult = {
+      graph: semanticGraph(prior),
+      indexing: {
+        mode: 'incremental',
+        changedInputs: [],
+        analyzedSourcePaths: [],
+        reusedSourcePaths: [...prior.files].sort(),
+      },
+      operations: { analyzedSourceFiles: 0, reusedSourceFiles: prior.files.length },
+    };
+    return legacyResult ? result.graph : result;
+  }
+  const globalSymbolNamesChanged = !reason && prior
+    ? await changedGlobalSymbolNames(root, changedSources, prior)
+    : false;
+  const plannedAnalyzedSourcePaths = !reason && prior
+    ? importerClosure(prior, [...new Set([
+      ...changedSources,
+      ...relationDependentPaths(prior, changedSources),
+      ...(globalSymbolNamesChanged
+        ? prior.files.filter((path) => !/\.[cm]?[jt]sx?$/.test(path))
+        : []),
+    ])]).filter((path) => prior.files.includes(path))
+    : undefined;
+  const built = await fullIndexGraph(root, {
+    ...(!reason && prior ? { prior } : {}),
+    ...(plannedAnalyzedSourcePaths ? { analyzedSourcePaths: plannedAnalyzedSourcePaths } : {}),
+    ...(normalized.onSourceExtraction ? { onSourceExtraction: normalized.onSourceExtraction } : {}),
+  });
+  const { graph, phaseUnits: units, analyzedSourcePaths, reusedSourcePaths } = built;
+  const emittedManifestPaths = units.flatMap((unit) => [
+    ...unit.symbolsPhase.consultedManifests,
+    ...unit.relationsPhase.consultedManifests,
+  ]);
+  const emittedEnvironment = (await resolutionEnvironment(root, emittedManifestPaths)).environment;
+  const cacheWithoutHash: Omit<CodeGraphCache, 'cacheContentHash'> = {
+    ...graph,
+    analysisVersion: ANALYSIS_VERSION,
+    declarationFingerprints: declarations,
+    resolutionEnvironment: emittedEnvironment,
+    phaseUnits: units,
+  };
+  const cache: CodeGraphCache = {
+    ...cacheWithoutHash,
+    cacheContentHash: cacheContentHash(cacheWithoutHash),
+  };
+  if (persist) {
+    try {
+      await writer(root, '.musubix/cache/codegraph.json', cache);
+    } catch {
+      throw new Error('CACHE_WRITE_FAILED: Failed to atomically replace the CodeGraph cache.');
+    }
+  }
+  const result: CodeGraphIndexResult = {
+    graph,
+    indexing: {
+      mode: reason ? 'full' : 'incremental',
+      changedInputs: refresh ? changedInputs : [],
+      analyzedSourcePaths,
+      reusedSourcePaths,
+      ...(reason ? { fullRebuildReason: reason } : {}),
+    },
+    operations: {
+      analyzedSourceFiles: analyzedSourcePaths.length,
+      reusedSourceFiles: reusedSourcePaths.length,
+    },
+  };
+  return legacyResult ? result.graph : result;
+}
+
+async function fullIndexGraph(root: string, buildOptions: GraphBuildOptions = {}): Promise<GraphBuildResult> {
   const paths = await graphInputs(root);
   const typedSources = paths.filter(isSource);
   const rustSources = paths.filter((path) => path.endsWith('.rs'));
@@ -123,6 +796,104 @@ export async function indexGraph(root: string, persist = true): Promise<CodeGrap
     calls: [],
     diagnostics,
     fingerprints: await snapshot(root, paths),
+  };
+  const plannedAnalyzed = new Set(buildOptions.analyzedSourcePaths ?? sources);
+  const actuallyAnalyzed = new Set<string>();
+  const actuallyReused = new Set<string>();
+  const priorUnits = new Map(
+    (buildOptions.prior?.phaseUnits ?? []).map((unit) => [`${unit.language}\0${unit.path}`, unit]),
+  );
+  const phaseUnits: CodeGraphPhaseUnit[] = [];
+  const relationTasks: Array<() => void> = [];
+  const unitFor = (language: string, path: string): CodeGraphPhaseUnit => {
+    const unit: CodeGraphPhaseUnit = {
+      path,
+      language,
+      symbolsPhase: {
+        symbols: [],
+        diagnostics: [],
+        consultedManifests: [],
+        declarations: [],
+      },
+      relationsPhase: {
+        imports: [],
+        calls: [],
+        diagnostics: [],
+        consultedManifests: [],
+      },
+    };
+    phaseUnits.push(unit);
+    return unit;
+  };
+  const extractSymbols = (
+    language: string,
+    path: string,
+    extraction: () => void,
+    declarations?: Map<string, string>,
+  ): void => {
+    const unit = unitFor(language, path);
+    const priorUnit = priorUnits.get(`${language}\0${path}`);
+    if (!plannedAnalyzed.has(path) && priorUnit) {
+      actuallyReused.add(path);
+      unit.symbolsPhase = {
+        ...priorUnit.symbolsPhase,
+        symbols: [...priorUnit.symbolsPhase.symbols],
+        diagnostics: [...priorUnit.symbolsPhase.diagnostics],
+        consultedManifests: [...priorUnit.symbolsPhase.consultedManifests],
+        declarations: [...priorUnit.symbolsPhase.declarations],
+      };
+      graph.symbols.push(...unit.symbolsPhase.symbols);
+      graph.diagnostics.push(...unit.symbolsPhase.diagnostics);
+      for (const [name, target] of unit.symbolsPhase.declarations) declarations?.set(name, target);
+      return;
+    }
+    actuallyAnalyzed.add(path);
+    buildOptions.onSourceExtraction?.({ path, language, phase: 'symbols' });
+    const symbolStart = graph.symbols.length;
+    const diagnosticStart = graph.diagnostics.length;
+    const previousDeclarations = declarations ? new Map(declarations) : undefined;
+    extraction();
+    unit.symbolsPhase.symbols = graph.symbols.slice(symbolStart);
+    unit.symbolsPhase.diagnostics = graph.diagnostics.slice(diagnosticStart);
+    if (declarations && previousDeclarations) {
+      unit.symbolsPhase.declarations = [...declarations]
+        .filter(([name, target]) => previousDeclarations.get(name) !== target)
+        .map(([name, target]) => [name, target]);
+    }
+  };
+  const queueRelations = (
+    language: string,
+    path: string,
+    extraction: () => void,
+  ): void => {
+    relationTasks.push(() => {
+      const unit = phaseUnits.find((candidate) => candidate.language === language && candidate.path === path)
+        ?? unitFor(language, path);
+      const priorUnit = priorUnits.get(`${language}\0${path}`);
+      if (!plannedAnalyzed.has(path) && priorUnit) {
+        actuallyReused.add(path);
+        unit.relationsPhase = {
+          ...priorUnit.relationsPhase,
+          imports: [...priorUnit.relationsPhase.imports],
+          calls: [...priorUnit.relationsPhase.calls],
+          diagnostics: [...priorUnit.relationsPhase.diagnostics],
+          consultedManifests: [...priorUnit.relationsPhase.consultedManifests],
+        };
+        graph.imports.push(...unit.relationsPhase.imports);
+        graph.calls.push(...unit.relationsPhase.calls);
+        graph.diagnostics.push(...unit.relationsPhase.diagnostics);
+        return;
+      }
+      actuallyAnalyzed.add(path);
+      buildOptions.onSourceExtraction?.({ path, language, phase: 'relations' });
+      const importStart = graph.imports.length;
+      const callStart = graph.calls.length;
+      const diagnosticStart = graph.diagnostics.length;
+      extraction();
+      unit.relationsPhase.imports = graph.imports.slice(importStart);
+      unit.relationsPhase.calls = graph.calls.slice(callStart);
+      unit.relationsPhase.diagnostics = graph.diagnostics.slice(diagnosticStart);
+    });
   };
   for (const manifest of paths.filter((candidate) => candidate.endsWith('package.json'))) {
     let value: Record<string, unknown>;
@@ -220,7 +991,7 @@ export async function indexGraph(root: string, persist = true): Promise<CodeGrap
       }
       graph.imports.push({ from: path, to: local ? target : `npm:${specifier}`, specifier, kind, line: lineOf(expression), external });
     }
-    function visit(node: ts.Node): void {
+    function visitRelations(node: ts.Node): void {
       if (ts.isImportDeclaration(node)) addImport(node.moduleSpecifier, 'import');
       else if (ts.isExportDeclaration(node) && node.moduleSpecifier) addImport(node.moduleSpecifier, 'export');
       else if (ts.isImportEqualsDeclaration(node) && ts.isExternalModuleReference(node.moduleReference) && node.moduleReference.expression) addImport(node.moduleReference.expression, 'require');
@@ -238,64 +1009,68 @@ export async function indexGraph(root: string, persist = true): Promise<CodeGrap
           graph.calls.push({ path, line: lineOf(node), expression: node.expression.getText(source), target });
         }
       }
+      ts.forEachChild(node, visitRelations);
+    }
+    function visitSymbols(node: ts.Node): void {
       if ((ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node) || ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node) ||
         ts.isEnumDeclaration(node) || ts.isVariableDeclaration(node) || ts.isMethodDeclaration(node)) && node.name) {
         const name = node.name.getText(source);
         graph.symbols.push({ id: `${path}#${name}@${lineOf(node)}`, name, path, line: lineOf(node), kind: ts.SyntaxKind[node.kind] });
       }
-      ts.forEachChild(node, visit);
+      ts.forEachChild(node, visitSymbols);
     }
-    visit(source);
+    extractSymbols('typescript', path, () => visitSymbols(source));
+    queueRelations('typescript', path, () => visitRelations(source));
   }
   const rustTexts = new Map(await mapWithConcurrency(rustSources, FILE_READ_CONCURRENCY, async (path) => [path, await readText(root, path)] as const));
-  for (const [path, text] of rustTexts) indexRustSymbols(path, text, graph);
-  for (const [path, text] of rustTexts) indexRustRelations(path, text, known, graph);
+  for (const [path, text] of rustTexts) extractSymbols('rust', path, () => indexRustSymbols(path, text, graph));
+  for (const [path, text] of rustTexts) queueRelations('rust', path, () => indexRustRelations(path, text, known, graph));
   const pythonTexts = new Map(await mapWithConcurrency(pythonSources, FILE_READ_CONCURRENCY, async (path) => [path, await readText(root, path)] as const));
-  for (const [path, text] of pythonTexts) indexPythonSymbols(path, text, graph);
-  for (const [path, text] of pythonTexts) indexPythonRelations(path, text, known, graph);
+  for (const [path, text] of pythonTexts) extractSymbols('python', path, () => indexPythonSymbols(path, text, graph));
+  for (const [path, text] of pythonTexts) queueRelations('python', path, () => indexPythonRelations(path, text, known, graph));
   const goTexts = new Map(await mapWithConcurrency(goSources, FILE_READ_CONCURRENCY, async (path) => [path, await readText(root, path)] as const));
-  for (const [path, text] of goTexts) indexGoSymbols(path, text, graph);
+  for (const [path, text] of goTexts) extractSymbols('go', path, () => indexGoSymbols(path, text, graph));
   const goModule = paths.includes('go.mod') ? /^module\s+(\S+)/m.exec(await readText(root, 'go.mod'))?.[1] ?? null : null;
-  for (const [path, text] of goTexts) indexGoRelations(path, text, known, graph, goModule);
+  for (const [path, text] of goTexts) queueRelations('go', path, () => indexGoRelations(path, text, known, graph, goModule));
   const javaTexts = new Map(await mapWithConcurrency(javaSources, FILE_READ_CONCURRENCY, async (path) => [path, await readText(root, path)] as const));
   const javaTypes = new Map<string, string>();
-  for (const [path, text] of javaTexts) indexJavaSymbols(path, text, graph, javaTypes);
-  for (const [path, text] of javaTexts) indexJavaRelations(path, text, graph, javaTypes);
+  for (const [path, text] of javaTexts) extractSymbols('java', path, () => indexJavaSymbols(path, text, graph, javaTypes), javaTypes);
+  for (const [path, text] of javaTexts) queueRelations('java', path, () => indexJavaRelations(path, text, graph, javaTypes));
   const cppTexts = new Map(await mapWithConcurrency(cppSources, FILE_READ_CONCURRENCY, async (path) => [path, await readText(root, path)] as const));
-  for (const [path, text] of cppTexts) indexCppSymbols(path, text, graph);
-  for (const [path, text] of cppTexts) indexCppRelations(path, text, known, graph);
+  for (const [path, text] of cppTexts) extractSymbols('cpp', path, () => indexCppSymbols(path, text, graph));
+  for (const [path, text] of cppTexts) queueRelations('cpp', path, () => indexCppRelations(path, text, known, graph));
   const csharpTexts = new Map(await mapWithConcurrency(csharpSources, FILE_READ_CONCURRENCY, async (path) => [path, await readText(root, path)] as const));
   const csharpTypes = new Map<string, string>();
-  for (const [path, text] of csharpTexts) indexCsharpSymbols(path, text, graph, csharpTypes);
-  for (const [path, text] of csharpTexts) indexCsharpRelations(path, text, graph, csharpTypes);
+  for (const [path, text] of csharpTexts) extractSymbols('csharp', path, () => indexCsharpSymbols(path, text, graph, csharpTypes), csharpTypes);
+  for (const [path, text] of csharpTexts) queueRelations('csharp', path, () => indexCsharpRelations(path, text, graph, csharpTypes));
   const phpTexts = new Map(await mapWithConcurrency(phpSources, FILE_READ_CONCURRENCY, async (path) => [path, await readText(root, path)] as const));
   const phpTypes = new Map<string, string>();
-  for (const [path, text] of phpTexts) indexPhpSymbols(path, text, graph, phpTypes);
-  for (const [path, text] of phpTexts) indexPhpRelations(path, text, known, graph, phpTypes);
+  for (const [path, text] of phpTexts) extractSymbols('php', path, () => indexPhpSymbols(path, text, graph, phpTypes), phpTypes);
+  for (const [path, text] of phpTexts) queueRelations('php', path, () => indexPhpRelations(path, text, known, graph, phpTypes));
   const rTexts = new Map(await mapWithConcurrency(rSources, FILE_READ_CONCURRENCY, async (path) => [path, await readText(root, path)] as const));
-  for (const [path, text] of rTexts) indexRSymbols(path, text, graph);
-  for (const [path, text] of rTexts) indexRRelations(path, text, known, graph);
+  for (const [path, text] of rTexts) extractSymbols('r', path, () => indexRSymbols(path, text, graph));
+  for (const [path, text] of rTexts) queueRelations('r', path, () => indexRRelations(path, text, known, graph));
   const juliaTexts = new Map(await mapWithConcurrency(juliaSources, FILE_READ_CONCURRENCY, async (path) => [path, await readText(root, path)] as const));
   const juliaModules = new Map<string, string>();
-  for (const [path, text] of juliaTexts) indexJuliaSymbols(path, text, graph, juliaModules);
-  for (const [path, text] of juliaTexts) indexJuliaRelations(path, text, known, graph, juliaModules);
+  for (const [path, text] of juliaTexts) extractSymbols('julia', path, () => indexJuliaSymbols(path, text, graph, juliaModules), juliaModules);
+  for (const [path, text] of juliaTexts) queueRelations('julia', path, () => indexJuliaRelations(path, text, known, graph, juliaModules));
   const kotlinTexts = new Map(await mapWithConcurrency(kotlinSources, FILE_READ_CONCURRENCY, async (path) => [path, await readText(root, path)] as const));
   const kotlinDeclarations = new Map<string, string>();
-  for (const [path, text] of kotlinTexts) indexKotlinSymbols(path, text, graph, kotlinDeclarations);
-  for (const [path, text] of kotlinTexts) indexKotlinRelations(path, text, known, graph, kotlinDeclarations);
+  for (const [path, text] of kotlinTexts) extractSymbols('kotlin', path, () => indexKotlinSymbols(path, text, graph, kotlinDeclarations), kotlinDeclarations);
+  for (const [path, text] of kotlinTexts) queueRelations('kotlin', path, () => indexKotlinRelations(path, text, known, graph, kotlinDeclarations));
   const rubyTexts = new Map(await mapWithConcurrency(rubySources, FILE_READ_CONCURRENCY, async (path) => [path, await readText(root, path)] as const));
-  for (const [path, text] of rubyTexts) indexRubySymbols(path, text, graph);
-  for (const [path, text] of rubyTexts) indexRubyRelations(path, text, known, graph);
+  for (const [path, text] of rubyTexts) extractSymbols('ruby', path, () => indexRubySymbols(path, text, graph));
+  for (const [path, text] of rubyTexts) queueRelations('ruby', path, () => indexRubyRelations(path, text, known, graph));
   const swiftTexts = new Map(await mapWithConcurrency(swiftSources, FILE_READ_CONCURRENCY, async (path) => [path, await readText(root, path)] as const));
-  for (const [path, text] of swiftTexts) indexSwiftSymbols(path, text, graph);
-  for (const [path, text] of swiftTexts) indexSwiftRelations(path, text, graph);
+  for (const [path, text] of swiftTexts) extractSymbols('swift', path, () => indexSwiftSymbols(path, text, graph));
+  for (const [path, text] of swiftTexts) queueRelations('swift', path, () => indexSwiftRelations(path, text, graph));
   const dartTexts = new Map(await mapWithConcurrency(dartSources, FILE_READ_CONCURRENCY, async (path) => [path, await readText(root, path)] as const));
   const dartPackages = new Map<string, string>();
   for (const manifest of paths.filter((path) => path.endsWith('pubspec.yaml'))) {
     const name = /^\s*name\s*:\s*([A-Za-z_]\w*)\s*$/m.exec(await readText(root, manifest))?.[1];
     if (name) dartPackages.set(dirname(manifest), name);
   }
-  for (const [path, text] of dartTexts) indexDartSymbols(path, text, graph);
+  for (const [path, text] of dartTexts) extractSymbols('dart', path, () => indexDartSymbols(path, text, graph));
   for (const [path, text] of dartTexts) {
     let directory = dirname(path);
     let packageInfo: { directory: string; name: string } | null = null;
@@ -308,41 +1083,49 @@ export async function indexGraph(root: string, persist = true): Promise<CodeGrap
       if (directory === '.') break;
       directory = dirname(directory);
     }
-    indexDartRelations(path, text, known, graph, packageInfo);
+    queueRelations('dart', path, () => indexDartRelations(path, text, known, graph, packageInfo));
   }
   const scalaTexts = new Map(await mapWithConcurrency(scalaSources, FILE_READ_CONCURRENCY, async (path) => [path, await readText(root, path)] as const));
   const scalaDeclarations = new Map<string, string>();
-  for (const [path, text] of scalaTexts) indexScalaSymbols(path, text, graph, scalaDeclarations);
-  for (const [path, text] of scalaTexts) indexScalaRelations(path, text, graph, scalaDeclarations);
+  for (const [path, text] of scalaTexts) extractSymbols('scala', path, () => indexScalaSymbols(path, text, graph, scalaDeclarations), scalaDeclarations);
+  for (const [path, text] of scalaTexts) queueRelations('scala', path, () => indexScalaRelations(path, text, graph, scalaDeclarations));
   const elixirTexts = new Map(await mapWithConcurrency(elixirSources, FILE_READ_CONCURRENCY, async (path) => [path, await readText(root, path)] as const));
   const elixirModules = new Map<string, string>();
-  for (const [path, text] of elixirTexts) indexElixirSymbols(path, text, graph, elixirModules);
-  for (const [path, text] of elixirTexts) indexElixirRelations(path, text, known, graph, elixirModules);
+  for (const [path, text] of elixirTexts) extractSymbols('elixir', path, () => indexElixirSymbols(path, text, graph, elixirModules), elixirModules);
+  for (const [path, text] of elixirTexts) queueRelations('elixir', path, () => indexElixirRelations(path, text, known, graph, elixirModules));
   const haskellTexts = new Map(await mapWithConcurrency(haskellSources, FILE_READ_CONCURRENCY, async (path) => [path, await readText(root, path)] as const));
   const haskellModules = new Map<string, string>();
-  for (const [path, text] of haskellTexts) indexHaskellSymbols(path, text, graph, haskellModules);
-  for (const [path, text] of haskellTexts) indexHaskellRelations(path, text, graph, haskellModules);
+  for (const [path, text] of haskellTexts) extractSymbols('haskell', path, () => indexHaskellSymbols(path, text, graph, haskellModules), haskellModules);
+  for (const [path, text] of haskellTexts) queueRelations('haskell', path, () => indexHaskellRelations(path, text, graph, haskellModules));
   const luaTexts = new Map(await mapWithConcurrency(luaSources, FILE_READ_CONCURRENCY, async (path) => [path, await readText(root, path)] as const));
-  for (const [path, text] of luaTexts) indexLuaSymbols(path, text, graph);
-  for (const [path, text] of luaTexts) indexLuaRelations(path, text, known, graph);
+  for (const [path, text] of luaTexts) extractSymbols('lua', path, () => indexLuaSymbols(path, text, graph));
+  for (const [path, text] of luaTexts) queueRelations('lua', path, () => indexLuaRelations(path, text, known, graph));
   const zigTexts = new Map(await mapWithConcurrency(zigSources, FILE_READ_CONCURRENCY, async (path) => [path, await readText(root, path)] as const));
-  for (const [path, text] of zigTexts) indexZigSymbols(path, text, graph);
-  for (const [path, text] of zigTexts) indexZigRelations(path, text, known, graph);
+  for (const [path, text] of zigTexts) extractSymbols('zig', path, () => indexZigSymbols(path, text, graph));
+  for (const [path, text] of zigTexts) queueRelations('zig', path, () => indexZigRelations(path, text, known, graph));
   const solidityTexts = new Map(await mapWithConcurrency(soliditySources, FILE_READ_CONCURRENCY, async (path) => [path, await readText(root, path)] as const));
-  for (const [path, text] of solidityTexts) indexSoliditySymbols(path, text, graph);
-  for (const [path, text] of solidityTexts) indexSolidityRelations(path, text, known, graph);
-  for (const [path, text] of cppTexts) indexObjectiveCSymbols(path, text, graph);
-  for (const [path, text] of objectiveCSources.map((path) => [path, cppTexts.get(path)!] as const)) indexObjectiveCRelations(path, text, graph);
+  for (const [path, text] of solidityTexts) extractSymbols('solidity', path, () => indexSoliditySymbols(path, text, graph));
+  for (const [path, text] of solidityTexts) queueRelations('solidity', path, () => indexSolidityRelations(path, text, known, graph));
+  for (const [path, text] of cppTexts) extractSymbols('objective-c', path, () => indexObjectiveCSymbols(path, text, graph));
+  for (const [path, text] of objectiveCSources.map((path) => [path, cppTexts.get(path)!] as const)) {
+    queueRelations('objective-c', path, () => indexObjectiveCRelations(path, text, graph));
+  }
   const fsharpTexts = new Map(await mapWithConcurrency(fsharpSources, FILE_READ_CONCURRENCY, async (path) => [path, await readText(root, path)] as const));
   const fsharpDeclarations = new Map<string, string>();
-  for (const [path, text] of fsharpTexts) indexFsharpSymbols(path, text, graph, fsharpDeclarations);
-  for (const [path, text] of fsharpTexts) indexFsharpRelations(path, text, graph, fsharpDeclarations);
+  for (const [path, text] of fsharpTexts) extractSymbols('fsharp', path, () => indexFsharpSymbols(path, text, graph, fsharpDeclarations), fsharpDeclarations);
+  for (const [path, text] of fsharpTexts) queueRelations('fsharp', path, () => indexFsharpRelations(path, text, graph, fsharpDeclarations));
   const vbTexts = new Map(await mapWithConcurrency(vbSources, FILE_READ_CONCURRENCY, async (path) => [path, await readText(root, path)] as const));
   const vbDeclarations = new Map<string, string>();
-  for (const [path, text] of vbTexts) indexVbSymbols(path, text, graph, vbDeclarations);
-  for (const [path, text] of vbTexts) indexVbRelations(path, text, graph, vbDeclarations);
-  if (persist) await writeJson(root, '.musubix/cache/codegraph.json', graph);
-  return graph;
+  for (const [path, text] of vbTexts) extractSymbols('vb', path, () => indexVbSymbols(path, text, graph, vbDeclarations), vbDeclarations);
+  for (const [path, text] of vbTexts) queueRelations('vb', path, () => indexVbRelations(path, text, graph, vbDeclarations));
+  for (const task of relationTasks) task();
+  await Promise.all(phaseUnits.map(async (unit) => {
+    unit.relationsPhase.consultedManifests = await consultedPackageManifests(root, unit.path, unit.relationsPhase.imports);
+  }));
+  phaseUnits.sort((left, right) => left.path.localeCompare(right.path) || left.language.localeCompare(right.language));
+  const analyzedSourcePaths = [...actuallyAnalyzed].sort();
+  const reusedSourcePaths = [...actuallyReused].filter((path) => !actuallyAnalyzed.has(path)).sort();
+  return { graph, phaseUnits, analyzedSourcePaths, reusedSourcePaths };
 }
 
 function maskedRust(text: string): string {
@@ -1283,32 +2066,79 @@ function indexVbRelations(path: string, text: string, graph: CodeGraph, declarat
 }
 
 export async function loadGraph(root: string): Promise<CodeGraph> {
-  const graph = JSON.parse(await readText(root, '.musubix/cache/codegraph.json')) as CodeGraph;
-  if (graph.schemaVersion !== 1 || !Array.isArray(graph.files) || !Array.isArray(graph.imports) || !Array.isArray(graph.symbols) || !graph.fingerprints) throw new Error('Invalid graph cache; run graph index.');
+  const cached = JSON.parse(await readText(root, '.musubix/cache/codegraph.json')) as unknown;
+  if (!validSemanticGraph(cached)) throw new Error('Invalid graph cache; run graph index.');
+  const graph = semanticGraph(cached);
   const current = await snapshot(root, await graphInputs(root));
   if (JSON.stringify(current) !== JSON.stringify(graph.fingerprints)) throw new Error('Code graph is stale; run graph index.');
   return graph;
 }
 
-export function graphImpact(graph: CodeGraph, query: string): { path: string; via: string[] }[] {
+/** @id CODE-M5-GRAPH-TRAVERSAL-001
+ * @implements REQ-M5-GRAPH-002
+ * @design DES-M5-GRAPH-003
+ */
+export function prepareGraphAdjacency(
+  graph: Pick<CodeGraph, 'files' | 'imports'>,
+  operations?: GraphOperationCounters,
+): GraphAdjacency {
+  const forward = new Map<string, string[]>();
+  const reverse = new Map<string, string[]>();
+  for (const file of graph.files) {
+    forward.set(file, []);
+    reverse.set(file, []);
+    if (operations) {
+      operations.forwardAdjacencyVisits += 1;
+      operations.reverseAdjacencyVisits += 1;
+    }
+  }
+  for (const edge of graph.imports) {
+    if (edge.external) continue;
+    forward.get(edge.from)?.push(edge.to);
+    reverse.get(edge.to)?.push(edge.from);
+    if (operations) {
+      operations.forwardAdjacencyVisits += 1;
+      operations.reverseAdjacencyVisits += 1;
+    }
+  }
+  return { forward, reverse };
+}
+
+function completeImportScan(
+  graph: Pick<CodeGraph, 'imports'>,
+  operations?: GraphOperationCounters,
+): ImportEdge[] {
+  if (operations) operations.completeImportScans += 1;
+  return graph.imports;
+}
+
+export function graphImpact(
+  graph: CodeGraph,
+  query: string,
+  operations?: GraphOperationCounters,
+): { path: string; via: string[] }[] {
   const roots = graph.files.includes(query) ? [query] : [...new Set(graph.symbols.filter((s) => s.name === query || s.id === query || `${s.path}#${s.name}` === query).map((s) => s.path))];
   if (!roots.length) throw new Error(`Code symbol or path not found: ${query}`);
+  const adjacency = prepareGraphAdjacency(graph, operations);
   const results = new Map(roots.map((path) => [path, { path, via: [path] }]));
   const queue = [...results.values()];
   for (let i = 0; i < queue.length; i++) {
     const current = queue[i]!;
-    for (const edge of graph.imports.filter((edge) => !edge.external && edge.to === current.path)) {
-      if (results.has(edge.from)) continue;
-      const impact = { path: edge.from, via: [...current.via, edge.from] };
-      results.set(edge.from, impact);
+    for (const importer of adjacency.reverse.get(current.path) ?? []) {
+      if (results.has(importer)) continue;
+      const impact = { path: importer, via: [...current.via, importer] };
+      results.set(importer, impact);
       queue.push(impact);
     }
   }
   return [...results.values()].sort((a, b) => a.path.localeCompare(b.path));
 }
 
-export function cycles(graph: Pick<CodeGraph, 'files' | 'imports'>): string[][] {
-  const adjacency = new Map(graph.files.map((file) => [file, graph.imports.filter((e) => e.from === file && !e.external).map((e) => e.to)]));
+export function cycles(
+  graph: Pick<CodeGraph, 'files' | 'imports'>,
+  operations?: GraphOperationCounters,
+): string[][] {
+  const adjacency = prepareGraphAdjacency(graph, operations).forward;
   const index = new Map<string, number>();
   const low = new Map<string, number>();
   const stack: string[] = [];
@@ -1360,6 +2190,7 @@ export function graphGate(
   graph: CodeGraph,
   config: Config['architecture'],
   codeGraph: Config['codeGraph'] = { mode: 'compatible' },
+  operations?: GraphOperationCounters,
 ): { valid: boolean; diagnostics: Diagnostic[]; cycles: string[][] } {
   const diagnostics = graph.diagnostics.map((diagnostic) =>
     codeGraph.mode === 'strict' && diagnostic.code === 'GRAPH_DYNAMIC'
@@ -1369,12 +2200,12 @@ export function graphGate(
           message: `${diagnostic.message} Strict Code Graph mode requires statically resolvable module loading.`,
         }
       : diagnostic);
-  const components = cycles(graph);
+  const components = cycles(graph, operations);
   if (config.forbidCycles) {
     for (const component of components) diagnostics.push(error('GRAPH_CYCLE', `Dependency cycle: ${component.join(' ↔ ')}.`));
   }
   for (const rule of config.rules) {
-    for (const edge of graph.imports) {
+    for (const edge of completeImportScan(graph, operations)) {
       if (matchGlob(edge.from, rule.from) && rule.disallow.some((pattern) => matchGlob(edge.to, pattern))) diagnostics.push(error('GRAPH_ARCHITECTURE', `${rule.name}: ${edge.from} must not depend on ${edge.to}.`, edge.from, edge.line));
     }
   }

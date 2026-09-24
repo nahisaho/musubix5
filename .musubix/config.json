@@ -35,6 +35,29 @@
       "timeoutMs": 180000
     },
     {
+      "name": "codegraph-tests",
+      "command": "node",
+      "args": [
+        "scripts/run-codegraph-tests.mjs",
+        "--report",
+        "{reportPath}"
+      ],
+      "tddArgs": [
+        "--test-id",
+        "{testId}"
+      ],
+      "tddReport": {
+        "format": "musubix-json",
+        "path": ".musubix/cache/test-results/{testId}.json"
+      },
+      "testReport": {
+        "format": "musubix-json",
+        "path": ".musubix/cache/test-results/codegraph.json"
+      },
+      "required": true,
+      "timeoutMs": 300000
+    },
+    {
       "name": "compatibility",
       "command": "npm",
       "args": [

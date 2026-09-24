@@ -2,7 +2,7 @@ import { error, ids, validateDesign, validateRequirements, type Diagnostic, type
 import { digest, exists, files, snapshot, within, writeJson, readText } from './files.js';
 import { loadTddEvidence } from './tdd.js';
 import { buildTrace } from './trace.js';
-import { indexGraph } from './graph.js';
+import { indexGraph, prepareGraphAdjacency } from './graph.js';
 import { validatePerformanceEvidence } from './performance.js';
 import {
   appendEvidenceOrder, evidenceOrderRecord, inspectEvidenceOrder,
@@ -47,7 +47,8 @@ async function requirementImplementationFingerprints(
   requirementIds: string[],
   trace: Awaited<ReturnType<typeof buildTrace>>,
 ): Promise<NonNullable<ChangeFingerprints['requirementImplementations']>> {
-  const graph = await indexGraph(root, false);
+  const { graph } = await indexGraph(root, { persist: false, refresh: false });
+  const adjacency = prepareGraphAdjacency(graph);
   const nodes = new Map(trace.nodes.map((node) => [node.id, node]));
   const testPaths = new Set(trace.nodes.filter((node) => node.kind === 'test').map((node) => node.path));
   const result: NonNullable<ChangeFingerprints['requirementImplementations']> = {};
@@ -64,10 +65,10 @@ async function requirementImplementationFingerprints(
     const queue = [...relevant];
     for (let index = 0; index < queue.length; index++) {
       const current = queue[index]!;
-      for (const edge of graph.imports.filter((entry) => !entry.external && entry.from === current)) {
-        if (testPaths.has(edge.to) || relevant.has(edge.to)) continue;
-        relevant.add(edge.to);
-        queue.push(edge.to);
+      for (const dependency of adjacency.forward.get(current) ?? []) {
+        if (testPaths.has(dependency) || relevant.has(dependency)) continue;
+        relevant.add(dependency);
+        queue.push(dependency);
       }
     }
     const paths = [...relevant].sort();
