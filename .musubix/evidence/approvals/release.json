@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "stage": "release",
-  "changeId": "CHANGE-0004",
-  "generation": 2,
+  "changeId": "CHANGE-0005",
+  "generation": 1,
   "artifacts": {
     ".gitattributes": "d60f352d0db1404c70afb4bb8b2ca3fd1c610572aa40720e8a0b7baa7885418c",
     ".github/plugin/marketplace.json": "7904e466f476b1ec77e25ad4dc0e7434ac14707dc69edf2437fb73d3809d5e39",
@@ -21,11 +21,12 @@
     ".github/workflows/candidate-gate.yml": "ae238d30cab2aa79f68e9897fd17f5a02f86018dacc46308190cd248533439c2",
     ".github/workflows/npm-publish.yml": "da2d3033a6717350ed55b27f9cf320843f3a4ae9123698dc74faea206a6dd6dd",
     ".github/workflows/release.yml": "ab235f4b0ff90d4d5a5c60e83b9969ad3a3b497e4ce81ba57d500032ac80e594",
-    ".gitignore": "2aef1f7c42b87aef99f447d1563b8a5a8432979881ff1db2edc52c02623b0753",
+    ".gitignore": "ed99a5e21e0874d31191b558aaec4d6a3238db0fba3eb2c67418ece8c85f1c4f",
     ".musubix/changes/CHANGE-0002.md": "314b6441c0be6a484ffc354e3585fde0019b78b42ee28e2e18ea06be4790495e",
     ".musubix/changes/CHANGE-0003.md": "4ae48abb9e3be0c0e2b78014b4064877a6b5f02a73d7c021e630a2b237d410a3",
-    ".musubix/changes/CHANGE-0004.md": "49de5030bbebeea4d986631e11b86b72e03342be83472888d1b6e785c92b5f11",
-    ".musubix/config.json": "85a99c721866821ef6c49f27b9b83ee802a7ea020f769d573bdce7347b0a11b3",
+    ".musubix/changes/CHANGE-0004.md": "827f8e03200eb9ba8221be3ecc8adfe0e5554f8b28aff2b6a658fba0e70270c7",
+    ".musubix/changes/CHANGE-0005.md": "4da4d93be9852ee2724809bc52504cd266f33de83eb0697089d19b5212646234",
+    ".musubix/config.json": "d46f1bf725a75dbd21587f27e31b14d32fdeb6c5d867d6c197bbcf3cc8724854",
     ".musubix/constitution.md": "f8b47fdc486f395bab05223a94821b145cf8df70ffde2c838a28f8d71fe0fa92",
     ".musubix/decisions/ADR-0002.md": "9f41d752530613cf6cc3ab6798709567e85650e5b97426dfca4147840eb35684",
     ".musubix/decisions/ADR-0003.md": "342a6a8e30c367684b02ee907f0f6bc3aef3b8ff6a08005148f43411f3885b7d",
@@ -41,15 +42,16 @@
     ".musubix/decisions/ADR-0013.md": "0c360dce20c0bded889a70a5bb276f8338405225941e7c088a2b3b108db4fcf4",
     ".musubix/decisions/ADR-0014.md": "40e01d0f00c5743332d253722c7f62e8e8cf2f99101398bd3cb7900cb2e1f013",
     ".musubix/decisions/ADR-0015.md": "832a1f63e6d8ab44a5c9cbda6679029e9a45f39a8a8bb6446563c41dccdf34d5",
-    ".musubix/evidence/approvals/design.json": "4269850b442ea7d96054741108f42f764ee4fb465ec92bf2e7288c2b299fea99",
-    ".musubix/evidence/approvals/requirements.json": "3c2212391dc1e1dd4f420be86ea62814fe8bbcc244e00331d989d3314d82eb3a",
-    ".musubix/evidence/changes.json": "2a812fb1e9619a2a331b0a8e9806a03eae0a526319dd358f75769743208c7c39",
-    ".musubix/evidence/order.json": "f1fa84641135019051a7f67d193d233e38afc3933973f323c6b2aeae6564b704",
-    ".musubix/evidence/release/gates/macos-node22.json": "72c1b21e13065168e916966d2594b4cdfed38d37b0eff5dc1f3d072234f48188",
-    ".musubix/evidence/release/gates/ubuntu-node20.json": "e8848c0a5f53e413c14167a84765d61bc581ad4376dc27a65376e921acd99ad7",
-    ".musubix/evidence/release/gates/ubuntu-node22.json": "a2c8f8f579cd2f1332064ff5c59e60516bf76a4690b7204e19ea2352519e6b12",
-    ".musubix/evidence/release/gates/ubuntu-node24.json": "c8bf4f55a9c3218f1c1bf1d1e34a066d182c2b25bbf04c779063d0dd9b9b9bb0",
-    ".musubix/evidence/release/gates/windows-node22.json": "443e9c355b11c0242389104e35542b258a5e973a84546af1889dc6892d4ec686",
+    ".musubix/decisions/ADR-0016.md": "92d60ae029514e1d57feaea5783bfbb7d5a2637c8a2979d6f089905c3b73e731",
+    ".musubix/evidence/approvals/design.json": "463d99620c3471e4b88b0dac6eaf84f8f4824124ee556ac6557a02fde4887d05",
+    ".musubix/evidence/approvals/requirements.json": "20891393c3913068806eec4363359331627209387acf2d434bad0c8010cc54d2",
+    ".musubix/evidence/changes.json": "e296d1d53c3b92ee4133231aaf8ed0ff7d727ba81408abf071f075287314b191",
+    ".musubix/evidence/order.json": "643b44ec228f5adc188b870e092e3f3c2c2a966871a35c8a00f5b0ca04107bce",
+    ".musubix/evidence/release/gates/macos-node22.json": "73bd1d1fd9bff06c54335f1cc0c9a6ddaa8ebebc89f9f6094c04fa41918031f0",
+    ".musubix/evidence/release/gates/ubuntu-node20.json": "69d058aab029ed9287ac031f35adea313d532ac0543a38c4648b71434590b37e",
+    ".musubix/evidence/release/gates/ubuntu-node22.json": "d5b094caa616cefc55a1a095783c6efcc90fa1eb37bcea8d80647d129c0e0715",
+    ".musubix/evidence/release/gates/ubuntu-node24.json": "6f1cd64c70f76d3b6da9d508ff9ac755af3a8f3cff1a5e068ec15e1234fee563",
+    ".musubix/evidence/release/gates/windows-node22.json": "42e5f4e26655806f755b56d3fc4209447f4d4899c844fd47271f89f6828a85c6",
     ".musubix/evidence/release/operations/CHANGE-0002-v0.1.0-push.json": "80c9e44f4852211a9dca3f874f45952e4c338dda6a9925ec4ed741512255715b",
     ".musubix/evidence/release/operations/CHANGE-0002-v0.1.0-release.json": "4c9a5cf15bbe2da8e1971ab759db07049e870a4c4dd3ff3ace287002cdb980df",
     ".musubix/evidence/release/operations/CHANGE-0002-v0.1.0-tag.json": "b188df52e449c9156a1ebc48206182550da13f615195ecc740b5ae42faf2def5",
@@ -67,14 +69,20 @@
     ".musubix/evidence/release/operations/CHANGE-0002-v0.1.1-push.json": "4aa036d9ce947dc3035c3f7d63ee536ceb7676a4b606bf1ad7df9332a7af5b40",
     ".musubix/evidence/release/operations/CHANGE-0002-v0.1.1-release.json": "cfd4506aa57a86803d40329cae102ca58b888f9b24bbe1a72d861498242eceb2",
     ".musubix/evidence/release/operations/CHANGE-0002-v0.1.1-tag.json": "be6cd9f3fb4d032abfd172e250e7178e07a15449a9e97d5f746087f44d08e694",
+    ".musubix/evidence/release/operations/change-0004-v0.2.0-publish.json": "45ff083ff7fdd79c7d1b29bac932f21fc97a13dd7d948ac1f0df5279ca642abd",
+    ".musubix/evidence/release/operations/change-0004-v0.2.0-push.json": "9c2b71cb2c3ba4ba2dc52c87b3348c4004915f49e71c7e6ff218fb99d254eef7",
+    ".musubix/evidence/release/operations/change-0004-v0.2.0-release.json": "fc902d37e3de22308d33e7e486d42b23288e94f0d001c151fa844a0d6dc76cfa",
+    ".musubix/evidence/release/operations/change-0004-v0.2.0-tag.json": "95c1e6ef9062d7776915a9ffcd29a0f4e0e84763100c5209d98242458b97f12b",
     ".musubix/evidence/run/change-0003-workflow-safe.jsonl": "3022aabb0a238c3b9a4bc72a38c570520f2bdeda8708c9410556041074e38357",
     ".musubix/evidence/run/workflow-20abff3a.jsonl": "a5bd65a766276c1289b9992cd0eb98dc0c28c7a2b4d0a2ea40f52adb3d641570",
     ".musubix/evidence/run/workflow-c0338040.jsonl": "71dc9c2082d460301aa3ab0e322b92707367e8847cebb2128f3de51820806554",
     ".musubix/evidence/run/workflow-c3f4c5fb.jsonl": "74f1a8f4468acab71cdae0cf1b15ff678bfe3119920ca4a7bf465ef5a1a5d5c6",
-    ".musubix/evidence/tdd.json": "b18d245104065904c2198dbbba14525e4ceab260dc89b0d968378256e073a97c",
+    ".musubix/evidence/tdd.json": "ccf1c667919578d62c111f1af0225f473ad17f7e1a81a21c9b6db4809c55ae41",
     ".musubix/evidence/workflow-declaration-corrections.json": "6538599283a5226b416754ee9ff1da49e15d9edda1c1d23dbd461163b2140191",
     ".musubix/evidence/workflow-waivers.json": "54426d7c94cc9d0763821076fb83d5b2c7bc4dc2c74c9bd529c3f34f02ddf19c",
-    ".musubix/evidence/workflow.json": "a1183f1827245e08d76d3b96f1174c0da4045af515a827ded70544d6d1f19149",
+    ".musubix/evidence/workflow.json": "10cec81810980e76af0d93ef267453fbae689b910e828c3cac08e4a65dcc069f",
+    ".musubix/features/codegraph-performance/design.md": "3ddf90dbb97a753644deb0e4dd38adaa27420273390a27b241612ef84f4c9c97",
+    ".musubix/features/codegraph-performance/requirements.md": "a5eb96722cea36c4fab7f81a09d992b1cbce62b154c7b85eab35199817d551e1",
     ".musubix/features/musubix5-clean-foundation/design.md": "d74909f43a23fca1445e0a4a75f22b7c6c648002966330904d970bdfad759bb5",
     ".musubix/features/musubix5-clean-foundation/requirements.md": "acad145405b899cc10cb97e05d45b253a865852ef5ada5f857a9ad593a8cd6dc",
     ".musubix/features/parallel-agent-development/design.md": "b82140e2728a3f4744486bffa126199b51b4df3f81851fdbee56662eaae2849d",
@@ -149,10 +157,27 @@
     ".musubix/journal/normal/000000000066.json": "1eca8247fee5194de162380d0eb702260c958f5260ef8d88f5c0d2e48e5af936",
     ".musubix/journal/normal/000000000067.json": "a504bfa5bb60072f6801611ba23e7f27d074836c383006782f7977a14be99007",
     ".musubix/journal/normal/000000000068.json": "ca98908b48868ede3d7f89dd4340a6df8385155bb57b49d14ccabe57b1521ec6",
+    ".musubix/journal/normal/000000000069.json": "9540cfee802f9d73f23464682cc4a6870b6a9989421b2037290b285db335012e",
+    ".musubix/journal/normal/000000000070.json": "82448561cbe694d4bf8a5c6352d519b1eb47d1bb120b55b4630b5e100f1c2ae6",
+    ".musubix/journal/normal/000000000071.json": "44333c0e846e5f2e13bd61251c66652041c46b71f6c8a1d047552e4ecffb3eb0",
+    ".musubix/journal/normal/000000000072.json": "03035bbe8157a6c9e65b5c165874ae424498d555f42a5d490a77d828334ce042",
+    ".musubix/journal/normal/000000000073.json": "ab99dbf0cb8ce78d75f816ab4d3ea59f055d58347727cfb27debe3d1ca1f623c",
+    ".musubix/journal/normal/000000000074.json": "c7c607c48ce37ab233e5b7724518c738ed0b26f635abe0177f533d25c579e95c",
+    ".musubix/journal/normal/000000000075.json": "c0a3ad62173a738b7d031e9ccecdc1d3fa60cccf342417c6cefc23a1ee67ea4d",
+    ".musubix/journal/normal/000000000076.json": "fd967aec99c0a56c9327db2d63057053e29c2a10a9133caf838ad5fb33143274",
+    ".musubix/journal/normal/000000000077.json": "17356e226fb4aaf35ace18ace4bc100be7bf9ebf18e341918ad22fbdb5aaf7bb",
+    ".musubix/journal/normal/000000000078.json": "b1d4f86da812258de2f51d5a7b60b41d3374792336e57795611283065963bc22",
+    ".musubix/journal/normal/000000000079.json": "cde1413244a71637c9a9138704e97003dd1069fc218b781fb7da0019117c4dae",
+    ".musubix/journal/normal/000000000080.json": "994ca1e11d392a0630ae7814a29faa743040ad6ffaec808c186ce5dde0f302b1",
+    ".musubix/journal/normal/000000000081.json": "55e6216581a7dd401863c1698ece97b8c1f524515207bb9d47d1089b361dc007",
+    ".musubix/journal/normal/000000000082.json": "276c445a4424751d9661faf4eadaa41ff5ce1250c5aa547dc7df6bee87b07a91",
+    ".musubix/journal/normal/000000000083.json": "891c6a7a8e17976f0872e8e7d7570bab727a3a6e62b796a47e775dabd0d2f690",
+    ".musubix/journal/normal/000000000084.json": "478047ab864ebb382f40058b81a639c20b753ca590c23987deb2f793406daad5",
+    ".musubix/journal/normal/000000000085.json": "6c90db8ae071310b431dbe8a9d21c7775e1ab16a3514a8464130b75e1215eb72",
     "CHANGELOG.md": "f9a825b23b8fbe6cc61735638f6b9fe2d8e70238241590af45441a4bf15c5acf",
     "LICENSE": "3363377bb6dce0fc69aff81727073c71f93a9dcfce3d42c7f64bcebef644b726",
-    "README-ja.md": "e0b4343e021f26b557fcc34498f1b0912b519fcf8d6f13d45f072f1c6dfe3bce",
-    "README.md": "fa5a01dc44d26d58cb7a43d661f46b6b40e44d0db2e4b598f9983468c5fcc0db",
+    "README-ja.md": "2c21bdce847e7f4cb155034cff58a6e3aa6ab56a241b6a714d8acd2c051cff14",
+    "README.md": "dacc554f1959db1fa1c4224b694eacfef8d17a20acf549d710b02b8905d619fa",
     "assets/ADR-0001.md": "07d68c567d75e9ec88f554114f8df4d1259a82cf45fd6567c65c3fc9db7090f0",
     "assets/constitution.md": "f8b47fdc486f395bab05223a94821b145cf8df70ffde2c838a28f8d71fe0fa92",
     "assets/design.md": "123dd9fa139e777847012c3218c3fe0a50758771107e5a81144584e8bc601917",
@@ -174,19 +199,19 @@
     "packages/analysis/src/attestation.ts": "c1875e4a1e2082c851ea422da460e1e853d4d5d0935a7e120af6ea78b2866095",
     "packages/analysis/src/bootstrap-runner.ts": "4167b10f413af1cdc39858f16f94110e407b7778ca8c09d8c0179e497f52550e",
     "packages/analysis/src/budget-ledger.ts": "c7e4fa74032e066491708685359ca7115ab34c44a0d2af18337bd15a4da25590",
-    "packages/analysis/src/candidate-gate.ts": "b4196f64c2b0a31d71218849a792a8d0686d12bc3514e44382ca8b461c534974",
+    "packages/analysis/src/candidate-gate.ts": "75aff901eb077f263cd0bb84330c27eb50f6c31126caeab6823876fe97bd8951",
     "packages/analysis/src/canonical.ts": "a055b09b2b56e39a40ae3999043c2c241e2de30c0a746cf4ec182e246de2ecc3",
     "packages/analysis/src/change-evidence.ts": "4af7011893b055e014a1af8d301935a0ca3791cacc1a45f982a3068e457d1d12",
     "packages/analysis/src/change-generation.ts": "f97f773b39665aee35b81556c54beed0b2bb5c11fa770456753c0fc93bb5d3e2",
     "packages/analysis/src/change-waiver.ts": "1b880c29a16080445f324265e0da067dd8537e64cb42f360369fd2a1eda0f9c3",
-    "packages/analysis/src/change.ts": "c8357d94650b431c8c7cc13dbb2a1039da2af365a8845e6eef3dd29c7afb3da8",
+    "packages/analysis/src/change.ts": "05556e6fa603d633291edd4a33331d5d8911b3270fc0a4926e4eb328ff836e69",
     "packages/analysis/src/compatibility-oracle.ts": "83aac1ddcf29d0ff7d76a8e05c9be9dfa1911f94c1ec960145578c43f2b32d98",
     "packages/analysis/src/config.ts": "b75dacf7bce0e58eaa465a32a6181e75d3492a1dafb4cbb5e09cc9220f9ffcba",
     "packages/analysis/src/evidence-registry.ts": "41bdd3f05c91734baf22cccf5289a9906eae30bfd1356236bc98c96be47da660",
     "packages/analysis/src/files.ts": "7a8cad4ffb34c910bf056fc431d177b72ef3814d0811cada2509a129ae910c0d",
     "packages/analysis/src/formal.ts": "9f5622983fed80c1e7c141cc7c7dcd217447e5c2edd39e64877db052a57b730b",
-    "packages/analysis/src/gate.ts": "d5c99e7bcb5bed53c577b82741f743832ca01397f8ec931e025f26243b166d85",
-    "packages/analysis/src/graph.ts": "448a2ebb4aa9f8b5a3b8a3ca7fbe06b51dd0a38f8c69830f6717947bda050a23",
+    "packages/analysis/src/gate.ts": "0d5ae7baacde0e3086d65fd8e6a89f0119ba8ac75c91b13289d017cd183ffe22",
+    "packages/analysis/src/graph.ts": "4de84f582a8da7ca24475354e0890600f34c7533f0c7af41346e879610ae4392",
     "packages/analysis/src/index.ts": "a023078b9461fa83b0f565cb9f80eb6b525c6028854f87f4bee20f3c2587ed1e",
     "packages/analysis/src/journal.ts": "a852798a86b2fe5ec38f32e827df64e45a37ba0dfa870fd3a513b605307094f6",
     "packages/analysis/src/knowledge.ts": "31313a4519c711ac98648313059359daf69959403e39deb1509dea90840182b4",
@@ -198,7 +223,7 @@
     "packages/analysis/src/parallel-runtime.ts": "1a15dbea2c162a9682773a36d130a92edd7f196bee22875a0ecb1a6a5935d13e",
     "packages/analysis/src/parallel-tdd-evidence.ts": "5968a550696b4f93c70bfd322f18afcf70f5e8dc04b888241fc76acc94a116ea",
     "packages/analysis/src/parallel.ts": "ac698520f8a60dcae907c4da7ec6bf53d920003a6db3ab8470d04252bdabcdae",
-    "packages/analysis/src/performance.ts": "a51c388499c57f177ebc4a6d5a160d7fb07550626b24a9c987b6b0d17e96ebe7",
+    "packages/analysis/src/performance.ts": "9eb0efa2eebbc95b86cf2c3bd10d59edbea90c936c017d736726e15ba84a698b",
     "packages/analysis/src/planner-output.ts": "c649e484d064c2fc5078bcbc21a08e49746feae179e26de99d92bae17ffe9a5c",
     "packages/analysis/src/process.ts": "675e76428f4e78e631fe1cbf9cddee298c93576d43fc63a5e977ff044b32d5d4",
     "packages/analysis/src/quality-policy.ts": "0ba33ac06b4762e0f398e04fd6c8975c7db6380f20080fc3dc89a701759fcd89",
@@ -218,7 +243,7 @@
     "packages/analysis/src/workspace-manager.ts": "9c5cf8b137be42914e79784a7a5414ba48eb26d454e5a07df24eb264f5757576",
     "packages/cli/package.json": "a2c263a6713f6030861ea09e310d43ca6235f91f821395259b8430c84a52b5fa",
     "packages/cli/src/install.ts": "4b33a24e19958e2c88af806dc1261f4f4a74d6e56cb9fe95c0dabf7cc20cef7f",
-    "packages/cli/src/main.ts": "f1401256565e850633ba47099d6f0cf73e242ca1fd6b21fd1c2e549d3a79ebe5",
+    "packages/cli/src/main.ts": "98664d942df30d7c9e2c062f20d25e78f55a37ce2790c3e7f22168805cf00d1e",
     "packages/domain/package.json": "00dece622fbb7794ef413f8f1717f5c7236c034030489c2aa9cd8513ccfb349a",
     "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
     "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
@@ -228,6 +253,7 @@
     "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34",
     "plugin.json": "ac68adbdf44926a763b0f7254f114abce0ddea333daae6f43edcaaca38fa1930",
     "scripts/check-package.mjs": "b817a08296efb0f2f90be012df55c598f59aaaf5230c8501c1af02b900546593",
+    "scripts/run-codegraph-tests.mjs": "62fc1a0bbc7e8facf0976b52d02854f0646f182f9b53662bf1bbc2808f098f45",
     "scripts/smoke-package.mjs": "b5f69bc4c0109632acdd266717695065dbce04e4d7f8d543eb164c1596a1568c",
     "tests/active-change-context.test.ts": "2db451f99fee47c7c75bb462ce0f04b4c808b87ab0174c95c0d54be05d878a37",
     "tests/approval-boundary-resume.test.ts": "7bf02bd5b510b0e3d47c1830dfbb03434bcec3bf8778ea9bd5788edd2e097379",
@@ -244,7 +270,7 @@
     "tests/budget-reservation.test.ts": "f7ee772c7546cba05001013d89cfce0fd692096fc9062e4e7e7c7ad1732def7c",
     "tests/budget-usage.test.ts": "45bf344f884740b91adfaf18a41830a72a3095a314aa71193a8750186752689f",
     "tests/candidate-gate-eol.test.ts": "db72054d71bb5bb2cb986c7a5ccb7b31d714b6c863e5901fd7d1fe723e8a1ad4",
-    "tests/candidate-gate-trust.test.ts": "790c226c4b4c3a435e044a63f2740d1321796b55f1ea2b8bbbe6fee224e1eded",
+    "tests/candidate-gate-trust.test.ts": "2ec0753f4c985fadbcba891d88c161bdd41f507d6172d2668f0aac356ec4c6d0",
     "tests/candidate-gate.test.ts": "cbba3d51e70b9d39806b039914426ceb142016b5ed37a702df29b2fef216a90b",
     "tests/candidate-snapshot-repository-binding.test.ts": "17b1d63cacfb98061293bae8c4fb1218cc27f5576b1c67e73d529b511a936b28",
     "tests/change-completeness-current.test.ts": "0c57842880dd7f10cabdae01c8f9f5a5cbdf19f1ce19c3fd0d39deddd35c3ca6",
@@ -257,6 +283,8 @@
     "tests/change-phase-checkpoint-operation.test.ts": "7a7f9611adbf133697e8d4c9485c39b4ec9300834283a998ae6f625027b10612",
     "tests/cli-help-contract.test.ts": "9528757483a6eab996a9084561f83259b130e00a15fb3bf45a1a8de762d08d74",
     "tests/cli-json-error-contract.test.ts": "db96b3a7986394c7ba941b495795ff9cb181063f744b1cabb378b1762a37c099",
+    "tests/codegraph-incremental-regressions.test.ts": "cb0cb9d9675ec1336966ff448a3994a339a7950ef819e2b71db0e6dd8e14fbf4",
+    "tests/codegraph-performance.test.ts": "b6481920fb15944ddf64a29b4cf421fee1115abfa94497c9296d5f0aae05ae6d",
     "tests/compatibility-oracle.test.ts": "246a1fb3090c0377d72feece8e578b9608bbb86cf75cdca3ae316956860adc90",
     "tests/cross-change-candidate-branch.test.ts": "cb340d1c22862a88654df138166f9d880b49d77aef6ba7efec607cbc61588740",
     "tests/evidence-binding.test.ts": "17e118ccc2ae168913c6af833ac40deedeac84668522573c64286848c1207248",
@@ -277,7 +305,7 @@
     "tests/parallel-development.test.ts": "6d49970e05e0cac6f500c06ac75f4bd4dd7fcab1810b29c9fb41fd89733a0383",
     "tests/parallel-final-findings-generation5.test.ts": "f454175e9d0ed64574942cd8fc77ffe93c42f2f6efc6e19271130475b3d4b7dc",
     "tests/parallel-ownership-history-generation5.test.ts": "5cc0f366a22059d1eafe81d4f22ad41e68b5ecdffa6accf6f824b00835e6311b",
-    "tests/parallel-quality-regressions.test.ts": "78d184810a9dfab27f2c36cbbd8d8bb88f2ab3e9545ae7f86629fcb43d56ae97",
+    "tests/parallel-quality-regressions.test.ts": "7a64abd524c6617ef9bcbcab3f9b1290c41942df79d52ebfc93be1da393b9d86",
     "tests/parallel-release-blockers-generation5.test.ts": "8739007ad5fbe19451cf1e6e2abba2265f1c1435a35e9e05164e927360bbefdc",
     "tests/parallel-review-regressions.test.ts": "b0ddb63c6f2a4fc41dd7b959b971c4cff8a2cc87f665a5ca2e42652b6cfc5423",
     "tests/parallel-runtime-lifecycle-generation5.test.ts": "66a6fb7e09b6ac620d30cc4c92f9c1fcbfdf79dab9c9109cca7cfa97314b9ea0",
@@ -326,16 +354,16 @@
   },
   "projection": {
     "repositoryId": "repository:e5297915dd33125e52ca4d9d5a00250e33a221401bd38b066934730c6948ecae",
-    "changeId": "CHANGE-0004",
-    "generation": 2,
-    "candidateCommit": "ce89548b0c01615c0a6355ef15f832b0e8ca9230",
-    "gateInputFingerprint": "006eb9660be6c6ccc18841dee2bf79b0c6ea7deb8aad7a1adccb00e8d246aa3c"
+    "changeId": "CHANGE-0005",
+    "generation": 1,
+    "candidateCommit": "ccc1c565c7ee8b2ed6e00904cd650235de07b551",
+    "gateInputFingerprint": "d84f81d0178749d6e929edec3bd3c7f03dc31646b66773a86f699815845d6c27"
   },
   "exclusions": [
     {
       "path": ".musubix/evidence/approvals/release.json",
       "reason": "release-self-reference",
-      "sha256": "4ea7f4e20a98e399a945de1fc11e2954a9cafb500be00f51b0c27c4e2ea93c8e"
+      "sha256": "ff3ab72bccd065370a9ba5e157722573c2b7ba4f88f1e989a9447af35ab5a636"
     },
     {
       "path": ".musubix/evidence/bootstrap/change-0003-resolver-bootstrap.json",
@@ -345,12 +373,12 @@
     {
       "path": ".musubix/evidence/formal.json",
       "reason": "gate-self-reference",
-      "sha256": "0c07d5197a45ae7538d4c0afa1a70ec3a4ac98e8fe462ed4c80b8ec324917bc5"
+      "sha256": "39f280489aa8550184bb393b108775d62ec888f6dc1ae6bcea011b2067fdba4b"
     },
     {
       "path": ".musubix/evidence/model-correspondence.json",
       "reason": "gate-self-reference",
-      "sha256": "0d16e61deb6ff0891d71c5f2d762cb21c9daeba641e3b80ac4058415efb81130"
+      "sha256": "37d2d966668d1cde82f7461bfc1cc2024b9caca6ab04c64c8f09d485a50c7c67"
     },
     {
       "path": ".musubix/evidence/native/test/TEST-M5-APPROVAL-001.json",
@@ -390,7 +418,7 @@
     {
       "path": ".musubix/evidence/native/test/TEST-M5-APPROVAL-CANDIDATE-TREE-001.json",
       "reason": "gate-self-reference",
-      "sha256": "c20fd46e6a667e7e417b5d0b7917180b71e9d8e9b92fba7cd2ef9b5e7a33174d"
+      "sha256": "8dcf4b6a59758d893c5331ff1d9fc06470954d38055c9ed3b1fdb4fb1360890a"
     },
     {
       "path": ".musubix/evidence/native/test/TEST-M5-APPROVAL-NATIVE-CANDIDATE-TREE-001.json",
@@ -460,17 +488,17 @@
     {
       "path": ".musubix/evidence/native/test/TEST-M5-COMPAT-001.json",
       "reason": "gate-self-reference",
-      "sha256": "a891b5f8a1ee02843ebb43dccd22196ea0c6cbcee92ede0515ee7e509153dc02"
+      "sha256": "40589cb1746a94fc26db18ce92c49bf13018e87a8d7f75ef13599e3d8630475a"
     },
     {
       "path": ".musubix/evidence/native/test/TEST-M5-COMPAT-003.json",
       "reason": "gate-self-reference",
-      "sha256": "1e93d4bddfa326dfb047efabeee92f171793e50303dc2413c6802f3641acae36"
+      "sha256": "35921847081ddd43e5c2d001c62655dd04ffdb916f10500f249e8c12a30de4a8"
     },
     {
       "path": ".musubix/evidence/native/test/TEST-M5-COMPAT-005.json",
       "reason": "gate-self-reference",
-      "sha256": "18d38d3421e6cc326cf008d97acdb8b160cb30192e376d87f9bd637becdf83db"
+      "sha256": "3c6654425fee0e960156e693163cc9facabfcf13fa83d96a84d43ac6d538587d"
     },
     {
       "path": ".musubix/evidence/native/test/TEST-M5-COMPAT-006.json",
@@ -510,7 +538,7 @@
     {
       "path": ".musubix/evidence/native/test/TEST-M5-COMPAT-ORACLE-001.json",
       "reason": "gate-self-reference",
-      "sha256": "cde3afbf20a6b079935c6b3410f1dcdfd5050b9619a56cd2b68c73e4f48f5600"
+      "sha256": "d28e708da25dd7b41e047e83ed657e6e1bad1e55e4e90f2102f356815ebab3bb"
     },
     {
       "path": ".musubix/evidence/native/test/TEST-M5-EVIDENCE-001.json",
@@ -550,12 +578,12 @@
     {
       "path": ".musubix/evidence/native/test/TEST-M5-EVIDENCE-CURRENT-001.json",
       "reason": "gate-self-reference",
-      "sha256": "9bdd7d8c55d63540b92c357e4e8028c849ddf964b79c6be2dc612c5ab1d38fd0"
+      "sha256": "f0a445d176eeffc2700e7eb9d492645bafc285f083651caed7a02f667ed4909f"
     },
     {
       "path": ".musubix/evidence/native/test/TEST-M5-EVIDENCE-TRACE-001.json",
       "reason": "gate-self-reference",
-      "sha256": "29eaeca0ec09d36edd428bd24d81c8dbc368e2c909cd36bc7601f3a92daef1cf"
+      "sha256": "78ef64b70a45c92c21b2db6b443fc1ca1e91df8defe077a402d65c3a80cf8d2d"
     },
     {
       "path": ".musubix/evidence/native/test/TEST-M5-LIFECYCLE-001.json",
@@ -565,7 +593,7 @@
     {
       "path": ".musubix/evidence/native/test/TEST-M5-LIFECYCLE-002.json",
       "reason": "gate-self-reference",
-      "sha256": "68da91c0ae0780ac46886898217e452f1a7b0d5472b3feda6bae6f488f06bb4a"
+      "sha256": "81196c1f0019587a374d3a5b8ac205f6cf7bce69e99e0fbfb7ea26584502e97f"
     },
     {
       "path": ".musubix/evidence/native/test/TEST-M5-LIFECYCLE-003.json",
@@ -880,7 +908,7 @@
     {
       "path": ".musubix/evidence/native/test/TEST-M5-QUALITY-COMPLETENESS-001.json",
       "reason": "gate-self-reference",
-      "sha256": "d55812701a1d8384d2c62e0e51f84b701bf6945c556d8058e0a4ae782cf436a8"
+      "sha256": "4b0a613b70fdd11e7c8ba6109e5bc03f9e795b71257e1ed7c640d55dc7ac8e07"
     },
     {
       "path": ".musubix/evidence/native/test/TEST-M5-QUALITY-SUPERSESSION-001.json",
@@ -905,7 +933,7 @@
     {
       "path": ".musubix/evidence/native/test/TEST-M5-RELEASE-001.json",
       "reason": "gate-self-reference",
-      "sha256": "c91a881c3986725882080597076f85459adc425c39360f082ce1cc546e87d2fc"
+      "sha256": "afa574d3b3c2f5e3e1222da3b382a498772da2ae6357a670cda84645ec20a507"
     },
     {
       "path": ".musubix/evidence/native/test/TEST-M5-RELEASE-002-APPROVAL-001.json",
@@ -925,7 +953,7 @@
     {
       "path": ".musubix/evidence/native/test/TEST-M5-RELEASE-002-TRUST-001.json",
       "reason": "gate-self-reference",
-      "sha256": "35eb22b28229d05bc2b1742902d94c019932feb0619caf3ca4b3674e2ad78217"
+      "sha256": "756fad5b734730323f6a26874e476cf280f0b1890452a3e8b300ccb51f5c7724"
     },
     {
       "path": ".musubix/evidence/native/test/TEST-M5-RELEASE-002.json",
@@ -1205,32 +1233,37 @@
     {
       "path": ".musubix/evidence/native/test/aggregate.json",
       "reason": "gate-self-reference",
-      "sha256": "50bdc2917a6efdebb56d11ea70533a9a489647dc53a3dcd4c49ec2ac2e1c15e8"
+      "sha256": "6b0aaffc09db7b2deeed84c6d104fe5ef11541d348cbcf86fe735906e90c73f3"
     },
     {
       "path": ".musubix/evidence/performance.json",
       "reason": "gate-self-reference",
-      "sha256": "84dc1eb94a2209cdc4b44f83520422f9321b72382aa091bea509ea4a3cdf2bb7"
+      "sha256": "0d14c90ec8a2c56494fb577ae1ca2527cc4d5aed3c694e19b46050fad654614c"
     },
     {
       "path": ".musubix/evidence/quality.json",
       "reason": "gate-self-reference",
-      "sha256": "82fb3b61bfb602ef0d58d7ca9342280afeff81fa0de54f2995733018af4d9342"
+      "sha256": "8172c71611ebe807887623407f8882329cd1aca6284a3bcf3ccbc1877bf10d37"
+    },
+    {
+      "path": ".musubix/features/codegraph-performance/trace.json",
+      "reason": "generated-trace",
+      "sha256": "8bacd287f8097952859f92a60f603da778c2404c2a8501fe79a729753e677e97"
     },
     {
       "path": ".musubix/features/musubix5-clean-foundation/trace.json",
       "reason": "generated-trace",
-      "sha256": "57e3951f7aeba774fa55ea9e573c7df93f8947905cdfc881fd86cd60aa590ea7"
+      "sha256": "8bacd287f8097952859f92a60f603da778c2404c2a8501fe79a729753e677e97"
     },
     {
       "path": ".musubix/features/parallel-agent-development/trace.json",
       "reason": "generated-trace",
-      "sha256": "57e3951f7aeba774fa55ea9e573c7df93f8947905cdfc881fd86cd60aa590ea7"
+      "sha256": "8bacd287f8097952859f92a60f603da778c2404c2a8501fe79a729753e677e97"
     },
     {
       "path": ".musubix/features/release-0-2-0/trace.json",
       "reason": "generated-trace",
-      "sha256": "57e3951f7aeba774fa55ea9e573c7df93f8947905cdfc881fd86cd60aa590ea7"
+      "sha256": "8bacd287f8097952859f92a60f603da778c2404c2a8501fe79a729753e677e97"
     },
     {
       "path": "docs/history/pre-change-0002/ADR-0001.md",
@@ -1273,7 +1306,7 @@
       "sha256": "9fe4f134e7c0d2633ccd3b2bd66464254f72ba51fad07191d4295280f7af9e0e"
     }
   ],
-  "artifactSha256": "26b728da0d913e75a0040e52e14bbae3c9d1c0a0a7d9a7c4304c506ed174cb38",
+  "artifactSha256": "062d7b95b31616879b66428eff05b2ebcfffac83d44797c81e86504ef267ad8a",
   "approver": "@nahisaho",
-  "approvedAt": "2026-09-23T16:32:39.500Z"
+  "approvedAt": "2026-09-24T05:26:49.212Z"
 }
