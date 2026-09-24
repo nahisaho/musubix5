@@ -1446,13 +1446,26 @@
       "phase": "complete",
       "status": "completed",
       "recordedAt": "2026-09-24T21:03:11.110Z"
+    },
+    {
+      "skill": "sdd-change",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0008",
+      "generation": 1,
+      "requirementIds": [
+        "REQ-M5-PARALLEL-010"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-09-24T22:18:43.378Z"
     }
   ],
   "verification": {
     "mode": "compatible",
-    "sourceSha256": "11f19f8c8d3ad2fbaf72c9afdb892d85589a493f76adceec79ae96c931146e6c",
-    "eventsSha256": "5b714a9f44f3c9ddd7f3e0caf19e2e71a3fa87a6d7b26462b347e6d7fe315619",
-    "verifiedAt": "2026-09-24T21:19:38.887Z",
+    "sourceSha256": "9dc60f3f965da67668e2e60cd8fb09c1af926a1ec6a4ec06c5cfec893dcef976",
+    "eventsSha256": "904ea26ceec3cfbde3d14db1efd42d4960b57b2b583ef0d651b3b8c667c8fcce",
+    "verifiedAt": "2026-09-24T22:31:17.683Z",
     "invocations": [
       {
         "skill": "sdd-change",
@@ -1578,6 +1591,13 @@
         "toolCallId": "call_RngOAiAM9ArpcciRsbtXX7kd",
         "invokedAt": "2026-09-24T21:02:28.881Z",
         "completedAt": "2026-09-24T21:02:28.893Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-change",
+        "toolCallId": "call_ctepMrliNLgE7o0RlOVd1Lhe",
+        "invokedAt": "2026-09-24T22:18:13.592Z",
+        "completedAt": "2026-09-24T22:18:13.608Z",
         "status": "completed"
       }
     ]

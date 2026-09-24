@@ -2,7 +2,7 @@
 schemaVersion: 1
 id: CHANGE-0008
 summary: Break the parallel integration release-approval deadlock
-status: active
+status: completed
 ---
 # CHANGE-0008: parallel-integration-approval-boundary
 
