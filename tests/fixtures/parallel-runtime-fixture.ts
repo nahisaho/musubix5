@@ -5,6 +5,7 @@ import { dirname, join, resolve } from 'node:path';
 
 import { digest } from '../../packages/analysis/src/files.js';
 import { appendJournalRecord } from '../../packages/analysis/src/journal.js';
+import { resilientRemovalOptions } from '../../packages/analysis/src/files.js';
 import type { AuthoredParallelPlan } from '../../packages/analysis/src/parallel.js';
 
 export const fixtureParallelPolicy = {
@@ -199,7 +200,7 @@ export async function createParallelFixture(options: FixtureOptions = {}): Promi
     root,
     baseCommit,
     planFile: 'parallel-plan.json',
-    dispose: () => rmSync(root, { recursive: true, force: true }),
+    dispose: () => rmSync(root, resilientRemovalOptions),
   };
 }
 

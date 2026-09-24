@@ -14396,6 +14396,54 @@
       "phase": "g4:quality:7",
       "previousSha256": "ff0e85e24428774c31c21f5f272deecf4f90293ef3259702716e512908669d27",
       "recordSha256": "974fb14b23b585c6067c55d031d2b311f6ac762b32cc7fe2cda97ad66197830d"
+    },
+    {
+      "sequence": 1800,
+      "kind": "tdd",
+      "entityId": "112beeee-1cb1-41e7-adca-2a74ef2a8313",
+      "phase": "red",
+      "previousSha256": "974fb14b23b585c6067c55d031d2b311f6ac762b32cc7fe2cda97ad66197830d",
+      "recordSha256": "fbc574d2a67abf1099fbc323080b574afd2dde9a01b87da540dd9d9908fe3431"
+    },
+    {
+      "sequence": 1801,
+      "kind": "change",
+      "entityId": "CHANGE-0007",
+      "phase": "g4:red:REQ-M5-RELEASE-002#7",
+      "previousSha256": "fbc574d2a67abf1099fbc323080b574afd2dde9a01b87da540dd9d9908fe3431",
+      "recordSha256": "7f1f911a655b4fc87f7667cfd48aa3a1ad406c907a8a3390c70dd45ef53655eb"
+    },
+    {
+      "sequence": 1802,
+      "kind": "change",
+      "entityId": "CHANGE-0007",
+      "phase": "g4:implementation:REQ-M5-RELEASE-002#7",
+      "previousSha256": "7f1f911a655b4fc87f7667cfd48aa3a1ad406c907a8a3390c70dd45ef53655eb",
+      "recordSha256": "eb996bcaadc7c5b6dbf2c7f7cd8d6740df83782afe878b0233335f6ccbc4cf62"
+    },
+    {
+      "sequence": 1803,
+      "kind": "tdd",
+      "entityId": "112beeee-1cb1-41e7-adca-2a74ef2a8313",
+      "phase": "green",
+      "previousSha256": "eb996bcaadc7c5b6dbf2c7f7cd8d6740df83782afe878b0233335f6ccbc4cf62",
+      "recordSha256": "fe874e455ca345f14e841ea1b02e96fc92126710988995cfcdc6ed6529c2a6ec"
+    },
+    {
+      "sequence": 1804,
+      "kind": "change",
+      "entityId": "CHANGE-0007",
+      "phase": "g4:green:REQ-M5-RELEASE-002#7",
+      "previousSha256": "fe874e455ca345f14e841ea1b02e96fc92126710988995cfcdc6ed6529c2a6ec",
+      "recordSha256": "2f293946629cf3abb59505c5ef78ea4e2cad94ed1ced3c3889da57262c02c982"
+    },
+    {
+      "sequence": 1805,
+      "kind": "change",
+      "entityId": "CHANGE-0007",
+      "phase": "g4:quality:8",
+      "previousSha256": "2f293946629cf3abb59505c5ef78ea4e2cad94ed1ced3c3889da57262c02c982",
+      "recordSha256": "30309928cc02a6f4ae000b619404cc90e0696756455275ffc26185037d6e5bc0"
     }
   ]
 }

@@ -21191,6 +21191,51 @@
         "diagnostics": [],
         "order": 1796
       }
+    },
+    {
+      "cycleId": "112beeee-1cb1-41e7-adca-2a74ef2a8313",
+      "changeId": "CHANGE-0007",
+      "generation": 4,
+      "requirementId": "REQ-M5-RELEASE-002",
+      "testId": "TEST-M5-RELEASE-WINDOWS-CLEANUP-001",
+      "testPath": "tests/resilient-removal.test.ts",
+      "commandName": "test",
+      "red": {
+        "phase": "red",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "failed",
+        "reportSha256": "34276c841b91793a5ace8e14e5a6bcdf9eb22c6cddb727737381c60519c935d7",
+        "commandSha256": "b5ec132e5e0bbe596ce757bb94b1f19551c0348b369e306122adfb26ab8bff78",
+        "outputSha256": "3e3948f4cf1e203e7d394140baf342076408ec6f888d05fe5e0d05eee68cb0be",
+        "exitCode": 1,
+        "durationMs": 3774,
+        "testFingerprint": "39b85e5b56557e33f75d5fce9a27435cc2722df8a7c002c5ea3aedcfa4cb9b73",
+        "sourceFingerprint": "518cf419163153b4bfb70090cb0bf59cf218835f51f1fffe9bedb1062894fc89",
+        "executionId": "42f52fd8-e5e9-4190-b579-9b1e6bd7fb52",
+        "recordedAt": "2026-09-24T17:27:23.651Z",
+        "diagnostics": [],
+        "order": 1800
+      },
+      "green": {
+        "phase": "green",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "passed",
+        "reportSha256": "737c01efcda63167e69bde54b35f5362306421d925b2d0d24127b1d80f1b9a7f",
+        "commandSha256": "b5ec132e5e0bbe596ce757bb94b1f19551c0348b369e306122adfb26ab8bff78",
+        "outputSha256": "3e3948f4cf1e203e7d394140baf342076408ec6f888d05fe5e0d05eee68cb0be",
+        "exitCode": 0,
+        "durationMs": 3664,
+        "testFingerprint": "39b85e5b56557e33f75d5fce9a27435cc2722df8a7c002c5ea3aedcfa4cb9b73",
+        "sourceFingerprint": "43598bcacc93a0fa6147c2bf4701e25a14462c94ce6ca38f61ccf6006b99bd32",
+        "executionId": "6e11cf34-ebc1-4198-a2cb-35cdd5f6318d",
+        "recordedAt": "2026-09-24T17:27:54.047Z",
+        "diagnostics": [],
+        "order": 1803
+      }
     }
   ],
   "chain": [
@@ -33823,6 +33868,34 @@
       "phaseEvidenceSha256": "d783180498cb668957844fcbee067fd72ebff2535673a671af46dd9ef117180d",
       "previousSha256": "41e4dbd25c80e28b78b28777083fb25516e3ee71c32456095f5906243defb091",
       "recordSha256": "741e5186cf160e421a474a823c4dc7622f5f2aa17b84e0c12c0108654982841e"
+    },
+    {
+      "sequence": 949,
+      "cycleId": "112beeee-1cb1-41e7-adca-2a74ef2a8313",
+      "changeId": "CHANGE-0007",
+      "generation": 4,
+      "requirementId": "REQ-M5-RELEASE-002",
+      "testId": "TEST-M5-RELEASE-WINDOWS-CLEANUP-001",
+      "testPath": "tests/resilient-removal.test.ts",
+      "commandName": "test",
+      "phase": "red",
+      "phaseEvidenceSha256": "3f1d5547fe0ac8699d9fdf7a3b9e0578072a2838942edc3206cbfed7cb3d22c0",
+      "previousSha256": "741e5186cf160e421a474a823c4dc7622f5f2aa17b84e0c12c0108654982841e",
+      "recordSha256": "4de7a70d2d6dd21e673df207812fecc2219e26964e27d53be51988641a07e23b"
+    },
+    {
+      "sequence": 950,
+      "cycleId": "112beeee-1cb1-41e7-adca-2a74ef2a8313",
+      "changeId": "CHANGE-0007",
+      "generation": 4,
+      "requirementId": "REQ-M5-RELEASE-002",
+      "testId": "TEST-M5-RELEASE-WINDOWS-CLEANUP-001",
+      "testPath": "tests/resilient-removal.test.ts",
+      "commandName": "test",
+      "phase": "green",
+      "phaseEvidenceSha256": "4c1f31fdc101c50dec873b85cbe90ae67cbb5d90f549b2359d3f599e356428d8",
+      "previousSha256": "4de7a70d2d6dd21e673df207812fecc2219e26964e27d53be51988641a07e23b",
+      "recordSha256": "c3adaacb6e82d8169e39e33449ebd6c22d1092f88e0c82f9b904f73a5a6c97c0"
     }
   ]
 }

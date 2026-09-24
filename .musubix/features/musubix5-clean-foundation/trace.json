@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-24T17:16:05.210Z",
+  "generatedAt": "2026-09-24T17:30:58.302Z",
   "nodes": [
     {
       "id": "CODE-M5-NPM-PUBLISH-WORKFLOW-YAML-001",
@@ -1160,6 +1160,12 @@
       "kind": "code",
       "path": "packages/analysis/src/evidence-registry.ts",
       "line": 216
+    },
+    {
+      "id": "CODE-M5-RELEASE-WINDOWS-CLEANUP-001",
+      "kind": "code",
+      "path": "packages/analysis/src/files.ts",
+      "line": 9
     },
     {
       "id": "CODE-M5-STATUS-GUIDANCE-001",
@@ -2642,6 +2648,12 @@
       "kind": "test",
       "path": "tests/repository-identity.test.ts",
       "line": 57
+    },
+    {
+      "id": "TEST-M5-RELEASE-WINDOWS-CLEANUP-001",
+      "kind": "test",
+      "path": "tests/resilient-removal.test.ts",
+      "line": 5
     },
     {
       "id": "TEST-M5-APPROVAL-002",
@@ -5855,6 +5867,16 @@
       "relation": "implements"
     },
     {
+      "from": "CODE-M5-RELEASE-WINDOWS-CLEANUP-001",
+      "to": "REQ-M5-RELEASE-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-WINDOWS-CLEANUP-001",
+      "to": "DES-M5-015",
+      "relation": "implements"
+    },
+    {
       "from": "CODE-M5-STATUS-GUIDANCE-001",
       "to": "REQ-M5-COMPAT-005",
       "relation": "implements"
@@ -8925,6 +8947,11 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-RELEASE-WINDOWS-CLEANUP-001",
+      "to": "REQ-M5-RELEASE-002",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-APPROVAL-002",
       "to": "REQ-M5-APPROVAL-002",
       "relation": "verifies"
@@ -9161,7 +9188,7 @@
     "packages/analysis/src/compatibility-oracle.ts": "83aac1ddcf29d0ff7d76a8e05c9be9dfa1911f94c1ec960145578c43f2b32d98",
     "packages/analysis/src/config.ts": "b75dacf7bce0e58eaa465a32a6181e75d3492a1dafb4cbb5e09cc9220f9ffcba",
     "packages/analysis/src/evidence-registry.ts": "41bdd3f05c91734baf22cccf5289a9906eae30bfd1356236bc98c96be47da660",
-    "packages/analysis/src/files.ts": "7a8cad4ffb34c910bf056fc431d177b72ef3814d0811cada2509a129ae910c0d",
+    "packages/analysis/src/files.ts": "987b2a90c079f0c391ee6ce1893de8664ddbfe43264eb7e8e65d6fb291cfa23d",
     "packages/analysis/src/formal.ts": "9f5622983fed80c1e7c141cc7c7dcd217447e5c2edd39e64877db052a57b730b",
     "packages/analysis/src/gate.ts": "6d60c847d4a07dab810155a586b571bdc7f171ca2dd175852d456cbdeef4f215",
     "packages/analysis/src/graph.ts": "4de84f582a8da7ca24475354e0890600f34c7533f0c7af41346e879610ae4392",
@@ -9242,7 +9269,7 @@
     "tests/evidence-identity.test.ts": "3467588120ed4b23c73dd5f0aff0be4b3ff83d38867ff18beda6bcceae98a899",
     "tests/evidence-kinds.test.ts": "b1a624757dcaaaf9431a0dfa245e358139d6566b07de2566477a2dd81ae0be65",
     "tests/evidence-supersession.test.ts": "aa73654e0e5bc737b9ed6725b4091648e9b9d7978a4d466a01506612c2d58bc7",
-    "tests/fixtures/parallel-runtime-fixture.ts": "e3eebc948e666a306f6ee4bd5cdbf661c6ef992be7cbf968540556a801ac1637",
+    "tests/fixtures/parallel-runtime-fixture.ts": "a0c109bb40e29f24c38ccd76a69d13bc9348eaf3293d5b81f9b305c88bc9eeac",
     "tests/global-setup.ts": "531cd25f855ef1c87176021b389361aee40615bb1aee62d111666fa43f69b856",
     "tests/helpers/journal-order-sentinel.ts": "4202b2775d671925f346eadf6ff8b5a54cfa8134842197f3952eed9842c5b3b1",
     "tests/journal-order.test.ts": "72d385f473d71776d707fb988cce06fd2534975492d7ff3eb22e8d4e9214429a",
@@ -9288,6 +9315,7 @@
     "tests/repository-identity-generation12.test.ts": "15c05bdb4e79de6ed827b4e5732e3c685f2b9650c4613047d485d7d4194f0fdc",
     "tests/repository-identity-workflows.test.ts": "f830e7b9d3ce9882bc3cc7a39d6cb19ff1a6c7a539df0e30164aaf631a1d051f",
     "tests/repository-identity.test.ts": "805c2e53cccec5b657c7d58c5b438029f6874f75919ba84b12ae3b538d7df73d",
+    "tests/resilient-removal.test.ts": "04abd69134a65e17114930b836e5df7136c03b523bc1ca341f80cfc919b94d16",
     "tests/run-local-workspace.test.ts": "b0071c5905412c1f846d854155fbd37b0f72c08db40a20405be71cbfc2f10561",
     "tests/tdd-batch-recording.test.ts": "e254e04461665d42877b747d038bf977f680a0c72255a03b5dfc471cca2f8ef8",
     "tests/tdd-cycle-resolver.test.ts": "e97858964eb27b9b5aa5108ae0b40cafe8ba5053cbc38aceec3a2069458ac885",

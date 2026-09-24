@@ -109,6 +109,8 @@ for creating, inspecting, diagnosing, or retiring snapshots.
 - Make the closed candidate matrix test harness deterministic across operating
   systems by building `dist` once before Vitest workers start and by recording
   the executable fixture mode explicitly in the Git index.
+- Retry recursive fixture cleanup on transient Windows `EBUSY`/`EPERM`
+  filesystem locks instead of failing an otherwise successful matrix test.
 - Add Red/Green tests for create/list/show/delete help and JSON, approval and
   quality preconditions, candidate-tree manifest identity, idempotent recreate,
   post-delete same-commit recreation, second-candidate rejection, legacy
@@ -193,3 +195,5 @@ for creating, inspecting, diagnosing, or retiring snapshots.
 - The closed candidate matrix preserves the CLI JSON error envelope without
   concurrent `tsc` writes and produces the same canonical executable-file
   manifest on Windows, macOS, and Linux.
+- Parallel-runtime fixture teardown tolerates transient Windows filesystem
+  locks while retaining bounded synchronous cleanup.

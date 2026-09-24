@@ -1,9 +1,21 @@
 import { createHash } from 'node:crypto';
+import type { RmOptions } from 'node:fs';
 import { lstat, mkdir, readdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
 
 const excluded = new Set(['.git', 'node_modules', 'dist', 'build', 'coverage', '.test-work', '.next', 'vendor', '__pycache__']);
 const pythonVirtualEnvironmentRoots = new Set(['.venv', 'venv']);
+
+/** @id CODE-M5-RELEASE-WINDOWS-CLEANUP-001
+ * @implements REQ-M5-RELEASE-002
+ * @design DES-M5-015
+ */
+export const resilientRemovalOptions: RmOptions = {
+  recursive: true,
+  force: true,
+  maxRetries: 5,
+  retryDelay: 100,
+};
 
 export function portable(path: string): string {
   return path.split(sep).join('/');
