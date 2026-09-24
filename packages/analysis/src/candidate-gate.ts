@@ -325,8 +325,9 @@ export function validateCandidateGateSet(
       ));
       continue;
     }
-    const commandNames = (record.commands ?? []).map((command) => command.name).sort();
-    if (commandNames.join('\n') !== [...requiredCandidateGateCommands].sort().join('\n')) {
+    const commandNames = record.commands?.map((command) => command.name).sort();
+    if (commandNames
+      && commandNames.join('\n') !== [...requiredCandidateGateCommands].sort().join('\n')) {
       diagnostics.push(error(
         'RELEASE_GATE_EVIDENCE_STALE',
         `Candidate gate ${jobId(record.job)} does not contain the current required command set.`,
