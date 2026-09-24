@@ -22,6 +22,19 @@ describe('repository identity workflow wiring', () => {
   });
 
   /**
+   * @id TEST-M5-CANDIDATE-GATE-PRE-APPROVAL-001
+   * @verifies REQ-M5-PARALLEL-010
+   */
+  it('TEST-M5-CANDIDATE-GATE-PRE-APPROVAL-001 accepts required commands before release approval', () => {
+    const workflow = readFileSync(
+      resolve(root, '.github/workflows/candidate-gate.yml'),
+      'utf8',
+    );
+    expect(workflow).toContain('const commandsPassed = failedChecks.length === 0');
+    expect(workflow).not.toContain("const commandsPassed = report.status === 'pass'");
+  });
+
+  /**
    * @id TEST-M5-RELEASE-003-REPOSITORY-IDENTITY-003
    * @verifies REQ-M5-RELEASE-003
    */

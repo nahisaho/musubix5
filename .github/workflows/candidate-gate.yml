@@ -165,7 +165,7 @@ jobs:
           const postTreeMatchesCandidate = treeClean();
           const commandNames = commands.map(({ name }) => name).sort();
           const expectedCommandNames = [...requiredCandidateGateCommands].sort();
-          const commandsPassed = report.status === 'pass'
+          const commandsPassed = failedChecks.length === 0
             && commandNames.join('\n') === expectedCommandNames.join('\n')
             && commands.every(({ status }) => status === 'pass');
           const result = {

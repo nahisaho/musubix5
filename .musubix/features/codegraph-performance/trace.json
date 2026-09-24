@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-24T21:03:05.852Z",
+  "generatedAt": "2026-09-24T21:20:41.107Z",
   "nodes": [
     {
       "id": "CODE-M5-NPM-PUBLISH-WORKFLOW-YAML-001",
@@ -2662,16 +2662,22 @@
       "line": 8
     },
     {
-      "id": "TEST-M5-RELEASE-003-REPOSITORY-IDENTITY-003",
+      "id": "TEST-M5-CANDIDATE-GATE-PRE-APPROVAL-001",
       "kind": "test",
       "path": "tests/repository-identity-workflows.test.ts",
       "line": 24
     },
     {
+      "id": "TEST-M5-RELEASE-003-REPOSITORY-IDENTITY-003",
+      "kind": "test",
+      "path": "tests/repository-identity-workflows.test.ts",
+      "line": 37
+    },
+    {
       "id": "TEST-M5-RELEASE-004-REPOSITORY-IDENTITY-003",
       "kind": "test",
       "path": "tests/repository-identity-workflows.test.ts",
-      "line": 42
+      "line": 55
     },
     {
       "id": "TEST-M5-WORKTREE-REPOSITORY-IDENTITY-002",
@@ -9014,6 +9020,11 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-CANDIDATE-GATE-PRE-APPROVAL-001",
+      "to": "REQ-M5-PARALLEL-010",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-RELEASE-003-REPOSITORY-IDENTITY-003",
       "to": "REQ-M5-RELEASE-003",
       "relation": "verifies"
@@ -9236,7 +9247,7 @@
   ],
   "diagnostics": [],
   "fingerprints": {
-    ".github/workflows/candidate-gate.yml": "ae238d30cab2aa79f68e9897fd17f5a02f86018dacc46308190cd248533439c2",
+    ".github/workflows/candidate-gate.yml": "5ad955d1c23936d026a0aa6fad800903dcf1f9bbf2d0886e5d7163b0303d4c2d",
     ".github/workflows/npm-publish.yml": "85a8744adc46f1d2a5276a60445b6cfdcae8088cd0b0b0f5d28304c9e1315c0f",
     ".github/workflows/release.yml": "6fd8e4e4ec2ffb40819ba231dbfc32b754d05623a123c1818cfd5646db072410",
     ".musubix/decisions/ADR-0002.md": "9f41d752530613cf6cc3ab6798709567e85650e5b97426dfca4147840eb35684",
@@ -9362,7 +9373,7 @@
     "tests/evidence-identity.test.ts": "3467588120ed4b23c73dd5f0aff0be4b3ff83d38867ff18beda6bcceae98a899",
     "tests/evidence-kinds.test.ts": "b1a624757dcaaaf9431a0dfa245e358139d6566b07de2566477a2dd81ae0be65",
     "tests/evidence-supersession.test.ts": "aa73654e0e5bc737b9ed6725b4091648e9b9d7978a4d466a01506612c2d58bc7",
-    "tests/fixtures/parallel-runtime-fixture.ts": "a0c109bb40e29f24c38ccd76a69d13bc9348eaf3293d5b81f9b305c88bc9eeac",
+    "tests/fixtures/parallel-runtime-fixture.ts": "9389a46bc5dcae88d414c71ccda50c00d74662df6db4df7f77990c4cba5bed29",
     "tests/global-setup.ts": "531cd25f855ef1c87176021b389361aee40615bb1aee62d111666fa43f69b856",
     "tests/helpers/journal-order-sentinel.ts": "4202b2775d671925f346eadf6ff8b5a54cfa8134842197f3952eed9842c5b3b1",
     "tests/journal-order.test.ts": "72d385f473d71776d707fb988cce06fd2534975492d7ff3eb22e8d4e9214429a",
@@ -9406,7 +9417,7 @@
     "tests/release-workflow-hardening.test.ts": "379dad4ed04b2080bb1cb19ce94558a20b3a07c2894f1a209e8c92caf9b3d5f3",
     "tests/release-workflow.test.ts": "b04c0a7afbad7d39599b4dc1f51afa673dc99c6c69385d67eb694b26d45ab2a2",
     "tests/repository-identity-generation12.test.ts": "15c05bdb4e79de6ed827b4e5732e3c685f2b9650c4613047d485d7d4194f0fdc",
-    "tests/repository-identity-workflows.test.ts": "f830e7b9d3ce9882bc3cc7a39d6cb19ff1a6c7a539df0e30164aaf631a1d051f",
+    "tests/repository-identity-workflows.test.ts": "65f1c950a76258205177e95ac3a1dc9d54b60011a40259c468acf0963adfcea5",
     "tests/repository-identity.test.ts": "805c2e53cccec5b657c7d58c5b438029f6874f75919ba84b12ae3b538d7df73d",
     "tests/resilient-removal.test.ts": "04abd69134a65e17114930b836e5df7136c03b523bc1ca341f80cfc919b94d16",
     "tests/run-local-workspace.test.ts": "b0071c5905412c1f846d854155fbd37b0f72c08db40a20405be71cbfc2f10561",

@@ -188,6 +188,7 @@ export async function createParallelFixture(options: FixtureOptions = {}): Promi
   git(root, ['config', 'user.name', 'Parallel Fixture']);
   git(root, ['config', 'user.email', 'parallel-fixture@example.invalid']);
   const baseCommit = commitAll(root, 'fixture baseline');
+  const repositoryRoot = git(root, ['rev-parse', '--show-toplevel']);
   await appendJournalRecord(root, {
     stream: 'normal',
     changeId: 'CHANGE-0003',
@@ -197,10 +198,10 @@ export async function createParallelFixture(options: FixtureOptions = {}): Promi
   });
 
   return {
-    root,
+    root: repositoryRoot,
     baseCommit,
     planFile: 'parallel-plan.json',
-    dispose: () => rmSync(root, resilientRemovalOptions),
+    dispose: () => rmSync(repositoryRoot, resilientRemovalOptions),
   };
 }
 

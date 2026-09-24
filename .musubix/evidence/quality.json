@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-24T21:00:09.800Z",
+  "generatedAt": "2026-09-24T21:22:44.207Z",
   "status": "fail",
   "checks": [
     {
@@ -519,8 +519,8 @@
     {
       "name": "workflow",
       "required": true,
-      "status": "fail",
-      "summary": "2 workflow declaration(s) are not fully reconciled with Copilot invocation events.",
+      "status": "pass",
+      "summary": "3 workflow declaration(s) across 3 Skill(s) reconciled with Copilot invocation events.",
       "diagnostics": [
         {
           "code": "WORKFLOW_DECLARATION_SUPERSEDED",
@@ -571,11 +571,6 @@
           "declarationRecordedAt": "2026-09-24T18:43:19.109Z",
           "index": 92,
           "detail": "WDC-945878446308BBC1EBB8B2DE"
-        },
-        {
-          "code": "WORKFLOW_INVOCATION_UNVERIFIED",
-          "severity": "error",
-          "message": "Workflow declarations have not been reconciled with a Copilot session log."
         }
       ]
     },
@@ -583,13 +578,13 @@
       "name": "tdd",
       "required": true,
       "status": "pass",
-      "summary": "497 Red-Green TDD cycle(s) recorded.",
+      "summary": "499 Red-Green TDD cycle(s) recorded.",
       "diagnostics": []
     },
     {
       "name": "change-history",
       "required": true,
-      "status": "fail",
+      "status": "pass",
       "summary": "7 staged change(s) checked for ordered artifact and TDD evidence.",
       "diagnostics": [
         {
@@ -597,18 +592,6 @@
           "severity": "warning",
           "changeId": "CHANGE-0003",
           "message": "CHANGE-0003: recordedAt for green:REQ-M5-LIFECYCLE-005,REQ-M5-PARALLEL-007,REQ-M5-PARALLEL-010,REQ-M5-PARALLEL-011,REQ-M5-PARALLEL-012,REQ-M5-PARALLEL-015,REQ-M5-TDD-003,REQ-M5-WORKTREE-001 (order 1207) is earlier than green:REQ-M5-COMPAT-013,REQ-M5-PARALLEL-001,REQ-M5-PARALLEL-002,REQ-M5-PARALLEL-003,REQ-M5-PARALLEL-004,REQ-M5-PARALLEL-005,REQ-M5-PARALLEL-006,REQ-M5-PARALLEL-007,REQ-M5-PARALLEL-008,REQ-M5-PARALLEL-009,REQ-M5-PARALLEL-010,REQ-M5-PARALLEL-011,REQ-M5-PARALLEL-012,REQ-M5-PARALLEL-013,REQ-M5-PARALLEL-014,REQ-M5-PARALLEL-015,REQ-M5-PARALLEL-016,REQ-M5-TDD-003,REQ-M5-WORKTREE-001 (order 1206)."
-        },
-        {
-          "code": "CHANGE_GENERATION_INCOMPLETE",
-          "severity": "error",
-          "message": "CHANGE-0008:generation 1 has not reached quality."
-        },
-        {
-          "code": "CHANGE_PHASE_MISSING",
-          "severity": "error",
-          "message": "CHANGE-0008 is missing quality.",
-          "changeId": "CHANGE-0008",
-          "detail": "phase:quality"
         }
       ]
     },
@@ -624,7 +607,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 4188,
+      "durationMs": 3373,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.2.0 typecheck\n> tsc --noEmit\n\n",
       "stderr": ""
@@ -634,7 +617,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 4408,
+      "durationMs": 3183,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.2.0 build\n> tsc -p tsconfig.build.json\n\n",
       "stderr": ""
@@ -644,7 +627,7 @@
       "required": true,
       "status": "pass",
       "summary": "npx: completed, exit 0.",
-      "durationMs": 61795,
+      "durationMs": 54070,
       "exitCode": 0,
       "stdout": "JSON report written to /home/nahisaho/GitHub/musubix5/.musubix/evidence/native/test/aggregate.json\n",
       "stderr": ""
@@ -654,7 +637,7 @@
       "required": true,
       "status": "pass",
       "summary": "node: completed, exit 0.",
-      "durationMs": 59644,
+      "durationMs": 48167,
       "exitCode": 0,
       "stdout": "JSON report written to /home/nahisaho/GitHub/musubix5/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-NOCHANGE-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-FALLBACK-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-GIT-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-CACHE-WRITE-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-TRAVERSAL-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-CYCLES-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-GATE-SCAN-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-GATE-ORDER-001.json\n",
       "stderr": ""
@@ -664,9 +647,9 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 5579,
+      "durationMs": 5295,
       "exitCode": 0,
-      "stdout": "\n> musubix5@0.2.0 test:compat\n> vitest run tests/cli-help-contract.test.ts tests/cli-json-error-contract.test.ts tests/compatibility-oracle.test.ts\n\n\n RUN  v3.2.7 /home/nahisaho/GitHub/musubix5\n\n ✓ tests/cli-help-contract.test.ts (1 test) 1165ms\n   ✓ CLI help compatibility > TEST-M5-COMPAT-001 preserves every inventoried help entry  1164ms\n ✓ tests/compatibility-oracle.test.ts (1 test) 44ms\n ✓ tests/cli-json-error-contract.test.ts (2 tests) 1489ms\n   ✓ CLI JSON failure compatibility > TEST-M5-COMPAT-003 preserves the operational-error envelope  369ms\n   ✓ CLI JSON failure compatibility > TEST-M5-APPROVAL-GUIDANCE-001 names the published approval recovery command  1118ms\n\n Test Files  3 passed (3)\n      Tests  4 passed (4)\n   Start at  05:59:50\n   Duration  5.13s (transform 675ms, setup 0ms, collect 68ms, tests 2.70s, environment 0ms, prepare 149ms)\n\n",
+      "stdout": "\n> musubix5@0.2.0 test:compat\n> vitest run tests/cli-help-contract.test.ts tests/cli-json-error-contract.test.ts tests/compatibility-oracle.test.ts\n\n\n RUN  v3.2.7 /home/nahisaho/GitHub/musubix5\n\n ✓ tests/cli-help-contract.test.ts (1 test) 1089ms\n   ✓ CLI help compatibility > TEST-M5-COMPAT-001 preserves every inventoried help entry  1088ms\n ✓ tests/compatibility-oracle.test.ts (1 test) 43ms\n ✓ tests/cli-json-error-contract.test.ts (2 tests) 1361ms\n   ✓ CLI JSON failure compatibility > TEST-M5-COMPAT-003 preserves the operational-error envelope  375ms\n   ✓ CLI JSON failure compatibility > TEST-M5-APPROVAL-GUIDANCE-001 names the published approval recovery command  986ms\n\n Test Files  3 passed (3)\n      Tests  4 passed (4)\n   Start at  06:22:28\n   Duration  4.88s (transform 632ms, setup 0ms, collect 59ms, tests 2.49s, environment 0ms, prepare 135ms)\n\n",
       "stderr": ""
     },
     {
@@ -674,7 +657,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 1102,
+      "durationMs": 1016,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.2.0 pack:check\n> node scripts/check-package.mjs\n\nPackage verified: musubix5-0.2.0.tgz, 200 files, 12 skills.\n",
       "stderr": ""
@@ -684,7 +667,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 4525,
+      "durationMs": 4349,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.2.0 pack:smoke\n> node scripts/smoke-package.mjs\n\nInstalled tarball verified: executable bin, ESM exports, init, status, assets, and hidden skills (0.2.0).\n",
       "stderr": ""
@@ -693,7 +676,7 @@
       "name": "test-identities",
       "required": false,
       "status": "pass",
-      "summary": "212/212 annotated test IDs passed in structured command reports.",
+      "summary": "213/213 annotated test IDs passed in structured command reports.",
       "diagnostics": []
     },
     {
@@ -774,12 +757,12 @@
     "formal.modeledFraction": 0,
     "commands.failures": 0,
     "commands.skipped": 0,
-    "tests.annotatedIds": 212,
-    "tests.executedIds": 212,
-    "tdd.cycles": 497,
+    "tests.annotatedIds": 213,
+    "tests.executedIds": 213,
+    "tdd.cycles": 499,
     "tdd.errors": 0,
     "changes.count": 7,
-    "changes.errors": 2,
+    "changes.errors": 0,
     "changes.complete": 7,
     "changes.completenessErrors": 0,
     "performance.budgets": 1,
@@ -800,27 +783,12 @@
   "mode": "changed",
   "feature": null,
   "changed": [
-    ".musubix/changes/CHANGE-0007.md",
-    ".musubix/changes/CHANGE-0008.md",
-    ".musubix/decisions/ADR-0017.md",
-    ".musubix/evidence/approvals/design.json",
-    ".musubix/evidence/approvals/requirements.json",
+    ".github/workflows/candidate-gate.yml",
     ".musubix/evidence/changes.json",
     ".musubix/evidence/formal.json",
     ".musubix/evidence/model-correspondence.json",
-    ".musubix/evidence/native/test/TEST-M5-APPROVAL-CANDIDATE-TREE-001.json",
-    ".musubix/evidence/native/test/TEST-M5-COMPAT-001.json",
-    ".musubix/evidence/native/test/TEST-M5-COMPAT-003.json",
-    ".musubix/evidence/native/test/TEST-M5-COMPAT-005.json",
-    ".musubix/evidence/native/test/TEST-M5-COMPAT-ORACLE-001.json",
-    ".musubix/evidence/native/test/TEST-M5-EVIDENCE-CURRENT-001.json",
-    ".musubix/evidence/native/test/TEST-M5-EVIDENCE-TRACE-001.json",
-    ".musubix/evidence/native/test/TEST-M5-LIFECYCLE-002.json",
-    ".musubix/evidence/native/test/TEST-M5-PARALLEL-INTEGRATION-PRE-RELEASE-001.json",
+    ".musubix/evidence/native/test/TEST-M5-CANDIDATE-GATE-PRE-APPROVAL-001.json",
     ".musubix/evidence/native/test/TEST-M5-PARALLEL-INTEGRATION-PRE-RELEASE-CONTEXT-001.json",
-    ".musubix/evidence/native/test/TEST-M5-PARALLEL-INTEGRATION-PRE-RELEASE-POLICY-002.json",
-    ".musubix/evidence/native/test/TEST-M5-QUALITY-COMPLETENESS-001.json",
-    ".musubix/evidence/native/test/TEST-M5-RELEASE-001.json",
     ".musubix/evidence/native/test/aggregate.json",
     ".musubix/evidence/order.json",
     ".musubix/evidence/performance.json",
@@ -829,63 +797,33 @@
     ".musubix/evidence/workflow.json",
     ".musubix/features/codegraph-performance/trace.json",
     ".musubix/features/musubix5-clean-foundation/trace.json",
-    ".musubix/features/parallel-agent-development/design.md",
-    ".musubix/features/parallel-agent-development/requirements.md",
     ".musubix/features/parallel-agent-development/trace.json",
     ".musubix/features/release-0-2-0/trace.json",
-    ".musubix/journal/normal/000000000110.json",
-    ".musubix/journal/normal/000000000111.json",
-    ".musubix/journal/normal/000000000112.json",
-    ".musubix/journal/normal/000000000113.json",
-    "packages/analysis/src/parallel-runtime.ts",
-    "tests/parallel-final-findings-generation5.test.ts",
-    "tests/parallel-release-blockers-generation5.test.ts"
+    ".musubix/journal/normal/000000000115.json",
+    "tests/fixtures/parallel-runtime-fixture.ts",
+    "tests/repository-identity-workflows.test.ts"
   ],
   "impacted": [
-    "packages/analysis/src/index.ts",
-    "packages/analysis/src/parallel-runtime.ts",
-    "packages/cli/src/install.ts",
-    "packages/cli/src/main.ts",
-    "tests/bootstrap-cli.test.ts",
-    "tests/candidate-snapshot-lifecycle.test.ts",
-    "tests/cli-help-contract.test.ts",
+    "tests/fixtures/parallel-runtime-fixture.ts",
     "tests/parallel-consumer-policy-generation5.test.ts",
     "tests/parallel-final-findings-generation5.test.ts",
     "tests/parallel-ownership-history-generation5.test.ts",
     "tests/parallel-release-blockers-generation5.test.ts",
-    "tests/parallel-review-regressions.test.ts",
     "tests/parallel-runtime-lifecycle-generation5.test.ts",
     "tests/parallel-scaffold-policy-generation5.test.ts",
-    "tests/release-0-2-0.test.ts",
-    "tests/release-operation-cli-error.test.ts",
-    "tests/trace-namespace.test.ts",
-    "tests/workflow-generation-reconciliation.test.ts"
+    "tests/parallel-skill-contract-generation5.test.ts",
+    "tests/repository-identity-workflows.test.ts"
   ],
   "lastChangeAnalysis": {
     "baseline": "HEAD",
-    "head": "6b46dbf776f557bacb51f9c259b2fee6834106a2",
+    "head": "1362874d8b8c6d6f1c1ae169dafbe6ad98ca47be",
     "changed": [
-      ".musubix/changes/CHANGE-0007.md",
-      ".musubix/changes/CHANGE-0008.md",
-      ".musubix/decisions/ADR-0017.md",
-      ".musubix/evidence/approvals/design.json",
-      ".musubix/evidence/approvals/requirements.json",
+      ".github/workflows/candidate-gate.yml",
       ".musubix/evidence/changes.json",
       ".musubix/evidence/formal.json",
       ".musubix/evidence/model-correspondence.json",
-      ".musubix/evidence/native/test/TEST-M5-APPROVAL-CANDIDATE-TREE-001.json",
-      ".musubix/evidence/native/test/TEST-M5-COMPAT-001.json",
-      ".musubix/evidence/native/test/TEST-M5-COMPAT-003.json",
-      ".musubix/evidence/native/test/TEST-M5-COMPAT-005.json",
-      ".musubix/evidence/native/test/TEST-M5-COMPAT-ORACLE-001.json",
-      ".musubix/evidence/native/test/TEST-M5-EVIDENCE-CURRENT-001.json",
-      ".musubix/evidence/native/test/TEST-M5-EVIDENCE-TRACE-001.json",
-      ".musubix/evidence/native/test/TEST-M5-LIFECYCLE-002.json",
-      ".musubix/evidence/native/test/TEST-M5-PARALLEL-INTEGRATION-PRE-RELEASE-001.json",
+      ".musubix/evidence/native/test/TEST-M5-CANDIDATE-GATE-PRE-APPROVAL-001.json",
       ".musubix/evidence/native/test/TEST-M5-PARALLEL-INTEGRATION-PRE-RELEASE-CONTEXT-001.json",
-      ".musubix/evidence/native/test/TEST-M5-PARALLEL-INTEGRATION-PRE-RELEASE-POLICY-002.json",
-      ".musubix/evidence/native/test/TEST-M5-QUALITY-COMPLETENESS-001.json",
-      ".musubix/evidence/native/test/TEST-M5-RELEASE-001.json",
       ".musubix/evidence/native/test/aggregate.json",
       ".musubix/evidence/order.json",
       ".musubix/evidence/performance.json",
@@ -894,44 +832,29 @@
       ".musubix/evidence/workflow.json",
       ".musubix/features/codegraph-performance/trace.json",
       ".musubix/features/musubix5-clean-foundation/trace.json",
-      ".musubix/features/parallel-agent-development/design.md",
-      ".musubix/features/parallel-agent-development/requirements.md",
       ".musubix/features/parallel-agent-development/trace.json",
       ".musubix/features/release-0-2-0/trace.json",
-      ".musubix/journal/normal/000000000110.json",
-      ".musubix/journal/normal/000000000111.json",
-      ".musubix/journal/normal/000000000112.json",
-      ".musubix/journal/normal/000000000113.json",
-      "packages/analysis/src/parallel-runtime.ts",
-      "tests/parallel-final-findings-generation5.test.ts",
-      "tests/parallel-release-blockers-generation5.test.ts"
+      ".musubix/journal/normal/000000000115.json",
+      "tests/fixtures/parallel-runtime-fixture.ts",
+      "tests/repository-identity-workflows.test.ts"
     ],
     "impacted": [
-      "packages/analysis/src/index.ts",
-      "packages/analysis/src/parallel-runtime.ts",
-      "packages/cli/src/install.ts",
-      "packages/cli/src/main.ts",
-      "tests/bootstrap-cli.test.ts",
-      "tests/candidate-snapshot-lifecycle.test.ts",
-      "tests/cli-help-contract.test.ts",
+      "tests/fixtures/parallel-runtime-fixture.ts",
       "tests/parallel-consumer-policy-generation5.test.ts",
       "tests/parallel-final-findings-generation5.test.ts",
       "tests/parallel-ownership-history-generation5.test.ts",
       "tests/parallel-release-blockers-generation5.test.ts",
-      "tests/parallel-review-regressions.test.ts",
       "tests/parallel-runtime-lifecycle-generation5.test.ts",
       "tests/parallel-scaffold-policy-generation5.test.ts",
-      "tests/release-0-2-0.test.ts",
-      "tests/release-operation-cli-error.test.ts",
-      "tests/trace-namespace.test.ts",
-      "tests/workflow-generation-reconciliation.test.ts"
+      "tests/parallel-skill-contract-generation5.test.ts",
+      "tests/repository-identity-workflows.test.ts"
     ],
-    "generatedAt": "2026-09-24T21:00:09.800Z"
+    "generatedAt": "2026-09-24T21:22:44.207Z"
   },
   "fingerprints": {
     ".gitattributes": "d60f352d0db1404c70afb4bb8b2ca3fd1c610572aa40720e8a0b7baa7885418c",
     ".github/plugin/marketplace.json": "7904e466f476b1ec77e25ad4dc0e7434ac14707dc69edf2437fb73d3809d5e39",
-    ".github/workflows/candidate-gate.yml": "ae238d30cab2aa79f68e9897fd17f5a02f86018dacc46308190cd248533439c2",
+    ".github/workflows/candidate-gate.yml": "5ad955d1c23936d026a0aa6fad800903dcf1f9bbf2d0886e5d7163b0303d4c2d",
     ".github/workflows/npm-publish.yml": "85a8744adc46f1d2a5276a60445b6cfdcae8088cd0b0b0f5d28304c9e1315c0f",
     ".github/workflows/release.yml": "6fd8e4e4ec2ffb40819ba231dbfc32b754d05623a123c1818cfd5646db072410",
     ".gitignore": "ed99a5e21e0874d31191b558aaec4d6a3238db0fba3eb2c67418ece8c85f1c4f",
@@ -1081,6 +1004,8 @@
     ".musubix/journal/normal/000000000111.json": "587c18a4d7ef99432389109c2253ee277118f732e232893c2715fa10ae984da7",
     ".musubix/journal/normal/000000000112.json": "7e7259a4393d29fd04fe924bbe01b274e517617ae98d95a8d36540534e7cab59",
     ".musubix/journal/normal/000000000113.json": "e2247f301439f17eccaa16a70a3a9ee0c49d99ddc4e217a066f285c0b0d2868f",
+    ".musubix/journal/normal/000000000114.json": "72770f955d3e88d00a49f74bf31b7736787cb22ba1594b0d5fe25e636f5e8f87",
+    ".musubix/journal/normal/000000000115.json": "a1d1ecaf8eaaf8f6963d566db3a182c57fd07e15dac8fe4da8a042c9b038261c",
     ".musubix/runs/CHANGE-0002/candidate-gate/35680846245/candidate-gate-macos-node22/candidate-gate-envelope.json": "fc054698e76f6a43dce00cf137bc53046ce3670e592f27c8f23186c22b6c10e3",
     ".musubix/runs/CHANGE-0002/candidate-gate/35680846245/candidate-gate-ubuntu-node20/candidate-gate-envelope.json": "0ce9218320d5ed9bd5f6d02f1ce685e7b72de5c0d988f415eef2bc609a7d9e05",
     ".musubix/runs/CHANGE-0002/candidate-gate/35680846245/candidate-gate-ubuntu-node22/candidate-gate-envelope.json": "7d6ec618b4d4f03c766bcb0a3794b6952c438c401ad35c0990ff2ae3b823a39e",
@@ -1362,7 +1287,7 @@
     "tests/evidence-identity.test.ts": "3467588120ed4b23c73dd5f0aff0be4b3ff83d38867ff18beda6bcceae98a899",
     "tests/evidence-kinds.test.ts": "b1a624757dcaaaf9431a0dfa245e358139d6566b07de2566477a2dd81ae0be65",
     "tests/evidence-supersession.test.ts": "aa73654e0e5bc737b9ed6725b4091648e9b9d7978a4d466a01506612c2d58bc7",
-    "tests/fixtures/parallel-runtime-fixture.ts": "a0c109bb40e29f24c38ccd76a69d13bc9348eaf3293d5b81f9b305c88bc9eeac",
+    "tests/fixtures/parallel-runtime-fixture.ts": "9389a46bc5dcae88d414c71ccda50c00d74662df6db4df7f77990c4cba5bed29",
     "tests/global-setup.ts": "531cd25f855ef1c87176021b389361aee40615bb1aee62d111666fa43f69b856",
     "tests/helpers/journal-order-sentinel.ts": "4202b2775d671925f346eadf6ff8b5a54cfa8134842197f3952eed9842c5b3b1",
     "tests/journal-order.test.ts": "72d385f473d71776d707fb988cce06fd2534975492d7ff3eb22e8d4e9214429a",
@@ -1406,7 +1331,7 @@
     "tests/release-workflow-hardening.test.ts": "379dad4ed04b2080bb1cb19ce94558a20b3a07c2894f1a209e8c92caf9b3d5f3",
     "tests/release-workflow.test.ts": "b04c0a7afbad7d39599b4dc1f51afa673dc99c6c69385d67eb694b26d45ab2a2",
     "tests/repository-identity-generation12.test.ts": "15c05bdb4e79de6ed827b4e5732e3c685f2b9650c4613047d485d7d4194f0fdc",
-    "tests/repository-identity-workflows.test.ts": "f830e7b9d3ce9882bc3cc7a39d6cb19ff1a6c7a539df0e30164aaf631a1d051f",
+    "tests/repository-identity-workflows.test.ts": "65f1c950a76258205177e95ac3a1dc9d54b60011a40259c468acf0963adfcea5",
     "tests/repository-identity.test.ts": "805c2e53cccec5b657c7d58c5b438029f6874f75919ba84b12ae3b538d7df73d",
     "tests/resilient-removal.test.ts": "04abd69134a65e17114930b836e5df7136c03b523bc1ca341f80cfc919b94d16",
     "tests/run-local-workspace.test.ts": "b0071c5905412c1f846d854155fbd37b0f72c08db40a20405be71cbfc2f10561",
