@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "artifactDigest": "8dfae57a210b5aebca37bcea2853221edc89ba58a68435b0bb5adef14f992a9d",
-  "attestationDigest": "a027f78b425ab4bda0e925e31235b883e6d11b10d3e7e736f38a9e13591e6b1c",
+  "artifactDigest": "3037bf62def1d2bc14e8ccf0c2d9cbae057c6a05c61baad7ab3c9535c5b338cf",
+  "attestationDigest": "fc4c34eab56d168cec91295fb0d32c8e6327d9d2a1044c5e2ec06a632067e41c",
   "ci": {
     "provider": "github",
-    "runId": "35887713280"
+    "runId": "35958524977"
   },
   "result": {
-    "candidateCommit": "ce89548b0c01615c0a6355ef15f832b0e8ca9230",
-    "changeId": "CHANGE-0004",
+    "candidateCommit": "0d675d8a8dc1722a1985d9608e7e130b9c9acf94",
+    "changeId": "CHANGE-0005",
     "commands": [
       {
         "digest": "27e7ec5d00ad7b13e37df6189a75fed0a3a6a8200aca47728c2f932d74b81af7",
@@ -29,7 +29,13 @@
         "status": "pass"
       },
       {
-        "digest": "6bb79a194de59a1e202752089e7c2372dfb582180e8d4034eec63dd8712d9b31",
+        "digest": "e0d233a56437d80299290a27d257d9a4deac62076d024ebf0e9fd28708cc2563",
+        "exitCode": 0,
+        "name": "codegraph-tests",
+        "status": "pass"
+      },
+      {
+        "digest": "8133ad121b37036afbf3acb3bdfbde0c6f95f35ca30cdfe529024c3d3d3ca2df",
         "exitCode": 0,
         "name": "compatibility",
         "status": "pass"
@@ -48,9 +54,9 @@
       }
     ],
     "commandsPassed": true,
-    "gateInputFingerprint": "006eb9660be6c6ccc18841dee2bf79b0c6ea7deb8aad7a1adccb00e8d246aa3c",
-    "gateReportDigest": "be8038c51e32cc433cc04180e871c50725ba4c8a1586af5a694649fbf21e2971",
-    "generation": 2,
+    "gateInputFingerprint": "4013cfd7f112b8b1a4af6dca5fd94b07ca80919b7917a87ad6ebc7650777fe30",
+    "gateReportDigest": "e8d951d058f9704eee5d3164e3bb708f7baa9399b8ba69e411d5d9d31ff95925",
+    "generation": 1,
     "job": {
       "nodeMajor": 22,
       "os": "macos"

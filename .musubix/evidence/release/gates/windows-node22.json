@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "artifactDigest": "4c188410bb32d3304d8bb1b3b9c5ed01505793497bed1a745f7500a4f5112829",
-  "attestationDigest": "a60a8e970cea134c4127a66bfca11484f7c0edb41ea3075e838bf58aaff059db",
+  "artifactDigest": "73cb5c3d153baac43d9e1d79acb82894fd37d262fd82091cbf105f942f2b7f8c",
+  "attestationDigest": "a277c95d5fb8ed8cbd0b3360fa9e37e89504ef8bd272d60545c37e99022f2539",
   "ci": {
     "provider": "github",
-    "runId": "35887713280"
+    "runId": "35958524977"
   },
   "result": {
-    "candidateCommit": "ce89548b0c01615c0a6355ef15f832b0e8ca9230",
-    "changeId": "CHANGE-0004",
+    "candidateCommit": "0d675d8a8dc1722a1985d9608e7e130b9c9acf94",
+    "changeId": "CHANGE-0005",
     "commands": [
       {
         "digest": "27e7ec5d00ad7b13e37df6189a75fed0a3a6a8200aca47728c2f932d74b81af7",
@@ -29,7 +29,13 @@
         "status": "pass"
       },
       {
-        "digest": "4c1be50a049649ffbf85f8b7f5acb5be2b0ed805f4334d6e80a445ef032abd59",
+        "digest": "70684e06c0952982500a0ea20f8954ae826ebbae20eaaf2fb628a54804af2f3d",
+        "exitCode": 0,
+        "name": "codegraph-tests",
+        "status": "pass"
+      },
+      {
+        "digest": "d6872b4ad8247e3aeed0ebd186e4e3409281831e242929a495b0771fd3db0b37",
         "exitCode": 0,
         "name": "compatibility",
         "status": "pass"
@@ -48,9 +54,9 @@
       }
     ],
     "commandsPassed": true,
-    "gateInputFingerprint": "006eb9660be6c6ccc18841dee2bf79b0c6ea7deb8aad7a1adccb00e8d246aa3c",
-    "gateReportDigest": "3b1136753b15b72a6d75c0e5cf56d96a5ad3ef4c253a1aabb1a032c4e5e012eb",
-    "generation": 2,
+    "gateInputFingerprint": "4013cfd7f112b8b1a4af6dca5fd94b07ca80919b7917a87ad6ebc7650777fe30",
+    "gateReportDigest": "0092489c4389e06b4010668162fe58cdc68f94d88297587289f87d18c79b183b",
+    "generation": 1,
     "job": {
       "nodeMajor": 22,
       "os": "windows"

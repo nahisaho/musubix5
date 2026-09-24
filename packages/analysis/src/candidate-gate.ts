@@ -27,6 +27,10 @@ export const requiredCandidateGateCommands = [
   'pack-smoke',
 ] as const;
 
+const legacyCandidateGateCommands = requiredCandidateGateCommands.filter(
+  (command) => command !== 'codegraph-tests',
+);
+
 export interface CandidateGateContext {
   repositoryId: string;
   changeId: string;
@@ -233,7 +237,10 @@ function isApprovedJob(value: unknown): value is CandidateGateJobResult['job'] {
   return candidateMatrixJobs.some((job) => job.os === value.os && job.nodeMajor === value.nodeMajor);
 }
 
-function parseCandidateGateResult(value: unknown): CandidateGateJobResult {
+function parseCandidateGateResult(
+  value: unknown,
+  acceptedCommandSets: readonly (readonly string[])[] = [requiredCandidateGateCommands],
+): CandidateGateJobResult {
   if (!isRecord(value)
     || value.schemaVersion !== 1
     || typeof value.repositoryId !== 'string'
@@ -270,7 +277,8 @@ function parseCandidateGateResult(value: unknown): CandidateGateJobResult {
     throw new Error('RELEASE_GATE_EVIDENCE_STALE: candidate gate command evidence is invalid.');
   }
   const commandNames = value.commands.map((command) => String((command as Record<string, unknown>).name)).sort();
-  if (commandNames.join('\n') !== [...requiredCandidateGateCommands].sort().join('\n')) {
+  if (!acceptedCommandSets.some((commands) =>
+    commandNames.join('\n') === [...commands].sort().join('\n'))) {
     throw new Error('RELEASE_GATE_EVIDENCE_STALE: candidate gate command set is incomplete.');
   }
   const commandsPass = value.commands.every((command) =>
@@ -314,6 +322,14 @@ export function validateCandidateGateSet(
           ? 'RELEASE_GATE_CANDIDATE_MISMATCH'
           : 'RELEASE_GATE_EVIDENCE_STALE',
         `Candidate gate ${jobId(record.job)} is bound to another candidate context.`,
+      ));
+      continue;
+    }
+    const commandNames = (record.commands ?? []).map((command) => command.name).sort();
+    if (commandNames.join('\n') !== [...requiredCandidateGateCommands].sort().join('\n')) {
+      diagnostics.push(error(
+        'RELEASE_GATE_EVIDENCE_STALE',
+        `Candidate gate ${jobId(record.job)} does not contain the current required command set.`,
       ));
       continue;
     }
@@ -401,7 +417,10 @@ async function loadPersistedCandidateGates(root: string): Promise<PersistedCandi
     return [{
       order: record.order,
       artifactDigest: payload.artifactDigest,
-      result: parseCandidateGateResult(payload.result),
+      result: parseCandidateGateResult(payload.result, [
+        legacyCandidateGateCommands,
+        requiredCandidateGateCommands,
+      ]),
       attestation: payload.attestation as unknown as EvidenceAttestation,
     }];
   });
