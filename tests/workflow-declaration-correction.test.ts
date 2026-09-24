@@ -9,10 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { digest } from '../packages/analysis/src/files.js';
-import {
-  resolvePortableNpmInvocation,
-  resolveProcessCommand,
-} from '../packages/analysis/src/process.js';
+import { resolveProcessCommand } from '../packages/analysis/src/process.js';
 import {
   validateLoadedWorkflow,
   type WorkflowEvent,
@@ -205,12 +202,6 @@ describe('workflow declaration correction', () => {
     }));
     const repositoryRoot = fileURLToPath(new URL('..', import.meta.url));
     expect(resolveProcessCommand('NPM', 'win32')).toBe('npm.cmd');
-    const npm = resolvePortableNpmInvocation(['run', 'build'], 'Windows');
-    expect(npm.command).toBe(process.execPath);
-    execFileSync(npm.command, npm.args, {
-      cwd: repositoryRoot,
-      stdio: 'pipe',
-    });
     const result = spawnSync(process.execPath, [
       resolve(repositoryRoot, 'dist/packages/cli/src/main.js'),
       'workflow',

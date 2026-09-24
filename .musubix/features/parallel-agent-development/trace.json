@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-24T16:43:01.541Z",
+  "generatedAt": "2026-09-24T17:10:33.332Z",
   "nodes": [
     {
       "id": "CODE-M5-NPM-PUBLISH-WORKFLOW-YAML-001",
@@ -1282,6 +1282,12 @@
       "line": 25
     },
     {
+      "id": "CODE-M5-RELEASE-BUILD-ISOLATION-001",
+      "kind": "code",
+      "path": "packages/analysis/src/process.ts",
+      "line": 79
+    },
+    {
       "id": "CODE-M5-QUALITY-001",
       "kind": "code",
       "path": "packages/analysis/src/quality-policy.ts",
@@ -1723,91 +1729,91 @@
       "id": "TEST-M5-WORKTREE-SNAPSHOT-MANIFEST-001",
       "kind": "test",
       "path": "tests/candidate-snapshot-lifecycle.test.ts",
-      "line": 68
+      "line": 70
     },
     {
       "id": "TEST-M5-WORKTREE-SNAPSHOT-CREATE-001",
       "kind": "test",
       "path": "tests/candidate-snapshot-lifecycle.test.ts",
-      "line": 97
+      "line": 99
     },
     {
       "id": "TEST-M5-WORKTREE-SNAPSHOT-CLI-001",
       "kind": "test",
       "path": "tests/candidate-snapshot-lifecycle.test.ts",
-      "line": 144
+      "line": 146
     },
     {
       "id": "TEST-M5-WORKTREE-SNAPSHOT-GUIDANCE-001",
       "kind": "test",
       "path": "tests/candidate-snapshot-lifecycle.test.ts",
-      "line": 172
+      "line": 174
     },
     {
       "id": "TEST-M5-WORKTREE-SNAPSHOT-READ-001",
       "kind": "test",
       "path": "tests/candidate-snapshot-lifecycle.test.ts",
-      "line": 186
+      "line": 188
     },
     {
       "id": "TEST-M5-WORKTREE-SNAPSHOT-LIST-CLI-001",
       "kind": "test",
       "path": "tests/candidate-snapshot-lifecycle.test.ts",
-      "line": 243
+      "line": 245
     },
     {
       "id": "TEST-M5-WORKTREE-SNAPSHOT-DELETE-001",
       "kind": "test",
       "path": "tests/candidate-snapshot-lifecycle.test.ts",
-      "line": 297
+      "line": 299
     },
     {
       "id": "TEST-M5-COMPAT-OBJECT-ID-WIDTH-001",
       "kind": "test",
       "path": "tests/candidate-snapshot-lifecycle.test.ts",
-      "line": 358
+      "line": 360
     },
     {
       "id": "TEST-M5-LIFECYCLE-SNAPSHOT-MAINTENANCE-001",
       "kind": "test",
       "path": "tests/candidate-snapshot-lifecycle.test.ts",
-      "line": 390
+      "line": 392
     },
     {
       "id": "TEST-M5-WORKTREE-SNAPSHOT-PROJECTION-001",
       "kind": "test",
       "path": "tests/candidate-snapshot-lifecycle.test.ts",
-      "line": 428
+      "line": 430
     },
     {
       "id": "TEST-M5-RELEASE-DELETED-SNAPSHOT-001",
       "kind": "test",
       "path": "tests/candidate-snapshot-lifecycle.test.ts",
-      "line": 469
+      "line": 471
     },
     {
       "id": "TEST-M5-WORKTREE-SNAPSHOT-JOURNAL-001",
       "kind": "test",
       "path": "tests/candidate-snapshot-lifecycle.test.ts",
-      "line": 499
+      "line": 501
     },
     {
       "id": "TEST-M5-RELEASE-STALE-SNAPSHOT-001",
       "kind": "test",
       "path": "tests/candidate-snapshot-lifecycle.test.ts",
-      "line": 534
+      "line": 536
     },
     {
       "id": "TEST-M5-WORKTREE-SNAPSHOT-PROTECTION-001",
       "kind": "test",
       "path": "tests/candidate-snapshot-lifecycle.test.ts",
-      "line": 559
+      "line": 561
     },
     {
       "id": "TEST-M5-WORKTREE-SNAPSHOT-FINGERPRINT-001",
       "kind": "test",
       "path": "tests/candidate-snapshot-lifecycle.test.ts",
-      "line": 591
+      "line": 593
     },
     {
       "id": "TEST-M5-CANDIDATE-SNAPSHOT-REPOSITORY-001",
@@ -1903,13 +1909,13 @@
       "id": "TEST-M5-COMPAT-003",
       "kind": "test",
       "path": "tests/cli-json-error-contract.test.ts",
-      "line": 59
+      "line": 57
     },
     {
       "id": "TEST-M5-APPROVAL-GUIDANCE-001",
       "kind": "test",
       "path": "tests/cli-json-error-contract.test.ts",
-      "line": 89
+      "line": 84
     },
     {
       "id": "TEST-M5-GRAPH-INCREMENTAL-NOCHANGE-001",
@@ -2005,7 +2011,7 @@
       "id": "TEST-M5-LIFECYCLE-002",
       "kind": "test",
       "path": "tests/journal-order.test.ts",
-      "line": 47
+      "line": 46
     },
     {
       "id": "TEST-M5-LIFECYCLE-003",
@@ -2668,6 +2674,12 @@
       "line": 164
     },
     {
+      "id": "TEST-M5-RELEASE-BUILD-ISOLATION-001",
+      "kind": "test",
+      "path": "tests/test-harness-portability.test.ts",
+      "line": 6
+    },
+    {
       "id": "TEST-M5-EVIDENCE-TRACE-001",
       "kind": "test",
       "path": "tests/trace-namespace.test.ts",
@@ -2689,7 +2701,7 @@
       "id": "TEST-M5-WORKFLOW-DECLARATION-CORRECTION-CLI-ERROR-001",
       "kind": "test",
       "path": "tests/workflow-declaration-correction-cli-errors.test.ts",
-      "line": 134
+      "line": 125
     },
     {
       "id": "TEST-M5-WORKFLOW-DECLARATION-CORRECTION-WAIVER-001",
@@ -2731,19 +2743,19 @@
       "id": "TEST-M5-WORKFLOW-DECLARATION-CORRECTION-001",
       "kind": "test",
       "path": "tests/workflow-declaration-correction.test.ts",
-      "line": 37
+      "line": 34
     },
     {
       "id": "TEST-M5-WORKFLOW-DECLARATION-CORRECTION-CLI-001",
       "kind": "test",
       "path": "tests/workflow-declaration-correction.test.ts",
-      "line": 136
+      "line": 133
     },
     {
       "id": "TEST-M5-WORKFLOW-DECLARATION-CORRECTION-SCHEMA-001",
       "kind": "test",
       "path": "tests/workflow-declaration-correction.test.ts",
-      "line": 271
+      "line": 262
     },
     {
       "id": "TEST-M5-EVIDENCE-006",
@@ -6378,6 +6390,16 @@
       "relation": "implements"
     },
     {
+      "from": "CODE-M5-RELEASE-BUILD-ISOLATION-001",
+      "to": "REQ-M5-RELEASE-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-RELEASE-BUILD-ISOLATION-001",
+      "to": "DES-M5-015",
+      "relation": "implements"
+    },
+    {
       "from": "CODE-M5-QUALITY-001",
       "to": "REQ-M5-WAIVER-001",
       "relation": "implements"
@@ -8958,6 +8980,11 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-RELEASE-BUILD-ISOLATION-001",
+      "to": "REQ-M5-RELEASE-002",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-EVIDENCE-TRACE-001",
       "to": "REQ-M5-EVIDENCE-001",
       "relation": "verifies"
@@ -9151,7 +9178,7 @@
     "packages/analysis/src/parallel.ts": "ac698520f8a60dcae907c4da7ec6bf53d920003a6db3ab8470d04252bdabcdae",
     "packages/analysis/src/performance.ts": "9eb0efa2eebbc95b86cf2c3bd10d59edbea90c936c017d736726e15ba84a698b",
     "packages/analysis/src/planner-output.ts": "c649e484d064c2fc5078bcbc21a08e49746feae179e26de99d92bae17ffe9a5c",
-    "packages/analysis/src/process.ts": "675e76428f4e78e631fe1cbf9cddee298c93576d43fc63a5e977ff044b32d5d4",
+    "packages/analysis/src/process.ts": "b21b96fbc66e663fdf15fcb66f8ea5de880047d8f3a11c290a2a34ec6bd6ea2b",
     "packages/analysis/src/quality-policy.ts": "0ba33ac06b4762e0f398e04fd6c8975c7db6380f20080fc3dc89a701759fcd89",
     "packages/analysis/src/release-manifest.ts": "e0be5c37e24dafab86606f15e48e40704794c9dd5ad19f150fc3386d554e6e39",
     "packages/analysis/src/release-operation-guard.ts": "059fc425c3fb1e2cd8a4e1a3c2318b2acb72d8f4ccc3f8d7ef26afe7d62ca339",
@@ -9195,7 +9222,7 @@
     "tests/candidate-gate-eol.test.ts": "db72054d71bb5bb2cb986c7a5ccb7b31d714b6c863e5901fd7d1fe723e8a1ad4",
     "tests/candidate-gate-trust.test.ts": "2ec0753f4c985fadbcba891d88c161bdd41f507d6172d2668f0aac356ec4c6d0",
     "tests/candidate-gate.test.ts": "cbba3d51e70b9d39806b039914426ceb142016b5ed37a702df29b2fef216a90b",
-    "tests/candidate-snapshot-lifecycle.test.ts": "11c2e4a40c10aed0e2597ec9567839d1f39f4718d3429fda5fe83326ba5fddc5",
+    "tests/candidate-snapshot-lifecycle.test.ts": "1a7edd521f0718b7fd95271c5f0c1e554a80ca49330c88cb2cb8a7b95945e171",
     "tests/candidate-snapshot-repository-binding.test.ts": "17b1d63cacfb98061293bae8c4fb1218cc27f5576b1c67e73d529b511a936b28",
     "tests/change-completeness-current.test.ts": "0c57842880dd7f10cabdae01c8f9f5a5cbdf19f1ce19c3fd0d39deddd35c3ca6",
     "tests/change-current-evidence.test.ts": "c99fdd1c6899a96367bcd99714871aff4fef962d2996b85d19c85d7fd1503bec",
@@ -9206,7 +9233,7 @@
     "tests/change-lease.test.ts": "90f359b766b40a5a70854148cc20115915fb127514c27bd13dcff9f03eaa256b",
     "tests/change-phase-checkpoint-operation.test.ts": "7a7f9611adbf133697e8d4c9485c39b4ec9300834283a998ae6f625027b10612",
     "tests/cli-help-contract.test.ts": "a7f397009f73fd7486325eb793a1ff35956a6cd6a85d19956791387c105ebb9f",
-    "tests/cli-json-error-contract.test.ts": "95b297d67d764f81c594d74ba1991ab28b61b0c980874a45f69dc9c7ab8517d2",
+    "tests/cli-json-error-contract.test.ts": "c3ac40792f18eecd12cc22bc8b68ae24cce68b1d01d3584a39d8d25739ad9f2c",
     "tests/codegraph-incremental-regressions.test.ts": "cb0cb9d9675ec1336966ff448a3994a339a7950ef819e2b71db0e6dd8e14fbf4",
     "tests/codegraph-performance.test.ts": "b6481920fb15944ddf64a29b4cf421fee1115abfa94497c9296d5f0aae05ae6d",
     "tests/compatibility-oracle.test.ts": "246a1fb3090c0377d72feece8e578b9608bbb86cf75cdca3ae316956860adc90",
@@ -9216,8 +9243,9 @@
     "tests/evidence-kinds.test.ts": "b1a624757dcaaaf9431a0dfa245e358139d6566b07de2566477a2dd81ae0be65",
     "tests/evidence-supersession.test.ts": "aa73654e0e5bc737b9ed6725b4091648e9b9d7978a4d466a01506612c2d58bc7",
     "tests/fixtures/parallel-runtime-fixture.ts": "e3eebc948e666a306f6ee4bd5cdbf661c6ef992be7cbf968540556a801ac1637",
+    "tests/global-setup.ts": "531cd25f855ef1c87176021b389361aee40615bb1aee62d111666fa43f69b856",
     "tests/helpers/journal-order-sentinel.ts": "4202b2775d671925f346eadf6ff8b5a54cfa8134842197f3952eed9842c5b3b1",
-    "tests/journal-order.test.ts": "57aea384a29f75a18367c088662dd856aa2bbebf5cd0b9fd45416988e49601a0",
+    "tests/journal-order.test.ts": "72d385f473d71776d707fb988cce06fd2534975492d7ff3eb22e8d4e9214429a",
     "tests/lifecycle-resume.test.ts": "05f7a3f30acf4b0b628e1c068d17c28cb248508fa2e9523c51e6455c4bd2e6ed",
     "tests/lifecycle-state-machine.test.ts": "5cbae549161c93fb5943575d9e0ba974d716f53ca2600ef8e6e07586622a0d33",
     "tests/native-approval.test.ts": "d0525f378f3fb655b6716c0847ddfba37f6e1dc3d3fd42e5d97ce0c1e218a9f0",
@@ -9264,14 +9292,15 @@
     "tests/tdd-batch-recording.test.ts": "e254e04461665d42877b747d038bf977f680a0c72255a03b5dfc471cca2f8ef8",
     "tests/tdd-cycle-resolver.test.ts": "e97858964eb27b9b5aa5108ae0b40cafe8ba5053cbc38aceec3a2069458ac885",
     "tests/tdd-generation-scope.test.ts": "92f90da7113769a0d900bd24665a5665d08e61e39fc7c3df7913629ad634e35a",
+    "tests/test-harness-portability.test.ts": "644252711db925d5a45ceed8b5f0bb9b0108ec726aebb80d1a833493df585ee3",
     "tests/trace-namespace.test.ts": "ace3b8880a0dbc1b143108986c63f292a7e19acff1a72055cbb5015204488a6c",
     "tests/workflow-change-owner.test.ts": "3bdbbc5fb5b497b120ce17aa938faab01b6b4fef48027d387982178141471f59",
-    "tests/workflow-declaration-correction-cli-errors.test.ts": "2e2a2da3eba02ec20cad9200987b4f43db959cd38711e3a8a327788978dac019",
+    "tests/workflow-declaration-correction-cli-errors.test.ts": "9fbd001466f6057fb842f5c82aa11862828cdfe067f66c4407595985cdad43e2",
     "tests/workflow-declaration-correction-regressions.test.ts": "4a5f75009254776b002102e4878d8767f31471974e75c4a0fa7905f6d9d75df6",
-    "tests/workflow-declaration-correction.test.ts": "ee71bf770c3b6e6656e20776a7ab775ae795aee1957d311335fe918d8da4b628",
+    "tests/workflow-declaration-correction.test.ts": "6a40db2e1cbbcde283f851dba4951eba2aa11dbbd061f3e4cd89e63756804336",
     "tests/workflow-generation-reconciliation.test.ts": "897e85fd1cdb51b09310b14ba038e6b46cd0ef9230239de0d23f95fd17e30152",
     "tests/workspace-isolation.test.ts": "2b2fb7376f1834916cc56b244fea870efa6ae40b78164a5c35b5ccb3db9ab923",
     "tests/workspace-ownership.test.ts": "29a82dab0567a09e186c127b8f25fe33a73d7a4943154acb01566382ac66744c",
-    "vitest.config.ts": "2338c9c1fc7792c2c04fb596d182829c7259f1c60617f86751169d35c914ae54"
+    "vitest.config.ts": "c7b4d8ed3eb6a3f2fcd0ca544deb12635a7556fe8af545004970ca717fbf9117"
   }
 }

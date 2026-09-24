@@ -106,6 +106,9 @@ for creating, inspecting, diagnosing, or retiring snapshots.
   bundled `sdd-quality` Skill so installed workflows commit all candidate
   inputs before snapshot creation, then commit the generated snapshot journal
   evidence without amending the candidate before release approval.
+- Make the closed candidate matrix test harness deterministic across operating
+  systems by building `dist` once before Vitest workers start and by recording
+  the executable fixture mode explicitly in the Git index.
 - Add Red/Green tests for create/list/show/delete help and JSON, approval and
   quality preconditions, candidate-tree manifest identity, idempotent recreate,
   post-delete same-commit recreation, second-candidate rejection, legacy
@@ -187,3 +190,6 @@ for creating, inspecting, diagnosing, or retiring snapshots.
   verified commit-inputs, snapshot, commit-journal-without-amend, candidate
   gate, inspection, and release-approval ordering and document explicit
   deletion/recovery before replacing a candidate.
+- The closed candidate matrix preserves the CLI JSON error envelope without
+  concurrent `tsc` writes and produces the same canonical executable-file
+  manifest on Windows, macOS, and Linux.

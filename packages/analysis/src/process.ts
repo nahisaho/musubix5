@@ -76,6 +76,18 @@ export function resolveNpmInvocationForEnvironment(
   return resolvePortableNpmInvocation(args, matrixOs, platform, nodeExecutable);
 }
 
+/** @id CODE-M5-RELEASE-BUILD-ISOLATION-001
+ * @implements REQ-M5-RELEASE-002
+ * @design DES-M5-015
+ */
+export function resolveBuildInvocationForEnvironment(
+  matrixOs: string | undefined = process.env.MATRIX_OS,
+  platform: NodeJS.Platform = process.platform,
+  nodeExecutable: string = process.execPath,
+): { command: string; args: string[] } {
+  return resolveNpmInvocationForEnvironment(['run', 'build'], matrixOs, platform, nodeExecutable);
+}
+
 export const runProcess: Runner = async (command, args, options) => new Promise((resolve) => {
   const start = performance.now();
   const invocation = /^npm$/i.test(command)

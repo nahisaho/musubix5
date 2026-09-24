@@ -22,6 +22,7 @@ function initializeRepository(): string {
   const root = mkdtempSync(join(tmpdir(), 'musubix5-candidate-snapshot-'));
   temporaryDirectories.push(root);
   git(root, 'init', '--quiet', '--initial-branch', 'change/CHANGE-0007');
+  git(root, 'config', 'core.filemode', 'false');
   git(root, 'config', 'user.email', 'test@example.com');
   git(root, 'config', 'user.name', 'Test User');
   git(root, 'remote', 'add', 'origin', 'https://github.com/example/musubix5.git');
@@ -30,6 +31,7 @@ function initializeRepository(): string {
   writeFileSync(join(root, 'nested', 'run.sh'), '#!/bin/sh\nexit 0\n');
   chmodSync(join(root, 'nested', 'run.sh'), 0o755);
   git(root, 'add', '.');
+  git(root, 'update-index', '--chmod=+x', 'nested/run.sh');
   git(root, 'commit', '--quiet', '-m', 'candidate');
   return root;
 }

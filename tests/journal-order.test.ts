@@ -5,7 +5,6 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { resolvePortableNpmInvocation } from '../packages/analysis/src/process.js';
 import { appendTimestampSentinel } from './helpers/journal-order-sentinel.js';
 
 const temporaryDirectories: string[] = [];
@@ -53,9 +52,6 @@ describe('repository-wide journal order', () => {
     temporaryDirectories.push(root);
     execFileSync('git', ['init', '--quiet', root]);
     const repositoryRoot = fileURLToPath(new URL('..', import.meta.url));
-    const build = resolvePortableNpmInvocation(['run', 'build']);
-    execFileSync(build.command, build.args, { cwd: repositoryRoot, stdio: 'pipe' });
-
     await Promise.all(Array.from({ length: 8 }, (_, index) =>
       appendInProcess(repositoryRoot, root, index)));
     await appendTimestampSentinel(repositoryRoot, root);

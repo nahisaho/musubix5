@@ -5,7 +5,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { defaultConfig } from '../packages/analysis/src/config.js';
 import { digest } from '../packages/analysis/src/files.js';
@@ -115,19 +115,10 @@ function run(root: string, code: string, recordedAt: string) {
   ], { encoding: 'utf8' });
 }
 
-beforeAll(() => {
-  const npm = resolvePortableNpmInvocation(['run', 'build'], 'Windows');
-  execFileSync(npm.command, npm.args, { cwd: repositoryRoot, stdio: 'pipe' });
-});
-
 afterEach(() => {
   for (const directory of temporaryDirectories.splice(0)) {
     rmSync(directory, { recursive: true, force: true });
   }
-});
-
-afterAll(() => {
-  temporaryDirectories.splice(0);
 });
 
 describe('workflow declaration correction CLI errors', () => {

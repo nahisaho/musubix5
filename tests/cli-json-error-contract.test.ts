@@ -1,4 +1,4 @@
-import { execFileSync, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import {
   appendFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync,
 } from 'node:fs';
@@ -6,8 +6,6 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
-
-import { resolveNpmInvocationForEnvironment } from '../packages/analysis/src/process.js';
 
 const temporaryDirectories: string[] = [];
 
@@ -64,9 +62,6 @@ describe('CLI JSON failure compatibility', () => {
     const root = mkdtempSync(join(tmpdir(), 'musubix5-json-error-'));
     temporaryDirectories.push(root);
     const repositoryRoot = fileURLToPath(new URL('..', import.meta.url));
-    const build = resolveNpmInvocationForEnvironment(['run', 'build']);
-    execFileSync(build.command, build.args, { cwd: repositoryRoot, stdio: 'pipe' });
-
     const result = spawnSync(process.execPath, [
       resolve(repositoryRoot, 'dist/packages/cli/src/main.js'),
       'config',
@@ -92,9 +87,6 @@ describe('CLI JSON failure compatibility', () => {
    */
   it('TEST-M5-APPROVAL-GUIDANCE-001 names the published approval recovery command', async () => {
     const repositoryRoot = fileURLToPath(new URL('..', import.meta.url));
-    const build = resolveNpmInvocationForEnvironment(['run', 'build']);
-    execFileSync(build.command, build.args, { cwd: repositoryRoot, stdio: 'pipe' });
-
     const staleRoot = approvalWorkspace('musubix5-stale-approval-guidance-');
     const { approvalManifest, requireApproval } =
       await import('../packages/analysis/src/approval.js');
