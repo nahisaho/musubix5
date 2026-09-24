@@ -77,9 +77,14 @@ async function requirementImplementationFingerprints(
   return result;
 }
 
-async function currentFingerprints(root: string, changeId: string, requirementIds: string[]): Promise<ChangeFingerprints> {
+async function currentFingerprints(
+  root: string,
+  changeId: string,
+  requirementIds: string[],
+  persistTrace = true,
+): Promise<ChangeFingerprints> {
   const paths = await files(root);
-  const trace = await buildTrace(root);
+  const trace = await buildTrace(root, persistTrace);
   const codePaths = trace.nodes.filter((node) => node.kind === 'code').map((node) => node.path);
   const testPaths = trace.nodes.filter((node) => node.kind === 'test').map((node) => node.path);
   const tddPath = '.musubix/evidence/tdd.json';
@@ -100,7 +105,7 @@ export async function currentChangeFingerprints(
   changeId: string,
   requirementIds: string[],
 ): Promise<ChangeFingerprints> {
-  return currentFingerprints(root, changeId, requirementIds);
+  return currentFingerprints(root, changeId, requirementIds, false);
 }
 
 const tddBatchPhases = ['red', 'implementation', 'green'] as const;

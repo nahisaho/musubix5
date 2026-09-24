@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-24T16:40:50.378Z",
+  "generatedAt": "2026-09-24T16:43:01.541Z",
   "nodes": [
     {
       "id": "CODE-M5-NPM-PUBLISH-WORKFLOW-YAML-001",
@@ -1075,13 +1075,13 @@
       "id": "CODE-M5-CHANGE-CURRENT-001",
       "kind": "code",
       "path": "packages/analysis/src/change.ts",
-      "line": 892
+      "line": 897
     },
     {
       "id": "CODE-M5-QUALITY-COMPLETENESS-001",
       "kind": "code",
       "path": "packages/analysis/src/change.ts",
-      "line": 1174
+      "line": 1179
     },
     {
       "id": "CODE-M5-COMPAT-ORACLE-001",
@@ -1802,6 +1802,12 @@
       "kind": "test",
       "path": "tests/candidate-snapshot-lifecycle.test.ts",
       "line": 559
+    },
+    {
+      "id": "TEST-M5-WORKTREE-SNAPSHOT-FINGERPRINT-001",
+      "kind": "test",
+      "path": "tests/candidate-snapshot-lifecycle.test.ts",
+      "line": 591
     },
     {
       "id": "TEST-M5-CANDIDATE-SNAPSHOT-REPOSITORY-001",
@@ -7372,6 +7378,11 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-WORKTREE-SNAPSHOT-FINGERPRINT-001",
+      "to": "REQ-M5-WORKTREE-005",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-CANDIDATE-SNAPSHOT-REPOSITORY-001",
       "to": "REQ-M5-APPROVAL-007",
       "relation": "verifies"
@@ -9119,7 +9130,7 @@
     "packages/analysis/src/change-evidence.ts": "4af7011893b055e014a1af8d301935a0ca3791cacc1a45f982a3068e457d1d12",
     "packages/analysis/src/change-generation.ts": "f97f773b39665aee35b81556c54beed0b2bb5c11fa770456753c0fc93bb5d3e2",
     "packages/analysis/src/change-waiver.ts": "1b880c29a16080445f324265e0da067dd8537e64cb42f360369fd2a1eda0f9c3",
-    "packages/analysis/src/change.ts": "4b83089f6d86095de444e174a77c95c8c853cba23c65453bd69fbaf93f8be43a",
+    "packages/analysis/src/change.ts": "270eb90eebe1c3b57e1dac1b88ff10feabdb0194ac29196be6c40adf73238c9d",
     "packages/analysis/src/compatibility-oracle.ts": "83aac1ddcf29d0ff7d76a8e05c9be9dfa1911f94c1ec960145578c43f2b32d98",
     "packages/analysis/src/config.ts": "b75dacf7bce0e58eaa465a32a6181e75d3492a1dafb4cbb5e09cc9220f9ffcba",
     "packages/analysis/src/evidence-registry.ts": "41bdd3f05c91734baf22cccf5289a9906eae30bfd1356236bc98c96be47da660",
@@ -9184,7 +9195,7 @@
     "tests/candidate-gate-eol.test.ts": "db72054d71bb5bb2cb986c7a5ccb7b31d714b6c863e5901fd7d1fe723e8a1ad4",
     "tests/candidate-gate-trust.test.ts": "2ec0753f4c985fadbcba891d88c161bdd41f507d6172d2668f0aac356ec4c6d0",
     "tests/candidate-gate.test.ts": "cbba3d51e70b9d39806b039914426ceb142016b5ed37a702df29b2fef216a90b",
-    "tests/candidate-snapshot-lifecycle.test.ts": "c7ed4e10a61195d7b8d6b157b26c793ff4694e92454003acce4e67974d6d193e",
+    "tests/candidate-snapshot-lifecycle.test.ts": "11c2e4a40c10aed0e2597ec9567839d1f39f4718d3429fda5fe83326ba5fddc5",
     "tests/candidate-snapshot-repository-binding.test.ts": "17b1d63cacfb98061293bae8c4fb1218cc27f5576b1c67e73d529b511a936b28",
     "tests/change-completeness-current.test.ts": "0c57842880dd7f10cabdae01c8f9f5a5cbdf19f1ce19c3fd0d39deddd35c3ca6",
     "tests/change-current-evidence.test.ts": "c99fdd1c6899a96367bcd99714871aff4fef962d2996b85d19c85d7fd1503bec",

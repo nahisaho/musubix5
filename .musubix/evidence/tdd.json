@@ -21056,6 +21056,51 @@
         "diagnostics": [],
         "order": 1781
       }
+    },
+    {
+      "cycleId": "b3b00a80-0d7c-430b-9e0b-6a51f8574bc2",
+      "changeId": "CHANGE-0007",
+      "generation": 4,
+      "requirementId": "REQ-M5-WORKTREE-005",
+      "testId": "TEST-M5-WORKTREE-SNAPSHOT-FINGERPRINT-001",
+      "testPath": "tests/candidate-snapshot-lifecycle.test.ts",
+      "commandName": "test",
+      "red": {
+        "phase": "red",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "failed",
+        "reportSha256": "5df9a1cf5153d5628c640e251b0b728ce1a827b6cff3f22193afa1ef57df72a8",
+        "commandSha256": "568bf16ab12fb4f2430529d7c133a53a5738a0801b622fde95e5b92d93cabb6d",
+        "outputSha256": "ca4b1573bdaef5c3a9d11809d20be949a32a8c9e4d48ae1fc194257f6f302d64",
+        "exitCode": 1,
+        "durationMs": 1496,
+        "testFingerprint": "0e52e27ae742ba33bb7baee158f32f4a2901b962e73c8b2ea2be78d49cfc3a7a",
+        "sourceFingerprint": "a6edad7260bedec36d0be3a5e50bb862cef6a3c3a855cd5459622c0d462a2580",
+        "executionId": "ad965901-965f-486f-ba5e-564a150ea813",
+        "recordedAt": "2026-09-24T16:42:09.394Z",
+        "diagnostics": [],
+        "order": 1785
+      },
+      "green": {
+        "phase": "green",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "passed",
+        "reportSha256": "4615bd1993d2ba02b26fb05dda240a9653691627b5f564b14884f07c9f8818c3",
+        "commandSha256": "568bf16ab12fb4f2430529d7c133a53a5738a0801b622fde95e5b92d93cabb6d",
+        "outputSha256": "ca4b1573bdaef5c3a9d11809d20be949a32a8c9e4d48ae1fc194257f6f302d64",
+        "exitCode": 0,
+        "durationMs": 1528,
+        "testFingerprint": "0e52e27ae742ba33bb7baee158f32f4a2901b962e73c8b2ea2be78d49cfc3a7a",
+        "sourceFingerprint": "b56e04f92b4c613c4884348a1e0230036bbccacf94d22ed520393978d76273fa",
+        "executionId": "fc5ca8dd-5102-4413-87b4-a5568736477f",
+        "recordedAt": "2026-09-24T16:42:32.753Z",
+        "diagnostics": [],
+        "order": 1788
+      }
     }
   ],
   "chain": [
@@ -33604,6 +33649,34 @@
       "phaseEvidenceSha256": "24f40bfde94ef910dd601aadb4561c588fe50d332891e073c37d5b056e7fc19f",
       "previousSha256": "d14aecae0324068644ad014ee7a0cc640026e6ad06c8b4ef7746885eebd547c7",
       "recordSha256": "bfedf2219915023f63562da9a6614c152597dbb4028d290d4cbc88b8169ae59c"
+    },
+    {
+      "sequence": 943,
+      "cycleId": "b3b00a80-0d7c-430b-9e0b-6a51f8574bc2",
+      "changeId": "CHANGE-0007",
+      "generation": 4,
+      "requirementId": "REQ-M5-WORKTREE-005",
+      "testId": "TEST-M5-WORKTREE-SNAPSHOT-FINGERPRINT-001",
+      "testPath": "tests/candidate-snapshot-lifecycle.test.ts",
+      "commandName": "test",
+      "phase": "red",
+      "phaseEvidenceSha256": "c00c8ef119fd2ba794f2de6f2b181d466dcbf3b1ca7f8dcc0a5b384e5d418638",
+      "previousSha256": "bfedf2219915023f63562da9a6614c152597dbb4028d290d4cbc88b8169ae59c",
+      "recordSha256": "c3fc6df8db2837468b0530b8300efef0f5692f2a2f31f5c88a3857532a64befe"
+    },
+    {
+      "sequence": 944,
+      "cycleId": "b3b00a80-0d7c-430b-9e0b-6a51f8574bc2",
+      "changeId": "CHANGE-0007",
+      "generation": 4,
+      "requirementId": "REQ-M5-WORKTREE-005",
+      "testId": "TEST-M5-WORKTREE-SNAPSHOT-FINGERPRINT-001",
+      "testPath": "tests/candidate-snapshot-lifecycle.test.ts",
+      "commandName": "test",
+      "phase": "green",
+      "phaseEvidenceSha256": "1d88f5cc761e463e76c7f62a4868fba71e662166f0a1a30c443d6effed46831c",
+      "previousSha256": "c3fc6df8db2837468b0530b8300efef0f5692f2a2f31f5c88a3857532a64befe",
+      "recordSha256": "e2b398bc8f44728c8f7f9569091714eb75cdb5bec1f07a3ed50fa7c764616b35"
     }
   ]
 }

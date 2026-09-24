@@ -587,4 +587,42 @@ describe('candidate snapshot lifecycle', () => {
       conflicting: false,
     })).toBe(true);
   });
+
+  /**
+   * @id TEST-M5-WORKTREE-SNAPSHOT-FINGERPRINT-001
+   * @verifies REQ-M5-WORKTREE-005
+   */
+  it('TEST-M5-WORKTREE-SNAPSHOT-FINGERPRINT-001 evaluates quality fingerprints without writing trace files', async () => {
+    const root = initializeRepository();
+    mkdirSync(join(root, '.musubix', 'features', 'demo'), { recursive: true });
+    writeFileSync(join(root, '.musubix', 'features', 'demo', 'requirements.md'), [
+      '# Requirements',
+      '',
+      '## REQ-DEMO-001: Demo',
+      'Priority: must',
+      'Type: functional',
+      'Pattern: ubiquitous',
+      'Statement: The system shall remain deterministic.',
+      'Acceptance: The output is deterministic.',
+      '',
+    ].join('\n'));
+    writeFileSync(join(root, '.musubix', 'features', 'demo', 'design.md'), [
+      '# Design',
+      '',
+      '## DES-DEMO-001: Demo',
+      'Requirements: REQ-DEMO-001',
+      'Responsibilities: Preserve deterministic behavior.',
+      'Interfaces: `demo()`',
+      'Constraints: No mutable global state.',
+      '',
+    ].join('\n'));
+    const tracePath = join(root, '.musubix', 'features', 'demo', 'trace.json');
+    writeFileSync(tracePath, 'sentinel\n');
+    const { currentChangeFingerprints } =
+      await import('../packages/analysis/src/change.js');
+
+    await currentChangeFingerprints(root, 'CHANGE-0007', ['REQ-DEMO-001']);
+
+    expect(readFileSync(tracePath, 'utf8')).toBe('sentinel\n');
+  });
 });
