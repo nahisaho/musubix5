@@ -36,9 +36,8 @@ for (const testId of selected) {
   await mkdir(dirname(operationsPath), { recursive: true });
   await rm(operationsPath, { force: true });
   await rm(vitestReportPath, { force: true });
-  const executable = process.platform === 'win32' ? 'npx.cmd' : 'npx';
-  const result = spawnSync(executable, [
-    'vitest',
+  const result = spawnSync(process.execPath, [
+    resolve('node_modules/vitest/vitest.mjs'),
     'run',
     'tests/codegraph-performance.test.ts',
     'tests/codegraph-incremental-regressions.test.ts',
