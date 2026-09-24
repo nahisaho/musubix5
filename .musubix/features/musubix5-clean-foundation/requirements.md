@@ -200,6 +200,13 @@ Pattern: event-driven
 Statement: When musubix3 records a bootstrap requirements or design approval for CHANGE-0002, the system shall recognize it only as authorization to enter the next development phase.
 Acceptance: Bootstrap approval binds the pinned musubix3 producer, repository identity, exact manifest, embedded configuration projection, stage, and approver, and musubix5 re-records approval for the same normative content set and projection before release readiness can become true.
 
+## REQ-M5-APPROVAL-010: Name the current approval recovery command
+Priority: must
+Type: functional
+Pattern: unwanted-behavior
+Statement: If an approval precondition is not approved and recovery guidance is emitted, then the system shall direct the user to the published `musubix5 approval validate` command.
+Acceptance: A stale requirements approval reached through `musubix5 design validate <design.md> --root <workspace> --json` exits with code 2 and produces a `CLI_ERROR` JSON envelope on stdout whose `error.message` contains the exact literal `musubix5 approval validate` and no `musubix3` substring; the shared approval precondition uses the same command literal for every non-approved approval status without changing status classification or exit semantics.
+
 ## REQ-M5-BUDGET-001: Reserve Reviewer budget first
 Priority: must
 Type: functional

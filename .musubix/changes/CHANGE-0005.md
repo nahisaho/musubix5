@@ -2,7 +2,7 @@
 schemaVersion: 1
 id: CHANGE-0005
 summary: Improve CodeGraph incremental indexing and traversal performance
-status: active
+status: completed
 ---
 # CHANGE-0005: codegraph-performance
 

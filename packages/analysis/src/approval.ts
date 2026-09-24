@@ -449,12 +449,16 @@ export function requireValidateDomainOption(config: ApprovalConfig, domain: stri
   }
 }
 
+/** @id CODE-M5-APPROVAL-GUIDANCE-001
+ * @implements REQ-M5-APPROVAL-010
+ * @design DES-M5-002 DES-M5-006
+ */
 export async function requireApproval(root: string, stage: ApprovalStage, config: ApprovalConfig, domain?: ResolvedDomain): Promise<void> {
   if (config.mode !== 'required') return;
   const result = await validateApprovalStage(root, stage, config, domain);
   if (result.status !== 'approved') {
     const scope = domain ? ` for domain "${domain.name}"` : '';
-    throw new Error(`${stage} approval${scope} is ${result.status}; record explicit current approval before continuing. Run \`musubix3 approval validate\` for a full per-stage status.`);
+    throw new Error(`${stage} approval${scope} is ${result.status}; record explicit current approval before continuing. Run \`musubix5 approval validate\` for a full per-stage status.`);
   }
 }
 
