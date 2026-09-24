@@ -1407,84 +1407,45 @@
       "phase": "complete",
       "status": "completed",
       "recordedAt": "2026-09-24T18:43:20.410Z"
+    },
+    {
+      "skill": "sdd-design",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0008",
+      "generation": 1,
+      "requirementIds": [
+        "REQ-M5-PARALLEL-010"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-09-24T19:51:11.421Z"
+    },
+    {
+      "skill": "sdd-implementation",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0008",
+      "generation": 1,
+      "requirementIds": [
+        "REQ-M5-PARALLEL-010"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-09-24T20:55:13.960Z"
+    },
+    {
+      "skill": "sdd-quality",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0008",
+      "generation": 1,
+      "requirementIds": [
+        "REQ-M5-PARALLEL-010"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-09-24T21:03:11.110Z"
     }
-  ],
-  "verification": {
-    "mode": "compatible",
-    "sourceSha256": "a4faded25bf4335479a3c3839a79281fd9f77a659bf283015aa6c848331af965",
-    "eventsSha256": "3332d3a389e42029cbedd63c7a2c3ab900b3845b50ec0d45c55728dc69dffc81",
-    "verifiedAt": "2026-09-24T18:46:04.485Z",
-    "invocations": [
-      {
-        "skill": "sdd-change",
-        "toolCallId": "call_NnRh509zpxlZR1KX6fZa8mqP",
-        "invokedAt": "2026-09-24T03:53:32.023Z",
-        "completedAt": "2026-09-24T03:53:32.047Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-change",
-        "toolCallId": "call_RVoCQGLdec41e8EzZZtC1Bxo",
-        "invokedAt": "2026-09-24T05:40:39.339Z",
-        "completedAt": "2026-09-24T05:40:39.346Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-issue-report",
-        "toolCallId": "call_AHaUFFusXgrjBJdhmlBgR6lG",
-        "invokedAt": "2026-09-24T06:04:09.229Z",
-        "completedAt": "2026-09-24T06:04:09.240Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-change",
-        "toolCallId": "call_jYn6wgflTP4eHe11O0UFxsjQ",
-        "invokedAt": "2026-09-24T06:50:53.318Z",
-        "completedAt": "2026-09-24T06:50:53.333Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-change",
-        "toolCallId": "call_nksORK2fkm93hVK47p4IYXHi",
-        "invokedAt": "2026-09-24T07:06:57.811Z",
-        "completedAt": "2026-09-24T07:06:57.821Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-design",
-        "toolCallId": "call_7SH4W4u1yq3xVkhrfGLkihNh",
-        "invokedAt": "2026-09-24T11:25:24.057Z",
-        "completedAt": "2026-09-24T11:25:24.067Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-design",
-        "toolCallId": "call_w5SrOMIcBsE8yViy08Dskb4A",
-        "invokedAt": "2026-09-24T11:34:49.383Z",
-        "completedAt": "2026-09-24T11:34:49.406Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-issue-report",
-        "toolCallId": "call_rjvoKOa2HJDGCqoV3IwNLU4K",
-        "invokedAt": "2026-09-24T12:05:07.372Z",
-        "completedAt": "2026-09-24T12:05:07.402Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-implementation",
-        "toolCallId": "call_zTdNp02K1qmv1vvMdoTMpXpe",
-        "invokedAt": "2026-09-24T15:22:08.413Z",
-        "completedAt": "2026-09-24T15:22:08.427Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-quality",
-        "toolCallId": "call_iWz1X8WdzYMFHdXoUPMUgKL5",
-        "invokedAt": "2026-09-24T15:51:58.948Z",
-        "completedAt": "2026-09-24T15:51:58.960Z",
-        "status": "completed"
-      }
-    ]
-  }
+  ]
 }

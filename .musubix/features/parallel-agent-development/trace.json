@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-24T18:48:47.438Z",
+  "generatedAt": "2026-09-24T21:03:05.852Z",
   "nodes": [
     {
       "id": "CODE-M5-NPM-PUBLISH-WORKFLOW-YAML-001",
@@ -114,6 +114,12 @@
       "id": "ADR-0016",
       "kind": "adr",
       "path": ".musubix/decisions/ADR-0016.md",
+      "line": 1
+    },
+    {
+      "id": "ADR-0017",
+      "kind": "adr",
+      "path": ".musubix/decisions/ADR-0017.md",
       "line": 1
     },
     {
@@ -1228,28 +1234,46 @@
       "line": 318
     },
     {
+      "id": "CODE-M5-PARALLEL-INTEGRATION-PRE-RELEASE-001",
+      "kind": "code",
+      "path": "packages/analysis/src/parallel-runtime.ts",
+      "line": 796
+    },
+    {
+      "id": "CODE-M5-PARALLEL-INTEGRATION-GATE-POLICY-001",
+      "kind": "code",
+      "path": "packages/analysis/src/parallel-runtime.ts",
+      "line": 927
+    },
+    {
+      "id": "CODE-M5-PARALLEL-INTEGRATION-STATUS-POLICY-001",
+      "kind": "code",
+      "path": "packages/analysis/src/parallel-runtime.ts",
+      "line": 974
+    },
+    {
       "id": "CODE-M5-PARALLEL-INTEGRATION-DIAGNOSTIC-001",
       "kind": "code",
       "path": "packages/analysis/src/parallel-runtime.ts",
-      "line": 825
+      "line": 993
     },
     {
       "id": "CODE-M5-PARALLEL-RUNTIME-PLAN-001",
       "kind": "code",
       "path": "packages/analysis/src/parallel-runtime.ts",
-      "line": 1261
+      "line": 1433
     },
     {
       "id": "CODE-M5-PARALLEL-RUNTIME-ASSIGNMENT-001",
       "kind": "code",
       "path": "packages/analysis/src/parallel-runtime.ts",
-      "line": 1385
+      "line": 1557
     },
     {
       "id": "CODE-M5-PARALLEL-RUNTIME-INTEGRATION-001",
       "kind": "code",
       "path": "packages/analysis/src/parallel-runtime.ts",
-      "line": 1735
+      "line": 1907
     },
     {
       "id": "CODE-M5-PARALLEL-PLAN-001",
@@ -2125,25 +2149,25 @@
       "id": "TEST-M5-PARALLEL-REAL-GATE-SUCCESS-001",
       "kind": "test",
       "path": "tests/parallel-final-findings-generation5.test.ts",
-      "line": 344
+      "line": 345
     },
     {
       "id": "TEST-M5-PARALLEL-INTEGRATION-CONTROL-EVIDENCE-001",
       "kind": "test",
       "path": "tests/parallel-final-findings-generation5.test.ts",
-      "line": 400
+      "line": 401
     },
     {
       "id": "TEST-M5-PARALLEL-FULL-SUCCESS-001",
       "kind": "test",
       "path": "tests/parallel-final-findings-generation5.test.ts",
-      "line": 437
+      "line": 438
     },
     {
       "id": "TEST-M5-PARALLEL-RUNTIME-EIGHT-WRITERS-001",
       "kind": "test",
       "path": "tests/parallel-final-findings-generation5.test.ts",
-      "line": 459
+      "line": 460
     },
     {
       "id": "TEST-M5-PARALLEL-OWNERSHIP-HISTORY-001",
@@ -2167,37 +2191,55 @@
       "id": "TEST-M5-PARALLEL-LATEST-BATCH-001",
       "kind": "test",
       "path": "tests/parallel-release-blockers-generation5.test.ts",
-      "line": 76
+      "line": 77
     },
     {
       "id": "TEST-M5-PARALLEL-INTEGRATION-GATE-001",
       "kind": "test",
       "path": "tests/parallel-release-blockers-generation5.test.ts",
-      "line": 88
+      "line": 89
+    },
+    {
+      "id": "TEST-M5-PARALLEL-INTEGRATION-PRE-RELEASE-001",
+      "kind": "test",
+      "path": "tests/parallel-release-blockers-generation5.test.ts",
+      "line": 136
+    },
+    {
+      "id": "TEST-M5-PARALLEL-INTEGRATION-PRE-RELEASE-POLICY-002",
+      "kind": "test",
+      "path": "tests/parallel-release-blockers-generation5.test.ts",
+      "line": 193
+    },
+    {
+      "id": "TEST-M5-PARALLEL-INTEGRATION-PRE-RELEASE-CONTEXT-001",
+      "kind": "test",
+      "path": "tests/parallel-release-blockers-generation5.test.ts",
+      "line": 279
     },
     {
       "id": "TEST-M5-PARALLEL-WORKSPACE-OVERLAY-001",
       "kind": "test",
       "path": "tests/parallel-release-blockers-generation5.test.ts",
-      "line": 120
+      "line": 401
     },
     {
       "id": "TEST-M5-PARALLEL-WORKSPACE-PARTIAL-COPY-001",
       "kind": "test",
       "path": "tests/parallel-release-blockers-generation5.test.ts",
-      "line": 149
+      "line": 430
     },
     {
       "id": "TEST-M5-PARALLEL-CONSUMER-CLI-001",
       "kind": "test",
       "path": "tests/parallel-release-blockers-generation5.test.ts",
-      "line": 210
+      "line": 491
     },
     {
       "id": "TEST-M5-PARALLEL-HANDOFF-EVIDENCE-DIRTY-001",
       "kind": "test",
       "path": "tests/parallel-release-blockers-generation5.test.ts",
-      "line": 233
+      "line": 514
     },
     {
       "id": "TEST-M5-TDD-SPLIT-ROOT-FINGERPRINT-001",
@@ -4937,6 +4979,11 @@
       "relation": "decides"
     },
     {
+      "from": "ADR-0017",
+      "to": "DES-M5-PARALLEL-007",
+      "relation": "decides"
+    },
+    {
       "from": "DES-M5-PARALLEL-007",
       "to": "DES-M5-006",
       "relation": "depends-on"
@@ -6019,6 +6066,36 @@
     {
       "from": "CODE-M5-APPROVAL-009",
       "to": "DES-M5-006",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-PARALLEL-INTEGRATION-PRE-RELEASE-001",
+      "to": "REQ-M5-PARALLEL-010",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-PARALLEL-INTEGRATION-PRE-RELEASE-001",
+      "to": "DES-M5-PARALLEL-007",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-PARALLEL-INTEGRATION-GATE-POLICY-001",
+      "to": "REQ-M5-PARALLEL-010",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-PARALLEL-INTEGRATION-GATE-POLICY-001",
+      "to": "DES-M5-PARALLEL-007",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-PARALLEL-INTEGRATION-STATUS-POLICY-001",
+      "to": "REQ-M5-PARALLEL-010",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-PARALLEL-INTEGRATION-STATUS-POLICY-001",
+      "to": "DES-M5-PARALLEL-007",
       "relation": "implements"
     },
     {
@@ -8077,6 +8154,21 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-PARALLEL-INTEGRATION-PRE-RELEASE-001",
+      "to": "REQ-M5-PARALLEL-010",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-PARALLEL-INTEGRATION-PRE-RELEASE-POLICY-002",
+      "to": "REQ-M5-PARALLEL-010",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-PARALLEL-INTEGRATION-PRE-RELEASE-CONTEXT-001",
+      "to": "REQ-M5-PARALLEL-010",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-PARALLEL-WORKSPACE-OVERLAY-001",
       "to": "REQ-M5-WORKTREE-001",
       "relation": "verifies"
@@ -9162,12 +9254,13 @@
     ".musubix/decisions/ADR-0014.md": "40e01d0f00c5743332d253722c7f62e8e8cf2f99101398bd3cb7900cb2e1f013",
     ".musubix/decisions/ADR-0015.md": "832a1f63e6d8ab44a5c9cbda6679029e9a45f39a8a8bb6446563c41dccdf34d5",
     ".musubix/decisions/ADR-0016.md": "92d60ae029514e1d57feaea5783bfbb7d5a2637c8a2979d6f089905c3b73e731",
+    ".musubix/decisions/ADR-0017.md": "e723c64fc4f0062cde0ca77cca2fa45863bcca7e664af244419f7dadbe7bd427",
     ".musubix/features/codegraph-performance/design.md": "3ddf90dbb97a753644deb0e4dd38adaa27420273390a27b241612ef84f4c9c97",
     ".musubix/features/codegraph-performance/requirements.md": "a5eb96722cea36c4fab7f81a09d992b1cbce62b154c7b85eab35199817d551e1",
     ".musubix/features/musubix5-clean-foundation/design.md": "14581aa3a96681d3120da678c4b3a5a170c1e6bd5904e7cf33470f3e443bf538",
     ".musubix/features/musubix5-clean-foundation/requirements.md": "ea035879fbfc6a032a5ca671f37211e57998512a2da9de0a86acb6ea328ac2b7",
-    ".musubix/features/parallel-agent-development/design.md": "4db616ff22452a4edec3ce8033ad5c1fbd8c023fcf1fc58e45eaa9ae27ffd9ac",
-    ".musubix/features/parallel-agent-development/requirements.md": "ff106781090ca42d511610d6957c59fb9fde7ede002ca86da64018b2285dae1a",
+    ".musubix/features/parallel-agent-development/design.md": "2d3ee454f0f131cdd21a62932790fafa0b6edc3df68d43e473d74b294d1e8a5d",
+    ".musubix/features/parallel-agent-development/requirements.md": "8fee03a0f32288e18819b311c13e7965ba51230dad7cb88f46209fbffb009112",
     ".musubix/features/release-0-2-0/design.md": "6642acfea4fe6e6b565a334e9a3490605bc418915e7a64af279e7a283df2c0eb",
     ".musubix/features/release-0-2-0/requirements.md": "9a21b40b82cd44ffc0a7975583be3e309b1541ec29e78e8eac22eb74f6eb7acf",
     "packages/analysis/src/adapters.ts": "4db9916f432a92d27520a7aa9af575db67897a729fbbed623331ddc00c020b95",
@@ -9200,7 +9293,7 @@
     "packages/analysis/src/mutation.ts": "87fcc7a0ef44b43a093c941319d7d6d600314d3ca2c4d94abddcb6c247c1dd9b",
     "packages/analysis/src/native-approval.ts": "bd6bba0231389ada6758213a90be9a6cfde96e45e89dc9776d9d4e46e2951c53",
     "packages/analysis/src/order.ts": "712ef698e5136da577602a9e603cbd59fe84f237ccda712cdcc9d2c6dd2335aa",
-    "packages/analysis/src/parallel-runtime.ts": "1a15dbea2c162a9682773a36d130a92edd7f196bee22875a0ecb1a6a5935d13e",
+    "packages/analysis/src/parallel-runtime.ts": "0977cfd97910605b739bed518d03c25bb8f5c937f5dbc30325bcc9105856900c",
     "packages/analysis/src/parallel-tdd-evidence.ts": "5968a550696b4f93c70bfd322f18afcf70f5e8dc04b888241fc76acc94a116ea",
     "packages/analysis/src/parallel.ts": "ac698520f8a60dcae907c4da7ec6bf53d920003a6db3ab8470d04252bdabcdae",
     "packages/analysis/src/performance.ts": "9eb0efa2eebbc95b86cf2c3bd10d59edbea90c936c017d736726e15ba84a698b",
@@ -9282,10 +9375,10 @@
     "tests/package-contract.test.ts": "3536d366dd871d09d1e6633b14f54354aed82349f3269de119cfcba40354dd1c",
     "tests/parallel-consumer-policy-generation5.test.ts": "075446948f66ad29d4aa87a3fd94cfd7de49787a2cf0c153ec1c1047f444d00a",
     "tests/parallel-development.test.ts": "6d49970e05e0cac6f500c06ac75f4bd4dd7fcab1810b29c9fb41fd89733a0383",
-    "tests/parallel-final-findings-generation5.test.ts": "f454175e9d0ed64574942cd8fc77ffe93c42f2f6efc6e19271130475b3d4b7dc",
+    "tests/parallel-final-findings-generation5.test.ts": "838ccd76ca52efd9f196f09cffec5fada7b541fcd31fd61563878f0d263600dd",
     "tests/parallel-ownership-history-generation5.test.ts": "5cc0f366a22059d1eafe81d4f22ad41e68b5ecdffa6accf6f824b00835e6311b",
     "tests/parallel-quality-regressions.test.ts": "7a64abd524c6617ef9bcbcab3f9b1290c41942df79d52ebfc93be1da393b9d86",
-    "tests/parallel-release-blockers-generation5.test.ts": "8739007ad5fbe19451cf1e6e2abba2265f1c1435a35e9e05164e927360bbefdc",
+    "tests/parallel-release-blockers-generation5.test.ts": "1921c2e3ad8362658ae9a8034f7ab7a17957b907324b9f0f300e85f4e9ada32b",
     "tests/parallel-review-regressions.test.ts": "b0ddb63c6f2a4fc41dd7b959b971c4cff8a2cc87f665a5ca2e42652b6cfc5423",
     "tests/parallel-runtime-lifecycle-generation5.test.ts": "66a6fb7e09b6ac620d30cc4c92f9c1fcbfdf79dab9c9109cca7cfa97314b9ea0",
     "tests/parallel-runtime-regression.test.ts": "96daf5a5d6155e357d5bd5b5053f966df697c95b7d9647275539818d9b01b45e",

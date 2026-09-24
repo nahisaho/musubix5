@@ -30,12 +30,13 @@ import {
 import { digest, exists, portable, readText, within, writeJson } from './files.js';
 import { runProcess, type ProcessResult } from './process.js';
 import { resolveChangeContext } from './change-generation.js';
-import { classifyReleaseApprovalDiagnostic } from './approval.js';
+import { loadApproval as loadStageApproval } from './approval.js';
 import { commandCwd, loadConfig, type CommandConfig, type Config } from './config.js';
 import { loadChangeEvidence } from './change-evidence.js';
 import { classifyParallelTddEvidence } from './parallel-tdd-evidence.js';
 import { loadTddEvidence } from './tdd.js';
 import { selectCurrentTddCycle } from './tdd-cycle-resolver.js';
+import { listCandidateSnapshotRecords } from './workspace-manager.js';
 import {
   acquireChangeLease,
   appendJournalRecord,
@@ -783,31 +784,198 @@ async function parallelCliEntry(workspace: string): Promise<string> {
   return entry;
 }
 
-export function integrationGateAcceptable(result: ProcessResult): boolean {
+export interface IntegrationPreReleaseContext {
+  releaseApproval: 'absent' | 'foreign-completed';
+}
+
+export interface IntegrationPreReleaseBinding {
+  changeId: string;
+  generation: number;
+}
+
+/** @id CODE-M5-PARALLEL-INTEGRATION-PRE-RELEASE-001
+ * @implements REQ-M5-PARALLEL-010
+ * @design DES-M5-PARALLEL-007
+ */
+export async function resolveIntegrationPreReleaseContext(
+  root: string,
+  binding: IntegrationPreReleaseBinding,
+): Promise<IntegrationPreReleaseContext | null> {
+  try {
+    const active = await resolveChangeContext(root);
+    if (active?.documentStatus !== 'active'
+      || active.changeId !== binding.changeId
+      || active.generation !== binding.generation) {
+      return null;
+    }
+    const evidence = await loadChangeEvidence(root);
+    if (!evidence) return null;
+    const change = evidence.changes.find((entry) => entry.changeId === binding.changeId);
+    if (!change || change.phases.quality) return null;
+    const liveCandidate = (await listCandidateSnapshotRecords(root)).some((snapshot) =>
+      !snapshot.deleted
+      && snapshot.repositoryStatus === 'match'
+      && snapshot.changeId === binding.changeId
+      && (snapshot.generation === binding.generation || snapshot.generation === null));
+    if (liveCandidate) return null;
+
+    const release = await loadStageApproval(root, 'release');
+    if (!release) return { releaseApproval: 'absent' };
+    if (release.changeId === binding.changeId) return null;
+    if (!release.changeId || !release.generation) return null;
+    const foreignContext = await resolveChangeContext(root, {
+      changeId: release.changeId,
+      maintenance: true,
+    });
+    const foreignChange = evidence.changes.find((entry) => entry.changeId === release.changeId);
+    if (foreignContext?.documentStatus !== 'completed'
+      || !foreignChange
+      || (foreignChange.generation ?? 1) !== release.generation
+      || !foreignChange.phases.quality) {
+      return null;
+    }
+    return { releaseApproval: 'foreign-completed' };
+  } catch {
+    return null;
+  }
+}
+
+interface IntegrationGateDiagnostic {
+  code?: string;
+  severity?: string;
+  detail?: string;
+  waiver?: unknown;
+}
+
+interface IntegrationGateCheck {
+  name?: string;
+  required?: boolean;
+  status?: string;
+  diagnostics?: IntegrationGateDiagnostic[];
+}
+
+function integrationWaiverValid(value: unknown): boolean {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const waiver = value as Record<string, unknown>;
+  return typeof waiver.approver === 'string'
+    && waiver.approver.trim().length > 0
+    && typeof waiver.reason === 'string'
+    && waiver.reason.trim().length > 0
+    && typeof waiver.recordedAt === 'string'
+    && Number.isFinite(Date.parse(waiver.recordedAt))
+    && (waiver.waiverRecordedAt === undefined
+      || (typeof waiver.waiverRecordedAt === 'string'
+        && Number.isFinite(Date.parse(waiver.waiverRecordedAt))));
+}
+
+function integrationRequiredDiagnostics(
+  check: IntegrationGateCheck,
+): IntegrationGateDiagnostic[] | null {
+  if (check.diagnostics === undefined) return [];
+  if (!Array.isArray(check.diagnostics)) return null;
+  for (const diagnostic of check.diagnostics) {
+    if (!diagnostic || typeof diagnostic !== 'object'
+      || typeof diagnostic.code !== 'string' || !diagnostic.code
+      || !['error', 'warning', 'info'].includes(diagnostic.severity ?? '')
+      || (diagnostic.detail !== undefined && typeof diagnostic.detail !== 'string')
+      || (diagnostic.waiver !== undefined && !integrationWaiverValid(diagnostic.waiver))) {
+      return null;
+    }
+  }
+  return check.diagnostics;
+}
+
+function integrationChangeHistoryFailureAcceptable(check: IntegrationGateCheck): boolean {
+  const diagnostics = integrationRequiredDiagnostics(check);
+  if (!diagnostics) return false;
+  const generationErrors = diagnostics.filter((diagnostic) =>
+    diagnostic.code === 'CHANGE_GENERATION_INCOMPLETE' && diagnostic.severity === 'error');
+  const missingQuality = diagnostics.filter((diagnostic) =>
+    diagnostic.code === 'CHANGE_PHASE_MISSING' && diagnostic.detail === 'phase:quality');
+  const otherErrors = diagnostics.filter((diagnostic) =>
+    diagnostic.severity === 'error'
+    && diagnostic.code !== 'CHANGE_GENERATION_INCOMPLETE'
+    && !(diagnostic.code === 'CHANGE_PHASE_MISSING' && diagnostic.detail === 'phase:quality'));
+  if (generationErrors.length !== 1 || missingQuality.length !== 1 || otherErrors.length !== 0) {
+    return false;
+  }
+  const phase = missingQuality[0]!;
+  return phase.severity === 'error'
+    || (phase.severity === 'warning' && integrationWaiverValid(phase.waiver));
+}
+
+const integrationApprovalCodes = {
+  absent: new Set(['APPROVAL_CANDIDATE_MISSING']),
+  'foreign-completed': new Set([
+    'APPROVAL_CANDIDATE_MISSING',
+    'CHANGE_GENERATION_INCOMPLETE',
+  ]),
+} satisfies Record<IntegrationPreReleaseContext['releaseApproval'], Set<string>>;
+
+function integrationApprovalFailureAcceptable(
+  check: IntegrationGateCheck,
+  context: IntegrationPreReleaseContext,
+): boolean {
+  const diagnostics = integrationRequiredDiagnostics(check);
+  if (!diagnostics) return false;
+  const errors = diagnostics.filter((diagnostic) => diagnostic.severity === 'error');
+  if (errors.length !== 1) return false;
+  const code = errors[0]!.code;
+  return integrationApprovalCodes[context.releaseApproval].has(code ?? '');
+}
+
+/** @id CODE-M5-PARALLEL-INTEGRATION-GATE-POLICY-001
+ * @implements REQ-M5-PARALLEL-010
+ * @design DES-M5-PARALLEL-007
+ */
+export function integrationGateAcceptable(
+  result: ProcessResult,
+  context?: IntegrationPreReleaseContext,
+): boolean {
   if (result.status !== 'completed') return false;
-  if (result.exitCode === 0) return true;
-  if (result.exitCode !== 1) return false;
   try {
     const report = JSON.parse(result.stdout) as {
-      checks?: Array<{
-        name?: string;
-        required?: boolean;
-        status?: string;
-        diagnostics?: Array<{ code?: string }>;
-      }>;
+      checks?: IntegrationGateCheck[];
     };
-    const failures = report.checks?.filter((check) => check.required && check.status !== 'pass') ?? [];
-    return failures.length > 0 && failures.every((check) =>
-      check.name === 'approval'
-      && (check.diagnostics?.length ?? 0) > 0
-      && check.diagnostics!.every((diagnostic) =>
-        typeof diagnostic.code === 'string' && classifyReleaseApprovalDiagnostic(diagnostic.code)));
+    if (!Array.isArray(report.checks)) return false;
+    const required = report.checks.filter((check) => check?.required === true);
+    if (required.length === 0) return false;
+    if (required.some((check) =>
+      typeof check.name !== 'string' || !check.name
+      || typeof check.status !== 'string'
+      || integrationRequiredDiagnostics(check) === null)) {
+      return false;
+    }
+    if (result.exitCode === 0) {
+      return required.every((check) => check.status === 'pass');
+    }
+    if (result.exitCode !== 1 || !context) return false;
+    if (required.some((check) => check.status !== 'pass' && check.status !== 'fail')) {
+      return false;
+    }
+    const failures = required.filter((check) => check.status === 'fail');
+    if (failures.length === 0
+      || failures.some((check) => check.name !== 'change-history' && check.name !== 'approval')) {
+      return false;
+    }
+    const changeHistory = failures.filter((check) => check.name === 'change-history');
+    const approval = failures.filter((check) => check.name === 'approval');
+    return changeHistory.length <= 1
+      && approval.length <= 1
+      && (changeHistory.length === 0
+        || integrationChangeHistoryFailureAcceptable(changeHistory[0]!))
+      && (approval.length === 0
+        || integrationApprovalFailureAcceptable(approval[0]!, context));
   } catch {
     return false;
   }
 }
 
-function integrationStatusAcceptable(result: ProcessResult): boolean {
+/** @id CODE-M5-PARALLEL-INTEGRATION-STATUS-POLICY-001
+ * @implements REQ-M5-PARALLEL-010
+ * @design DES-M5-PARALLEL-007
+ */
+export function integrationStatusAcceptable(result: ProcessResult): boolean {
   if (result.status !== 'completed' || result.exitCode !== 0) return false;
   try {
     const status = JSON.parse(result.stdout) as {
@@ -816,7 +984,7 @@ function integrationStatusAcceptable(result: ProcessResult): boolean {
     };
     return status.initialized === true
       && ['pass', 'fail', 'stale', 'skipped'].includes(status.gate?.status ?? '')
-      && typeof status.gate?.ready === 'boolean';
+      && status.gate?.ready === false;
   } catch {
     return false;
   }
@@ -844,6 +1012,7 @@ async function runIntegrationCliCheck(
   env: NodeJS.ProcessEnv,
   name: string,
   record: ParallelCommandOutcome[],
+  resolveGateContext?: () => Promise<IntegrationPreReleaseContext | null>,
 ): Promise<void> {
   const commandArgs = [localCli, ...args, '--root', root, '--workspace', workspace, '--json'];
   const result = await runProcess(process.execPath, commandArgs, {
@@ -862,7 +1031,10 @@ async function runIntegrationCliCheck(
     stderr: result.stderr,
   });
   const acceptable = name === 'gate-changed'
-    ? integrationGateAcceptable(result)
+    ? integrationGateAcceptable(
+      result,
+      result.exitCode === 1 ? await resolveGateContext?.() ?? undefined : undefined,
+    )
     : name === 'status'
       ? integrationStatusAcceptable(result)
       : result.status === 'completed' && result.exitCode === 0;
@@ -1996,6 +2168,12 @@ export async function verifyParallelIntegration(
         env,
         check.name,
         verification.checks,
+        check.name === 'gate-changed'
+          ? () => resolveIntegrationPreReleaseContext(root, {
+            changeId: plan.binding.changeId,
+            generation: plan.binding.generation,
+          })
+          : undefined,
       );
     }
     const head = await git(integration.worktree, ['rev-parse', 'HEAD']);

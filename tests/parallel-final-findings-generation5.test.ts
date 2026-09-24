@@ -187,6 +187,7 @@ async function createSplitRootLifecycleFixture(options: { stubCli?: boolean } = 
       "const evidence = root && existsSync(resolve(root, '.musubix/evidence/tdd.json'));",
       "const green = workspace && readFileSync(resolve(workspace, 'packages/core/value.ts'), 'utf8').includes('green');",
       "const samePath = (left, right) => left && right && realpathSync(left) === realpathSync(right);",
+      "if (args[0] === 'gate') console.log(JSON.stringify({ status: 'pass', checks: [{ name: 'commands', required: true, status: 'pass', diagnostics: [] }] }));",
       "if (args[0] === 'status') console.log(JSON.stringify({ initialized: true, gate: { status: 'fail', ready: false } }));",
       "process.exit(samePath(root, controlRoot) && samePath(workspace, process.cwd()) && evidence && green ? 0 : 1);",
       '',
@@ -383,7 +384,6 @@ describe('CHANGE-0003 generation 5 final parallel findings', () => {
     const instruction = await runtime.issueParallelAssignmentInstruction(fixture.root, plan.planId, 'core');
     const head = await completeAssignmentTdd(fixture, plan.planId, instruction);
     await runtime.recordParallelAssignmentResult(fixture.root, plan.planId, 'core', 1, head);
-    await recordChangePhase(fixture.root, 'CHANGE-0003', 'quality', ['REQ-M5-PARALLEL-004']);
     await runtime.startParallelIntegration(fixture.root, plan.planId);
 
     const outcome = await runtime.verifyParallelIntegration(fixture.root, plan.planId);
@@ -395,6 +395,7 @@ describe('CHANGE-0003 generation 5 final parallel findings', () => {
         ]),
       },
     });
+    await recordChangePhase(fixture.root, 'CHANGE-0003', 'quality', ['REQ-M5-PARALLEL-004']);
   });
 
   /** @id TEST-M5-PARALLEL-INTEGRATION-CONTROL-EVIDENCE-001

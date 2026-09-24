@@ -2,7 +2,7 @@
 schemaVersion: 1
 id: CHANGE-0007
 summary: Expose candidate snapshot creation through the public CLI
-status: active
+status: completed
 ---
 # CHANGE-0007: candidate-snapshot-cli
 
