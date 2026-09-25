@@ -19,6 +19,7 @@ import {
   batchKey,
   generationOrderPhase,
   loadChangeEvidence,
+  nextBatchScopeId,
   type ChangeEvidence,
   type ChangeFingerprints,
   type ChangePhaseEvidence,
@@ -231,7 +232,7 @@ export async function recordChangePhaseFromWorkspace(
   controlRoot: string,
   sourceRoot: string,
   changeId: string,
-  phase: 'implementation' | 'green',
+  phase: 'red' | 'implementation' | 'green',
   requirementIds: string[],
   dependencies: WorkspaceChangePhaseDependencies = workspaceChangePhaseDefaults,
 ): Promise<ChangeEvidence> {
@@ -240,8 +241,10 @@ export async function recordChangePhaseFromWorkspace(
     || requirementIds.some((requirementId) => !/^REQ-[A-Z0-9][A-Z0-9-]*$/.test(requirementId))) {
     throw new Error('CHANGE_GENERATION_REQUIREMENTS: a valid non-empty requirement batch is required.');
   }
-  await dependencies.verifyRepository(controlRoot, sourceRoot);
-  const evidence = await dependencies.loadChangeEvidence(controlRoot);
+  const control = resolve(controlRoot);
+  const source = resolve(sourceRoot);
+  await dependencies.verifyRepository(control, source);
+  const evidence = await dependencies.loadChangeEvidence(control);
   const change = evidence?.changes.find((entry) => entry.changeId === changeId);
   const generation = change ? activeChangeGeneration(change) : null;
   if (!evidence || !change || generation === null) {
@@ -254,23 +257,45 @@ export async function recordChangePhaseFromWorkspace(
   }
   const fullSet = normalizedRequirementIds.length === change.requirementIds.length
     && normalizedRequirementIds.every((requirementId) => change.requirementIds.includes(requirementId));
-  const batch = fullSet
+  change.tddBatches ??= [];
+  let batch = fullSet
     ? undefined
-    : batchForRecording(change.tddBatches ?? [], normalizedRequirementIds, phase);
-  const previous = fullSet ? change.phases[phase === 'implementation' ? 'red' : 'implementation']
-    : batch?.[phase === 'implementation' ? 'red' : 'implementation'];
+    : batchForRecording(change.tddBatches, normalizedRequirementIds, phase);
+  if (!fullSet && phase === 'red') {
+    if (batch?.red) {
+      throw new Error(`${changeId}:red is already recorded for the pending requirement batch ${normalizedRequirementIds.join(', ')}.`);
+    }
+    batch = {
+      scopeId: nextBatchScopeId(change.tddBatches, normalizedRequirementIds),
+      requirementIds: normalizedRequirementIds,
+    };
+    change.tddBatches.push(batch);
+  }
+  const precedingPhase = phase === 'red'
+    ? 'design'
+    : phase === 'implementation'
+      ? 'red'
+      : 'implementation';
+  const previous = phase === 'red'
+    ? change.phases.design
+    : phase === 'implementation'
+      ? fullSet ? change.phases.red : batch?.red
+      : fullSet ? change.phases.implementation : batch?.implementation;
   if (!previous) {
-    throw new Error(`${phase} requires the preceding ${phase === 'implementation' ? 'red' : 'implementation'} phase for requirement batch ${normalizedRequirementIds.join(', ')}.`);
+    throw new Error(`${phase} requires the preceding ${precedingPhase} phase for requirement batch ${normalizedRequirementIds.join(', ')}.`);
   }
   if (fullSet ? change.phases[phase] !== undefined : batch?.[phase] !== undefined) {
     throw new Error(`${changeId}:${phase} is already recorded for requirement batch ${normalizedRequirementIds.join(', ')}.`);
   }
   const fingerprints = await dependencies.currentFingerprints(
-    controlRoot,
-    sourceRoot,
+    control,
+    source,
     changeId,
     normalizedRequirementIds,
   );
+  if (phase === 'red' && fingerprints.tests === previous.fingerprints.tests) {
+    throw new Error(`CHANGE_TESTS_UNCHANGED_AT_RECORD: ${changeId} did not add or change tests since design.`);
+  }
   if (phase === 'implementation') {
     if (fingerprints.implementation === previous.fingerprints.implementation) {
       throw new Error(`CHANGE_IMPLEMENTATION_UNCHANGED_AT_RECORD: ${changeId} did not change implementation since red.`);
@@ -291,14 +316,14 @@ export async function recordChangePhaseFromWorkspace(
     fingerprints,
   };
   const scopeId = fullSet ? undefined : batch?.scopeId ?? batchKey(normalizedRequirementIds);
-  checkpoint.order = (await dependencies.appendEvidenceOrder(controlRoot, {
+  checkpoint.order = (await dependencies.appendEvidenceOrder(control, {
     kind: 'change',
     entityId: changeId,
     phase: generationOrderPhase(generation, phase, scopeId),
   })).sequence;
   if (fullSet) change.phases[phase] = checkpoint;
   else batch![phase] = checkpoint;
-  await dependencies.writeJson(controlRoot, '.musubix/evidence/changes.json', evidence);
+  await dependencies.writeJson(control, '.musubix/evidence/changes.json', evidence);
   return evidence;
 }
 
