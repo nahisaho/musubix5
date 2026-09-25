@@ -1769,13 +1769,27 @@
       "phase": "complete",
       "status": "completed",
       "recordedAt": "2026-09-25T19:02:40.673Z"
+    },
+    {
+      "skill": "sdd-change",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0012",
+      "generation": 2,
+      "requirementIds": [
+        "REQ-M5-CI-002",
+        "REQ-M5-TDD-003"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-09-25T19:09:14.961Z"
     }
   ],
   "verification": {
     "mode": "compatible",
     "sourceSha256": "04a52400dda312e4842a63f1d4836055c8927a0b90944e52b01834321b6ab03a",
-    "eventsSha256": "d5ec69cba4ef1f930fc21833080aac15972887acd46164e80225141fc4af021e",
-    "verifiedAt": "2026-09-25T19:05:47.255Z",
+    "eventsSha256": "49e87c538b02e2054dfda86bc4fda1956e90d9a844e7ca99946105d3456b586f",
+    "verifiedAt": "2026-09-25T19:09:18.407Z",
     "invocations": [
       {
         "skill": "sdd-change",
