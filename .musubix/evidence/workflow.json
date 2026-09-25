@@ -1755,13 +1755,27 @@
       "phase": "complete",
       "status": "completed",
       "recordedAt": "2026-09-25T14:16:31.090Z"
+    },
+    {
+      "skill": "sdd-quality",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0012",
+      "generation": 2,
+      "requirementIds": [
+        "REQ-M5-CI-002",
+        "REQ-M5-TDD-003"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-09-25T19:02:40.673Z"
     }
   ],
   "verification": {
     "mode": "compatible",
-    "sourceSha256": "5e997d1f11d862f414c0bef39f4d39b11b85bc25f475cfb46c22611516e9122c",
-    "eventsSha256": "0e2f2a257457aa68c69bc6ff29d56febfc782bcd13b1fa62e6c17c244e379cd6",
-    "verifiedAt": "2026-09-25T14:16:34.139Z",
+    "sourceSha256": "04a52400dda312e4842a63f1d4836055c8927a0b90944e52b01834321b6ab03a",
+    "eventsSha256": "d5ec69cba4ef1f930fc21833080aac15972887acd46164e80225141fc4af021e",
+    "verifiedAt": "2026-09-25T19:05:47.255Z",
     "invocations": [
       {
         "skill": "sdd-change",
@@ -2041,6 +2055,20 @@
         "toolCallId": "call_3jZlBSekPrMWghk0IfcUJqGR",
         "invokedAt": "2026-09-25T14:08:29.800Z",
         "completedAt": "2026-09-25T14:08:29.815Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-change",
+        "toolCallId": "call_HB0XEb8xs6R23KQn78qCawPW",
+        "invokedAt": "2026-09-25T14:30:31.185Z",
+        "completedAt": "2026-09-25T14:30:31.196Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-issue-report",
+        "toolCallId": "call_F60iwoJlOUI03h0QdkwVsxf6",
+        "invokedAt": "2026-09-25T14:59:12.478Z",
+        "completedAt": "2026-09-25T14:59:12.496Z",
         "status": "completed"
       }
     ]

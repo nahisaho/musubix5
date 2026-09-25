@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-25T15:13:55.441Z",
-  "status": "fail",
+  "generatedAt": "2026-09-25T19:08:26.154Z",
+  "status": "pass",
   "checks": [
     {
       "name": "policy",
@@ -550,7 +550,7 @@
       "name": "workflow",
       "required": true,
       "status": "pass",
-      "summary": "4 workflow declaration(s) across 3 Skill(s) reconciled with Copilot invocation events.",
+      "summary": "5 workflow declaration(s) across 4 Skill(s) reconciled with Copilot invocation events.",
       "diagnostics": [
         {
           "code": "WORKFLOW_DECLARATION_SUPERSEDED",
@@ -637,7 +637,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 3550,
+      "durationMs": 3600,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.2.0 typecheck\n> tsc --noEmit\n\n",
       "stderr": ""
@@ -647,7 +647,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 3386,
+      "durationMs": 3932,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.2.0 build\n> tsc -p tsconfig.build.json\n\n",
       "stderr": ""
@@ -657,7 +657,7 @@
       "required": true,
       "status": "pass",
       "summary": "npx: completed, exit 0.",
-      "durationMs": 60813,
+      "durationMs": 64114,
       "exitCode": 0,
       "stdout": "JSON report written to /home/nahisaho/GitHub/musubix5/.musubix/evidence/native/test/aggregate.json\n",
       "stderr": ""
@@ -667,7 +667,7 @@
       "required": true,
       "status": "pass",
       "summary": "node: completed, exit 0.",
-      "durationMs": 53116,
+      "durationMs": 59901,
       "exitCode": 0,
       "stdout": "JSON report written to /home/nahisaho/GitHub/musubix5/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-NOCHANGE-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-FALLBACK-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-GIT-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-CACHE-WRITE-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-TRAVERSAL-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-CYCLES-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-GATE-SCAN-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-GATE-ORDER-001.json\n",
       "stderr": ""
@@ -677,9 +677,9 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 5817,
+      "durationMs": 6436,
       "exitCode": 0,
-      "stdout": "\n> musubix5@0.2.0 test:compat\n> vitest run tests/cli-help-contract.test.ts tests/cli-json-error-contract.test.ts tests/compatibility-oracle.test.ts\n\n\n RUN  v3.2.7 /home/nahisaho/GitHub/musubix5\n\n ✓ tests/cli-help-contract.test.ts (1 test) 1312ms\n   ✓ CLI help compatibility > TEST-M5-COMPAT-001 preserves every inventoried help entry  1311ms\n ✓ tests/compatibility-oracle.test.ts (1 test) 48ms\n ✓ tests/cli-json-error-contract.test.ts (2 tests) 1611ms\n   ✓ CLI JSON failure compatibility > TEST-M5-COMPAT-003 preserves the operational-error envelope  450ms\n   ✓ CLI JSON failure compatibility > TEST-M5-APPROVAL-GUIDANCE-001 names the published approval recovery command  1160ms\n\n Test Files  3 passed (3)\n      Tests  4 passed (4)\n   Start at  00:13:34\n   Duration  5.38s (transform 724ms, setup 0ms, collect 64ms, tests 2.97s, environment 0ms, prepare 148ms)\n\n",
+      "stdout": "\n> musubix5@0.2.0 test:compat\n> vitest run tests/cli-help-contract.test.ts tests/cli-json-error-contract.test.ts tests/compatibility-oracle.test.ts\n\n\n RUN  v3.2.7 /home/nahisaho/GitHub/musubix5\n\n ✓ tests/cli-help-contract.test.ts (1 test) 1316ms\n   ✓ CLI help compatibility > TEST-M5-COMPAT-001 preserves every inventoried help entry  1315ms\n ✓ tests/compatibility-oracle.test.ts (1 test) 45ms\n ✓ tests/cli-json-error-contract.test.ts (2 tests) 1667ms\n   ✓ CLI JSON failure compatibility > TEST-M5-COMPAT-003 preserves the operational-error envelope  421ms\n   ✓ CLI JSON failure compatibility > TEST-M5-APPROVAL-GUIDANCE-001 names the published approval recovery command  1244ms\n\n Test Files  3 passed (3)\n      Tests  4 passed (4)\n   Start at  04:08:04\n   Duration  5.95s (transform 741ms, setup 0ms, collect 67ms, tests 3.03s, environment 1ms, prepare 168ms)\n\n",
       "stderr": ""
     },
     {
@@ -687,7 +687,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 1104,
+      "durationMs": 1157,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.2.0 pack:check\n> node scripts/check-package.mjs\n\nPackage verified: musubix5-0.2.0.tgz, 203 files, 12 skills.\n",
       "stderr": ""
@@ -697,7 +697,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 4760,
+      "durationMs": 5074,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.2.0 pack:smoke\n> node scripts/smoke-package.mjs\n\nInstalled tarball verified: executable bin, ESM exports, init, status, assets, and hidden skills (0.2.0).\n",
       "stderr": ""
@@ -740,16 +740,9 @@
     {
       "name": "approval",
       "required": true,
-      "status": "fail",
-      "summary": "2/3 approval stage(s) are current.",
-      "diagnostics": [
-        {
-          "code": "CHANGE_GENERATION_INCOMPLETE",
-          "severity": "error",
-          "message": "CHANGE_GENERATION_INCOMPLETE: release approval requires the matching active CHANGE generation.",
-          "path": ".musubix/evidence/approvals/release.json"
-        }
-      ]
+      "status": "pass",
+      "summary": "3/3 approval stage(s) are current.",
+      "diagnostics": []
     },
     {
       "name": "commands",
@@ -805,12 +798,12 @@
     "modelCorrespondence.coveredRequirements": 0,
     "modelCorrespondence.errors": 0,
     "attestation.errors": 0,
-    "approval.errors": 1,
+    "approval.errors": 0,
     "coverage.design": 1,
     "coverage.implementation": 1,
     "coverage.tests": 1
   },
-  "mode": "changed",
+  "mode": "full",
   "feature": null,
   "changed": [
     ".musubix/changes/CHANGE-0012.md",
