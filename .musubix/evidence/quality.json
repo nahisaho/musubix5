@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-25T05:14:29.417Z",
-  "status": "fail",
+  "generatedAt": "2026-09-25T05:37:21.862Z",
+  "status": "pass",
   "checks": [
     {
       "name": "policy",
@@ -627,7 +627,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 3621,
+      "durationMs": 3734,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.2.0 typecheck\n> tsc --noEmit\n\n",
       "stderr": ""
@@ -637,7 +637,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 3481,
+      "durationMs": 3342,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.2.0 build\n> tsc -p tsconfig.build.json\n\n",
       "stderr": ""
@@ -647,7 +647,7 @@
       "required": true,
       "status": "pass",
       "summary": "npx: completed, exit 0.",
-      "durationMs": 54628,
+      "durationMs": 58169,
       "exitCode": 0,
       "stdout": "JSON report written to /home/nahisaho/GitHub/musubix5/.musubix/evidence/native/test/aggregate.json\n",
       "stderr": ""
@@ -657,7 +657,7 @@
       "required": true,
       "status": "pass",
       "summary": "node: completed, exit 0.",
-      "durationMs": 48230,
+      "durationMs": 53222,
       "exitCode": 0,
       "stdout": "JSON report written to /home/nahisaho/GitHub/musubix5/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-NOCHANGE-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-FALLBACK-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-GIT-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-CACHE-WRITE-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-TRAVERSAL-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-CYCLES-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-GATE-SCAN-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-GATE-ORDER-001.json\n",
       "stderr": ""
@@ -667,9 +667,9 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 5312,
+      "durationMs": 5517,
       "exitCode": 0,
-      "stdout": "\n> musubix5@0.2.0 test:compat\n> vitest run tests/cli-help-contract.test.ts tests/cli-json-error-contract.test.ts tests/compatibility-oracle.test.ts\n\n\n RUN  v3.2.7 /home/nahisaho/GitHub/musubix5\n\n ✓ tests/cli-help-contract.test.ts (1 test) 1133ms\n   ✓ CLI help compatibility > TEST-M5-COMPAT-001 preserves every inventoried help entry  1132ms\n ✓ tests/compatibility-oracle.test.ts (1 test) 36ms\n ✓ tests/cli-json-error-contract.test.ts (2 tests) 1397ms\n   ✓ CLI JSON failure compatibility > TEST-M5-COMPAT-003 preserves the operational-error envelope  387ms\n   ✓ CLI JSON failure compatibility > TEST-M5-APPROVAL-GUIDANCE-001 names the published approval recovery command  1009ms\n\n Test Files  3 passed (3)\n      Tests  4 passed (4)\n   Start at  14:14:12\n   Duration  4.90s (transform 667ms, setup 0ms, collect 78ms, tests 2.57s, environment 0ms, prepare 138ms)\n\n",
+      "stdout": "\n> musubix5@0.2.0 test:compat\n> vitest run tests/cli-help-contract.test.ts tests/cli-json-error-contract.test.ts tests/compatibility-oracle.test.ts\n\n\n RUN  v3.2.7 /home/nahisaho/GitHub/musubix5\n\n ✓ tests/cli-help-contract.test.ts (1 test) 1106ms\n   ✓ CLI help compatibility > TEST-M5-COMPAT-001 preserves every inventoried help entry  1105ms\n ✓ tests/compatibility-oracle.test.ts (1 test) 38ms\n ✓ tests/cli-json-error-contract.test.ts (2 tests) 1420ms\n   ✓ CLI JSON failure compatibility > TEST-M5-COMPAT-003 preserves the operational-error envelope  357ms\n   ✓ CLI JSON failure compatibility > TEST-M5-APPROVAL-GUIDANCE-001 names the published approval recovery command  1062ms\n\n Test Files  3 passed (3)\n      Tests  4 passed (4)\n   Start at  14:37:02\n   Duration  5.10s (transform 645ms, setup 0ms, collect 62ms, tests 2.56s, environment 0ms, prepare 142ms)\n\n",
       "stderr": ""
     },
     {
@@ -677,7 +677,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 972,
+      "durationMs": 1039,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.2.0 pack:check\n> node scripts/check-package.mjs\n\nPackage verified: musubix5-0.2.0.tgz, 200 files, 12 skills.\n",
       "stderr": ""
@@ -687,7 +687,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 4371,
+      "durationMs": 4398,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.2.0 pack:smoke\n> node scripts/smoke-package.mjs\n\nInstalled tarball verified: executable bin, ESM exports, init, status, assets, and hidden skills (0.2.0).\n",
       "stderr": ""
@@ -730,16 +730,9 @@
     {
       "name": "approval",
       "required": true,
-      "status": "fail",
-      "summary": "2/3 approval stage(s) are current.",
-      "diagnostics": [
-        {
-          "code": "CHANGE_GENERATION_INCOMPLETE",
-          "severity": "error",
-          "message": "CHANGE_GENERATION_INCOMPLETE: release approval requires the matching active CHANGE generation.",
-          "path": ".musubix/evidence/approvals/release.json"
-        }
-      ]
+      "status": "pass",
+      "summary": "3/3 approval stage(s) are current.",
+      "diagnostics": []
     },
     {
       "name": "commands",
@@ -795,12 +788,12 @@
     "modelCorrespondence.coveredRequirements": 0,
     "modelCorrespondence.errors": 0,
     "attestation.errors": 0,
-    "approval.errors": 1,
+    "approval.errors": 0,
     "coverage.design": 1,
     "coverage.implementation": 1,
     "coverage.tests": 1
   },
-  "mode": "changed",
+  "mode": "full",
   "feature": null,
   "changed": [
     ".musubix/evidence/changes.json",
@@ -1017,6 +1010,11 @@
     ".musubix/journal/normal/000000000137.json": "139ba767c6345f66fee33bb71cb3d47eee8f7a0247bb449632dc4ded7afbc3fd",
     ".musubix/journal/normal/000000000138.json": "c3dc61e44e89e6575131e687ba726b39796d0280e1e7f86ec510fd5db393ec98",
     ".musubix/journal/normal/000000000139.json": "270a0645cfbfc9fd00c85c4ceb22d099ba8e84813babe442e8fd5e63d2761973",
+    ".musubix/journal/normal/000000000140.json": "13086f62e163d0cb663cb48ddaa93a3360dd390d19176bc9f8f6088aa18e1ec9",
+    ".musubix/journal/normal/000000000141.json": "7dd4cd0bf39b18e453c7694cec38a5e12c0ba66325d776143db1b41d7df8c5e8",
+    ".musubix/journal/normal/000000000142.json": "3ff710da33c002758e98d733d18490c55b32f2f83f9a74d861390a3cfcf38fcc",
+    ".musubix/journal/normal/000000000143.json": "7ada915c1bd94f7414a058f799e676ea5aef859043724f86a99692d4d2aea1bd",
+    ".musubix/journal/normal/000000000144.json": "6b662497f7d1c8166e85202f49ebca929c1d8f10dd89f9f8b8bcaea6b4ee53df",
     ".musubix/runs/CHANGE-0002/candidate-gate/35680846245/candidate-gate-macos-node22/candidate-gate-envelope.json": "fc054698e76f6a43dce00cf137bc53046ce3670e592f27c8f23186c22b6c10e3",
     ".musubix/runs/CHANGE-0002/candidate-gate/35680846245/candidate-gate-ubuntu-node20/candidate-gate-envelope.json": "0ce9218320d5ed9bd5f6d02f1ce685e7b72de5c0d988f415eef2bc609a7d9e05",
     ".musubix/runs/CHANGE-0002/candidate-gate/35680846245/candidate-gate-ubuntu-node22/candidate-gate-envelope.json": "7d6ec618b4d4f03c766bcb0a3794b6952c438c401ad35c0990ff2ae3b823a39e",
