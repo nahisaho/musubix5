@@ -12,6 +12,17 @@ import { requireApproval, resolveRequirementDomain } from './approval.js';
 import { activeChangeContext, resolveChangeContext, type ActiveChangeContext } from './change-generation.js';
 import { classifyParallelTddEvidence } from './parallel-tdd-evidence.js';
 import { parseMusubixTestReport, type MusubixTestReport } from './test-report.js';
+import { indexGraph, prepareGraphAdjacency } from './graph.js';
+import {
+  activeChangeGeneration,
+  batchForRecording,
+  batchKey,
+  generationOrderPhase,
+  loadChangeEvidence,
+  type ChangeEvidence,
+  type ChangeFingerprints,
+  type ChangePhaseEvidence,
+} from './change-evidence.js';
 import {
   candidateEvidenceBinding,
   validateCandidateBinding,
@@ -105,6 +116,190 @@ export interface TddEvidence {
   schemaVersion: 1;
   cycles: TddCycle[];
   chain?: TddChainRecord[];
+}
+
+export interface WorkspaceChangePhaseDependencies {
+  verifyRepository(controlRoot: string, sourceRoot: string): Promise<void>;
+  loadChangeEvidence(root: string): Promise<ChangeEvidence | null>;
+  currentFingerprints(
+    controlRoot: string,
+    sourceRoot: string,
+    changeId: string,
+    requirementIds: string[],
+  ): Promise<ChangeFingerprints>;
+  appendEvidenceOrder(
+    root: string,
+    input: { kind: 'change'; entityId: string; phase: string },
+  ): Promise<{ sequence: number }>;
+  writeJson(root: string, path: string, value: unknown): Promise<void>;
+}
+
+async function fingerprintPaths(root: string, paths: string[]): Promise<string> {
+  return digest(JSON.stringify(await snapshot(root, [...new Set(paths)].sort())));
+}
+
+async function verifyWorkspaceRepository(controlRoot: string, sourceRoot: string): Promise<void> {
+  const commonDirectory = async (root: string): Promise<string> => {
+    const result = await runProcess(
+      'git',
+      ['-C', root, 'rev-parse', '--path-format=absolute', '--git-common-dir'],
+      { cwd: root, timeoutMs: 30_000 },
+    );
+    if (result.status !== 'completed' || result.exitCode !== 0) {
+      throw new Error('CANDIDATE_WORKSPACE_REPOSITORY_MISMATCH: unable to resolve Git common directory.');
+    }
+    return resolve(result.stdout.trim());
+  };
+  if (await commonDirectory(controlRoot) !== await commonDirectory(sourceRoot)) {
+    throw new Error('CANDIDATE_WORKSPACE_REPOSITORY_MISMATCH: source and control roots belong to different repositories.');
+  }
+}
+
+/** @id CODE-M5-WORKSPACE-CHANGE-FINGERPRINTS-001
+ * @implements REQ-M5-MULTI-CHANGE-003 REQ-M5-MULTI-CHANGE-008 REQ-M5-COMPAT-013
+ * @design DES-M5-MULTI-CHANGE-005
+ */
+export async function workspaceChangeFingerprints(
+  controlRoot: string,
+  sourceRoot: string,
+  changeId: string,
+  requirementIds: string[],
+): Promise<ChangeFingerprints> {
+  const paths = await files(sourceRoot);
+  const trace = await buildTrace(sourceRoot, false);
+  const codePaths = trace.nodes.filter((node) => node.kind === 'code').map((node) => node.path);
+  const testPaths = new Set(trace.nodes.filter((node) => node.kind === 'test').map((node) => node.path));
+  const { graph } = await indexGraph(sourceRoot, { persist: false, refresh: false });
+  const adjacency = prepareGraphAdjacency(graph);
+  const nodes = new Map(trace.nodes.map((node) => [node.id, node]));
+  const requirementImplementations: NonNullable<ChangeFingerprints['requirementImplementations']> = {};
+  for (const requirementId of requirementIds) {
+    const designs = trace.edges
+      .filter((edge) => edge.relation === 'satisfies'
+        && edge.to === requirementId
+        && nodes.get(edge.from)?.kind === 'design')
+      .map((edge) => edge.from);
+    const relevant = new Set(trace.edges
+      .filter((edge) => edge.relation === 'implements'
+        && (edge.to === requirementId || designs.includes(edge.to))
+        && nodes.get(edge.from)?.kind === 'code')
+      .map((edge) => nodes.get(edge.from)!.path)
+      .filter((path) => graph.files.includes(path) && !testPaths.has(path)));
+    const queue = [...relevant];
+    for (let index = 0; index < queue.length; index += 1) {
+      for (const dependency of adjacency.forward.get(queue[index]!) ?? []) {
+        if (testPaths.has(dependency) || relevant.has(dependency)) continue;
+        relevant.add(dependency);
+        queue.push(dependency);
+      }
+    }
+    const implementationPaths = [...relevant].sort();
+    requirementImplementations[requirementId] = {
+      paths: implementationPaths,
+      fingerprints: await snapshot(sourceRoot, implementationPaths),
+    };
+  }
+  const tddPath = '.musubix/evidence/tdd.json';
+  return {
+    impact: await fingerprintPaths(sourceRoot, paths.filter((path) =>
+      path === `.musubix/changes/${changeId}.md`)),
+    requirements: await fingerprintPaths(sourceRoot, paths.filter((path) =>
+      /^\.musubix\/features\/[^/]+\/requirements\.md$/.test(path))),
+    design: await fingerprintPaths(sourceRoot, paths.filter((path) =>
+      /^\.musubix\/features\/[^/]+\/design\.md$/.test(path)
+      || /^\.musubix\/decisions\/ADR-\d+\.md$/.test(path))),
+    implementation: await fingerprintPaths(sourceRoot, codePaths),
+    tests: await fingerprintPaths(sourceRoot, [...testPaths]),
+    tdd: await fingerprintPaths(controlRoot, await exists(within(controlRoot, tddPath)) ? [tddPath] : []),
+    requirementImplementations,
+  };
+}
+
+const workspaceChangePhaseDefaults: WorkspaceChangePhaseDependencies = {
+  verifyRepository: verifyWorkspaceRepository,
+  loadChangeEvidence,
+  currentFingerprints: workspaceChangeFingerprints,
+  appendEvidenceOrder,
+  writeJson,
+};
+
+/** @id CODE-M5-WORKSPACE-CHANGE-CHECKPOINT-001
+ * @implements REQ-M5-MULTI-CHANGE-003 REQ-M5-MULTI-CHANGE-008 REQ-M5-COMPAT-013
+ * @design DES-M5-MULTI-CHANGE-005
+ */
+export async function recordChangePhaseFromWorkspace(
+  controlRoot: string,
+  sourceRoot: string,
+  changeId: string,
+  phase: 'implementation' | 'green',
+  requirementIds: string[],
+  dependencies: WorkspaceChangePhaseDependencies = workspaceChangePhaseDefaults,
+): Promise<ChangeEvidence> {
+  if (!/^CHANGE-\d+$/.test(changeId)
+    || !requirementIds.length
+    || requirementIds.some((requirementId) => !/^REQ-[A-Z0-9][A-Z0-9-]*$/.test(requirementId))) {
+    throw new Error('CHANGE_GENERATION_REQUIREMENTS: a valid non-empty requirement batch is required.');
+  }
+  await dependencies.verifyRepository(controlRoot, sourceRoot);
+  const evidence = await dependencies.loadChangeEvidence(controlRoot);
+  const change = evidence?.changes.find((entry) => entry.changeId === changeId);
+  const generation = change ? activeChangeGeneration(change) : null;
+  if (!evidence || !change || generation === null) {
+    throw new Error('CHANGE_GENERATION_PHASE: workspace checkpoint requires an active CHANGE generation.');
+  }
+  const normalizedRequirementIds = [...new Set(requirementIds)].sort();
+  if (!normalizedRequirementIds.every((requirementId) =>
+    change.requirementIds.includes(requirementId))) {
+    throw new Error('CHANGE_GENERATION_REQUIREMENTS: phase requirement IDs must belong to the CHANGE.');
+  }
+  const fullSet = normalizedRequirementIds.length === change.requirementIds.length
+    && normalizedRequirementIds.every((requirementId) => change.requirementIds.includes(requirementId));
+  const batch = fullSet
+    ? undefined
+    : batchForRecording(change.tddBatches ?? [], normalizedRequirementIds, phase);
+  const previous = fullSet ? change.phases[phase === 'implementation' ? 'red' : 'implementation']
+    : batch?.[phase === 'implementation' ? 'red' : 'implementation'];
+  if (!previous) {
+    throw new Error(`${phase} requires the preceding ${phase === 'implementation' ? 'red' : 'implementation'} phase for requirement batch ${normalizedRequirementIds.join(', ')}.`);
+  }
+  if (fullSet ? change.phases[phase] !== undefined : batch?.[phase] !== undefined) {
+    throw new Error(`${changeId}:${phase} is already recorded for requirement batch ${normalizedRequirementIds.join(', ')}.`);
+  }
+  const fingerprints = await dependencies.currentFingerprints(
+    controlRoot,
+    sourceRoot,
+    changeId,
+    normalizedRequirementIds,
+  );
+  if (phase === 'implementation') {
+    if (fingerprints.implementation === previous.fingerprints.implementation) {
+      throw new Error(`CHANGE_IMPLEMENTATION_UNCHANGED_AT_RECORD: ${changeId} did not change implementation since red.`);
+    }
+    const unchanged = normalizedRequirementIds.filter((requirementId) => {
+      const before = previous.fingerprints.requirementImplementations?.[requirementId];
+      const after = fingerprints.requirementImplementations?.[requirementId];
+      return before && after
+        && JSON.stringify(before.fingerprints) === JSON.stringify(after.fingerprints);
+    });
+    if (unchanged.length) {
+      throw new Error(`CHANGE_RELEVANT_IMPLEMENTATION_UNCHANGED_AT_RECORD: ${changeId} did not change implementation related to ${unchanged.join(', ')} since red.`);
+    }
+  }
+  const checkpoint: ChangePhaseEvidence = {
+    phase,
+    recordedAt: new Date().toISOString(),
+    fingerprints,
+  };
+  const scopeId = fullSet ? undefined : batch?.scopeId ?? batchKey(normalizedRequirementIds);
+  checkpoint.order = (await dependencies.appendEvidenceOrder(controlRoot, {
+    kind: 'change',
+    entityId: changeId,
+    phase: generationOrderPhase(generation, phase, scopeId),
+  })).sequence;
+  if (fullSet) change.phases[phase] = checkpoint;
+  else batch![phase] = checkpoint;
+  await dependencies.writeJson(controlRoot, '.musubix/evidence/changes.json', evidence);
+  return evidence;
 }
 
 function render(value: string, testId: string, testPath: string, reportPath: string): string {
