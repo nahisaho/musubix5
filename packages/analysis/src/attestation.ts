@@ -1,7 +1,7 @@
 import { createHash, createPublicKey, verify, type JsonWebKey, type KeyObject } from 'node:crypto';
 import { error, type Diagnostic } from '../../domain/src/index.js';
 import type { AttestationConfig } from './config.js';
-import { digest, evidenceInputPaths, exists, files, readText, snapshot, within } from './files.js';
+import { digest, evidenceInputs, exists, readText, snapshot, within } from './files.js';
 import { performanceEvidenceHead, validatePerformanceEvidence } from './performance.js';
 import { mutationEvidenceHead, validateMutationEvidence } from './mutation.js';
 import { modelCorrespondenceEvidenceHead, validateModelCorrespondenceEvidence } from './model-correspondence.js';
@@ -136,7 +136,7 @@ export async function collectEvidenceHeads(root: string): Promise<Record<string,
       metrics,
     }));
   }
-  const workspace = await snapshot(root, evidenceInputPaths(await files(root)));
+  const workspace = await snapshot(root, await evidenceInputs(root));
   heads.workspace = digest(canonical(workspace));
   return Object.fromEntries(Object.entries(heads).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0));
 }

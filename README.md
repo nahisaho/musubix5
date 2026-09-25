@@ -1028,10 +1028,11 @@ entry's direct input/projection is:
   with the `attestation.errors` entry excluded; also excludes `generatedAt`,
   `durationMs`, and `stdout`/`stderr`.
 - `workspace`: not an evidence file at all — a content digest over the
-  non-evidence repository file set returned by `files(root)`, filtered by
-  `evidenceInputPaths`; `.musubix/evidence/**` itself is excluded from this
-  walk so writing evidence never perturbs the workspace snapshot it is
-  bound into.
+  non-evidence repository file set returned by the root-aware evidence input
+  selector. The selector preserves the standard `evidenceInputPaths` exclusions
+  but includes `.github/skills/*/SKILL.md` for explicitly recognized musubix
+  source repositories. `.musubix/evidence/**` itself is excluded from this walk
+  so writing evidence never perturbs the workspace snapshot it is bound into.
 
 See `collectEvidenceHeads` and the per-entry head functions it delegates to
 (`workflowEvidenceHead`, `performanceEvidenceHead`, `mutationEvidenceHead`,

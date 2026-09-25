@@ -168,6 +168,37 @@ export function evidenceInputPaths(paths: string[]): string[] {
     && !/(?:^|\/)(?:logs?|session-logs)\//.test(path));
 }
 
+/** @id CODE-M5-EVIDENCE-SKILL-INPUT-001
+ * @implements REQ-M5-EVIDENCE-009 REQ-M5-EVIDENCE-008
+ * @design DES-M5-EVIDENCE-SKILL-001
+ */
+export function isRecognizedMusubixSource(manifest: unknown): boolean {
+  if (typeof manifest !== 'object' || manifest === null || Array.isArray(manifest)) return false;
+  const candidate = manifest as { name?: unknown; repository?: unknown };
+  if (typeof candidate.name !== 'string'
+    || typeof candidate.repository !== 'object'
+    || candidate.repository === null
+    || Array.isArray(candidate.repository)) return false;
+  const repository = candidate.repository as { url?: unknown };
+  if (typeof repository.url !== 'string') return false;
+  return (candidate.name === 'musubix5'
+      && repository.url === 'https://github.com/nahisaho/musubix5.git')
+    || (candidate.name === 'musubix3'
+      && repository.url === 'https://github.com/nahisaho/musubix3.git');
+}
+
+export async function evidenceInputs(root: string): Promise<string[]> {
+  const projectFiles = await files(root);
+  let includeSkills = false;
+  try {
+    includeSkills = isRecognizedMusubixSource(JSON.parse(await readText(root, 'package.json')));
+  } catch {
+    // Missing or unreadable consumer manifests do not enable repository Skill inputs.
+  }
+  const included = new Set(evidenceInputPaths(projectFiles));
+  return projectFiles.filter((path) => included.has(path) || (includeSkills && isSkillSource(path)));
+}
+
 // Fixed pool size chosen to stay comfortably under common OS file-descriptor
 // limits (commonly 1024 on Linux/WSL) even on projects with large,
 // unexcluded vendored source trees (ADR-0018).

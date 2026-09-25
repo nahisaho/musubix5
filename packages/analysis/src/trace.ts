@@ -1,7 +1,19 @@
 import ts from 'typescript';
 import { dirname, basename } from 'node:path';
 import { error, ids, validateDesign, validateRequirements, type Diagnostic } from '../../domain/src/index.js';
-import { exists, files, isArtifact, isSkillSource, isSource, isTraceSource, readText, snapshot, within, writeJson } from './files.js';
+import {
+  exists,
+  files,
+  isArtifact,
+  isRecognizedMusubixSource,
+  isSkillSource,
+  isSource,
+  isTraceSource,
+  readText,
+  snapshot,
+  within,
+  writeJson,
+} from './files.js';
 
 export interface TraceNode {
   id: string;
@@ -24,21 +36,6 @@ export interface TraceGraph {
   edges: TraceEdge[];
   diagnostics: Diagnostic[];
   fingerprints: Record<string, string>;
-}
-
-function isRecognizedMusubixSource(manifest: unknown): boolean {
-  if (typeof manifest !== 'object' || manifest === null || Array.isArray(manifest)) return false;
-  const candidate = manifest as { name?: unknown; repository?: unknown };
-  if (typeof candidate.name !== 'string'
-    || typeof candidate.repository !== 'object'
-    || candidate.repository === null
-    || Array.isArray(candidate.repository)) return false;
-  const repository = candidate.repository as { url?: unknown };
-  if (typeof repository.url !== 'string') return false;
-  return (candidate.name === 'musubix5'
-      && repository.url === 'https://github.com/nahisaho/musubix5.git')
-    || (candidate.name === 'musubix3'
-      && repository.url === 'https://github.com/nahisaho/musubix3.git');
 }
 
 /** @id CODE-M5-TRACE-SKILL-001

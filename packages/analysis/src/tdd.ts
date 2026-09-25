@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import ts from 'typescript';
 import { error, type Diagnostic } from '../../domain/src/index.js';
 import { loadConfig, commandCwd } from './config.js';
-import { digest, evidenceInputPaths, exists, files, isSource, readText, safePath, snapshot, within, writeJson } from './files.js';
+import { digest, evidenceInputs, exists, files, isSource, readText, safePath, snapshot, within, writeJson } from './files.js';
 import { runProcess, type Runner } from './process.js';
 import { buildTrace, type TraceNode } from './trace.js';
 import { adapterInvocation, clearAdapterOutput, mergeAdapterArgs, normalizeAdapterReport, readAdapterOutput } from './adapters.js';
@@ -134,7 +134,7 @@ function appendChainRecord(evidence: TddEvidence, cycle: TddCycle, phase: TddCha
 
 async function sourceFingerprint(root: string, testPath: string, excludedPaths: string[] = []): Promise<string> {
   const excluded = new Set(excludedPaths);
-  const paths = evidenceInputPaths(await files(root)).filter((path) =>
+  const paths = (await evidenceInputs(root)).filter((path) =>
     path !== testPath && !excluded.has(path));
   return digest(JSON.stringify(await snapshot(root, paths)));
 }

@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { unlink } from 'node:fs/promises';
 import { validateConstitution, validateDesign, validateRequirements, type Diagnostic, type Evidence } from '../../domain/src/index.js';
 import { loadConfig, loadPolicyBaseline, policyDiagnostics, commandCwd, type Config } from './config.js';
-import { digest, evidenceInputPaths, exists, files, readText, safePath, snapshot, within, writeJson } from './files.js';
+import { digest, evidenceInputs, exists, files, readText, safePath, snapshot, within, writeJson } from './files.js';
 import { graphGate, graphImpact, indexGraph } from './graph.js';
 import { formalCheck, type FormalResult } from './formal.js';
 import { validateWorkflow } from './workflow.js';
@@ -72,7 +72,20 @@ export interface FormalEvidence {
 }
 
 export async function evidenceSnapshot(root: string): Promise<Record<string, string>> {
-  return snapshot(root, evidenceInputPaths(await files(root)));
+  return snapshot(root, await evidenceInputs(root));
+}
+
+/** @id CODE-M5-EVIDENCE-SKILL-CURRENCY-001
+ * @implements REQ-M5-EVIDENCE-009
+ * @design DES-M5-EVIDENCE-SKILL-001
+ */
+export function qualityInputsCurrent(
+  recorded: unknown,
+  current: Record<string, string>,
+): boolean {
+  if (typeof recorded !== 'object' || recorded === null || Array.isArray(recorded)) return false;
+  if (!Object.values(recorded).every((value) => typeof value === 'string')) return false;
+  return JSON.stringify(recorded) === JSON.stringify(current);
 }
 
 export function snapshotChanges(
@@ -851,7 +864,7 @@ export async function projectStatus(root: string): Promise<{
     const evidence = JSON.parse(await readText(root, evidencePath)) as Partial<GateReport>;
     if (evidence.schemaVersion !== 1 || !['pass', 'fail', 'skipped'].includes(String(evidence.status))) throw new Error('Invalid quality evidence; run gate.');
     if (evidence.status === 'pass' || evidence.status === 'fail') {
-      status = evidence.fingerprints && JSON.stringify(evidence.fingerprints) === JSON.stringify(await evidenceSnapshot(root)) ? evidence.status : 'stale';
+      status = qualityInputsCurrent(evidence.fingerprints, await evidenceSnapshot(root)) ? evidence.status : 'stale';
       if (status === 'pass' && (!evidence.checks?.length || aggregateStatus(evidence.checks) !== 'pass')) status = 'stale';
       if (status === 'pass') {
         const performance = await validatePerformanceEvidence(root);
