@@ -105,7 +105,7 @@ describe('release generation 5', () => {
 
   /**
    * @id TEST-M5-RELEASE-003-GEN5-001
-   * @verifies REQ-M5-RELEASE-003
+   * @verifies REQ-M5-RELEASE-003 REQ-M5-TDD-CURRENCY-001
    */
   it('TEST-M5-RELEASE-003-GEN5-001 creates only a sealed GitHub Release for v0.2.0', async () => {
     const {
@@ -159,7 +159,7 @@ describe('release generation 5', () => {
 
   /**
    * @id TEST-M5-RELEASE-003-DOCS-001
-   * @verifies REQ-M5-RELEASE-003
+   * @verifies REQ-M5-RELEASE-003 REQ-M5-TDD-CURRENCY-001
    */
   it('TEST-M5-RELEASE-003-DOCS-001 validates release documentation version surfaces', async () => {
     const {
@@ -242,7 +242,7 @@ describe('release generation 5', () => {
 
   /**
    * @id TEST-M5-RELEASE-004-001
-   * @verifies REQ-M5-RELEASE-004
+   * @verifies REQ-M5-RELEASE-004 REQ-M5-TDD-CURRENCY-001
    */
   it('TEST-M5-RELEASE-004-001 publishes the exact verified GitHub Release tarball', async () => {
     const releaseWorkflow = await import('../packages/analysis/src/release-workflow.js');

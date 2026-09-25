@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-25T19:09:27.495Z",
-  "totalRequirements": 97,
+  "generatedAt": "2026-09-25T20:37:33.947Z",
+  "totalRequirements": 98,
   "modeledRequirements": 0,
   "modeledFraction": 0,
   "result": {
@@ -111,6 +111,7 @@
       "REQ-M5-REL020-001",
       "REQ-M5-REL020-002",
       "REQ-M5-REL020-003",
+      "REQ-M5-TDD-CURRENCY-001",
       "REQ-M5-EVIDENCE-009",
       "REQ-M5-EVIDENCE-008",
       "REQ-SESSION-SCOPED-DEVELOPMENT-001",
@@ -585,6 +586,11 @@
       {
         "code": "FORMAL_UNSUPPORTED",
         "severity": "warning",
+        "message": "REQ-M5-TDD-CURRENCY-001 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
         "message": "REQ-M5-EVIDENCE-009 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
       },
       {
@@ -620,6 +626,7 @@
     ".musubix/features/node24-github-actions/requirements.md": "32e775df8d7bbe3336b657a2516b93e3ec5bf3ca202506b96e159569dfe95c5b",
     ".musubix/features/parallel-agent-development/requirements.md": "8fee03a0f32288e18819b311c13e7965ba51230dad7cb88f46209fbffb009112",
     ".musubix/features/release-0-2-0/requirements.md": "9a21b40b82cd44ffc0a7975583be3e309b1541ec29e78e8eac22eb74f6eb7acf",
+    ".musubix/features/repository-tdd-currency/requirements.md": "a4bcc2d987a377ebf9a4532993455acc49864c5368a2de0a4ddccb2bf9c5b86b",
     ".musubix/features/skill-evidence-inputs/requirements.md": "454b7ed930b9eb9c66e9960e613debbdfb23beffce072add38b8e520d802c8f0",
     ".musubix/features/trace-skill-source-selection/requirements.md": "94fe7ab9c31b7b3e6ee7455039b71eaa66f622715db71cce155b2ca1f438c1fb"
   }

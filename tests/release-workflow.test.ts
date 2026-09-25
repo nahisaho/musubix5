@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 describe('release workflow', () => {
   /**
    * @id TEST-M5-RELEASE-003
-   * @verifies REQ-M5-RELEASE-003
+   * @verifies REQ-M5-RELEASE-003 REQ-M5-TDD-CURRENCY-001
    */
   it('TEST-M5-RELEASE-003 binds versions, evidence, artifacts, and side effects', async () => {
     const {

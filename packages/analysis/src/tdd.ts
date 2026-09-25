@@ -338,6 +338,10 @@ function terminalFingerprintEvidence(
   return { cycle, order: latest.order, fingerprint: latest.fingerprint };
 }
 
+/** @id CODE-M5-TDD-CURRENCY-REPAIR-001
+ * @implements REQ-M5-TDD-CURRENCY-001
+ * @design DES-M5-TDD-CURRENCY-001
+ */
 function effectiveLatestCycle(
   index: TddCurrencyIndex,
   testId: string,

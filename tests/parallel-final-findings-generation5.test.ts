@@ -343,7 +343,7 @@ async function completeAssignmentTdd(
 
 describe('CHANGE-0003 generation 5 final parallel findings', () => {
   /** @id TEST-M5-PARALLEL-REAL-GATE-SUCCESS-001
-   * @verifies REQ-M5-TDD-003 REQ-M5-PARALLEL-007 REQ-M5-PARALLEL-010
+   * @verifies REQ-M5-TDD-003 REQ-M5-PARALLEL-007 REQ-M5-PARALLEL-010 REQ-M5-TDD-CURRENCY-001
    */
   it('TEST-M5-PARALLEL-REAL-GATE-SUCCESS-001 verifies provisional assignment TDD through the real integration gate', async () => {
     const { fixture } = await createSplitRootLifecycleFixture({ stubCli: false });

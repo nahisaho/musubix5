@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 describe('release generation 5 boundaries', () => {
   /**
    * @id TEST-M5-RELEASE-003-CONTEXT-BINDING-001
-   * @verifies REQ-M5-RELEASE-003
+   * @verifies REQ-M5-RELEASE-003 REQ-M5-TDD-CURRENCY-001
    */
   it('TEST-M5-RELEASE-003-CONTEXT-BINDING-001 verifies direct release attestation identity', async () => {
     const { validateReleaseAttestationIdentity } =

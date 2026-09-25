@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 describe('CHANGE-0003 quality regressions', () => {
   /** @id TEST-M5-PARALLEL-GRAPH-ACYCLIC-001
-   * @verifies REQ-M5-PARALLEL-009 REQ-M5-PARALLEL-010 REQ-M5-PARALLEL-013
+   * @verifies REQ-M5-PARALLEL-009 REQ-M5-PARALLEL-010 REQ-M5-PARALLEL-013 REQ-M5-TDD-CURRENCY-001
    */
   it('TEST-M5-PARALLEL-GRAPH-ACYCLIC-001 keeps parallel TDD provenance dependencies acyclic', async () => {
     const { graphGate, indexGraph } = await import('../packages/analysis/src/graph.js');

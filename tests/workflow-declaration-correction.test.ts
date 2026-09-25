@@ -132,7 +132,7 @@ describe('workflow declaration correction', () => {
 
   /**
    * @id TEST-M5-WORKFLOW-DECLARATION-CORRECTION-CLI-001
-   * @verifies REQ-M5-EVIDENCE-006 REQ-M5-COMPAT-013
+   * @verifies REQ-M5-EVIDENCE-006 REQ-M5-COMPAT-013 REQ-M5-TDD-CURRENCY-001
    */
   it('TEST-M5-WORKFLOW-DECLARATION-CORRECTION-CLI-001 records a correction with JSON exit 0', () => {
     const root = mkdtempSync(join(tmpdir(), 'musubix5-workflow-correction-cli-'));

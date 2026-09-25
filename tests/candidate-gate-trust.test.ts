@@ -16,7 +16,7 @@ afterEach(() => {
 describe('candidate gate trust contract', () => {
   /**
    * @id TEST-M5-RELEASE-002-TRUST-001
-   * @verifies REQ-M5-APPROVAL-007 REQ-M5-EVIDENCE-003 REQ-M5-RELEASE-002
+   * @verifies REQ-M5-APPROVAL-007 REQ-M5-EVIDENCE-003 REQ-M5-RELEASE-002 REQ-M5-TDD-CURRENCY-001
    */
   it('TEST-M5-RELEASE-002-TRUST-001 materializes approved policy and rejects unsigned artifacts', async () => {
     const root = mkdtempSync(join(tmpdir(), 'musubix5-candidate-trust-'));

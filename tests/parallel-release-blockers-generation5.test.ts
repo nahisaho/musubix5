@@ -86,7 +86,7 @@ describe('CHANGE-0003 generation 5 release blocker regressions', () => {
   });
 
   /** @id TEST-M5-PARALLEL-INTEGRATION-GATE-001
-   * @verifies REQ-M5-PARALLEL-010 REQ-M5-PARALLEL-013
+   * @verifies REQ-M5-PARALLEL-010 REQ-M5-PARALLEL-013 REQ-M5-TDD-CURRENCY-001
    */
   it('TEST-M5-PARALLEL-INTEGRATION-GATE-001 tolerates only the complete pre-release diagnostic pair', async () => {
     const { integrationGateAcceptable } = await import('../packages/analysis/src/parallel-runtime.js');

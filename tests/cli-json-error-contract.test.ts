@@ -83,7 +83,7 @@ describe('CLI JSON failure compatibility', () => {
 
   /**
    * @id TEST-M5-APPROVAL-GUIDANCE-001
-   * @verifies REQ-M5-APPROVAL-010
+   * @verifies REQ-M5-APPROVAL-010 REQ-M5-TDD-CURRENCY-001
    */
   it('TEST-M5-APPROVAL-GUIDANCE-001 names the published approval recovery command', async () => {
     const repositoryRoot = fileURLToPath(new URL('..', import.meta.url));

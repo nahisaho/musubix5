@@ -1824,6 +1824,68 @@
       "phase": "complete",
       "status": "completed",
       "recordedAt": "2026-09-25T20:05:32.335Z"
+    },
+    {
+      "skill": "sdd-implementation",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0013",
+      "generation": 1,
+      "requirementIds": [
+        "REQ-M5-TDD-CURRENCY-001"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-09-25T20:24:16.573Z"
+    },
+    {
+      "skill": "sdd-quality",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0013",
+      "generation": 1,
+      "requirementIds": [
+        "REQ-M5-TDD-CURRENCY-001"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-09-25T20:27:26.932Z"
     }
-  ]
+  ],
+  "verification": {
+    "mode": "compatible",
+    "sourceSha256": "1f23bbf726036220f7b200f647c45172ee74ecdafb9784be1235a2a32bfc9d73",
+    "eventsSha256": "cb78b0df722e4a78dab86110586427d99fa091c61d51f8dcb3b30988feaeef52",
+    "verifiedAt": "2026-09-25T20:27:36.681Z",
+    "invocations": [
+      {
+        "skill": "sdd-change",
+        "toolCallId": "call_fngoGEYcBI138c51zFPMCEwF",
+        "invokedAt": "2026-09-25T19:45:08.332Z",
+        "completedAt": "2026-09-25T19:45:08.339Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-design",
+        "toolCallId": "call_WpgGwN72DWm99TduXaDPcNcE",
+        "invokedAt": "2026-09-25T19:45:41.661Z",
+        "completedAt": "2026-09-25T19:45:41.670Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-implementation",
+        "toolCallId": "call_NEh6AdHFgMxWgZJg0H7ZtwJR",
+        "invokedAt": "2026-09-25T20:08:56.983Z",
+        "completedAt": "2026-09-25T20:08:56.998Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-quality",
+        "toolCallId": "call_Mb81WfAtQoIva0Vniqz9b4lS",
+        "invokedAt": "2026-09-25T20:24:19.389Z",
+        "completedAt": "2026-09-25T20:24:19.396Z",
+        "status": "completed"
+      }
+    ]
+  }
 }
