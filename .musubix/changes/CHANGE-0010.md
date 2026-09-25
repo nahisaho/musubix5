@@ -2,7 +2,7 @@
 schemaVersion: 1
 id: CHANGE-0010
 summary: Standardize GitHub Actions on Node.js 24
-status: active
+status: completed
 ---
 # CHANGE-0010: node24-github-actions
 
