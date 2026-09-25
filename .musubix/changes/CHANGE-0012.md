@@ -2,7 +2,7 @@
 schemaVersion: 1
 id: CHANGE-0012
 summary: Make Unix-socket verification portable and TDD currency selection deterministic
-status: active
+status: completed
 ---
 # CHANGE-0012: portable-unix-socket-and-tdd-currency
 
