@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "stage": "design",
-  "changeId": "CHANGE-0013",
+  "changeId": "CHANGE-0014",
   "generation": 1,
   "artifacts": {
     ".musubix/constitution.md": "f8b47fdc486f395bab05223a94821b145cf8df70ffde2c838a28f8d71fe0fa92",
@@ -28,14 +28,18 @@
     ".musubix/decisions/ADR-0022.md": "7c635784df01ac4a51b99feac2d34891416dcbea17d461e199f07daedf9d4a74",
     ".musubix/decisions/ADR-0023.md": "4308013a832dd1d2183b1eee79176e08da4b30501ada4fb66ac763bab08a10fe",
     ".musubix/decisions/ADR-0024.md": "dab62ae03853e1eb3a0fefdfcee64084b50fa87916e8893a9028f6eb95a88289",
+    ".musubix/decisions/ADR-0025.md": "3935050fe5dbf18cb9d0a0507943e72011e31c9145a9abf21492c6fedf847be7",
+    ".musubix/decisions/ADR-0026.md": "ce43c81711990e317b061642fe8d25ac937b770cee81ef4093809ec8e20e4827",
     ".musubix/features/codegraph-performance/design.md": "3ddf90dbb97a753644deb0e4dd38adaa27420273390a27b241612ef84f4c9c97",
     ".musubix/features/codegraph-performance/requirements.md": "a5eb96722cea36c4fab7f81a09d992b1cbce62b154c7b85eab35199817d551e1",
+    ".musubix/features/multi-change-workspaces/design.md": "d7b9c3477a4b3a333784a86d3d7004f0528fde7dd4dd1ae7f29309c5e3bed42d",
+    ".musubix/features/multi-change-workspaces/requirements.md": "763808e7abc7966f5611e827a363026067825e1dcf456c781d7f49e7622d8880",
     ".musubix/features/musubix5-clean-foundation/design.md": "866a686fecf0bf726316593a1770ba7bd05f66f35a9ec39a44a5ac5d27edee46",
-    ".musubix/features/musubix5-clean-foundation/requirements.md": "9926a78a9fd0e9b47cc358386358c00d2490ff4f3402766d089733e235f9f0ab",
+    ".musubix/features/musubix5-clean-foundation/requirements.md": "3df9a035c805bbde98ac364fea202370db4ec1e7268c3c394d6aae2907133a74",
     ".musubix/features/node24-github-actions/design.md": "a51859b2653b1b1885c9280b8fbba0efdbbc2692e2b4cddb60b6dd75a7217cb5",
     ".musubix/features/node24-github-actions/requirements.md": "32e775df8d7bbe3336b657a2516b93e3ec5bf3ca202506b96e159569dfe95c5b",
     ".musubix/features/parallel-agent-development/design.md": "2d3ee454f0f131cdd21a62932790fafa0b6edc3df68d43e473d74b294d1e8a5d",
-    ".musubix/features/parallel-agent-development/requirements.md": "8fee03a0f32288e18819b311c13e7965ba51230dad7cb88f46209fbffb009112",
+    ".musubix/features/parallel-agent-development/requirements.md": "8d0cb15a2928c593d70d03acc21f93f404a084cf8ce49f20197a2338949c24f7",
     ".musubix/features/release-0-2-0/design.md": "6642acfea4fe6e6b565a334e9a3490605bc418915e7a64af279e7a283df2c0eb",
     ".musubix/features/release-0-2-0/requirements.md": "9a21b40b82cd44ffc0a7975583be3e309b1541ec29e78e8eac22eb74f6eb7acf",
     ".musubix/features/repository-tdd-currency/design.md": "65268ced8744efd297df10d2debf1cd214fb66c69cd1ca8c990383bf52b9132d",
@@ -183,7 +187,7 @@
     }
   },
   "exclusions": [],
-  "artifactSha256": "5e2b57576c4791421ba7ed19ea29b6b639059a29fb051a5d1836c1821b1c68c5",
+  "artifactSha256": "6533dae752c250c72452e67c03fe5db7f2165eb801548601757008290aa5ed82",
   "approver": "nahisaho",
-  "approvedAt": "2026-09-25T20:08:28.430Z"
+  "approvedAt": "2026-09-25T23:06:16.127Z"
 }
