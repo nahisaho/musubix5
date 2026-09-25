@@ -242359,6 +242359,56 @@
           "order": 2040
         }
       ]
+    },
+    {
+      "changeId": "CHANGE-0013",
+      "generation": 1,
+      "activeGeneration": 1,
+      "requirementIds": [
+        "REQ-M5-TDD-CURRENCY-001"
+      ],
+      "phases": {
+        "impact": {
+          "phase": "impact",
+          "recordedAt": "2026-09-25T19:28:23.102Z",
+          "fingerprints": {
+            "impact": "ad870171351bb0d5bf9f9b0d60ea7cd63535b4ba9773d234cb799fbd476541ac",
+            "requirements": "fa788336670f9f27cbee4f656c61d336e3688df4f0a6362141813bf61862ded7",
+            "design": "2a776950c13035111e50f7a1fefc7e861903314959b86052f0a229060bc6ae42",
+            "implementation": "5746846ce94f996a53f7939fccf353fa62ed402adeafa91a04d83a5eaeda4f0c",
+            "tests": "9f8a09c5764ca32c193517edc9a7e0e32df3f99250820adca781000e5bcdf855",
+            "tdd": "39a7c3774f0c7cc26276087931cff5f19158df17fdac9646d9001de40b6f1a4c",
+            "requirementImplementations": {
+              "REQ-M5-TDD-CURRENCY-001": {
+                "paths": [],
+                "fingerprints": {}
+              }
+            }
+          },
+          "order": 2084
+        },
+        "requirements": {
+          "phase": "requirements",
+          "recordedAt": "2026-09-25T19:39:37.573Z",
+          "fingerprints": {
+            "impact": "5307de83c9c5dcf9e05bcfdbe58894c43b64e927c5c86657726b028e88b45e6c",
+            "requirements": "a1f4bc602bab69ccc82d6d8485070199a3d2df53a66af8beb65fa9264f5521f3",
+            "design": "2a776950c13035111e50f7a1fefc7e861903314959b86052f0a229060bc6ae42",
+            "implementation": "5746846ce94f996a53f7939fccf353fa62ed402adeafa91a04d83a5eaeda4f0c",
+            "tests": "9f8a09c5764ca32c193517edc9a7e0e32df3f99250820adca781000e5bcdf855",
+            "tdd": "39a7c3774f0c7cc26276087931cff5f19158df17fdac9646d9001de40b6f1a4c",
+            "requirementImplementations": {
+              "REQ-M5-TDD-CURRENCY-001": {
+                "paths": [],
+                "fingerprints": {}
+              }
+            }
+          },
+          "approvalManifestSha256": "74aa03ea7de3dde0422ccf93c0cce68e82014b82653a6fe7a00e71690773284e",
+          "requirementsOrdinal": 1,
+          "order": 2085
+        }
+      }
     }
   ]
 }
