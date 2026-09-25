@@ -644,7 +644,7 @@ release権限はrepository review、CODEOWNERS/branch protection、またはCI/O
 保護してください。
 candidateのrelease承認には`.github/workflows/candidate-gate.yml`の閉じた
 GitHub Actions matrixも必要です。`musubix5 candidate-gate context`で候補に
-bindingされた入力を準備し、その候補commitでworkflowを実行して5個のopaque artifactを
+bindingされた入力を準備し、その候補commitでworkflowを実行して3個のopaque artifactを
 取得し、`musubix5 candidate-gate ingest <artifact...>`で取り込み、
 `musubix5 candidate-gate validate`で完全性を確認します。取り込みは署名なし、
 stale、候補不一致、同一batch内job重複、CI run再利用を拒否し、検証はtracked
@@ -933,8 +933,8 @@ CLI検証を呼び出す前に削除します。短命JWTは署名済みattestat
   日本語は文字 bigram。Git 根拠は最大100コミット・各30ファイルで、共変更は相関、
   著者別ディレクトリ件数は貢献の記録であって因果や専門性ではありません。
   履歴がない場合は明示的に skipped。外部サービスへは送信しません。
-- Core CIはNode 22をLinux、Windows、macOSで実行し、LinuxではNode 20と
-  Node 24の互換性も追加確認します。native adapterとformal solverの統合は、
+- Core CIはNode.js 24をLinux、Windows、macOSで実行します。Node.js 20と22は
+  package runtimeとして引き続きsupportしますが、継続検証は行いません。native adapterとformal solverの統合は、
   固定toolchainを使ってLinuxで実行します。
   Windowsの実行ラッパーとprocess tree停止にはplatform固有の差があります。
   ESLintは追加せず、strict TypeScript と既存テストで検証します。
@@ -954,8 +954,9 @@ npm run pack:smoke
 `packages/domain` は純粋な検証、`packages/analysis` は根拠・コンパイラ・
 ファイルシステム、`packages/cli` はコマンドと配置を担当します。
 ビルド出力は `dist/packages/**`。npm パッケージには隠しSkills、プラグイン定義、
-CLI、モジュール、雛形が明示的に含まれます。Core CIはNode 22をLinux、Windows、
-macOSで実行し、LinuxではNode 20/24の互換性も検証します。native adapterと
+CLI、モジュール、雛形が明示的に含まれます。Core CIはNode.js 24をLinux、Windows、
+macOSで実行します。Node.js 20と22は`>=20`のpackage runtime contractでsupportを
+継続しますが、継続検証は行いません。native adapterと
 formal solverは固定toolchainを使ってLinuxで統合検証します。
 `pack:smoke` は実際のtarballを `.test-work/` 内の独立した利用側プロジェクトへ
 導入し、実行ファイル・ESM export・配置を確認してから削除します。

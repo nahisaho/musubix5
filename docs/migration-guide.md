@@ -26,6 +26,24 @@ covered by musubix3 v0.1.18 contract tests. Other intentional incompatibilities
 must be added to this guide together with an ADR and regression test before
 implementation.
 
+## Node.js 24 candidate matrix
+
+GitHub Actions now installs Node.js 24 for candidate verification, release, and
+npm publication. The candidate matrix emits one opaque envelope artifact for
+each of Ubuntu, Windows, and macOS. The published package runtime contract
+remains Node.js `>=20`, but Node.js 20 and 22 are no longer continuously
+verified by the candidate matrix.
+
+Persisted Ubuntu/20, Ubuntu/22, Windows/22, and macOS/22 candidate-gate records
+remain readable for historical status and deletion invalidation. They do not
+satisfy or block the current three-job matrix. Ingesting a new envelope for one
+of those retired identities fails with `RELEASE_GATE_EVIDENCE_STALE` and
+persists no record. Historical candidate snapshots can therefore report
+`candidateGateStatus: missing` under the current matrix.
+
+Any in-flight candidate created before this change must rerun candidate gates
+to produce Ubuntu/24, Windows/24, and macOS/24 evidence before release approval.
+
 ## Approval manifest extensions
 
 Native musubix5 approvals use `approval-manifest-schema-v1`. Requirements and

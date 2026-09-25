@@ -1,3 +1,6 @@
+# @id CODE-M5-CI-NODE24-001
+# @implements REQ-M5-CI-001
+# @design DES-M5-CI-001
 name: Candidate gate
 
 on:
@@ -37,19 +40,13 @@ jobs:
         include:
           - runner: ubuntu-latest
             os: ubuntu
-            node: 20
-          - runner: ubuntu-latest
-            os: ubuntu
-            node: 22
-          - runner: ubuntu-latest
-            os: ubuntu
             node: 24
           - runner: windows-latest
             os: windows
-            node: 22
+            node: 24
           - runner: macos-latest
             os: macos
-            node: 22
+            node: 24
     runs-on: ${{ matrix.runner }}
     env:
       CANDIDATE_COMMIT: ${{ inputs.candidateCommit }}

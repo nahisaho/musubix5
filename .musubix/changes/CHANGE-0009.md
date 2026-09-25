@@ -2,7 +2,7 @@
 schemaVersion: 1
 id: CHANGE-0009
 summary: Include repository-owned Skill sources in strict trace inputs
-status: active
+status: completed
 ---
 # CHANGE-0009: trace-skill-source-selection
 

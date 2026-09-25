@@ -1,6 +1,6 @@
 # @id CODE-M5-RELEASE-WORKFLOW-YAML-001
-# @implements REQ-M5-RELEASE-003 REQ-M5-REL020-002
-# @design DES-M5-020 DES-M5-REL020-002
+# @implements REQ-M5-RELEASE-003 REQ-M5-REL020-002 REQ-M5-CI-001
+# @design DES-M5-020 DES-M5-REL020-002 DES-M5-CI-001
 name: Candidate-bound release
 
 on:
@@ -51,7 +51,7 @@ jobs:
           path: evidence
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
           cache-dependency-path: candidate/package-lock.json
       - name: Pin npm
@@ -200,7 +200,7 @@ jobs:
           path: build-b
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
       - name: Pin npm
         run: npm install --global npm@11.5.1
       # @id CODE-M5-RELEASE-003-CONTEXT-BUNDLE-001
@@ -395,7 +395,7 @@ jobs:
           path: evidence
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
       - run: npm install --global npm@11.5.1
       - run: npm --prefix candidate ci && npm --prefix candidate run build
       - uses: actions/download-artifact@v4

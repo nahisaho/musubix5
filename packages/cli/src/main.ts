@@ -22,7 +22,7 @@ import {
   recordChangeWaiver, recordWorkflowWaiver, recordAllWorkflowWaivers, recordWorkflowDeclarationCorrection,
   bootstrapRun, bootstrapResume, bootstrapStatus, executeBootstrapFileOperation,
   type BootstrapAuthorityManifest,
-  candidateGateContext, ingestCandidateGateEnvelopes, loadCandidateGateResults,
+  candidateGateContext, candidateMatrixJobs, ingestCandidateGateEnvelopes, loadCandidateGateResults,
   validateCandidateGateSet, type CandidateGateEnvelope,
   authorizeReleaseOperation, releaseOperationStatus, validateReleaseOperationAuthorization,
   type ReleaseOperationScope,
@@ -254,7 +254,11 @@ async function publicCandidateSnapshotProjection(
       record.changeId === snapshot.changeId
       && record.generation === snapshot.generation
       && record.candidateCommit === snapshot.commit);
-    if (matchingGateRecords.length > 0) {
+    const currentJobIds = new Set(candidateMatrixJobs.map((job) =>
+      `${job.os}-node${job.nodeMajor}`));
+    const matchingCurrentGateRecords = matchingGateRecords.filter((record) =>
+      currentJobIds.has(`${record.job.os}-node${record.job.nodeMajor}`));
+    if (matchingCurrentGateRecords.length > 0) {
       const gateContext = await candidateGateContext(
         root,
         snapshot.changeId,
@@ -264,7 +268,8 @@ async function publicCandidateSnapshotProjection(
       const gate = validateCandidateGateSet(gateContext, gateRecords);
       candidateGateStatus = gate.valid
         ? 'pass'
-        : matchingGateRecords.some((record) => record.status !== 'pass' || !record.commandsPassed)
+        : matchingCurrentGateRecords.some((record) =>
+          record.status !== 'pass' || !record.commandsPassed)
           ? 'fail'
           : gate.diagnostics.some((diagnostic) => diagnostic.code === 'RELEASE_GATE_EVIDENCE_MISSING')
             ? 'missing'

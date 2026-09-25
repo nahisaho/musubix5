@@ -695,7 +695,7 @@ CODEOWNERS/branch protection, or CI/OIDC attestation.
 Candidate release approval additionally requires the closed GitHub Actions
 matrix in `.github/workflows/candidate-gate.yml`. Prepare its bound inputs with
 `musubix5 candidate-gate context`, dispatch the workflow for the exact candidate,
-download all five opaque artifacts, ingest them with
+download all three opaque artifacts, ingest them with
 `musubix5 candidate-gate ingest <artifact...>`, and verify the set with
 `musubix5 candidate-gate validate`. Ingestion rejects unsigned, stale, wrong-candidate, same-batch duplicate-job,
 or reused-run artifacts; validation rejects any accepted record whose gate
@@ -1129,8 +1129,8 @@ transcript/session fields into the Ed25519 signature.
   cover at most 100 commits/30 files per commit; they indicate correlation and
   contribution, not causality or expertise. No Git history is explicitly skipped.
   Indexing is local; nothing is sent to a service.
-- Core CI covers Node 22 on Linux, Windows, and macOS, with additional Node 20
-  and Node 24 Linux compatibility checks. Native adapters and formal solvers run
+- Core CI covers Node.js 24 on Linux, Windows, and macOS. Node.js 20 and 22
+  remain supported package runtimes but are not continuously verified. Native adapters and formal solvers run
   once on Linux with pinned toolchains.
   No formatting/lint framework is bundled; strict TypeScript and tests are used.
 
@@ -1149,9 +1149,9 @@ npm run pack:smoke
 Workspaces: `packages/domain` (pure validators), `packages/analysis` (evidence,
 compiler and filesystem services), `packages/cli` (thin command/installation layer).
 One build emits `dist/packages/**`. Published contents explicitly include hidden
-skills, native manifests, built CLI/modules and assets. Core CI runs on Node 22
-across Linux, Windows, and macOS, with additional Node 20 and Node 24 compatibility
-checks on Linux. Native adapter and formal-solver integrations run on Linux with
+skills, native manifests, built CLI/modules and assets. Core CI runs on Node.js 24
+across Linux, Windows, and macOS. Node.js 20 and 22 remain supported by the
+`>=20` package runtime contract but are not continuously verified. Native adapter and formal-solver integrations run on Linux with
 pinned toolchains. Tests cover unit behavior, CLI exits, installer preservation,
 and packaging.
 `pack:smoke` installs the real tarball into an isolated `.test-work/` consumer,

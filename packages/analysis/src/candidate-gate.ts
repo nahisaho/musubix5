@@ -10,12 +10,26 @@ import { verifyJournal } from './journal.js';
 import { resolveCandidateSnapshot } from './workspace-manager.js';
 
 export const candidateMatrixJobs = [
+  { os: 'ubuntu', nodeMajor: 24 },
+  { os: 'windows', nodeMajor: 24 },
+  { os: 'macos', nodeMajor: 24 },
+] as const;
+
+export const historicalCandidateMatrixJobs = [
   { os: 'ubuntu', nodeMajor: 20 },
   { os: 'ubuntu', nodeMajor: 22 },
-  { os: 'ubuntu', nodeMajor: 24 },
   { os: 'windows', nodeMajor: 22 },
   { os: 'macos', nodeMajor: 22 },
 ] as const;
+
+export type CandidateGateJob =
+  | typeof candidateMatrixJobs[number]
+  | typeof historicalCandidateMatrixJobs[number];
+
+const persistedCandidateMatrixJobs: readonly CandidateGateJob[] = [
+  ...candidateMatrixJobs,
+  ...historicalCandidateMatrixJobs,
+];
 
 export const requiredCandidateGateCommands = [
   'typecheck',
@@ -41,7 +55,7 @@ export interface CandidateGateContext {
 
 export interface CandidateGateJobResult extends CandidateGateContext {
   schemaVersion: 1;
-  job: typeof candidateMatrixJobs[number];
+  job: CandidateGateJob;
   producer: string;
   runtime: { os: string; nodeMajor: number };
   commands?: Array<{ name: string; digest: string; status: 'pass' | 'fail' }>;
@@ -232,14 +246,31 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
-function isApprovedJob(value: unknown): value is CandidateGateJobResult['job'] {
-  if (!isRecord(value)) return false;
-  return candidateMatrixJobs.some((job) => job.os === value.os && job.nodeMajor === value.nodeMajor);
+function isCandidateGateJobShape(value: unknown): value is { os: string; nodeMajor: number } {
+  return isRecord(value)
+    && typeof value.os === 'string'
+    && value.os.length > 0
+    && Number.isInteger(value.nodeMajor)
+    && Number(value.nodeMajor) > 0;
+}
+
+function isAcceptedJob(
+  value: { os: string; nodeMajor: number },
+  acceptedJobs: readonly CandidateGateJob[],
+): value is CandidateGateJob {
+  return acceptedJobs.some((job) => job.os === value.os && job.nodeMajor === value.nodeMajor);
+}
+
+function isCurrentJob(value: CandidateGateJob): value is typeof candidateMatrixJobs[number] {
+  return candidateMatrixJobs.some((job) =>
+    job.os === value.os && job.nodeMajor === value.nodeMajor);
 }
 
 function parseCandidateGateResult(
   value: unknown,
-  acceptedCommandSets: readonly (readonly string[])[] = [requiredCandidateGateCommands],
+  acceptedJobs: readonly CandidateGateJob[],
+  acceptedCommandSets: readonly (readonly string[])[],
+  acceptedJobDescription: string,
 ): CandidateGateJobResult {
   if (!isRecord(value)
     || value.schemaVersion !== 1
@@ -253,7 +284,7 @@ function parseCandidateGateResult(
     || !/^[0-9a-f]{40,64}$/.test(value.candidateCommit)
     || typeof value.gateInputFingerprint !== 'string'
     || !/^[0-9a-f]{64}$/i.test(value.gateInputFingerprint)
-    || !isApprovedJob(value.job)
+    || !isCandidateGateJobShape(value.job)
     || value.producer !== 'github-actions'
     || !isRecord(value.runtime)
     || value.runtime.os !== value.job.os
@@ -263,6 +294,11 @@ function parseCandidateGateResult(
     || typeof value.postTreeMatchesCandidate !== 'boolean'
     || !['pass', 'fail'].includes(String(value.status))) {
     throw new Error('RELEASE_GATE_EVIDENCE_STALE: candidate gate result schema is invalid.');
+  }
+  if (!isAcceptedJob(value.job, acceptedJobs)) {
+    throw new Error(
+      `RELEASE_GATE_EVIDENCE_STALE: candidate gate ${value.job.os}-node${value.job.nodeMajor} is outside ${acceptedJobDescription}.`,
+    );
   }
   if (!Array.isArray(value.commands)
     || value.commands.length === 0
@@ -303,8 +339,8 @@ function sameContext(left: CandidateGateContext, right: CandidateGateContext): b
 }
 
 /** @id CODE-M5-CANDIDATE-GATE-001
- * @implements REQ-M5-RELEASE-002
- * @design DES-M5-019
+ * @implements REQ-M5-RELEASE-002 REQ-M5-CI-001
+ * @design DES-M5-019 DES-M5-CI-001
  */
 export function validateCandidateGateSet(
   context: CandidateGateContext,
@@ -313,7 +349,7 @@ export function validateCandidateGateSet(
   const diagnostics: Diagnostic[] = [];
   const current = new Map<string, CandidateGateJobResult>();
   const observed = new Set<string>();
-  for (const record of records) {
+  for (const record of records.filter((entry) => isCurrentJob(entry.job))) {
     const id = jobId(record.job);
     observed.add(id);
     if (!sameContext(context, record)) {
@@ -418,10 +454,12 @@ async function loadPersistedCandidateGates(root: string): Promise<PersistedCandi
     return [{
       order: record.order,
       artifactDigest: payload.artifactDigest,
-      result: parseCandidateGateResult(payload.result, [
-        legacyCandidateGateCommands,
-        requiredCandidateGateCommands,
-      ]),
+      result: parseCandidateGateResult(
+        payload.result,
+        persistedCandidateMatrixJobs,
+        [legacyCandidateGateCommands, requiredCandidateGateCommands],
+        'the supported candidate gate history',
+      ),
       attestation: payload.attestation as unknown as EvidenceAttestation,
     }];
   });
@@ -481,6 +519,12 @@ export async function ingestCandidateGateEnvelopes(
   for (const envelope of envelopes) {
     const attestation = envelope.attestation!;
     const artifactDigest = sha256(canonicalBytes(envelope.result));
+    const result = parseCandidateGateResult(
+      envelope.result,
+      candidateMatrixJobs,
+      [requiredCandidateGateCommands],
+      'the current candidate matrix',
+    );
     const diagnostics = await verifyDetachedEvidenceAttestation(
       attestation,
       gatePolicy.attestation,
@@ -498,7 +542,6 @@ export async function ingestCandidateGateEnvelopes(
     if (diagnostics.length) {
       throw new Error(`RELEASE_GATE_EVIDENCE_STALE: ${diagnostics[0]!.message}`);
     }
-    const result = parseCandidateGateResult(envelope.result);
     const resultJobId = jobId(result.job);
     if (seenJobs.has(resultJobId)) {
       throw new Error(`RELEASE_GATE_EVIDENCE_STALE: candidate gate ${resultJobId} is duplicated.`);
