@@ -2,7 +2,7 @@
 schemaVersion: 1
 id: CHANGE-0013
 summary: Restore repository-wide TDD source currency
-status: active
+status: completed
 ---
 # CHANGE-0013: repository-tdd-currency
 
