@@ -242407,6 +242407,27 @@
           "approvalManifestSha256": "74aa03ea7de3dde0422ccf93c0cce68e82014b82653a6fe7a00e71690773284e",
           "requirementsOrdinal": 1,
           "order": 2085
+        },
+        "design": {
+          "phase": "design",
+          "recordedAt": "2026-09-25T20:08:31.266Z",
+          "fingerprints": {
+            "impact": "a34770ad19e2c0d53bdcda4d78b3d58d485c5b65876debd73233e9ccd9ab6f24",
+            "requirements": "a1f4bc602bab69ccc82d6d8485070199a3d2df53a66af8beb65fa9264f5521f3",
+            "design": "bef0b073d56d0b1804a6196aee7be028bef55c6d475576cb5fce1db211655aa1",
+            "implementation": "5746846ce94f996a53f7939fccf353fa62ed402adeafa91a04d83a5eaeda4f0c",
+            "tests": "9f8a09c5764ca32c193517edc9a7e0e32df3f99250820adca781000e5bcdf855",
+            "tdd": "39a7c3774f0c7cc26276087931cff5f19158df17fdac9646d9001de40b6f1a4c",
+            "requirementImplementations": {
+              "REQ-M5-TDD-CURRENCY-001": {
+                "paths": [],
+                "fingerprints": {}
+              }
+            }
+          },
+          "approvalManifestSha256": "5e2b57576c4791421ba7ed19ea29b6b639059a29fb051a5d1836c1821b1c68c5",
+          "designOrdinal": 1,
+          "order": 2086
         }
       }
     }

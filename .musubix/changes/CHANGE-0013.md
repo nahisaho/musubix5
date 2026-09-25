@@ -62,6 +62,8 @@ source changes and cannot be repaired by the algorithm-only migration command.
   add a comment-only implementation trace annotation for
   `REQ-M5-TDD-CURRENCY-001` to the existing TDD currency implementation.
 - Persist new TDD and ordered CHANGE evidence for the genuine repair cycles.
+- Record the full-requirement quality phase after Green and before completion
+  simulation or release approval.
 - Do not retain product implementation changes after Green.
 
 ## Expected verification
@@ -72,7 +74,8 @@ source changes and cannot be repaired by the algorithm-only migration command.
   completed reports `valid: true` and zero `TDD_TEST_STALE` diagnostics.
 - `npx musubix5 tdd validate --json` reports no `TDD_TEST_STALE` diagnostics
   after CHANGE completion.
-- Strict trace, graph gate, changed gate, and status complete successfully.
+- Strict trace, graph gate, changed gate, and status complete successfully,
+  then the CHANGE quality phase is recorded before completion.
 
 ## Residual risks
 

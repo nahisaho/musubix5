@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-25T19:39:36.863Z",
+  "generatedAt": "2026-09-25T20:08:30.242Z",
   "nodes": [
     {
       "id": "CODE-SESSION-SCOPED-DEVELOPMENT-001",
@@ -174,6 +174,12 @@
       "id": "ADR-0023",
       "kind": "adr",
       "path": ".musubix/decisions/ADR-0023.md",
+      "line": 1
+    },
+    {
+      "id": "ADR-0024",
+      "kind": "adr",
+      "path": ".musubix/decisions/ADR-0024.md",
       "line": 1
     },
     {
@@ -1066,6 +1072,12 @@
       "path": ".musubix/features/release-0-2-0/requirements.md",
       "line": 23,
       "mandatory": true
+    },
+    {
+      "id": "DES-M5-TDD-CURRENCY-001",
+      "kind": "design",
+      "path": ".musubix/features/repository-tdd-currency/design.md",
+      "line": 3
     },
     {
       "id": "REQ-M5-TDD-CURRENCY-001",
@@ -5745,6 +5757,16 @@
       "relation": "depends-on"
     },
     {
+      "from": "DES-M5-TDD-CURRENCY-001",
+      "to": "REQ-M5-TDD-CURRENCY-001",
+      "relation": "satisfies"
+    },
+    {
+      "from": "ADR-0024",
+      "to": "DES-M5-TDD-CURRENCY-001",
+      "relation": "decides"
+    },
+    {
       "from": "DES-M5-EVIDENCE-SKILL-001",
       "to": "REQ-M5-EVIDENCE-009",
       "relation": "satisfies"
@@ -9859,6 +9881,7 @@
     ".musubix/decisions/ADR-0021.md": "6a630d6600ba1507331cd8e334446f827725dc6505eea36e1b690f10badf2855",
     ".musubix/decisions/ADR-0022.md": "7c635784df01ac4a51b99feac2d34891416dcbea17d461e199f07daedf9d4a74",
     ".musubix/decisions/ADR-0023.md": "4308013a832dd1d2183b1eee79176e08da4b30501ada4fb66ac763bab08a10fe",
+    ".musubix/decisions/ADR-0024.md": "dab62ae03853e1eb3a0fefdfcee64084b50fa87916e8893a9028f6eb95a88289",
     ".musubix/features/codegraph-performance/design.md": "3ddf90dbb97a753644deb0e4dd38adaa27420273390a27b241612ef84f4c9c97",
     ".musubix/features/codegraph-performance/requirements.md": "a5eb96722cea36c4fab7f81a09d992b1cbce62b154c7b85eab35199817d551e1",
     ".musubix/features/musubix5-clean-foundation/design.md": "866a686fecf0bf726316593a1770ba7bd05f66f35a9ec39a44a5ac5d27edee46",
@@ -9869,6 +9892,7 @@
     ".musubix/features/parallel-agent-development/requirements.md": "8fee03a0f32288e18819b311c13e7965ba51230dad7cb88f46209fbffb009112",
     ".musubix/features/release-0-2-0/design.md": "6642acfea4fe6e6b565a334e9a3490605bc418915e7a64af279e7a283df2c0eb",
     ".musubix/features/release-0-2-0/requirements.md": "9a21b40b82cd44ffc0a7975583be3e309b1541ec29e78e8eac22eb74f6eb7acf",
+    ".musubix/features/repository-tdd-currency/design.md": "65268ced8744efd297df10d2debf1cd214fb66c69cd1ca8c990383bf52b9132d",
     ".musubix/features/repository-tdd-currency/requirements.md": "a4bcc2d987a377ebf9a4532993455acc49864c5368a2de0a4ddccb2bf9c5b86b",
     ".musubix/features/skill-evidence-inputs/design.md": "b19a3244db5668cf8a3d88ed8db01ab3ab53de8eb0a28c91b63aa56e88abbd29",
     ".musubix/features/skill-evidence-inputs/requirements.md": "454b7ed930b9eb9c66e9960e613debbdfb23beffce072add38b8e520d802c8f0",
