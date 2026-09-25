@@ -99,6 +99,14 @@ export interface CandidateRegistrationResult {
   replayed: boolean;
 }
 
+export interface RoutedCandidateState {
+  kind: 'candidate';
+  sourceRoot: string;
+  controlRoot: string;
+  projectionRoot: string;
+  binding: CandidateBinding;
+}
+
 const transitions: Readonly<Record<CandidateLifecycleState, readonly CandidateLifecycleState[]>> = {
   prepared: ['active', 'failed', 'abandoned', 'deleted'],
   active: ['ready', 'failed', 'abandoned', 'stale', 'deleted'],
@@ -257,6 +265,28 @@ export function candidateEvidenceRoot(controlRoot: string, candidateId: string):
 
 export function candidateReportRoot(controlRoot: string, candidateId: string): string {
   return resolve(candidateStateRoot(controlRoot, candidateId), 'reports');
+}
+
+export function routeCandidateState(
+  controlRoot: string,
+  sourceRoot: string,
+  candidate: CandidateRegistryEntry,
+): RoutedCandidateState {
+  assertCandidateEntry(candidate, candidate.repositoryId);
+  return {
+    kind: 'candidate',
+    sourceRoot: resolve(sourceRoot),
+    controlRoot: resolve(controlRoot),
+    projectionRoot: candidateStateRoot(controlRoot, candidate.candidateId),
+    binding: {
+      candidateId: candidate.candidateId,
+      changeId: candidate.changeId,
+      generation: candidate.generation,
+      repositoryId: candidate.repositoryId,
+      baseCommit: candidate.baseCommit,
+      candidateCommit: candidate.candidateCommit,
+    },
+  };
 }
 
 export function integrationStateRoot(controlRoot: string, integrationId: string): string {
