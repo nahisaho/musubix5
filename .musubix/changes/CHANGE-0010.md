@@ -76,3 +76,7 @@ Node.js 24, while the published package runtime contract remains Node.js
   testing and user reports unless a separate compatibility workflow is added.
 - Before the CHANGE-0010 candidate's three new Node.js 24 records are ingested,
   candidate readiness is expected to report missing or stale gate evidence.
+- GitHub issue #17 tracks the remaining macOS default-`TMPDIR` Unix-socket path
+  limit. The candidate gate currently mitigates it by running verification
+  under `${{ runner.temp }}`, so local macOS verification can still require a
+  shorter temporary directory until the socket-path construction is fixed.
