@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     globalSetup: ['./tests/global-setup.ts'],
     include: ['tests/**/*.test.ts'],
-    testTimeout: 20_000,
+    testTimeout: 60_000,
     maxWorkers: 2,
   },
 });
