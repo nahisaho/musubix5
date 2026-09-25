@@ -9,7 +9,7 @@ import { buildTrace, type TraceNode } from './trace.js';
 import { adapterInvocation, clearAdapterOutput, mergeAdapterArgs, normalizeAdapterReport, readAdapterOutput } from './adapters.js';
 import { appendEvidenceOrder, evidenceOrderRecord, inspectEvidenceOrder, type validateEvidenceOrderLog } from './order.js';
 import { requireApproval, resolveRequirementDomain } from './approval.js';
-import { activeChangeContext } from './change-generation.js';
+import { activeChangeContext, resolveChangeContext, type ActiveChangeContext } from './change-generation.js';
 import { classifyParallelTddEvidence } from './parallel-tdd-evidence.js';
 import { parseMusubixTestReport, type MusubixTestReport } from './test-report.js';
 export { parseMusubixTestReport, type MusubixTestReport } from './test-report.js';
@@ -169,8 +169,7 @@ export function canonicalTestFingerprintText(text: string): string {
   return text.replace(/\r\n?/g, '\n');
 }
 
-async function testFingerprint(root: string, test: TraceNode): Promise<string> {
-  const text = await readText(root, test.path);
+function testFingerprintFromText(test: TraceNode, text: string): string {
   const start = sourceLineStartOffset(text, test.line);
   if (isSource(test.path)) {
     const source = ts.createSourceFile(test.path, text, ts.ScriptTarget.Latest, true);
@@ -187,6 +186,10 @@ async function testFingerprint(root: string, test: TraceNode): Promise<string> {
   return digest(canonicalTestFingerprintText(
     text.slice(start, next < 0 ? text.length : searchFrom + next),
   ).trim());
+}
+
+async function testFingerprint(root: string, test: TraceNode): Promise<string> {
+  return testFingerprintFromText(test, await readText(root, test.path));
 }
 
 // The pre-REQ-TDD-FINGERPRINT-SCOPING-001 algorithm (top-level statements
@@ -217,26 +220,241 @@ export interface TddMigrationResult {
   reason?: string;
 }
 
+/** @id CODE-M5-TDD-EFFECTIVE-LATEST-001
+ * @implements REQ-M5-TDD-003
+ * @design DES-M5-TDD-005
+ */
+type TddCycleScopePredicate = (cycle: TddCycle) => boolean;
+
+interface EffectiveTddCurrencySelection {
+  readonly cycle: TddCycle;
+  readonly order: number;
+  readonly fingerprint: string;
+}
+
+interface TddEventScope {
+  terminalScope?: TddCycleScopePredicate;
+  voidScope?: TddCycleScopePredicate;
+  workScope?: TddCycleScopePredicate;
+}
+
+interface TddVerifiedEvent {
+  cycle: TddCycle;
+  order: number;
+  kind: 'terminal' | 'void' | 'work';
+}
+
+interface TddCurrencyIndex {
+  evidence: TddEvidence;
+  order: ReturnType<typeof validateEvidenceOrderLog>;
+  validlyVoidedCycles: Set<TddCycle>;
+  cyclesByTest: Map<string, TddCycle[]>;
+  chainIndex: TddChainIndex;
+}
+
+interface TddChainIndexEntry {
+  record: TddChainRecord;
+  position: number;
+}
+
+type TddChainIndex = Map<string, TddChainIndexEntry[]>;
+
+const allCycles: TddCycleScopePredicate = () => true;
+
+function tddChainKey(cycleId: string, testId: string, phase: TddChainPhase): string {
+  return JSON.stringify([cycleId, testId, phase]);
+}
+
+function buildTddChainIndex(chain: TddChainRecord[] | undefined): TddChainIndex {
+  const index: TddChainIndex = new Map();
+  for (const [position, record] of (chain ?? []).entries()) {
+    const key = tddChainKey(record.cycleId, record.testId, record.phase);
+    const entries = index.get(key);
+    const entry = { record, position };
+    if (entries) entries.push(entry);
+    else index.set(key, [entry]);
+  }
+  return index;
+}
+
+async function maintenanceChangeContext(root: string): Promise<ActiveChangeContext | null> {
+  const selected = await resolveChangeContext(root, { maintenance: true });
+  if (!selected || selected.generation === null) return null;
+  return {
+    changeId: selected.changeId,
+    generation: selected.generation,
+    requirementIds: selected.requirementIds,
+  };
+}
+
+function activeScope(activeChange: ActiveChangeContext | null): TddCycleScopePredicate {
+  if (!activeChange) return allCycles;
+  return (cycle) => (cycle.generation ?? 1) === activeChange.generation
+    && (cycle.changeId === undefined || cycle.changeId === activeChange.changeId);
+}
+
+function buildTddCurrencyIndex(
+  evidence: TddEvidence,
+  order: ReturnType<typeof validateEvidenceOrderLog>,
+  validlyVoidedCycles: Set<TddCycle>,
+  chainIndex: TddChainIndex = buildTddChainIndex(evidence.chain),
+): TddCurrencyIndex {
+  const cyclesByTest = new Map<string, TddCycle[]>();
+  for (const cycle of evidence.cycles) {
+    const cycles = cyclesByTest.get(cycle.testId);
+    if (cycles) cycles.push(cycle);
+    else cyclesByTest.set(cycle.testId, [cycle]);
+  }
+  return {
+    evidence,
+    order,
+    validlyVoidedCycles,
+    cyclesByTest,
+    chainIndex,
+  };
+}
+
+function terminalFingerprintEvidence(
+  index: TddCurrencyIndex,
+  cycle: TddCycle,
+): Readonly<EffectiveTddCurrencySelection> | undefined {
+  if (!cycle.red?.valid || !cycle.green?.valid || index.validlyVoidedCycles.has(cycle)) return undefined;
+  if (!phaseLinkageValid(index.order, index.evidence.chain, index.chainIndex, cycle, 'red', cycle.red)
+    || !phaseLinkageValid(index.order, index.evidence.chain, index.chainIndex, cycle, 'green', cycle.green)) return undefined;
+  if (cycle.red.order! >= cycle.green.order!) return undefined;
+  const candidates: Array<{ order: number; fingerprint: string }> = [{
+    order: cycle.green.order!,
+    fingerprint: cycle.green.testFingerprint,
+  }];
+  if (cycle.refactor?.valid
+    && phaseLinkageValid(index.order, index.evidence.chain, index.chainIndex, cycle, 'refactor', cycle.refactor)) {
+    candidates.push({ order: cycle.refactor.order!, fingerprint: cycle.refactor.testFingerprint });
+  }
+  if (cycle.migrate?.approver?.trim()
+    && phaseLinkageValid(index.order, index.evidence.chain, index.chainIndex, cycle, 'migrate', cycle.migrate)) {
+    candidates.push({ order: cycle.migrate.order!, fingerprint: cycle.migrate.toFingerprint });
+  }
+  const latest = candidates.sort((left, right) => right.order - left.order)[0]!;
+  return { cycle, order: latest.order, fingerprint: latest.fingerprint };
+}
+
+function effectiveLatestCycle(
+  index: TddCurrencyIndex,
+  testId: string,
+  upperBoundExclusive?: number,
+  scopePredicate: TddCycleScopePredicate = allCycles,
+): Readonly<EffectiveTddCurrencySelection> | undefined {
+  let best: Readonly<EffectiveTddCurrencySelection> | undefined;
+  for (const cycle of index.cyclesByTest.get(testId) ?? []) {
+    if (!scopePredicate(cycle)) continue;
+    const selection = terminalFingerprintEvidence(index, cycle);
+    if (!selection || (upperBoundExclusive !== undefined && selection.order >= upperBoundExclusive)) continue;
+    if (!best || selection.order > best.order) best = selection;
+  }
+  return best;
+}
+
+function workEventOrder(index: TddCurrencyIndex, cycle: TddCycle): number | undefined {
+  if (cycle.green?.valid) return undefined;
+  if (cycle.green
+    && phaseLinkageValid(index.order, index.evidence.chain, index.chainIndex, cycle, 'green', cycle.green)) {
+    return cycle.green.order;
+  }
+  if (cycle.red?.valid
+    && phaseLinkageValid(index.order, index.evidence.chain, index.chainIndex, cycle, 'red', cycle.red)) {
+    return cycle.red.order;
+  }
+  return undefined;
+}
+
+function greatestVerifiedEvent(
+  index: TddCurrencyIndex,
+  testId: string,
+  eventScope: TddEventScope,
+): TddVerifiedEvent | undefined {
+  const terminalScope = eventScope.terminalScope ?? allCycles;
+  const voidScope = eventScope.voidScope ?? allCycles;
+  const workScope = eventScope.workScope ?? allCycles;
+  let greatest: TddVerifiedEvent | undefined;
+  const consider = (event: TddVerifiedEvent): void => {
+    if (!greatest || event.order > greatest.order) greatest = event;
+  };
+  for (const cycle of index.cyclesByTest.get(testId) ?? []) {
+    if (terminalScope(cycle)) {
+      const terminal = terminalFingerprintEvidence(index, cycle);
+      if (terminal) consider({ cycle, order: terminal.order, kind: 'terminal' });
+    }
+    if (voidScope(cycle) && index.validlyVoidedCycles.has(cycle) && cycle.void?.order !== undefined) {
+      consider({ cycle, order: cycle.void.order, kind: 'void' });
+    }
+    if (workScope(cycle)) {
+      const order = workEventOrder(index, cycle);
+      if (order !== undefined) consider({ cycle, order, kind: 'work' });
+    }
+  }
+  return greatest;
+}
+
+function noActiveWorkScope(
+  unbounded: EffectiveTddCurrencySelection,
+): TddCycleScopePredicate {
+  return (cycle) => cycle.changeId === undefined
+    || (cycle.changeId === unbounded.cycle.changeId
+      && (cycle.generation ?? 1) === (unbounded.cycle.generation ?? 1));
+}
+
+function eventScopeForSelection(
+  activeChange: ActiveChangeContext | null,
+  operationScope: TddCycleScopePredicate,
+  unbounded: EffectiveTddCurrencySelection | undefined,
+): TddEventScope | undefined {
+  if (activeChange) {
+    return {
+      terminalScope: operationScope,
+      voidScope: operationScope,
+      workScope: operationScope,
+    };
+  }
+  if (!unbounded) return undefined;
+  return {
+    terminalScope: allCycles,
+    voidScope: allCycles,
+    workScope: noActiveWorkScope(unbounded),
+  };
+}
+
 export async function migrateTddFingerprint(root: string, testId: string, approver: string): Promise<TddMigrationResult> {
-  if (!approver) throw new Error('An approver is required to migrate TDD fingerprint evidence.');
+  if (!approver.trim()) throw new Error('An approver is required to migrate TDD fingerprint evidence.');
   const evidence = await loadTddEvidence(root);
   if (!evidence) throw new Error('No TDD evidence found.');
-  let cycle = evidence.cycles.filter((entry) => entry.testId === testId).at(-1);
-  if (!cycle) throw new Error(`No TDD cycle found for ${testId}.`);
-  const order = await inspectEvidenceOrder(root);
-  if (voidLinkage(evidence, order, cycle).valid) {
-    const validlyVoided = new Set(evidence.cycles.filter((entry) => voidLinkage(evidence, order, entry).valid));
-    const effective = effectiveLatestCycle(evidence, order, validlyVoided, testId, cycle);
-    if (effective) cycle = effective;
+  if (!evidence.cycles.some((entry) => entry.testId === testId)) {
+    throw new Error(`No TDD cycle found for ${testId}.`);
   }
-  if (!cycle.cycleId) throw new Error(`${testId} lacks a cycle ID; regenerate its evidence before migrating.`);
-  if (!cycle.green?.valid) throw new Error(`${testId} has no valid Green phase to migrate.`);
+  const order = await inspectEvidenceOrder(root);
+  const chainIndex = buildTddChainIndex(evidence.chain);
+  const validlyVoided = new Set(evidence.cycles.filter((entry) =>
+    voidLinkage(evidence, order, entry, chainIndex).valid));
+  const index = buildTddCurrencyIndex(evidence, order, validlyVoided, chainIndex);
+  const activeChange = await maintenanceChangeContext(root);
+  const operationScope = activeScope(activeChange);
+  const unbounded = effectiveLatestCycle(index, testId, undefined, operationScope);
+  const eventScope = eventScopeForSelection(activeChange, operationScope, unbounded);
+  if (!unbounded || !eventScope) throw new Error(`${testId} has no valid Green phase to migrate.`);
+  const event = greatestVerifiedEvent(index, testId, eventScope);
+  if (event?.kind === 'work') throw new Error(`${testId} has no valid Green phase to migrate.`);
+  const selection = effectiveLatestCycle(
+    index,
+    testId,
+    event?.kind === 'void' ? event.order : undefined,
+    operationScope,
+  );
+  if (!selection) throw new Error(`${testId} has no valid Green phase to migrate.`);
+  const cycle = selection.cycle;
   if (cycle.migrate) throw new Error(`${testId} has already been migrated.`);
   const trace = await buildTrace(root);
   const test = trace.nodes.find((node) => node.kind === 'test' && node.id === testId);
   if (!test) throw new Error(`Annotated test ID not found: ${testId}`);
-  const latestPhase = cycle.refactor?.valid ? cycle.refactor : cycle.green;
-  const storedFingerprint = latestPhase.testFingerprint;
+  const storedFingerprint = selection.fingerprint;
   const legacyCurrent = await legacyTestFingerprint(root, test);
   if (legacyCurrent !== storedFingerprint) {
     return {
@@ -250,10 +468,14 @@ export async function migrateTddFingerprint(root: string, testId: string, approv
     phase: 'migrate',
     fromFingerprint: storedFingerprint,
     toFingerprint,
-    approver,
+    approver: approver.trim(),
     recordedAt: new Date().toISOString(),
   };
-  record.order = (await appendEvidenceOrder(root, { kind: 'tdd', entityId: cycle.cycleId, phase: 'migrate' })).sequence;
+  record.order = (await appendEvidenceOrder(root, {
+    kind: 'tdd',
+    entityId: cycle.cycleId!,
+    phase: 'migrate',
+  })).sequence;
   cycle.migrate = record;
   appendChainRecord(evidence, cycle, 'migrate', record);
   await writeJson(root, '.musubix/evidence/tdd.json', evidence);
@@ -276,6 +498,7 @@ export async function loadTddEvidence(root: string): Promise<TddEvidence | null>
 function phaseLinkageValid(
   order: ReturnType<typeof validateEvidenceOrderLog>,
   chain: TddChainRecord[] | undefined,
+  chainIndex: TddChainIndex,
   cycle: TddCycle,
   phase: TddChainPhase,
   phaseEvidence: unknown,
@@ -286,11 +509,10 @@ function phaseLinkageValid(
   const orderRecord = evidenceOrderRecord(order.records, 'tdd', cycle.cycleId, phase);
   if (!orderRecord || orderRecord.sequence !== phaseOrder) return false;
   if (phase === 'void' && orderRecord.testId !== cycle.testId) return false;
-  const matches = chain.filter((record) => record.phase === phase && record.cycleId === cycle.cycleId && record.testId === cycle.testId);
+  const matches = chainIndex.get(tddChainKey(cycle.cycleId, cycle.testId, phase)) ?? [];
   if (matches.length !== 1) return false;
-  const record = matches[0]!;
-  const index = chain.indexOf(record);
-  const expectedPrevious = index === 0 ? null : chain[index - 1]!.recordSha256;
+  const { record, position } = matches[0]!;
+  const expectedPrevious = position === 0 ? null : chain[position - 1]!.recordSha256;
   const { recordSha256, ...payload } = record;
   return recordSha256 === chainRecordSha256(payload)
     && record.previousSha256 === expectedPrevious
@@ -301,9 +523,10 @@ function voidLinkage(
   evidence: TddEvidence,
   order: ReturnType<typeof validateEvidenceOrderLog>,
   cycle: TddCycle,
+  chainIndex: TddChainIndex = buildTddChainIndex(evidence.chain),
 ): { valid: boolean; reason?: string } {
   if (!cycle.void) return { valid: false };
-  if (phaseLinkageValid(order, evidence.chain, cycle, 'void', cycle.void)) return { valid: true };
+  if (phaseLinkageValid(order, evidence.chain, chainIndex, cycle, 'void', cycle.void)) return { valid: true };
   let reason = 'an invalid monotonic evidence order log';
   if (order.valid) {
     if (!cycle.cycleId || cycle.void.order === undefined) {
@@ -327,35 +550,6 @@ function voidLinkage(
   return { valid: false, reason: `${cycle.testId}'s void evidence is malformed: ${reason}.` };
 }
 
-/** Resolves the effective latest cycle for `testId` when its actual latest
- * cycle (`voidedCycle`) is validly voided, per REQ-TDD-CYCLE-VOID-010: the
- * eligible, non-voided candidate with the greatest verified Green order
- * sequence strictly before the void's own order sequence.
- */
-function effectiveLatestCycle(
-  evidence: TddEvidence,
-  order: ReturnType<typeof validateEvidenceOrderLog>,
-  validlyVoidedCycles: Set<TddCycle>,
-  testId: string,
-  voidedCycle: TddCycle,
-): TddCycle | undefined {
-  if (!voidedCycle.cycleId) return undefined;
-  const voidRecord = evidenceOrderRecord(order.records, 'tdd', voidedCycle.cycleId, 'void');
-  if (!voidRecord) return undefined;
-  let best: { cycle: TddCycle; sequence: number } | undefined;
-  for (const candidate of evidence.cycles) {
-    if (candidate.testId !== testId || candidate === voidedCycle) continue;
-    if (!candidate.red.valid || !candidate.green?.valid) continue;
-    if (validlyVoidedCycles.has(candidate)) continue;
-    if (!candidate.cycleId) continue;
-    if (!phaseLinkageValid(order, evidence.chain, candidate, 'green', candidate.green)) continue;
-    const record = evidenceOrderRecord(order.records, 'tdd', candidate.cycleId, 'green');
-    if (!record || record.sequence >= voidRecord.sequence) continue;
-    if (!best || record.sequence > best.sequence) best = { cycle: candidate, sequence: record.sequence };
-  }
-  return best?.cycle;
-}
-
 export interface TddVoidResult {
   voided: boolean;
   testId: string;
@@ -368,18 +562,62 @@ export async function voidTddCycle(root: string, testId: string, approver: strin
   if (!reason?.trim()) throw new Error('A reason is required to void a TDD cycle.');
   const evidence = await loadTddEvidence(root);
   if (!evidence) throw new Error('No TDD evidence found.');
-  const cycle = evidence.cycles.filter((entry) => entry.testId === testId).at(-1);
-  if (!cycle) throw new Error(`No TDD cycle found for ${testId}.`);
-  if (cycle.green?.valid) throw new Error(`${testId}'s latest cycle has a valid Green phase; only a dangling cycle can be voided.`);
-  if (cycle.void) throw new Error(`${testId}'s latest cycle is already voided.`);
-  if (!cycle.cycleId) throw new Error(`${testId} lacks a cycle ID; regenerate its evidence before voiding.`);
-  if (!evidence.chain && evidence.cycles.some((entry) => entry !== cycle)) {
+  const testCycles = evidence.cycles.filter((entry) => entry.testId === testId);
+  if (!testCycles.length) throw new Error(`No TDD cycle found for ${testId}.`);
+  const activeChange = await maintenanceChangeContext(root);
+  const operationScope = activeScope(activeChange);
+  const operationCycles = testCycles.filter(operationScope);
+  if (!operationCycles.length) {
+    return {
+      voided: false,
+      testId,
+      reason: `${testId} has no verifiable dangling TDD cycle in the current operation scope.`,
+    };
+  }
+  const structuralCycle = operationCycles.at(-1)!;
+  if (!structuralCycle.cycleId) {
+    throw new Error(`${testId} lacks a cycle ID; regenerate its evidence before voiding.`);
+  }
+  if (!evidence.chain && operationCycles.some((entry) => entry !== structuralCycle)) {
     throw new Error('Existing TDD evidence lacks an append-only hash chain; regenerate it before recording new phases.');
   }
   const order = await inspectEvidenceOrder(root);
-  const earlierCycles = evidence.cycles.slice(0, evidence.cycles.indexOf(cycle)).filter((entry) => entry.testId === testId);
-  const eligibleFallback = earlierCycles.some((entry) =>
-    entry.red.valid && entry.green?.valid && !voidLinkage(evidence, order, entry).valid);
+  const chainIndex = buildTddChainIndex(evidence.chain);
+  const validlyVoided = new Set(evidence.cycles.filter((entry) =>
+    voidLinkage(evidence, order, entry, chainIndex).valid));
+  const index = buildTddCurrencyIndex(evidence, order, validlyVoided, chainIndex);
+  const event = greatestVerifiedEvent(index, testId, {
+    terminalScope: operationScope,
+    voidScope: operationScope,
+    workScope: operationScope,
+  });
+  if (!event) {
+    return {
+      voided: false,
+      testId,
+      reason: `${testId} has no verifiable dangling TDD cycle in the current operation scope.`,
+    };
+  }
+  if (event.cycle.void && !validlyVoided.has(event.cycle)) {
+    return {
+      voided: false,
+      testId,
+      reason: `${testId} has no verifiable dangling TDD cycle in the current operation scope.`,
+    };
+  }
+  if (event.kind === 'terminal') {
+    throw new Error(`${testId}'s latest cycle has a valid Green phase; only a dangling cycle can be voided.`);
+  }
+  if (event.kind === 'void') throw new Error(`${testId}'s latest cycle is already voided.`);
+  const cycle = event.cycle;
+  if (cycle.void || cycle.green?.valid) {
+    return {
+      voided: false,
+      testId,
+      reason: `${testId} has no verifiable dangling TDD cycle in the current operation scope.`,
+    };
+  }
+  const eligibleFallback = effectiveLatestCycle(index, testId, event.order, operationScope);
   if (!eligibleFallback) {
     return {
       voided: false,
@@ -388,11 +626,16 @@ export async function voidTddCycle(root: string, testId: string, approver: strin
     };
   }
   const record: TddVoidEvidence = { phase: 'void', approver, reason, recordedAt: new Date().toISOString() };
-  record.order = (await appendEvidenceOrder(root, { kind: 'tdd', entityId: cycle.cycleId, phase: 'void', testId: cycle.testId })).sequence;
+  record.order = (await appendEvidenceOrder(root, {
+    kind: 'tdd',
+    entityId: cycle.cycleId!,
+    phase: 'void',
+    testId: cycle.testId,
+  })).sequence;
   cycle.void = record;
   appendChainRecord(evidence, cycle, 'void', record);
   await writeJson(root, '.musubix/evidence/tdd.json', evidence);
-  return { voided: true, testId, cycleId: cycle.cycleId };
+  return { voided: true, testId, cycleId: cycle.cycleId! };
 }
 
 export async function runTddPhase(
@@ -636,9 +879,7 @@ export async function validateTddEvidence(
   const diagnostics: Diagnostic[] = [];
   const order = await inspectEvidenceOrder(root);
   const activeChange = await activeChangeContext(root);
-  const activeCycle = (cycle: TddCycle): boolean => !activeChange
-    || ((cycle.generation ?? 1) === activeChange.generation
-      && (cycle.changeId === undefined || cycle.changeId === activeChange.changeId));
+  const activeCycle = activeScope(activeChange);
   diagnostics.push(...order.diagnostics);
   if (!evidence.chain) {
     diagnostics.push(error('TDD_CHAIN_MISSING', 'TDD evidence lacks the append-only hash chain.'));
@@ -686,8 +927,6 @@ export async function validateTddEvidence(
       diagnostics.push(error('TDD_CHAIN_ORPHAN', `TDD chain record ${record.sequence} has no matching cycle phase.`));
     }
   }
-  const latestCycles = new Map<string, TddCycle>();
-  for (const cycle of evidence.cycles.filter(activeCycle)) latestCycles.set(cycle.testId, cycle);
   const supersededCycles = new Set<TddCycle>();
   for (const cycle of evidence.cycles.filter((entry) => !activeCycle(entry))) supersededCycles.add(cycle);
   {
@@ -705,10 +944,11 @@ export async function validateTddEvidence(
     }
   }
   const validlyVoidedCycles = new Set<TddCycle>();
+  const currencyChainIndex = buildTddChainIndex(evidence.chain);
   const voided: Array<{ testId: string; cycleId: string; void: { approver: string; reason: string; recordedAt: string } }> = [];
   for (const cycle of evidence.cycles) {
     if (!cycle.void) continue;
-    const linkage = voidLinkage(evidence, order, cycle);
+    const linkage = voidLinkage(evidence, order, cycle, currencyChainIndex);
     if (linkage.valid) {
       validlyVoidedCycles.add(cycle);
       voided.push({
@@ -720,6 +960,12 @@ export async function validateTddEvidence(
       diagnostics.push(error('TDD_VOID_EVIDENCE_MALFORMED', linkage.reason!, cycle.testPath));
     }
   }
+  const currencyIndex = buildTddCurrencyIndex(
+    evidence,
+    order,
+    validlyVoidedCycles,
+    currencyChainIndex,
+  );
   const trace = await buildTrace(root, false);
   const activeRequirementIds = activeChange ? new Set(activeChange.requirementIds) : null;
   for (const requirement of trace.nodes.filter((node) =>
@@ -754,6 +1000,53 @@ export async function validateTddEvidence(
         `${requirement.id} has no valid Red-Green cycle from an authoritative verifying test.`,
         requirement.path,
         requirement.line,
+      ));
+    }
+  }
+  const sourceTextCache = new Map<string, Promise<string>>();
+  const fingerprintCache = new Map<string, Promise<string>>();
+  const currencyTargets = new Set(
+    evidence.cycles
+      .filter((cycle) => cycle.green?.valid && (!activeChange || activeCycle(cycle)))
+      .map((cycle) => cycle.testId),
+  );
+  for (const testId of currencyTargets) {
+    const unbounded = effectiveLatestCycle(currencyIndex, testId);
+    if (!unbounded) continue;
+    const eventScope: TddEventScope = activeChange
+      ? {
+          terminalScope: allCycles,
+          voidScope: allCycles,
+          workScope: activeCycle,
+        }
+      : {
+          terminalScope: allCycles,
+          voidScope: allCycles,
+          workScope: noActiveWorkScope(unbounded),
+        };
+    const event = greatestVerifiedEvent(currencyIndex, testId, eventScope);
+    if (event?.kind === 'work') continue;
+    const selection = event?.kind === 'void'
+      ? effectiveLatestCycle(currencyIndex, testId, event.order)
+      : unbounded;
+    if (!selection) continue;
+    const test = trace.nodes.find((node) => node.kind === 'test' && node.id === testId);
+    if (!test) continue;
+    let current = fingerprintCache.get(testId);
+    if (!current) {
+      let sourceText = sourceTextCache.get(test.path);
+      if (!sourceText) {
+        sourceText = readText(root, test.path);
+        sourceTextCache.set(test.path, sourceText);
+      }
+      current = sourceText.then((text) => testFingerprintFromText(test, text));
+      fingerprintCache.set(testId, current);
+    }
+    if (await current !== selection.fingerprint) {
+      diagnostics.push(error(
+        'TDD_TEST_STALE',
+        `${testId} changed after its latest passing TDD phase.`,
+        test.path,
       ));
     }
   }
@@ -792,7 +1085,7 @@ export async function validateTddEvidence(
       if (cycle.migrate.order !== undefined && latestNonMigrateOrder !== undefined && cycle.migrate.order <= latestNonMigrateOrder) {
         diagnostics.push(error('TDD_ORDER_SEQUENCE', `${cycle.testId}:migrate is not after Green/Refactor in monotonic evidence order.`, cycle.testPath));
       }
-      if (!cycle.migrate.approver) {
+      if (!cycle.migrate.approver?.trim()) {
         diagnostics.push(error('TDD_LEGACY_OR_UNSCOPED_EVIDENCE', `${cycle.testId}:migrate lacks a recorded human approver.`, cycle.testPath));
       }
     }
@@ -805,25 +1098,6 @@ export async function validateTddEvidence(
     if (cycle.green?.valid) {
       if (!cycle.green.scoped || !cycle.green.resultObserved || cycle.green.testStatus !== 'passed' || !cycle.green.reportSha256 || !cycle.green.sourceFingerprint || !cycle.green.executionId) {
         diagnostics.push(error('TDD_LEGACY_OR_UNSCOPED_EVIDENCE', `${cycle.testId} Green lacks test-scoped execution provenance.`, cycle.testPath));
-      }
-      const actualLatest = latestCycles.get(cycle.testId);
-      // Effective-latest resolution for TDD_TEST_STALE (REQ-TDD-CYCLE-VOID-010)
-      // is implemented by the shared `effectiveLatestCycle` helper, annotated
-      // as CODE-TDD-CYCLE-VOID-004 above.
-      const isStaleTarget = actualLatest === cycle
-        || (actualLatest !== undefined && validlyVoidedCycles.has(actualLatest)
-          && effectiveLatestCycle(evidence, order, validlyVoidedCycles, cycle.testId, actualLatest) === cycle);
-      if (isStaleTarget) {
-        const test = trace.nodes.find((node) => node.kind === 'test' && node.id === cycle.testId);
-        const current = test ? await testFingerprint(root, test) : undefined;
-        const candidates: Array<{ order: number; fingerprint: string }> = [];
-        if (cycle.green.order !== undefined) candidates.push({ order: cycle.green.order, fingerprint: cycle.green.testFingerprint });
-        if (cycle.refactor?.valid && cycle.refactor.order !== undefined) {
-          candidates.push({ order: cycle.refactor.order, fingerprint: cycle.refactor.testFingerprint });
-        }
-        if (cycle.migrate?.order !== undefined) candidates.push({ order: cycle.migrate.order, fingerprint: cycle.migrate.toFingerprint });
-        const latest = candidates.sort((a, b) => b.order - a.order)[0];
-        if (latest && current !== latest.fingerprint) diagnostics.push(error('TDD_TEST_STALE', `${cycle.testId} changed after its latest passing TDD phase.`, cycle.testPath));
       }
       if (cycle.red.sourceFingerprint === cycle.green.sourceFingerprint) {
         diagnostics.push(error('TDD_GREEN_WITHOUT_SOURCE_CHANGE', `${cycle.testId} has no non-test project change between Red and Green.`, cycle.testPath));

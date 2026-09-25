@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-25T08:05:03.301Z",
-  "totalRequirements": 96,
+  "generatedAt": "2026-09-25T14:19:38.793Z",
+  "totalRequirements": 97,
   "modeledRequirements": 0,
   "modeledFraction": 0,
   "result": {
@@ -90,6 +90,7 @@
       "REQ-M5-RELEASE-004",
       "REQ-M5-RELEASE-002",
       "REQ-M5-CI-001",
+      "REQ-M5-CI-002",
       "REQ-M5-PARALLEL-001",
       "REQ-M5-PARALLEL-002",
       "REQ-M5-PARALLEL-003",
@@ -479,6 +480,11 @@
       {
         "code": "FORMAL_UNSUPPORTED",
         "severity": "warning",
+        "message": "REQ-M5-CI-002 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
         "message": "REQ-M5-PARALLEL-001 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
       },
       {
@@ -610,8 +616,8 @@
   },
   "fingerprints": {
     ".musubix/features/codegraph-performance/requirements.md": "a5eb96722cea36c4fab7f81a09d992b1cbce62b154c7b85eab35199817d551e1",
-    ".musubix/features/musubix5-clean-foundation/requirements.md": "95a39a7ea6f8a964cc83fa64d804a41b5528c6c63408659bf41e88937c036f7d",
-    ".musubix/features/node24-github-actions/requirements.md": "d01a9e96d5cbd6ca5dfcb4e3397566b618e6019751c48da1ed22476dbc224565",
+    ".musubix/features/musubix5-clean-foundation/requirements.md": "9926a78a9fd0e9b47cc358386358c00d2490ff4f3402766d089733e235f9f0ab",
+    ".musubix/features/node24-github-actions/requirements.md": "32e775df8d7bbe3336b657a2516b93e3ec5bf3ca202506b96e159569dfe95c5b",
     ".musubix/features/parallel-agent-development/requirements.md": "8fee03a0f32288e18819b311c13e7965ba51230dad7cb88f46209fbffb009112",
     ".musubix/features/release-0-2-0/requirements.md": "9a21b40b82cd44ffc0a7975583be3e309b1541ec29e78e8eac22eb74f6eb7acf",
     ".musubix/features/skill-evidence-inputs/requirements.md": "454b7ed930b9eb9c66e9960e613debbdfb23beffce072add38b8e520d802c8f0",

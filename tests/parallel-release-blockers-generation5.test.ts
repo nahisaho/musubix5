@@ -1,7 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { once } from 'node:events';
 import { existsSync, readFileSync, rmSync, symlinkSync } from 'node:fs';
-import { createServer } from 'node:net';
 import { resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -20,6 +18,7 @@ import {
   writeFixtureFile,
   writeParallelStore,
 } from './fixtures/parallel-runtime-fixture.js';
+import { withShortUnixSocket } from './fixtures/short-unix-socket.js';
 
 const fixtures: ParallelFixture[] = [];
 const extraWorktrees: Array<{ root: string; path: string }> = [];
@@ -428,7 +427,7 @@ describe('CHANGE-0003 generation 5 release blocker regressions', () => {
   });
 
   /** @id TEST-M5-PARALLEL-WORKSPACE-PARTIAL-COPY-001
-   * @verifies REQ-M5-WORKTREE-001 REQ-M5-PARALLEL-009 REQ-M5-PARALLEL-010
+   * @verifies REQ-M5-WORKTREE-001 REQ-M5-PARALLEL-009 REQ-M5-PARALLEL-010 REQ-M5-CI-002
    */
   it('TEST-M5-PARALLEL-WORKSPACE-PARTIAL-COPY-001 canonicalizes workspace aliases and restores state after overlay copy failure', async () => {
     const fixture = await createParallelFixture();
@@ -466,25 +465,27 @@ describe('CHANGE-0003 generation 5 release blocker regressions', () => {
     git(fixture.root, ['worktree', 'add', '--detach', workspace, fixture.baseCommit]);
     extraWorktrees.push({ root: fixture.root, path: workspace });
     writeFixtureFile(workspace, '.musubix/workspace-marker.txt', 'preserve\n');
-    const socketPath = resolve(fixture.root, '.musubix/z-overlay-copy-failure.sock');
-    const server = createServer();
-    server.listen(socketPath);
-    await once(server, 'listening');
+    let result: ReturnType<typeof spawnSync> | undefined;
+    await withShortUnixSocket(resolve(fixture.root, '.musubix'), async (context) => {
+      expect(Buffer.byteLength(context.socketPath, 'utf8')).toBeLessThanOrEqual(90);
+      expect(context.socketPath).not.toBe(context.targetSocketPath);
+      expect(context.targetSocketPath).toBe(
+        resolve(fixture.root, '.musubix/z-overlay-copy-failure.sock'),
+      );
+      result = spawnSync(process.execPath, [
+        resolve(repositoryRoot(), 'dist/packages/cli/src/main.js'),
+        'graph',
+        'gate',
+        '--root',
+        fixture.root,
+        '--workspace',
+        workspace,
+        '--json',
+      ], { encoding: 'utf8' });
+    });
 
-    const result = spawnSync(process.execPath, [
-      resolve(repositoryRoot(), 'dist/packages/cli/src/main.js'),
-      'graph',
-      'gate',
-      '--root',
-      fixture.root,
-      '--workspace',
-      workspace,
-      '--json',
-    ], { encoding: 'utf8' });
-    server.close();
-    await once(server, 'close');
-
-    expect(result.status).not.toBe(0);
+    expect(result!.status).not.toBe(0);
+    expect(`${result!.stdout}${result!.stderr}`).toContain('z-overlay-copy-failure.sock');
     expect(existsSync(resolve(workspace, '.musubix/workspace-marker.txt'))).toBe(true);
   });
 

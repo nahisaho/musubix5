@@ -207,7 +207,7 @@ afterEach(() => {
 describe('candidate-bound matrix gates', () => {
   /**
    * @id TEST-M5-CI-NODE24-001
-   * @verifies REQ-M5-CI-001 REQ-M5-COMPAT-007
+   * @verifies REQ-M5-CI-001 REQ-M5-CI-002 REQ-M5-COMPAT-007
    */
   it('TEST-M5-CI-NODE24-001 standardizes every GitHub Actions Node runtime on 24', () => {
     const root = fileURLToPath(new URL('..', import.meta.url));
@@ -279,11 +279,8 @@ describe('candidate-bound matrix gates', () => {
       .toEqual(candidateMatrixJobs);
     const verificationStep = (verify.steps as Array<Record<string, unknown>>)
       .find((step) => step.name === 'Run closed verification matrix');
-    expect(verificationStep).toEqual(expect.objectContaining({
-      env: {
-        TMPDIR: '${{ runner.temp }}',
-      },
-    }));
+    expect(verificationStep).toBeDefined();
+    expect(verificationStep).not.toHaveProperty('env.TMPDIR');
     const uploads = (verify.steps as Array<Record<string, unknown>>)
       .filter((step) => typeof step.uses === 'string'
         && step.uses.toLowerCase().startsWith('actions/upload-artifact@'));
@@ -321,6 +318,34 @@ describe('candidate-bound matrix gates', () => {
     expect(baseline).toContain(
       '- musubix5 verification matrix: Node.js 24 on Ubuntu, Windows, and macOS',
     );
+  });
+
+  /**
+   * @id TEST-M5-CI-DEFAULT-TMPDIR-001
+   * @verifies REQ-M5-CI-002
+   */
+  it('TEST-M5-CI-DEFAULT-TMPDIR-001 preserves the candidate runner temporary environment', () => {
+    const root = fileURLToPath(new URL('..', import.meta.url));
+    const workflowSource = readFileSync(
+      join(root, '.github', 'workflows', 'candidate-gate.yml'),
+      'utf8',
+    );
+    const workflow = parse(workflowSource) as unknown;
+    const inspect = (value: unknown): void => {
+      if (Array.isArray(value)) {
+        for (const entry of value) inspect(entry);
+        return;
+      }
+      if (!value || typeof value !== 'object') return;
+      for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
+        if (key === 'env' && entry && typeof entry === 'object' && !Array.isArray(entry)) {
+          expect(entry).not.toHaveProperty('TMPDIR');
+        }
+        inspect(entry);
+      }
+    };
+    inspect(workflow);
+    expect(workflowSource).not.toMatch(/TMPDIR[^\n]*GITHUB_ENV|GITHUB_ENV[^\n]*TMPDIR/);
   });
 
   /**

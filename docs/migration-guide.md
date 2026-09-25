@@ -355,6 +355,77 @@ Do not copy musubix3 or musubix4 generated evidence into musubix5. Recreate
 requirements, design, approvals, TDD, trace, graph, workflow, quality, release,
 benchmark, and waiver evidence using musubix5 in the destination repository.
 
+### Candidate Unix-socket temporary-directory behavior
+
+Candidate verification no longer overrides the runner's `TMPDIR`. Unix-socket
+regression tests instead create a unique mode-0700 directory under the platform
+fixed POSIX `/tmp` directory, independent of the platform default temporary
+directory, bind through a bounded short alias, and retain the socket entry in
+the target `.musubix` directory for the duration of the test. Callers should
+not depend on the former workflow-level `TMPDIR` value. This is a CI-internal
+portability correction governed by `REQ-M5-CI-002` and `ADR-0022`; it does not
+change the public CLI or JSON compatibility surface governed by
+`REQ-M5-COMPAT-013`.
+
+### TDD source-currency chronology
+
+TDD source-currency validation, fingerprint migration, and void fallback use
+verified monotonic evidence order instead of evidence-array position.
+Source-currency validation may select a newer verified scoped Green fingerprint
+instead of an older legacy unscoped cycle. During an active CHANGE,
+`tdd migrate` and `tdd void` operate only on cycles in the active generation
+whose CHANGE owner is absent or matches the active CHANGE; complete or abandon
+the active CHANGE before repairing a foreign or prior-generation cycle.
+When a CHANGE is selected but has no active generation, validation retains
+`CHANGE_GENERATION_PHASE`, while `tdd migrate` and `tdd void` treat maintenance
+as having no active operation scope and consider all cycles for the test.
+`tdd migrate` rejects a blank or whitespace-only approver before persistence,
+using the existing approver-required error and exit code 2; historical
+migrations with such an approver are reported with
+`TDD_LEGACY_OR_UNSCOPED_EVIDENCE`. Because active migration does not mutate or
+use foreign void candidates, its record can remain globally non-current when a
+later foreign or prior-generation void bounds repository-wide validation;
+complete or abandon the active CHANGE before repository-wide repair.
+If no cycle for the test exists at all, migration retains
+`No TDD cycle found for <testId>.`; if cycles exist but none has an eligible
+Green terminal in the active operation scope, it retains
+`<testId> has no valid Green phase to migrate.` Both remain exit-code-2 errors.
+A cycle-ID-less or chain-unverified record now follows that no-valid-Green path
+instead of the legacy missing-cycle-ID migration error. After verified
+selection, any existing migration record, including malformed evidence, retains
+`<testId> has already been migrated.` with exit code 2 and is not overwritten;
+record a genuine new Red/Green cycle to establish later current evidence.
+
+Open TDD work suppresses `TDD_TEST_STALE` only when it is relevant to the
+currency target. During an active CHANGE, only work in the active generation
+whose CHANGE owner is absent or matches can suppress. Without an active CHANGE,
+unscoped work can suppress, while scoped work must match the unbounded greatest
+terminal's CHANGE and generation; that scope is fixed before a void boundary is
+applied. Foreign or prior-generation open work therefore does not hide a stale
+diagnostic for an active target.
+
+The `tdd void` CLI keeps its existing help, JSON shape, exit classes, valid-Green
+and already-voided message strings, and no-fallback reason string. Verified
+event order and scoped structural guards can change which retained message
+applies to a repository state. During an active CHANGE, a test with cycles only
+outside the active operation scope now returns `{ voided: false }` with an
+exact reason `<testId> has no verifiable dangling TDD cycle in the current
+operation scope.` and exit code 1 rather than selecting foreign or
+prior-generation evidence; the same result protects a cycle bearing an
+unverified void record from being overwritten. Fallback selection is also
+restricted to the active operation scope, so a foreign or prior-generation
+passing cycle no longer permits the void; the command returns the unchanged
+no-fallback reason with exit code 1. Complete or abandon the active CHANGE
+before retrying repository-wide repair. These are intentional compatibility differences
+governed by REQ-M5-TDD-003, REQ-M5-COMPAT-013, and ADR-0023.
+
+Because active validation can select a newer foreign or prior-generation
+terminal while maintenance commands remain active-scoped, a stale diagnostic
+can require either a genuine new Red/Green cycle in the active scope or
+completion/abandonment of the active CHANGE followed by repository-wide
+migration or void repair. Maintenance evidence must not mutate foreign history
+merely to clear the active gate.
+
 For an in-place upgrade of an existing musubix3 repository:
 
 1. Preserve normative requirements, designs, ADRs, configuration, source, and
