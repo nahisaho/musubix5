@@ -15,6 +15,7 @@ export const candidateMatrixJobs = [
   { os: 'macos', nodeMajor: 24 },
 ] as const;
 
+// The workflow runs verification under runner.temp so macOS Unix socket paths stay within platform limits.
 export const historicalCandidateMatrixJobs = [
   { os: 'ubuntu', nodeMajor: 20 },
   { os: 'ubuntu', nodeMajor: 22 },

@@ -69,6 +69,8 @@ jobs:
       - run: npm run build
       - name: Run closed verification matrix
         shell: bash
+        env:
+          TMPDIR: ${{ runner.temp }}
         run: |
           node --input-type=module <<'NODE'
           import { spawnSync } from 'node:child_process';

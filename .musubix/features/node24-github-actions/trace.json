@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-25T04:07:50.551Z",
+  "generatedAt": "2026-09-25T04:40:23.611Z",
   "nodes": [
     {
       "id": "CODE-SESSION-SCOPED-DEVELOPMENT-001",
@@ -1133,7 +1133,7 @@
       "id": "CODE-M5-CANDIDATE-GATE-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-gate.ts",
-      "line": 341
+      "line": 342
     },
     {
       "id": "CODE-M5-REPOSITORY-IDENTITY-001",
@@ -1841,25 +1841,25 @@
       "id": "TEST-M5-CI-HISTORICAL-GATES-001",
       "kind": "test",
       "path": "tests/candidate-gate.test.ts",
-      "line": 319
+      "line": 326
     },
     {
       "id": "TEST-M5-RELEASE-002",
       "kind": "test",
       "path": "tests/candidate-gate.test.ts",
-      "line": 390
+      "line": 397
     },
     {
       "id": "TEST-M5-RELEASE-002-APPROVAL-001",
       "kind": "test",
       "path": "tests/candidate-gate.test.ts",
-      "line": 429
+      "line": 436
     },
     {
       "id": "TEST-M5-RELEASE-002-GATE-DIAGNOSTIC-001",
       "kind": "test",
       "path": "tests/candidate-gate.test.ts",
-      "line": 460
+      "line": 467
     },
     {
       "id": "TEST-M5-WORKTREE-SNAPSHOT-MANIFEST-001",
@@ -9563,7 +9563,7 @@
     ".github/skills/sdd-quality/SKILL.md": "b9451e41ce6598ca90284a7b439aa3a8b98cf4c47f5e90659754b6dfe8c5f712",
     ".github/skills/sdd-requirements/SKILL.md": "c5d07dcc445c38b8b79c1144934b12c575189a02b0999aa57cf85abcf825b59a",
     ".github/skills/sdd-traceability/SKILL.md": "923c6c8915f3c2464cc2732392cbf2675485070fd5a78b2a502ef4aaa4852cdd",
-    ".github/workflows/candidate-gate.yml": "ba5f0a312d6378ddfb5e9810619a18978d86a5d84626bce2ec7ef09215cb3b06",
+    ".github/workflows/candidate-gate.yml": "3987db32b5f45e5d56f6b6cb0634befae66de6183b168a76daddf9baf68fb260",
     ".github/workflows/npm-publish.yml": "02ddb083d95d7ed14abeaa245955fe9b0f1cb55caaccb798a31b4f747e9e003c",
     ".github/workflows/release.yml": "fa8c0dfd02eb3489676349aeb40f5773fb5e2a3473c784f2b20bc88e6a584526",
     ".musubix/decisions/ADR-0002.md": "9f41d752530613cf6cc3ab6798709567e85650e5b97426dfca4147840eb35684",
@@ -9606,7 +9606,7 @@
     "packages/analysis/src/attestation.ts": "c1875e4a1e2082c851ea422da460e1e853d4d5d0935a7e120af6ea78b2866095",
     "packages/analysis/src/bootstrap-runner.ts": "4167b10f413af1cdc39858f16f94110e407b7778ca8c09d8c0179e497f52550e",
     "packages/analysis/src/budget-ledger.ts": "c7e4fa74032e066491708685359ca7115ab34c44a0d2af18337bd15a4da25590",
-    "packages/analysis/src/candidate-gate.ts": "86db6259276d5f29d7fa2bff156ad100d227a7fd236a5e3ad353ee037aa16dec",
+    "packages/analysis/src/candidate-gate.ts": "161abbc9eb4bc8b032f5bd8c5f76234026acf908ab7f74ffc859ec0e64b8fe7b",
     "packages/analysis/src/canonical.ts": "4135d7521ba529d61a695586a206e71081b4e300938a5ae160dcfda770e73195",
     "packages/analysis/src/change-evidence.ts": "4af7011893b055e014a1af8d301935a0ca3791cacc1a45f982a3068e457d1d12",
     "packages/analysis/src/change-generation.ts": "f97f773b39665aee35b81556c54beed0b2bb5c11fa770456753c0fc93bb5d3e2",
@@ -9675,7 +9675,7 @@
     "tests/budget-usage.test.ts": "45bf344f884740b91adfaf18a41830a72a3095a314aa71193a8750186752689f",
     "tests/candidate-gate-eol.test.ts": "db72054d71bb5bb2cb986c7a5ccb7b31d714b6c863e5901fd7d1fe723e8a1ad4",
     "tests/candidate-gate-trust.test.ts": "7a28a3f3ea11e013604d3f94148d4bb7767881d21c952e9708f3f441124a02e1",
-    "tests/candidate-gate.test.ts": "b58672a09e0f5d3713985cc4f71975985233083b8bd930ee83a74d5511c514c9",
+    "tests/candidate-gate.test.ts": "fa39a876564534dc28ac2048b4b7535785b69bf816ea9299be6524a5692a3328",
     "tests/candidate-snapshot-lifecycle.test.ts": "1a7edd521f0718b7fd95271c5f0c1e554a80ca49330c88cb2cb8a7b95945e171",
     "tests/candidate-snapshot-repository-binding.test.ts": "17b1d63cacfb98061293bae8c4fb1218cc27f5576b1c67e73d529b511a936b28",
     "tests/change-completeness-current.test.ts": "0c57842880dd7f10cabdae01c8f9f5a5cbdf19f1ce19c3fd0d39deddd35c3ca6",

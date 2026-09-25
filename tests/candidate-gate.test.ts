@@ -277,6 +277,13 @@ describe('candidate-bound matrix gates', () => {
     ]);
     expect(matrix.include.map(({ os, node }) => ({ os, nodeMajor: node })))
       .toEqual(candidateMatrixJobs);
+    const verificationStep = (verify.steps as Array<Record<string, unknown>>)
+      .find((step) => step.name === 'Run closed verification matrix');
+    expect(verificationStep).toEqual(expect.objectContaining({
+      env: {
+        TMPDIR: '${{ runner.temp }}',
+      },
+    }));
     const uploads = (verify.steps as Array<Record<string, unknown>>)
       .filter((step) => typeof step.uses === 'string'
         && step.uses.toLowerCase().startsWith('actions/upload-artifact@'));
