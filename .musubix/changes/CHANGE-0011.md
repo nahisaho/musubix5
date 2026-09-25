@@ -2,7 +2,7 @@
 schemaVersion: 1
 id: CHANGE-0011
 summary: Include repository Skill sources in non-trace evidence inputs
-status: active
+status: completed
 ---
 # CHANGE-0011: skill-evidence-inputs
 
