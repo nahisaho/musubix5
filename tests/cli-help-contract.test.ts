@@ -41,6 +41,7 @@ describe('CLI help compatibility', () => {
         expected = expected.replace(
           '  approval                                         Prepare, record and validate explicit artifact-bound human approvals',
           '  candidate-snapshot                               Create and inspect immutable candidate snapshot lifecycle evidence\n'
+            + '  candidate-workspace                              Create and inspect isolated CHANGE candidate workspaces\n'
             + '  approval                                         Prepare, record and validate explicit artifact-bound human approvals',
         );
       } else if (snapshot.command === 'musubix3 workflow-sanitize') {
@@ -52,12 +53,25 @@ describe('CLI help compatibility', () => {
         );
       } else if (snapshot.command === 'musubix3 change-record') {
         expected = expected.replace(
-          '  --dry-run               Preview the outcome without recording it',
-          '  --reopen                Start or resume the next CHANGE generation (impact\n'
-            + '                          only)\n'
-            + '  --operation-id <id>     Idempotency identity for same-generation\n'
-            + '                          requirements/design supersession\n'
-            + '  --dry-run               Preview the outcome without recording it',
+          '  --root <directory>      Project root / プロジェクトルート (default: ".")\n'
+            + '  --json                  Machine-readable JSON\n'
+            + '  --requirement <ids...>  Requirement IDs affected by this change\n'
+            + '  --allow-unchanged       Record requirements even if unchanged since impact\n'
+            + '                          (defect fixes only)\n'
+            + '  --dry-run               Preview the outcome without recording it\n'
+            + '  -h, --help              display help for command',
+          '  --root <directory>       Project root / プロジェクトルート (default: ".")\n'
+            + '  --json                   Machine-readable JSON\n'
+            + '  --requirement <ids...>   Requirement IDs affected by this change\n'
+            + '  --allow-unchanged        Record requirements even if unchanged since impact\n'
+            + '                           (defect fixes only)\n'
+            + '  --reopen                 Start or resume the next CHANGE generation (impact\n'
+            + '                           only)\n'
+            + '  --operation-id <id>      Idempotency identity for same-generation\n'
+            + '                           requirements/design supersession\n'
+            + '  --workspace <directory>  Read source fingerprints from a separate worktree\n'
+            + '  --dry-run                Preview the outcome without recording it\n'
+            + '  -h, --help               display help for command',
         );
       } else if (snapshot.command === 'musubix3 change') {
         expected = expected.replace(

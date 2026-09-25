@@ -12,7 +12,8 @@ import {
   buildKnowledge, buildTrace, checkTrace, configLint, cycles, exists, files, formalCheck, graphGate,
   graphImpact, indexGraph, informationalChangedFiles, loadConfig, loadGraph, loadTrace, portable, projectStatus, queryKnowledge,
   formalDoctor, generateFormalArtifacts, readText, runGate, traceImpact, type Solver,
-  abandonPersistedChangeGeneration, changePhases, recordChangePhase, recordWorkflow, runTddPhase, sanitizeWorkflowLogFile,
+  abandonPersistedChangeGeneration, changePhases, recordChangePhase, recordChangePhaseFromWorkspace, recordWorkflow,
+  runTddPhase, sanitizeWorkflowLogFile,
   validateTddEvidence, verifyWorkflowLogFile, migrateTddFingerprint, voidTddCycle, type ChangePhase, type TddPhase,
   attestationSigningPayload, createUnsignedAttestation, githubOidcAudience, verifyEvidenceAttestation,
   mutationDoctor, mutationIdentity, validateMutationEvidence, validateModelCorrespondenceEvidence, within,
@@ -1183,14 +1184,32 @@ export function createProgram(): Command {
     .option('--allow-unchanged', 'Record requirements even if unchanged since impact (defect fixes only)')
     .option('--reopen', 'Start or resume the next CHANGE generation (impact only)')
     .option('--operation-id <id>', 'Idempotency identity for same-generation requirements/design supersession')
+    .option('--workspace <directory>', 'Read source fingerprints from a separate worktree')
     .option('--dry-run', 'Preview the outcome without recording it')
     .action(async (changeId: string, phase: string, options: {
       root: string; json?: boolean; requirement?: string[]; allowUnchanged?: boolean; reopen?: boolean;
-      operationId?: string; dryRun?: boolean;
+      operationId?: string; workspace?: string; dryRun?: boolean;
     }) => {
       if (!changePhases.includes(phase as ChangePhase)) throw new Error(`phase must be one of: ${changePhases.join(', ')}`);
       if (!options.reopen && !options.requirement?.length) throw new Error('--requirement is required unless impact uses --reopen.');
       if (options.reopen && phase !== 'impact') throw new Error('--reopen is accepted only for impact.');
+      if (options.workspace) {
+        if (phase !== 'implementation' && phase !== 'green') {
+          throw new Error('--workspace is accepted only for implementation or green.');
+        }
+        if (options.allowUnchanged || options.reopen || options.operationId || options.dryRun) {
+          throw new Error('--workspace cannot be combined with --allow-unchanged, --reopen, --operation-id, or --dry-run.');
+        }
+        const evidence = await recordChangePhaseFromWorkspace(
+          resolve(options.root),
+          resolve(options.workspace),
+          changeId,
+          phase,
+          options.requirement ?? [],
+        );
+        output(evidence, !!options.json, `Recorded ${changeId}:${phase}.`);
+        return;
+      }
       const changeOptions: {
         allowUnchanged?: boolean;
         reopen?: boolean;
