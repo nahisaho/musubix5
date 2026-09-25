@@ -12,6 +12,12 @@ import { requireApproval, resolveRequirementDomain } from './approval.js';
 import { activeChangeContext, resolveChangeContext, type ActiveChangeContext } from './change-generation.js';
 import { classifyParallelTddEvidence } from './parallel-tdd-evidence.js';
 import { parseMusubixTestReport, type MusubixTestReport } from './test-report.js';
+import {
+  candidateEvidenceBinding,
+  validateCandidateBinding,
+  type CandidateEvidenceBinding,
+  type CandidateEvidenceContext,
+} from './approval.js';
 export { parseMusubixTestReport, type MusubixTestReport } from './test-report.js';
 
 export type TddPhase = 'red' | 'green' | 'refactor';
@@ -59,6 +65,7 @@ export interface TddCycle {
   cycleId?: string;
   changeId?: string;
   generation?: number;
+  binding?: CandidateEvidenceBinding;
   requirementId: string;
   testId: string;
   testPath: string;
@@ -82,6 +89,7 @@ export interface TddChainRecord {
   cycleId: string;
   changeId?: string;
   generation?: number;
+  binding?: CandidateEvidenceBinding;
   requirementId: string;
   testId: string;
   testPath: string;
@@ -120,6 +128,7 @@ function appendChainRecord(evidence: TddEvidence, cycle: TddCycle, phase: TddCha
     sequence: evidence.chain.length + 1,
     cycleId: cycle.cycleId,
     ...(cycle.changeId ? { changeId: cycle.changeId, generation: cycle.generation } : {}),
+    ...(cycle.binding ? { binding: cycle.binding } : {}),
     requirementId: cycle.requirementId,
     testId: cycle.testId,
     testPath: cycle.testPath,
@@ -657,6 +666,7 @@ export async function runTddPhase(
     worktree: string;
     startCommit: string;
   },
+  evidenceContext?: CandidateEvidenceContext,
 ): Promise<TddPhaseEvidence> {
   if (parallel) {
     if (!/^parallel-plan:[a-f0-9]{64}$/.test(parallel.planId)
@@ -697,6 +707,9 @@ export async function runTddPhase(
   }
   const currentFingerprint = await testFingerprint(workspace, test);
   const activeChange = await activeChangeContext(root);
+  const binding = evidenceContext
+    ? candidateEvidenceBinding(evidenceContext, evidenceContext.candidateCommit)
+    : undefined;
   const evidence: TddEvidence = await loadTddEvidence(root) ?? { schemaVersion: 1, cycles: [], chain: [] };
   if (evidence.cycles.some((cycle) =>
     [cycle.red, cycle.green, cycle.refactor].some((item) => item && !Number.isInteger(item.order)))) {
@@ -724,6 +737,9 @@ export async function runTddPhase(
     }
     if (JSON.stringify(previous.parallel ?? null) !== JSON.stringify(parallel ?? null)) {
       throw new Error('PARALLEL_TDD_UNCONSUMED: TDD phases must use the same parallel assignment identity.');
+    }
+    if (binding && !validateCandidateBinding(previous, evidenceContext!).valid) {
+      throw new Error('CANDIDATE_EVIDENCE_MISMATCH: TDD phases cannot cross candidate contexts.');
     }
   }
   const adapter = command.adapter ? adapterInvocation(command.adapter, command.name, testId, test.path) : null;
@@ -850,6 +866,7 @@ export async function runTddPhase(
     const cycle: TddCycle = {
       cycleId,
       ...(activeChange ? { changeId: activeChange.changeId, generation: activeChange.generation } : {}),
+      ...(binding ? { binding } : {}),
       requirementId,
       testId,
       testPath: test.path,
@@ -874,6 +891,7 @@ export async function runTddPhase(
 export async function validateTddEvidence(
   root: string,
   purpose = 'readiness',
+  evidenceContext?: CandidateEvidenceContext,
 ): Promise<{
   present: boolean; valid: boolean; diagnostics: Diagnostic[]; cycles: number;
   voided: Array<{ testId: string; cycleId: string; void: { approver: string; reason: string; recordedAt: string } }>;
@@ -885,6 +903,11 @@ export async function validateTddEvidence(
   const activeChange = await activeChangeContext(root);
   const activeCycle = activeScope(activeChange);
   diagnostics.push(...order.diagnostics);
+  if (evidenceContext) {
+    for (const cycle of evidence.cycles) {
+      diagnostics.push(...validateCandidateBinding(cycle, evidenceContext).diagnostics);
+    }
+  }
   if (!evidence.chain) {
     diagnostics.push(error('TDD_CHAIN_MISSING', 'TDD evidence lacks the append-only hash chain.'));
   } else {
@@ -921,6 +944,7 @@ export async function validateTddEvidence(
           || record.testPath !== cycle.testPath
           || record.commandName !== cycle.commandName
           || JSON.stringify(record.parallel ?? null) !== JSON.stringify(cycle.parallel ?? null)
+          || JSON.stringify(record.binding ?? null) !== JSON.stringify(cycle.binding ?? null)
           || record.phaseEvidenceSha256 !== digest(JSON.stringify(phaseEvidence))) {
           diagnostics.push(error('TDD_CHAIN_PAYLOAD_MISMATCH', `${cycle.testId}:${phase} does not match its immutable TDD chain record.`, cycle.testPath));
         }

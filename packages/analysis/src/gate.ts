@@ -35,6 +35,13 @@ import {
   domainOwning, domainsConfigured, loadApproval, resolveDomains, validateApprovals, validateApprovalsForFeatureGate,
   type ApprovalStageValidation, type ApprovalValidation,
 } from './approval.js';
+import {
+  candidateEvidenceBinding,
+  preserveEvidenceDiagnostics,
+  validateCandidateBinding,
+  type CandidateEvidenceBinding,
+  type CandidateEvidenceContext,
+} from './approval.js';
 import { listCandidateSnapshotRecords } from './workspace-manager.js';
 import { requiredCommandDiagnostics } from './quality-policy.js';
 
@@ -59,6 +66,7 @@ export interface GateReport {
   waivers?: Array<{ changeId: string; code: string; requirementId?: string; detail?: string; approver: string; reason: string; recordedAt: string }>;
   workflowWaivers?: Array<{ skill: string; phase: string; declarationRecordedAt: string; index?: number; code: string; approver: string; reason: string; waiverRecordedAt: string }>;
   waiverDiagnostics?: Diagnostic[];
+  binding?: CandidateEvidenceBinding;
 }
 
 export interface FormalEvidence {
@@ -109,6 +117,29 @@ export function aggregateStatus(checks: Evidence[]): 'pass' | 'fail' {
   return checks.every((check) => !check.required || check.status === 'pass') ? 'pass' : 'fail';
 }
 
+/** @id CODE-M5-CANDIDATE-STATUS-001
+ * @implements REQ-M5-MULTI-CHANGE-003 REQ-M5-MULTI-CHANGE-008
+ * @design DES-M5-MULTI-CHANGE-005 DES-M5-MULTI-CHANGE-007
+ */
+export function candidateStatus(
+  context: CandidateEvidenceContext | null,
+  evidence: {
+    quality?: GateReport | null;
+    approvals?: ApprovalValidation | null;
+    diagnostics?: Diagnostic[];
+  },
+): { ready: boolean; diagnostics: Diagnostic[] } {
+  const diagnostics = preserveEvidenceDiagnostics(evidence.diagnostics ?? []);
+  if (context && evidence.quality) {
+    diagnostics.push(...validateCandidateBinding(evidence.quality, context).diagnostics);
+  }
+  const ready = diagnostics.every((diagnostic) => diagnostic.severity !== 'error')
+    && evidence.quality?.status === 'pass'
+    && aggregateStatus(evidence.quality.checks) === 'pass'
+    && evidence.approvals?.valid === true;
+  return { ready, diagnostics };
+}
+
 export async function runGate(root: string, options: {
   changed?: boolean;
   feature?: string;
@@ -118,6 +149,7 @@ export async function runGate(root: string, options: {
   attestationOptions?: AttestationVerificationOptions;
   persistenceMode?: 'normal' | 'matrix';
   tddPurpose?: 'readiness' | 'integration-verification';
+  evidenceContext?: CandidateEvidenceContext;
 } = {}): Promise<GateReport> {
   const config = options.config ?? await loadConfig(root);
   const runner = options.runner ?? runProcess;
@@ -704,6 +736,9 @@ export async function runGate(root: string, options: {
     waivers,
     workflowWaivers,
     waiverDiagnostics,
+    ...(options.evidenceContext
+      ? { binding: candidateEvidenceBinding(options.evidenceContext) }
+      : {}),
   };
   if (!featureDir && !matrixMode) await writeJson(root, evidencePath, report);
   return report;

@@ -8,6 +8,12 @@ import { appendEvidence } from './evidence-registry.js';
 import { files, readText, writeJson } from './files.js';
 import { verifyJournal } from './journal.js';
 import { resolveCandidateSnapshot } from './workspace-manager.js';
+import {
+  preserveEvidenceDiagnostics,
+  validateCandidateBinding,
+  type CandidateEvidenceBinding,
+  type CandidateEvidenceContext,
+} from './approval.js';
 
 export const candidateMatrixJobs = [
   { os: 'ubuntu', nodeMajor: 24 },
@@ -337,6 +343,42 @@ function sameContext(left: CandidateGateContext, right: CandidateGateContext): b
     && left.generation === right.generation
     && left.candidateCommit === right.candidateCommit
     && left.gateInputFingerprint === right.gateInputFingerprint;
+}
+
+const integrationCandidateGateDetails: Readonly<Record<string, string>> = {
+  RELEASE_GATE_EVIDENCE_MISSING: 'integration-candidate-gate-missing',
+  RELEASE_GATE_EVIDENCE_STALE: 'integration-candidate-context-mismatch',
+  RELEASE_GATE_CANDIDATE_MISMATCH: 'integration-candidate-context-mismatch',
+};
+
+/** @id CODE-M5-INTEGRATION-GATE-DIAGNOSTIC-001
+ * @implements REQ-M5-RELEASE-002 REQ-M5-PARALLEL-010
+ * @design DES-M5-MULTI-CHANGE-005
+ */
+export function classifyIntegrationCandidateGateDiagnostic(
+  diagnostic: Diagnostic,
+): Diagnostic {
+  const preserved = preserveEvidenceDiagnostics([diagnostic])[0]!;
+  if (preserved.detail !== undefined) return preserved;
+  const detail = integrationCandidateGateDetails[preserved.code];
+  return detail ? { ...preserved, detail } : preserved;
+}
+
+export function projectCandidateGate(
+  context: CandidateEvidenceContext,
+  records: Array<CandidateGateJobResult & { binding?: CandidateEvidenceBinding }>,
+): { records: CandidateGateJobResult[]; diagnostics: Diagnostic[] } {
+  const selected: CandidateGateJobResult[] = [];
+  const diagnostics: Diagnostic[] = [];
+  for (const record of records) {
+    const binding = validateCandidateBinding(record, context);
+    if (!binding.valid) {
+      diagnostics.push(...binding.diagnostics);
+      continue;
+    }
+    selected.push(record);
+  }
+  return { records: selected, diagnostics };
 }
 
 /** @id CODE-M5-CANDIDATE-GATE-001

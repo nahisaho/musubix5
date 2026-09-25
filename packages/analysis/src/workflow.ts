@@ -18,6 +18,12 @@ import {
   type WorkflowEvent, type WorkflowManifest, type WorkflowSanitizationResult, type WorkflowVerificationOptions,
 } from './workflow-types.js';
 import { loadWorkflowDeclarationCorrectionContext } from './workflow-correction.js';
+import {
+  candidateEvidenceBinding,
+  validateCandidateBinding,
+  type CandidateEvidenceBinding,
+  type CandidateEvidenceContext,
+} from './approval.js';
 
 export * from './workflow-types.js';
 export { recordWorkflowDeclarationCorrection } from './workflow-correction.js';
@@ -48,7 +54,7 @@ function eventsSha256(events: WorkflowEvent[]): string {
 export async function recordWorkflow(
   root: string,
   event: Omit<WorkflowEvent, 'version' | 'recordedAt' | 'commandSha256'> & { command?: string },
-  options: { changeId?: string } = {},
+  options: { changeId?: string; evidenceContext?: CandidateEvidenceContext } = {},
 ): Promise<WorkflowManifest> {
   if (!/^[a-z0-9-]+$/.test(event.skill)) throw new Error('Workflow skill must be a lowercase kebab-case identifier.');
   if (!/^[a-z0-9-]+$/.test(event.phase)) throw new Error('Workflow phase must be a lowercase kebab-case identifier.');
@@ -70,7 +76,7 @@ export async function recordWorkflow(
     );
   }
   delete current.verification;
-  current.events.push({
+  const recorded: WorkflowEvent & { binding?: CandidateEvidenceBinding } = {
     skill: event.skill,
     version: '0.1.8',
     provenance: 'self-reported',
@@ -80,7 +86,11 @@ export async function recordWorkflow(
     ...(event.reason ? { reason: event.reason } : {}),
     ...(event.command ? { commandSha256: digest(event.command) } : {}),
     recordedAt: new Date().toISOString(),
-  });
+    ...(options.evidenceContext
+      ? { binding: candidateEvidenceBinding(options.evidenceContext) }
+      : {}),
+  };
+  current.events.push(recorded);
   await writeJson(root, '.musubix/evidence/workflow.json', current);
   return current;
 }
@@ -116,6 +126,21 @@ function activeWorkflowEvents(
       ? [{ event, index }]
       : [];
   });
+}
+
+export function workflowEventsForCandidate(
+  workflow: WorkflowManifest,
+  context: CandidateEvidenceContext | null,
+): { events: WorkflowEvent[]; diagnostics: Diagnostic[] } {
+  if (context === null) return { events: [...workflow.events], diagnostics: [] };
+  const events: WorkflowEvent[] = [];
+  const diagnostics: Diagnostic[] = [];
+  for (const event of workflow.events) {
+    const validation = validateCandidateBinding(event, context);
+    if (validation.valid) events.push(event);
+    else diagnostics.push(...validation.diagnostics);
+  }
+  return { events, diagnostics };
 }
 
 export async function verifyWorkflowLog(
