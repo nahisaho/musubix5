@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-25T23:06:30.620Z",
+  "generatedAt": "2026-09-25T23:13:22.367Z",
   "nodes": [
     {
       "id": "CODE-SESSION-SCOPED-DEVELOPMENT-001",
@@ -1780,97 +1780,109 @@
       "id": "CODE-M5-WORKTREE-002",
       "kind": "code",
       "path": "packages/analysis/src/workspace-manager.ts",
-      "line": 230
+      "line": 314
     },
     {
       "id": "CODE-M5-WORKTREE-004",
       "kind": "code",
       "path": "packages/analysis/src/workspace-manager.ts",
-      "line": 258
+      "line": 342
     },
     {
       "id": "CODE-M5-WORKTREE-001",
       "kind": "code",
       "path": "packages/analysis/src/workspace-manager.ts",
-      "line": 292
+      "line": 376
+    },
+    {
+      "id": "CODE-M5-MULTI-CHANGE-CANDIDATE-001",
+      "kind": "code",
+      "path": "packages/analysis/src/workspace-manager.ts",
+      "line": 427
     },
     {
       "id": "CODE-M5-WORKTREE-CANDIDATE-SNAPSHOT-001",
       "kind": "code",
       "path": "packages/analysis/src/workspace-manager.ts",
-      "line": 392
+      "line": 632
     },
     {
       "id": "CODE-M5-WORKTREE-SNAPSHOT-READ-001",
       "kind": "code",
       "path": "packages/analysis/src/workspace-manager.ts",
-      "line": 587
+      "line": 827
     },
     {
       "id": "CODE-M5-WORKTREE-SNAPSHOT-DELETE-001",
       "kind": "code",
       "path": "packages/analysis/src/workspace-manager.ts",
-      "line": 737
+      "line": 977
     },
     {
       "id": "CODE-M5-RELEASE-DETACHED-SNAPSHOT-001",
       "kind": "code",
       "path": "packages/analysis/src/workspace-manager.ts",
-      "line": 814
+      "line": 1054
     },
     {
       "id": "CODE-M5-WORKTREE-SNAPSHOT-MANIFEST-001",
       "kind": "code",
       "path": "packages/analysis/src/workspace-manager.ts",
-      "line": 937
+      "line": 1177
     },
     {
       "id": "CODE-M5-WORKTREE-003",
       "kind": "code",
       "path": "packages/analysis/src/workspace-manager.ts",
-      "line": 975
+      "line": 1215
     },
     {
       "id": "CODE-M5-PARALLEL-WORKSPACE-OVERLAY-001",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 302
+      "line": 321
     },
     {
       "id": "CODE-M5-COMPAT-001",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 415
+      "line": 434
     },
     {
       "id": "CODE-M5-PARALLEL-INTEGRATION-TRACE-001",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 509
+      "line": 528
     },
     {
       "id": "CODE-M5-PARALLEL-CLI-001",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 585
+      "line": 604
+    },
+    {
+      "id": "CODE-M5-MULTI-CHANGE-CONTEXT-001",
+      "kind": "code",
+      "path": "packages/cli/src/main.ts",
+      "line": 1362
     },
     {
       "id": "CODE-M5-BOOTSTRAP-CLI-001",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 1559
+      "line": 1602
     },
     {
       "id": "CODE-M5-CLI-ERROR-ENVELOPE-001",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 1618
+      "line": 1661
     },
     {
       "id": "CODE-M5-CLI-BIN-ENTRY-001",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 1642
+      "line": 1685
     },
     {
       "id": "CODE-M5-COMPAT-006",
@@ -2177,6 +2189,18 @@
       "kind": "test",
       "path": "tests/candidate-snapshot-repository-binding.test.ts",
       "line": 48
+    },
+    {
+      "id": "TEST-M5-MULTI-CHANGE-CONTEXT-001",
+      "kind": "test",
+      "path": "tests/candidate-workspace-context.test.ts",
+      "line": 55
+    },
+    {
+      "id": "TEST-M5-MULTI-CHANGE-CANDIDATE-001",
+      "kind": "test",
+      "path": "tests/candidate-workspace-lifecycle.test.ts",
+      "line": 59
     },
     {
       "id": "TEST-M5-QUALITY-COMPLETENESS-001",
@@ -8280,6 +8304,31 @@
       "relation": "implements"
     },
     {
+      "from": "CODE-M5-MULTI-CHANGE-CANDIDATE-001",
+      "to": "REQ-M5-MULTI-CHANGE-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-MULTI-CHANGE-CANDIDATE-001",
+      "to": "REQ-M5-MULTI-CHANGE-004",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-MULTI-CHANGE-CANDIDATE-001",
+      "to": "DES-M5-MULTI-CHANGE-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-MULTI-CHANGE-CANDIDATE-001",
+      "to": "DES-M5-MULTI-CHANGE-003",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-MULTI-CHANGE-CANDIDATE-001",
+      "to": "DES-M5-MULTI-CHANGE-004",
+      "relation": "implements"
+    },
+    {
       "from": "CODE-M5-WORKTREE-CANDIDATE-SNAPSHOT-001",
       "to": "REQ-M5-WORKTREE-001",
       "relation": "implements"
@@ -8427,6 +8476,26 @@
     {
       "from": "CODE-M5-PARALLEL-CLI-001",
       "to": "DES-M5-PARALLEL-009",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-MULTI-CHANGE-CONTEXT-001",
+      "to": "REQ-M5-MULTI-CHANGE-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-MULTI-CHANGE-CONTEXT-001",
+      "to": "REQ-M5-MULTI-CHANGE-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-MULTI-CHANGE-CONTEXT-001",
+      "to": "DES-M5-MULTI-CHANGE-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-MULTI-CHANGE-CONTEXT-001",
+      "to": "DES-M5-MULTI-CHANGE-009",
       "relation": "implements"
     },
     {
@@ -8872,6 +8941,16 @@
     {
       "from": "TEST-M5-CANDIDATE-SNAPSHOT-REPOSITORY-001",
       "to": "REQ-M5-WORKTREE-001",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-MULTI-CHANGE-CONTEXT-001",
+      "to": "REQ-M5-MULTI-CHANGE-002",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-MULTI-CHANGE-CANDIDATE-001",
+      "to": "REQ-M5-MULTI-CHANGE-001",
       "relation": "verifies"
     },
     {
@@ -10810,9 +10889,9 @@
     "packages/analysis/src/workflow-types.ts": "4fa0d85248bd9373eed4dc7043f1320c9b918f08fc8874dd982c528876b74783",
     "packages/analysis/src/workflow-waiver.ts": "77a93cc41b1a917bf08f8a26eacafc0ce32edcf3b3d90a2b5ccca5d792d014ac",
     "packages/analysis/src/workflow.ts": "9d0e551e55dc7865d1e82f7e2a4d4e7d8db8846f0b584fd512cf19f5d0a0964c",
-    "packages/analysis/src/workspace-manager.ts": "26f6ca98c8e3b06a8cace37c5dc0e6a908fcd158deb995bc52058243562e3033",
+    "packages/analysis/src/workspace-manager.ts": "4e1b6fd6535ddc2ca7293a50efcd58305db2094c96bc555022cf719a76f57f35",
     "packages/cli/src/install.ts": "4b33a24e19958e2c88af806dc1261f4f4a74d6e56cb9fe95c0dabf7cc20cef7f",
-    "packages/cli/src/main.ts": "071e22a6e02a74202e0df38714e12cb816fd41494e91e3a21868a1348039c1c6",
+    "packages/cli/src/main.ts": "e22bc054a43da173ee291be0eb342286e0d8bf2fa7c225506faf489cf0de88b3",
     "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
     "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
     "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
@@ -10841,6 +10920,8 @@
     "tests/candidate-gate.test.ts": "0bf94156513d2774b42dfb2e9089305dedb724dea72179e6c289b8293efc2939",
     "tests/candidate-snapshot-lifecycle.test.ts": "1a7edd521f0718b7fd95271c5f0c1e554a80ca49330c88cb2cb8a7b95945e171",
     "tests/candidate-snapshot-repository-binding.test.ts": "17b1d63cacfb98061293bae8c4fb1218cc27f5576b1c67e73d529b511a936b28",
+    "tests/candidate-workspace-context.test.ts": "73228d2e89700f838c32dcd0ff72788d60a44f0aa7adb24a3b7f783be4777680",
+    "tests/candidate-workspace-lifecycle.test.ts": "ccaf3c0d528c2f3fa4eee1cc777953a9d2c8e90796e8f13bc8715c4a0a37454e",
     "tests/change-completeness-current.test.ts": "0c57842880dd7f10cabdae01c8f9f5a5cbdf19f1ce19c3fd0d39deddd35c3ca6",
     "tests/change-current-evidence.test.ts": "c99fdd1c6899a96367bcd99714871aff4fef962d2996b85d19c85d7fd1503bec",
     "tests/change-generation-binding.test.ts": "8ee76fba7e222d5c1d109d4ba333d7c9007461ac1cb5caea80ec068bb8ad1d56",

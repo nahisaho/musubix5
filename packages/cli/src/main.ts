@@ -33,7 +33,8 @@ import {
   verifyParallelIntegration,
   parallelExitCode,
   currentChangeFingerprints, deleteCandidateSnapshot, listCandidateSnapshotRecords, loadChangeEvidence,
-  persistCandidateSnapshot, showCandidateSnapshotRecord,
+  createRegisteredCandidateWorkspace, listRegisteredCandidateWorkspaces,
+  persistCandidateSnapshot, showCandidateSnapshotRecord, showRegisteredCandidateWorkspace,
   resolveChangeContext,
   type CandidateSnapshotStructuralProjection,
 } from '../../analysis/src/index.js';
@@ -108,6 +109,24 @@ async function candidateSnapshotAction(
     if (json) console.log(JSON.stringify({ error: { code, message: detail } }));
     else console.error(`${code}: ${detail}`);
     process.exitCode = code === 'CLI_ERROR' || code === 'APPROVAL_CANDIDATE_UNAVAILABLE' ? 2 : 1;
+  }
+}
+
+async function candidateWorkspaceAction(
+  json: boolean,
+  action: () => Promise<unknown>,
+): Promise<void> {
+  try {
+    output(await action(), json);
+  } catch (cause) {
+    const message = cause instanceof Error ? cause.message : String(cause);
+    const failure = /^(CLI_ERROR|CANDIDATE_[A-Z0-9_]+|CHANGE_GENERATION_[A-Z0-9_]+):\s*(.*)$/.exec(message);
+    if (!failure) throw cause;
+    const code = failure[1]!;
+    const detail = failure[2]!;
+    if (json) console.log(JSON.stringify({ error: { code, message: detail } }));
+    else console.error(`${code}: ${detail}`);
+    process.exitCode = code === 'CLI_ERROR' ? 2 : 1;
   }
 }
 
@@ -1339,6 +1358,30 @@ export function createProgram(): Command {
         });
       });
     });
+
+  /** @id CODE-M5-MULTI-CHANGE-CONTEXT-001
+   * @implements REQ-M5-MULTI-CHANGE-001 REQ-M5-MULTI-CHANGE-002
+   * @design DES-M5-MULTI-CHANGE-001 DES-M5-MULTI-CHANGE-009
+   */
+  const candidateWorkspace = program.command('candidate-workspace')
+    .description('Create and inspect isolated CHANGE candidate workspaces');
+  common(candidateWorkspace.command('create'))
+    .requiredOption('--change-id <id>', 'Explicit active CHANGE owner')
+    .action(async (options: { root: string; json?: boolean; changeId: string }) => {
+      await candidateWorkspaceAction(!!options.json, async () =>
+        createRegisteredCandidateWorkspace(resolve(options.root), options.changeId));
+    });
+  common(candidateWorkspace.command('list'))
+    .action(async (options: { root: string; json?: boolean }) => {
+      await candidateWorkspaceAction(!!options.json, async () =>
+        listRegisteredCandidateWorkspaces(resolve(options.root)));
+    });
+  common(candidateWorkspace.command('show <selector>'))
+    .action(async (selector: string, options: { root: string; json?: boolean }) => {
+      await candidateWorkspaceAction(!!options.json, async () =>
+        showRegisteredCandidateWorkspace(resolve(options.root), selector));
+    });
+
   const approval = program.command('approval').description('Prepare, record and validate explicit artifact-bound human approvals');
   common(approval.command('prepare <stage>').description('Show the exact artifact manifest a human must review'))
     .option('--domain <name>', 'Approval domain (required when approval.domains is configured, except for release)')

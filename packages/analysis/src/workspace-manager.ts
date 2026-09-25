@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { lstat, mkdir, readFile, readlink } from 'node:fs/promises';
+import { lstat, mkdir, open, readFile, readlink, rename } from 'node:fs/promises';
 import { dirname, relative, resolve, sep } from 'node:path';
 import { promisify } from 'node:util';
 import { canonicalBytes, canonicalRepositoryIdentity, sha256 } from './canonical.js';
@@ -14,7 +14,12 @@ import {
 } from './journal.js';
 
 const execFileAsync = promisify(execFile);
-const generatedStatePrefixes = ['.musubix/evidence/', '.musubix/journal/'];
+const generatedStatePrefixes = [
+  '.musubix/candidates/',
+  '.musubix/evidence/',
+  '.musubix/journal/',
+];
+const candidateRegistryPath = '.musubix/candidates/registry.json';
 
 export interface DirtyPathState {
   status: string;
@@ -42,6 +47,32 @@ export interface CandidateWorkspace extends BaselineWorkspace {
   path: string;
   branch: string;
   candidateId: string;
+}
+
+export interface RegisteredCandidateWorkspace {
+  schemaVersion: 1;
+  candidateId: string;
+  changeId: string;
+  generation: number;
+  repositoryId: string;
+  creationEpoch: number;
+  baseCommit: string;
+  candidateCommit: string;
+  branch: string;
+  worktreePath: string;
+  state: 'active';
+  preparedOrder: number;
+  activeOrder: number;
+}
+
+export interface RegisteredCandidateWorkspaceResult extends RegisteredCandidateWorkspace {
+  replayed: boolean;
+}
+
+interface CandidateWorkspaceRegistry {
+  schemaVersion: 1;
+  repositoryId: string;
+  candidates: RegisteredCandidateWorkspace[];
 }
 
 export interface QaWorkspace {
@@ -194,8 +225,61 @@ async function pathExists(path: string): Promise<boolean> {
   }
 }
 
+async function writeCanonicalJson(path: string, value: unknown): Promise<void> {
+  await mkdir(dirname(path), { recursive: true });
+  const temporary = `${path}.${process.pid}.tmp`;
+  const handle = await open(temporary, 'wx');
+  try {
+    await handle.writeFile(canonicalBytes(value));
+    await handle.sync();
+  } finally {
+    await handle.close();
+  }
+  await rename(temporary, path);
+}
+
 async function gitCommonDirectory(root: string): Promise<string> {
   return resolve(root, await git(root, ['rev-parse', '--git-common-dir']));
+}
+
+async function loadCandidateWorkspaceRegistry(root: string): Promise<CandidateWorkspaceRegistry | null> {
+  const path = resolve(root, candidateRegistryPath);
+  if (!await pathExists(path)) return null;
+  const registry = JSON.parse(await readFile(path, 'utf8')) as Partial<CandidateWorkspaceRegistry>;
+  if (registry.schemaVersion !== 1
+    || typeof registry.repositoryId !== 'string'
+    || !Array.isArray(registry.candidates)
+    || registry.candidates.some((candidate) =>
+      candidate.schemaVersion !== 1
+      || typeof candidate.candidateId !== 'string'
+      || !/^candidate:[a-f0-9]{64}$/.test(candidate.candidateId)
+      || !/^CHANGE-\d+$/.test(candidate.changeId)
+      || !Number.isInteger(candidate.generation) || candidate.generation < 1
+      || candidate.repositoryId !== registry.repositoryId
+      || !Number.isInteger(candidate.creationEpoch) || candidate.creationEpoch < 1
+      || !/^[a-f0-9]{40,64}$/.test(candidate.baseCommit)
+      || !/^[a-f0-9]{40,64}$/.test(candidate.candidateCommit)
+      || typeof candidate.branch !== 'string' || !candidate.branch
+      || typeof candidate.worktreePath !== 'string' || !candidate.worktreePath
+      || candidate.state !== 'active'
+      || !Number.isInteger(candidate.preparedOrder) || candidate.preparedOrder < 1
+      || !Number.isInteger(candidate.activeOrder) || candidate.activeOrder < 1)) {
+    throw new Error('CANDIDATE_STATE_OWNERSHIP: candidate workspace registry is invalid.');
+  }
+  return registry as CandidateWorkspaceRegistry;
+}
+
+async function writeCandidateWorkspaceRegistry(
+  root: string,
+  registry: CandidateWorkspaceRegistry,
+): Promise<void> {
+  await writeCanonicalJson(resolve(root, candidateRegistryPath), {
+    ...registry,
+    candidates: [...registry.candidates].sort((left, right) =>
+      left.changeId.localeCompare(right.changeId)
+      || left.generation - right.generation
+      || left.candidateId.localeCompare(right.candidateId)),
+  });
 }
 
 async function repositoryIdentity(root: string): Promise<string> {
@@ -338,6 +422,162 @@ export async function createCandidateWorkspace(
     branch,
     candidateId,
   };
+}
+
+/** @id CODE-M5-MULTI-CHANGE-CANDIDATE-001
+ * @implements REQ-M5-MULTI-CHANGE-001 REQ-M5-MULTI-CHANGE-004
+ * @design DES-M5-MULTI-CHANGE-002 DES-M5-MULTI-CHANGE-003 DES-M5-MULTI-CHANGE-004
+ */
+export async function createRegisteredCandidateWorkspace(
+  root: string,
+  changeId: string,
+): Promise<RegisteredCandidateWorkspaceResult> {
+  if (!/^CHANGE-\d+$/.test(changeId)) {
+    throw new Error('CLI_ERROR: change-id must match CHANGE-<digits>.');
+  }
+  const context = await resolveChangeContext(root, { changeId });
+  if (!context || context.generation === null) {
+    throw new Error(`CHANGE_GENERATION_PHASE: CHANGE ${changeId} has no active generation.`);
+  }
+  const repositoryId = await repositoryIdentity(root);
+  const existingRegistry = await loadCandidateWorkspaceRegistry(root);
+  if (existingRegistry && existingRegistry.repositoryId !== repositoryId) {
+    throw new Error('CANDIDATE_WORKSPACE_REPOSITORY_MISMATCH: registry belongs to another repository.');
+  }
+  const existing = existingRegistry?.candidates.find((candidate) =>
+    candidate.changeId === changeId && candidate.generation === context.generation);
+  if (existing) return { ...existing, replayed: true };
+
+  const baseCommit = await git(root, ['rev-parse', '--verify', 'HEAD^{commit}'], true);
+  if (!/^[a-f0-9]{40,64}$/.test(baseCommit)) {
+    throw new Error('CANDIDATE_COMMIT_UNREACHABLE: candidate creation requires an immutable HEAD.');
+  }
+  const creationEpoch = 1 + Math.max(0, ...(existingRegistry?.candidates
+    .filter((candidate) => candidate.changeId === changeId)
+    .map((candidate) => candidate.creationEpoch) ?? []));
+  const candidateId = `candidate:${sha256(canonicalBytes({
+    schemaVersion: 1,
+    repositoryId,
+    changeId,
+    generation: context.generation,
+    baseCommit,
+    creationEpoch,
+  }))}`;
+  const suffix = candidateId.slice('candidate:'.length, 'candidate:'.length + 16);
+  const branch = `musubix5/${changeId}/g${context.generation}/${suffix}`;
+  const worktreePath = `musubix5/workspaces/${changeId}/g${context.generation}/${suffix}`;
+  const absoluteWorktreePath = resolve(await gitCommonDirectory(root), worktreePath);
+  const prepared = await appendJournalRecord(root, {
+    stream: 'normal',
+    changeId,
+    kind: 'candidate-workspace-prepared',
+    idempotencyKey: `candidate-workspace:${candidateId}:prepared`,
+    payload: {
+      schemaVersion: 1,
+      candidateId,
+      changeId,
+      generation: context.generation,
+      repositoryId,
+      creationEpoch,
+      baseCommit,
+      branch,
+      worktreePath,
+      state: 'prepared',
+    },
+  });
+  await mkdir(dirname(absoluteWorktreePath), { recursive: true });
+  const branchCommit = await git(root, [
+    'rev-parse',
+    '--verify',
+    `refs/heads/${branch}^{commit}`,
+  ], true);
+  if (await pathExists(absoluteWorktreePath)) {
+    const existingHead = await git(absoluteWorktreePath, ['rev-parse', 'HEAD'], true);
+    const existingBranch = await git(absoluteWorktreePath, ['branch', '--show-current'], true);
+    if (existingHead !== baseCommit || existingBranch !== branch) {
+      throw new Error(
+        'CANDIDATE_STATE_OWNERSHIP: existing candidate worktree has another identity.',
+      );
+    }
+  } else {
+    if (branchCommit && branchCommit !== baseCommit) {
+      throw new Error(
+        'CANDIDATE_STATE_OWNERSHIP: existing candidate branch has another identity.',
+      );
+    }
+    await git(root, branchCommit
+      ? ['worktree', 'add', '--quiet', absoluteWorktreePath, branch]
+      : ['worktree', 'add', '--quiet', '-b', branch, absoluteWorktreePath, baseCommit]);
+  }
+  const active = await appendJournalRecord(root, {
+    stream: 'normal',
+    changeId,
+    kind: 'candidate-workspace-active',
+    idempotencyKey: `candidate-workspace:${candidateId}:active`,
+    payload: {
+      schemaVersion: 1,
+      candidateId,
+      changeId,
+      generation: context.generation,
+      repositoryId,
+      creationEpoch,
+      baseCommit,
+      candidateCommit: baseCommit,
+      branch,
+      worktreePath,
+      state: 'active',
+      preparedOrder: prepared.order,
+    },
+  });
+  const candidate: RegisteredCandidateWorkspace = {
+    schemaVersion: 1,
+    candidateId,
+    changeId,
+    generation: context.generation,
+    repositoryId,
+    creationEpoch,
+    baseCommit,
+    candidateCommit: baseCommit,
+    branch,
+    worktreePath,
+    state: 'active',
+    preparedOrder: prepared.order,
+    activeOrder: active.order,
+  };
+  await writeCandidateWorkspaceRegistry(root, {
+    schemaVersion: 1,
+    repositoryId,
+    candidates: [...(existingRegistry?.candidates ?? []), candidate],
+  });
+  return { ...candidate, replayed: false };
+}
+
+export async function listRegisteredCandidateWorkspaces(
+  root: string,
+): Promise<RegisteredCandidateWorkspace[]> {
+  const registry = await loadCandidateWorkspaceRegistry(root);
+  if (!registry) return [];
+  const repositoryId = await repositoryIdentity(root);
+  if (registry.repositoryId !== repositoryId) {
+    throw new Error('CANDIDATE_WORKSPACE_REPOSITORY_MISMATCH: registry belongs to another repository.');
+  }
+  return [...registry.candidates].sort((left, right) =>
+    left.changeId.localeCompare(right.changeId)
+    || left.generation - right.generation
+    || left.candidateId.localeCompare(right.candidateId));
+}
+
+export async function showRegisteredCandidateWorkspace(
+  root: string,
+  selector: string,
+): Promise<RegisteredCandidateWorkspace> {
+  const candidates = await listRegisteredCandidateWorkspaces(root);
+  const matches = candidates.filter((candidate) =>
+    candidate.candidateId === selector || candidate.changeId === selector);
+  if (matches.length !== 1) {
+    throw new Error('CANDIDATE_WORKSPACE_NOT_FOUND: candidate workspace was not found.');
+  }
+  return matches[0]!;
 }
 
 export async function createQaWorkspace(root: string, input: CandidateWorkspace & {
