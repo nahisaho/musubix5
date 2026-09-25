@@ -115,6 +115,16 @@ as a residual risk by CHANGE-0010 and closes GitHub Issues #17 and #19.
 - `docs/migration-guide.md`
 - `packages/analysis/src/tdd.ts`
 - `tests/tdd-generation-scope.test.ts`
+- `vitest.config.ts`
+  - Raises the repository-wide bounded test timeout from 20 seconds to 60
+    seconds after the first Windows Node.js 24 candidate run showed that
+    `TEST-M5-PARALLEL-REAL-GATE-SUCCESS-001` can exceed 20 seconds on the
+    hosted Windows runner even though the same test passes locally in about
+    seven seconds. The timeout remains finite and changes only failure latency;
+    it does not skip or weaken assertions. A per-test timeout would modify the
+    authoritative annotated test source and require an unrelated replacement
+    TDD fingerprint cycle, so the existing suite-level timeout policy was
+    adjusted instead.
 
 ## Expected verification
 
@@ -157,6 +167,22 @@ as a residual risk by CHANGE-0010 and closes GitHub Issues #17 and #19.
   verified passing order before the void record.
 - Open Red cycles suppress source-currency staleness until Green or valid void,
   preserving the existing TDD working interval.
+- Candidate run `36147273379` passed Ubuntu and macOS but failed the Windows
+  `command:test` check because
+  `TEST-M5-PARALLEL-REAL-GATE-SUCCESS-001` exceeded the former 20-second
+  Vitest timeout. That run was dispatched from head `91cd5fe`, not snapshot
+  `snapshot-000000000156`'s candidate commit `449c0b9`, so it would not have
+  been admissible OIDC-bound candidate evidence even if Windows had passed.
+  Snapshot 156 was retired, the bounded suite timeout was raised to 60 seconds,
+  and replacement snapshot `snapshot-000000000158` bound candidate commit
+  `e2dd762`.
+- Replacement candidate run `36149443486`, dispatched from a temporary branch
+  whose head was exactly `e2dd762` so the GitHub OIDC `sha` claim matched the
+  attested candidate, passed the complete Node.js 24 matrix on Ubuntu, Windows,
+  and macOS. All three ingested OIDC-bound envelopes match generation 2, the
+  persisted repository identity, gate-input fingerprint
+  `f101899e245a586d8bb6f7e4a063cce3826a49c1d0e56afb1c3e09e74a5a319c`,
+  the candidate commit, the required command set, and clean pre/post trees.
 
 ## Residual risks
 
@@ -193,3 +219,29 @@ as a residual risk by CHANGE-0010 and closes GitHub Issues #17 and #19.
 - Malformed foreign or prior-generation evidence outside the active void scope
   no longer triggers the scoped missing-cycle-ID or missing-chain guard during
   that active CHANGE.
+- The suite-level Vitest timeout is now 60 seconds rather than 20 seconds.
+  Assertions and command coverage are unchanged, and the replacement candidate
+  passed all three hosted operating systems, but a hung test can take up to 40
+  seconds longer to fail.
+- Completing CHANGE-0012 resumes repository-wide source-currency validation
+  and exposes the following 11 pre-existing `TDD_TEST_STALE` debts:
+  `TEST-M5-RELEASE-002-TRUST-001`, `TEST-M5-RELEASE-003`,
+  `TEST-M5-RELEASE-003-GEN5-001`, `TEST-M5-RELEASE-004-001`,
+  `TEST-M5-RELEASE-003-CONTEXT-BINDING-001`,
+  `TEST-M5-RELEASE-003-DOCS-001`,
+  `TEST-M5-PARALLEL-GRAPH-ACYCLIC-001`,
+  `TEST-M5-PARALLEL-INTEGRATION-GATE-001`,
+  `TEST-M5-PARALLEL-REAL-GATE-SUCCESS-001`,
+  `TEST-M5-WORKFLOW-DECLARATION-CORRECTION-CLI-001`, and
+  `TEST-M5-APPROVAL-GUIDANCE-001`. Completion simulation against both the
+  pre-change selector and the CHANGE-0012 selector produced the same set, so
+  this change introduces no new stale ID. Follow-up is tracked in #34.
+- After CHANGE-0012 is marked completed, regenerating repository-wide quality
+  evidence produces `tdd: fail` and an overall failing gate until #34 repairs
+  those 11 fingerprints. This release authorization therefore relies on the
+  complete pre-completion evidence set bound to candidate `e2dd762`; no
+  post-completion quality claim is implied.
+- Status retains three historical `WORKFLOW_WAIVER_STALE` error-severity
+  diagnostics for old `sdd-design`, `sdd-quality`, and `sdd-requirements`
+  declarations. The current workflow check passes and these stale waivers do
+  not authorize this invocation, but the historical records remain visible.
