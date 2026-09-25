@@ -26,14 +26,32 @@ export interface TraceGraph {
   fingerprints: Record<string, string>;
 }
 
+function isRecognizedMusubixSource(manifest: unknown): boolean {
+  if (typeof manifest !== 'object' || manifest === null || Array.isArray(manifest)) return false;
+  const candidate = manifest as { name?: unknown; repository?: unknown };
+  if (typeof candidate.name !== 'string'
+    || typeof candidate.repository !== 'object'
+    || candidate.repository === null
+    || Array.isArray(candidate.repository)) return false;
+  const repository = candidate.repository as { url?: unknown };
+  if (typeof repository.url !== 'string') return false;
+  return (candidate.name === 'musubix5'
+      && repository.url === 'https://github.com/nahisaho/musubix5.git')
+    || (candidate.name === 'musubix3'
+      && repository.url === 'https://github.com/nahisaho/musubix3.git');
+}
+
+/** @id CODE-M5-TRACE-SKILL-001
+ * @implements REQ-M5-EVIDENCE-008
+ * @design DES-M5-TRACE-SKILL-001
+ */
 export async function traceInputs(root: string): Promise<string[]> {
   const projectFiles = await files(root);
   let isMusubixRepository = false;
   try {
-    const packageManifest = JSON.parse(await readText(root, 'package.json')) as { name?: string };
-    isMusubixRepository = packageManifest.name === 'musubix3';
+    isMusubixRepository = isRecognizedMusubixSource(JSON.parse(await readText(root, 'package.json')));
   } catch {
-    // Consumer projects do not need to trace musubix3's own Skill definitions.
+    // Missing or unreadable consumer manifests do not enable repository Skill inputs.
   }
   return projectFiles.filter((path) => isArtifact(path) || isTraceSource(path) || (isMusubixRepository && isSkillSource(path)));
 }
@@ -103,8 +121,127 @@ function maskGenericStrings(text: string, path: string): string {
   return chars.join('');
 }
 
+interface MarkdownLine {
+  start: number;
+  contentEnd: number;
+  end: number;
+  content: string;
+}
+
+function markdownLines(text: string): MarkdownLine[] {
+  const lines: MarkdownLine[] = [];
+  for (let start = 0; start < text.length;) {
+    let contentEnd = start;
+    while (contentEnd < text.length && text[contentEnd] !== '\r' && text[contentEnd] !== '\n') contentEnd += 1;
+    let end = contentEnd;
+    if (text[end] === '\r') end += 1;
+    if (text[end] === '\n') end += 1;
+    lines.push({ start, contentEnd, end, content: text.slice(start, contentEnd) });
+    start = end;
+  }
+  return lines;
+}
+
+function maskMarkdownCodeExamples(text: string): string {
+  const chars = text.split('');
+  const masked = new Uint8Array(chars.length);
+  const lines = markdownLines(text);
+  const maskRange = (start: number, end: number): void => {
+    for (let index = start; index < end; index += 1) {
+      masked[index] = 1;
+      if (chars[index] !== '\r' && chars[index] !== '\n' && !(index === 0 && chars[index] === '\uFEFF')) {
+        chars[index] = ' ';
+      }
+    }
+  };
+  const lineContent = (line: MarkdownLine, index: number): string =>
+    index === 0 && line.content.startsWith('\uFEFF') ? line.content.slice(1) : line.content;
+  const blank = (line: MarkdownLine, index: number): boolean => /^[ \t]*$/.test(lineContent(line, index));
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index]!;
+    const opener = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(lineContent(line, index));
+    if (!opener) continue;
+    const marker = opener[1]!;
+    const character = marker[0]!;
+    const closer = new RegExp(`^ {0,3}\\${character}{${marker.length},}[ \\t]*$`);
+    let last = lines.length - 1;
+    for (let cursor = index + 1; cursor < lines.length; cursor += 1) {
+      if (closer.test(lineContent(lines[cursor]!, cursor))) {
+        last = cursor;
+        break;
+      }
+    }
+    maskRange(line.start, lines[last]!.end);
+    index = last;
+  }
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index]!;
+    if (masked[line.start] || !/^(?: {4,}|\t)/.test(lineContent(line, index))) continue;
+    if (index > 0 && !blank(lines[index - 1]!, index - 1)) continue;
+    let previous = index - 1;
+    while (previous >= 0 && blank(lines[previous]!, previous)) previous -= 1;
+    if (previous >= 0) {
+      const preceding = lineContent(lines[previous]!, previous);
+      if (/^[ \t]/.test(preceding) || /^(?:[-+*]|\d+[.)])\s/.test(preceding)) continue;
+    }
+    let cursor = index;
+    let lastIndented = index;
+    while (cursor < lines.length) {
+      const candidate = lines[cursor]!;
+      if (/^(?: {4,}|\t)/.test(lineContent(candidate, cursor))) lastIndented = cursor;
+      else if (!blank(candidate, cursor)) break;
+      cursor += 1;
+    }
+    maskRange(line.start, lines[lastIndented]!.end);
+    index = lastIndented;
+  }
+
+  for (let lineIndex = 0; lineIndex < lines.length;) {
+    if (blank(lines[lineIndex]!, lineIndex)) {
+      lineIndex += 1;
+      continue;
+    }
+    const start = lines[lineIndex]!.start;
+    let endLine = lineIndex;
+    while (endLine + 1 < lines.length && !blank(lines[endLine + 1]!, endLine + 1)) endLine += 1;
+    const end = lines[endLine]!.contentEnd;
+    for (let cursor = start; cursor < end;) {
+      if (chars[cursor] !== '`' || masked[cursor]) {
+        cursor += 1;
+        continue;
+      }
+      let openerEnd = cursor + 1;
+      while (openerEnd < end && chars[openerEnd] === '`' && !masked[openerEnd]) openerEnd += 1;
+      const length = openerEnd - cursor;
+      let closerStart = openerEnd;
+      let found = false;
+      while (closerStart < end) {
+        if (chars[closerStart] !== '`' || masked[closerStart]) {
+          closerStart += 1;
+          continue;
+        }
+        let closerEnd = closerStart + 1;
+        while (closerEnd < end && chars[closerEnd] === '`' && !masked[closerEnd]) closerEnd += 1;
+        if (closerEnd - closerStart === length) {
+          maskRange(cursor, closerEnd);
+          cursor = closerEnd;
+          found = true;
+          break;
+        }
+        closerStart = closerEnd;
+      }
+      if (!found) cursor = openerEnd;
+    }
+    lineIndex = endLine + 1;
+  }
+  return chars.join('');
+}
+
 function genericCommentBlocks(text: string, path: string): { text: string; line: number }[] {
-  const searchable = maskGenericStrings(text, path);
+  const skillSource = isSkillSource(path);
+  const searchable = skillSource ? maskMarkdownCodeExamples(text) : maskGenericStrings(text, path);
   const matches: { text: string; index: number; end: number }[] = [];
   const nestedBlock = path.endsWith('.hs')
     ? { open: '{-', close: '-}' }
@@ -128,8 +265,9 @@ function genericCommentBlocks(text: string, path: string): { text: string; line:
       }
       if (depth !== 0) break;
       const original = text.slice(start, cursor);
-      if (/@(id|implements|verifies|design)\b/.test(original)) {
-        matches.push({ text: original, index: start, end: cursor });
+      const candidate = searchable.slice(start, cursor);
+      if (/@(id|implements|verifies|design)\b/.test(candidate)) {
+        matches.push({ text: skillSource ? candidate : original, index: start, end: cursor });
       }
       start = cursor - nestedBlock.open.length;
     }
@@ -151,10 +289,11 @@ function genericCommentBlocks(text: string, path: string): { text: string; line:
     for (const match of searchable.matchAll(pattern)) {
       if (match.index !== undefined) {
         const original = text.slice(match.index, match.index + match[0].length);
+        const candidate = searchable.slice(match.index, match.index + match[0].length);
         const end = match.index + match[0].length;
-        if (/@(id|implements|verifies|design)\b/.test(original)
+        if (/@(id|implements|verifies|design)\b/.test(candidate)
           && !matches.some((existing) => match.index! < existing.end && end > existing.index)) {
-          matches.push({ text: original, index: match.index, end });
+          matches.push({ text: skillSource ? candidate : original, index: match.index, end });
         }
       }
     }

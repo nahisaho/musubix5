@@ -1,7 +1,19 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-24T22:31:19.342Z",
+  "generatedAt": "2026-09-25T00:54:45.126Z",
   "nodes": [
+    {
+      "id": "CODE-SESSION-SCOPED-DEVELOPMENT-001",
+      "kind": "code",
+      "path": ".github/skills/sdd-change/SKILL.md",
+      "line": 6
+    },
+    {
+      "id": "CODE-SESSION-SCOPED-DEVELOPMENT-002",
+      "kind": "code",
+      "path": ".github/skills/sdd-requirements/SKILL.md",
+      "line": 6
+    },
     {
       "id": "CODE-M5-NPM-PUBLISH-WORKFLOW-YAML-001",
       "kind": "code",
@@ -120,6 +132,18 @@
       "id": "ADR-0017",
       "kind": "adr",
       "path": ".musubix/decisions/ADR-0017.md",
+      "line": 1
+    },
+    {
+      "id": "ADR-0018",
+      "kind": "adr",
+      "path": ".musubix/decisions/ADR-0018.md",
+      "line": 1
+    },
+    {
+      "id": "ADR-0019",
+      "kind": "adr",
+      "path": ".musubix/decisions/ADR-0019.md",
       "line": 1
     },
     {
@@ -982,6 +1006,45 @@
       "mandatory": true
     },
     {
+      "id": "DES-M5-TRACE-SKILL-001",
+      "kind": "design",
+      "path": ".musubix/features/trace-skill-source-selection/design.md",
+      "line": 3
+    },
+    {
+      "id": "DES-SESSION-SCOPED-DEVELOPMENT-001",
+      "kind": "design",
+      "path": ".musubix/features/trace-skill-source-selection/design.md",
+      "line": 10
+    },
+    {
+      "id": "DES-SESSION-SCOPED-DEVELOPMENT-002",
+      "kind": "design",
+      "path": ".musubix/features/trace-skill-source-selection/design.md",
+      "line": 17
+    },
+    {
+      "id": "REQ-M5-EVIDENCE-008",
+      "kind": "requirement",
+      "path": ".musubix/features/trace-skill-source-selection/requirements.md",
+      "line": 3,
+      "mandatory": true
+    },
+    {
+      "id": "REQ-SESSION-SCOPED-DEVELOPMENT-001",
+      "kind": "requirement",
+      "path": ".musubix/features/trace-skill-source-selection/requirements.md",
+      "line": 10,
+      "mandatory": true
+    },
+    {
+      "id": "REQ-SESSION-SCOPED-DEVELOPMENT-002",
+      "kind": "requirement",
+      "path": ".musubix/features/trace-skill-source-selection/requirements.md",
+      "line": 17,
+      "mandatory": true
+    },
+    {
       "id": "CODE-M5-APPROVAL-003",
       "kind": "code",
       "path": "packages/analysis/src/approval-boundary.ts",
@@ -1442,6 +1505,12 @@
       "kind": "code",
       "path": "packages/analysis/src/tdd.ts",
       "line": 164
+    },
+    {
+      "id": "CODE-M5-TRACE-SKILL-001",
+      "kind": "code",
+      "path": "packages/analysis/src/trace.ts",
+      "line": 44
     },
     {
       "id": "CODE-M5-WORKFLOW-DECLARATION-CORRECTION-001",
@@ -2749,7 +2818,19 @@
       "id": "TEST-M5-EVIDENCE-TRACE-001",
       "kind": "test",
       "path": "tests/trace-namespace.test.ts",
-      "line": 5
+      "line": 111
+    },
+    {
+      "id": "TEST-M5-EVIDENCE-SKILL-INPUT-001",
+      "kind": "test",
+      "path": "tests/trace-namespace.test.ts",
+      "line": 125
+    },
+    {
+      "id": "TEST-SESSION-SCOPED-DEVELOPMENT-001",
+      "kind": "test",
+      "path": "tests/trace-namespace.test.ts",
+      "line": 209
     },
     {
       "id": "TEST-M5-WORKFLOW-CHANGE-OWNER-001",
@@ -2855,6 +2936,36 @@
     }
   ],
   "edges": [
+    {
+      "from": "CODE-SESSION-SCOPED-DEVELOPMENT-001",
+      "to": "REQ-SESSION-SCOPED-DEVELOPMENT-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-SESSION-SCOPED-DEVELOPMENT-001",
+      "to": "REQ-SESSION-SCOPED-DEVELOPMENT-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-SESSION-SCOPED-DEVELOPMENT-001",
+      "to": "DES-SESSION-SCOPED-DEVELOPMENT-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-SESSION-SCOPED-DEVELOPMENT-002",
+      "to": "REQ-SESSION-SCOPED-DEVELOPMENT-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-SESSION-SCOPED-DEVELOPMENT-002",
+      "to": "REQ-SESSION-SCOPED-DEVELOPMENT-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-SESSION-SCOPED-DEVELOPMENT-002",
+      "to": "DES-SESSION-SCOPED-DEVELOPMENT-002",
+      "relation": "implements"
+    },
     {
       "from": "CODE-M5-NPM-PUBLISH-WORKFLOW-YAML-001",
       "to": "REQ-M5-RELEASE-004",
@@ -5366,6 +5477,46 @@
       "relation": "depends-on"
     },
     {
+      "from": "DES-M5-TRACE-SKILL-001",
+      "to": "REQ-M5-EVIDENCE-008",
+      "relation": "satisfies"
+    },
+    {
+      "from": "ADR-0018",
+      "to": "DES-M5-TRACE-SKILL-001",
+      "relation": "decides"
+    },
+    {
+      "from": "DES-SESSION-SCOPED-DEVELOPMENT-001",
+      "to": "REQ-SESSION-SCOPED-DEVELOPMENT-001",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-SESSION-SCOPED-DEVELOPMENT-001",
+      "to": "REQ-SESSION-SCOPED-DEVELOPMENT-002",
+      "relation": "satisfies"
+    },
+    {
+      "from": "ADR-0019",
+      "to": "DES-SESSION-SCOPED-DEVELOPMENT-001",
+      "relation": "decides"
+    },
+    {
+      "from": "DES-SESSION-SCOPED-DEVELOPMENT-002",
+      "to": "REQ-SESSION-SCOPED-DEVELOPMENT-001",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-SESSION-SCOPED-DEVELOPMENT-002",
+      "to": "REQ-SESSION-SCOPED-DEVELOPMENT-002",
+      "relation": "satisfies"
+    },
+    {
+      "from": "ADR-0019",
+      "to": "DES-SESSION-SCOPED-DEVELOPMENT-002",
+      "relation": "decides"
+    },
+    {
       "from": "CODE-M5-APPROVAL-003",
       "to": "REQ-M5-APPROVAL-003",
       "relation": "implements"
@@ -6863,6 +7014,16 @@
     {
       "from": "CODE-M5-TDD-EOL-FINGERPRINT-001",
       "to": "DES-M5-PARALLEL-006",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-TRACE-SKILL-001",
+      "to": "REQ-M5-EVIDENCE-008",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-TRACE-SKILL-001",
+      "to": "DES-M5-TRACE-SKILL-001",
       "relation": "implements"
     },
     {
@@ -9136,6 +9297,21 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-EVIDENCE-SKILL-INPUT-001",
+      "to": "REQ-M5-EVIDENCE-008",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-SESSION-SCOPED-DEVELOPMENT-001",
+      "to": "REQ-SESSION-SCOPED-DEVELOPMENT-001",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-SESSION-SCOPED-DEVELOPMENT-001",
+      "to": "REQ-SESSION-SCOPED-DEVELOPMENT-002",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-WORKFLOW-CHANGE-OWNER-001",
       "to": "REQ-M5-EVIDENCE-006",
       "relation": "verifies"
@@ -9258,6 +9434,18 @@
   ],
   "diagnostics": [],
   "fingerprints": {
+    ".github/skills/sdd-agent-assignment/SKILL.md": "a92acc1af27365d13272c1b0a65f84d29fa5f582f1eb2a450da05ff8920c31a1",
+    ".github/skills/sdd-change/SKILL.md": "043787ee6ccc065cf9b397905f033074b291832745350efb96bbfcb783b5221b",
+    ".github/skills/sdd-design/SKILL.md": "d7665156ac3c4116ef9ff2ecb91be9337caee21976420d92881e38bfb5439429",
+    ".github/skills/sdd-formal-codegraph/SKILL.md": "fd874e867289b3751eda8b94a4f0deb1b0d7eadf839414504d27bc2a1cef57ac",
+    ".github/skills/sdd-implementation/SKILL.md": "8c43335af2b7cb9412f02bdb041d11d80b11293564bca2a0073b34c9078eabd7",
+    ".github/skills/sdd-integration-verification/SKILL.md": "13e3cb7f5647fbab569ac3cf8a7cc0a01efea5de00166ad92d61542196a51e60",
+    ".github/skills/sdd-issue-report/SKILL.md": "9653843582e1d048de68eccffb30d5b99460d5272c038f4ebd687b0c508c5601",
+    ".github/skills/sdd-knowledge/SKILL.md": "69711171d070c41d8f366e12dd19db953b6f1255dd1970a0db077f9a906d75e4",
+    ".github/skills/sdd-parallel-dispatch/SKILL.md": "0acfa44e191b94a30d573164cec0a85e94cc1c1eecf9d27c4b0a9af0ac37b27b",
+    ".github/skills/sdd-quality/SKILL.md": "b9451e41ce6598ca90284a7b439aa3a8b98cf4c47f5e90659754b6dfe8c5f712",
+    ".github/skills/sdd-requirements/SKILL.md": "c5d07dcc445c38b8b79c1144934b12c575189a02b0999aa57cf85abcf825b59a",
+    ".github/skills/sdd-traceability/SKILL.md": "923c6c8915f3c2464cc2732392cbf2675485070fd5a78b2a502ef4aaa4852cdd",
     ".github/workflows/candidate-gate.yml": "5ad955d1c23936d026a0aa6fad800903dcf1f9bbf2d0886e5d7163b0303d4c2d",
     ".github/workflows/npm-publish.yml": "85a8744adc46f1d2a5276a60445b6cfdcae8088cd0b0b0f5d28304c9e1315c0f",
     ".github/workflows/release.yml": "6fd8e4e4ec2ffb40819ba231dbfc32b754d05623a123c1818cfd5646db072410",
@@ -9277,6 +9465,8 @@
     ".musubix/decisions/ADR-0015.md": "832a1f63e6d8ab44a5c9cbda6679029e9a45f39a8a8bb6446563c41dccdf34d5",
     ".musubix/decisions/ADR-0016.md": "92d60ae029514e1d57feaea5783bfbb7d5a2637c8a2979d6f089905c3b73e731",
     ".musubix/decisions/ADR-0017.md": "e723c64fc4f0062cde0ca77cca2fa45863bcca7e664af244419f7dadbe7bd427",
+    ".musubix/decisions/ADR-0018.md": "02596130d5d62aeb19057e65ddbea3f6ea6d3a651522920821e6cd0e681f551f",
+    ".musubix/decisions/ADR-0019.md": "1e40577c3ad136158d555dbd4e25fc906736d54082cc52e3186cd2b7d23cb893",
     ".musubix/features/codegraph-performance/design.md": "3ddf90dbb97a753644deb0e4dd38adaa27420273390a27b241612ef84f4c9c97",
     ".musubix/features/codegraph-performance/requirements.md": "a5eb96722cea36c4fab7f81a09d992b1cbce62b154c7b85eab35199817d551e1",
     ".musubix/features/musubix5-clean-foundation/design.md": "14581aa3a96681d3120da678c4b3a5a170c1e6bd5904e7cf33470f3e443bf538",
@@ -9285,6 +9475,8 @@
     ".musubix/features/parallel-agent-development/requirements.md": "8fee03a0f32288e18819b311c13e7965ba51230dad7cb88f46209fbffb009112",
     ".musubix/features/release-0-2-0/design.md": "6642acfea4fe6e6b565a334e9a3490605bc418915e7a64af279e7a283df2c0eb",
     ".musubix/features/release-0-2-0/requirements.md": "9a21b40b82cd44ffc0a7975583be3e309b1541ec29e78e8eac22eb74f6eb7acf",
+    ".musubix/features/trace-skill-source-selection/design.md": "9f0b85c49499fe68692d2d220ce95994f6ad82f29c2addecdae0d62c5fcd81eb",
+    ".musubix/features/trace-skill-source-selection/requirements.md": "94fe7ab9c31b7b3e6ee7455039b71eaa66f622715db71cce155b2ca1f438c1fb",
     "packages/analysis/src/adapters.ts": "4db9916f432a92d27520a7aa9af575db67897a729fbbed623331ddc00c020b95",
     "packages/analysis/src/approval-boundary.ts": "ec0c2da68cff776388126e4d34db112d529462bd7dfcfe4691d2bc5701a81090",
     "packages/analysis/src/approval-domains.ts": "56363d8d7fe0158df596a09abf2688f439815c38dd582fd5970c1bb30e6c5994",
@@ -9330,7 +9522,7 @@
     "packages/analysis/src/tdd-cycle-resolver.ts": "9098bc74830c1907492da8e08c9fa806550a135554fe41b37998bb344ffffc78",
     "packages/analysis/src/tdd.ts": "958facb8cfb044cd36345aa03d1ee37596fb588e8e80c08a2d238220e274c475",
     "packages/analysis/src/test-report.ts": "c4389c1a73b8ff61beae2061c1eaaeeadc4c5cc529befc059111ea5430d602c4",
-    "packages/analysis/src/trace.ts": "270f0348e850d2eb8de81802bc0206f32acdc9b86556bf6cad76dc481799bfa2",
+    "packages/analysis/src/trace.ts": "1f6eac66a2006cdd939aaaec30c27955debc3cb6a91666306ab9a6630c5e5b27",
     "packages/analysis/src/workflow-correction.ts": "63fddf07315b8af34b7a96a542c68f82eee5ba8a321795a24bafe1ca8033e2f6",
     "packages/analysis/src/workflow-types.ts": "4fa0d85248bd9373eed4dc7043f1320c9b918f08fc8874dd982c528876b74783",
     "packages/analysis/src/workflow-waiver.ts": "77a93cc41b1a917bf08f8a26eacafc0ce32edcf3b3d90a2b5ccca5d792d014ac",
@@ -9436,7 +9628,7 @@
     "tests/tdd-cycle-resolver.test.ts": "e97858964eb27b9b5aa5108ae0b40cafe8ba5053cbc38aceec3a2069458ac885",
     "tests/tdd-generation-scope.test.ts": "92f90da7113769a0d900bd24665a5665d08e61e39fc7c3df7913629ad634e35a",
     "tests/test-harness-portability.test.ts": "644252711db925d5a45ceed8b5f0bb9b0108ec726aebb80d1a833493df585ee3",
-    "tests/trace-namespace.test.ts": "ace3b8880a0dbc1b143108986c63f292a7e19acff1a72055cbb5015204488a6c",
+    "tests/trace-namespace.test.ts": "8597797fe0fa237f52c6831c1d541ed0666b5789b11d3fc04a72b8c6d3fd9b4e",
     "tests/workflow-change-owner.test.ts": "3bdbbc5fb5b497b120ce17aa938faab01b6b4fef48027d387982178141471f59",
     "tests/workflow-declaration-correction-cli-errors.test.ts": "9fbd001466f6057fb842f5c82aa11862828cdfe067f66c4407595985cdad43e2",
     "tests/workflow-declaration-correction-regressions.test.ts": "4a5f75009254776b002102e4878d8767f31471974e75c4a0fa7905f6d9d75df6",

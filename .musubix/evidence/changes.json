@@ -234838,6 +234838,1306 @@
           "qualityOrdinal": 3
         }
       ]
+    },
+    {
+      "changeId": "CHANGE-0009",
+      "generation": 2,
+      "activeGeneration": 2,
+      "requirementIds": [
+        "REQ-M5-EVIDENCE-008",
+        "REQ-SESSION-SCOPED-DEVELOPMENT-001",
+        "REQ-SESSION-SCOPED-DEVELOPMENT-002"
+      ],
+      "phases": {
+        "impact": {
+          "phase": "impact",
+          "recordedAt": "2026-09-24T22:41:54.590Z",
+          "fingerprints": {
+            "impact": "a54971b2bea2d41ca601260341324f978adfb0c7cbe149e669f053aecfff568e",
+            "requirements": "32d739e7efc0777b0ccf3cd52a176dc9cd01aa3a6c33753e8eb7fc5af588d5bf",
+            "design": "84038a9d76926878d21ffd87c0f2528426ed6f605a09686859479fc6ea841e0f",
+            "implementation": "38294a9cecc877bbfb67cc1b7d8ec801ed9e8f9eec0510c7db7b7163fb0305c0",
+            "tests": "4805e901bb04ccc0a605fcaae2c8a67a2ec46fdbcef1e1cd8797cc74f6313393",
+            "tdd": "0c08574d6e33ba7bf4c2acec3427f875c16a0cf432d19dc805e05a17a4a64ad5",
+            "requirementImplementations": {
+              "REQ-M5-EVIDENCE-008": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-SESSION-SCOPED-DEVELOPMENT-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-SESSION-SCOPED-DEVELOPMENT-002": {
+                "paths": [],
+                "fingerprints": {}
+              }
+            }
+          },
+          "order": 1869
+        },
+        "requirements": {
+          "phase": "requirements",
+          "recordedAt": "2026-09-24T23:23:04.544Z",
+          "fingerprints": {
+            "impact": "419b0a0477ce7141e830babe9ef96d493515de6cc65ed66a56bc2d8e1afdc442",
+            "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+            "design": "84038a9d76926878d21ffd87c0f2528426ed6f605a09686859479fc6ea841e0f",
+            "implementation": "38294a9cecc877bbfb67cc1b7d8ec801ed9e8f9eec0510c7db7b7163fb0305c0",
+            "tests": "4805e901bb04ccc0a605fcaae2c8a67a2ec46fdbcef1e1cd8797cc74f6313393",
+            "tdd": "0c08574d6e33ba7bf4c2acec3427f875c16a0cf432d19dc805e05a17a4a64ad5",
+            "requirementImplementations": {
+              "REQ-M5-EVIDENCE-008": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-SESSION-SCOPED-DEVELOPMENT-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-SESSION-SCOPED-DEVELOPMENT-002": {
+                "paths": [],
+                "fingerprints": {}
+              }
+            }
+          },
+          "approvalManifestSha256": "721d2105fb5d77d659145ac02f05ef634f001cd3dcd2dc51c1c6da9864d3af71",
+          "requirementsOrdinal": 1,
+          "order": 1870
+        },
+        "design": {
+          "phase": "design",
+          "recordedAt": "2026-09-24T23:50:12.690Z",
+          "fingerprints": {
+            "impact": "419b0a0477ce7141e830babe9ef96d493515de6cc65ed66a56bc2d8e1afdc442",
+            "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+            "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+            "implementation": "38294a9cecc877bbfb67cc1b7d8ec801ed9e8f9eec0510c7db7b7163fb0305c0",
+            "tests": "4805e901bb04ccc0a605fcaae2c8a67a2ec46fdbcef1e1cd8797cc74f6313393",
+            "tdd": "0c08574d6e33ba7bf4c2acec3427f875c16a0cf432d19dc805e05a17a4a64ad5",
+            "requirementImplementations": {
+              "REQ-M5-EVIDENCE-008": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-SESSION-SCOPED-DEVELOPMENT-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-SESSION-SCOPED-DEVELOPMENT-002": {
+                "paths": [],
+                "fingerprints": {}
+              }
+            }
+          },
+          "approvalManifestSha256": "1c1f9bd834ec52a636179b68a413ad4afaddc7dea7513e7864c3b35e4299643f",
+          "designOrdinal": 1,
+          "order": 1871
+        },
+        "red": {
+          "phase": "red",
+          "recordedAt": "2026-09-24T23:52:17.750Z",
+          "fingerprints": {
+            "impact": "419b0a0477ce7141e830babe9ef96d493515de6cc65ed66a56bc2d8e1afdc442",
+            "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+            "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+            "implementation": "38294a9cecc877bbfb67cc1b7d8ec801ed9e8f9eec0510c7db7b7163fb0305c0",
+            "tests": "9ee995ad58e3eede7530ce94ed7808310e4720c02dacbc34b380fd6c73b5c5fb",
+            "tdd": "4e8a41f6e0b54b252498827821e9211ee8b375aabf362f7f07054cfca2dbea7e",
+            "requirementImplementations": {
+              "REQ-M5-EVIDENCE-008": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-SESSION-SCOPED-DEVELOPMENT-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-SESSION-SCOPED-DEVELOPMENT-002": {
+                "paths": [],
+                "fingerprints": {}
+              }
+            }
+          },
+          "order": 1875
+        },
+        "implementation": {
+          "phase": "implementation",
+          "recordedAt": "2026-09-24T23:56:47.435Z",
+          "fingerprints": {
+            "impact": "419b0a0477ce7141e830babe9ef96d493515de6cc65ed66a56bc2d8e1afdc442",
+            "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+            "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+            "implementation": "8c50f131dade49baacb52a9237894a6eef6660419c6f72658782232c72e415c0",
+            "tests": "9ee995ad58e3eede7530ce94ed7808310e4720c02dacbc34b380fd6c73b5c5fb",
+            "tdd": "b4f21d73a56e76f16f9d20929654a7384f363af98811a1d8a3e7c9400ed3b0da",
+            "requirementImplementations": {
+              "REQ-M5-EVIDENCE-008": {
+                "paths": [
+                  "packages/analysis/src/files.ts",
+                  "packages/analysis/src/trace.ts",
+                  "packages/domain/src/constitution.ts",
+                  "packages/domain/src/design.ts",
+                  "packages/domain/src/index.ts",
+                  "packages/domain/src/markdown.ts",
+                  "packages/domain/src/requirements.ts",
+                  "packages/domain/src/types.ts"
+                ],
+                "fingerprints": {
+                  "packages/analysis/src/files.ts": "987b2a90c079f0c391ee6ce1893de8664ddbfe43264eb7e8e65d6fb291cfa23d",
+                  "packages/analysis/src/trace.ts": "1f6eac66a2006cdd939aaaec30c27955debc3cb6a91666306ab9a6630c5e5b27",
+                  "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                  "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
+                  "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                  "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                  "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                  "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                }
+              },
+              "REQ-SESSION-SCOPED-DEVELOPMENT-001": {
+                "paths": [
+                  ".github/skills/sdd-change/SKILL.md",
+                  ".github/skills/sdd-requirements/SKILL.md"
+                ],
+                "fingerprints": {
+                  ".github/skills/sdd-change/SKILL.md": "043787ee6ccc065cf9b397905f033074b291832745350efb96bbfcb783b5221b",
+                  ".github/skills/sdd-requirements/SKILL.md": "c5d07dcc445c38b8b79c1144934b12c575189a02b0999aa57cf85abcf825b59a"
+                }
+              },
+              "REQ-SESSION-SCOPED-DEVELOPMENT-002": {
+                "paths": [
+                  ".github/skills/sdd-change/SKILL.md",
+                  ".github/skills/sdd-requirements/SKILL.md"
+                ],
+                "fingerprints": {
+                  ".github/skills/sdd-change/SKILL.md": "043787ee6ccc065cf9b397905f033074b291832745350efb96bbfcb783b5221b",
+                  ".github/skills/sdd-requirements/SKILL.md": "c5d07dcc445c38b8b79c1144934b12c575189a02b0999aa57cf85abcf825b59a"
+                }
+              }
+            }
+          },
+          "order": 1879
+        },
+        "green": {
+          "phase": "green",
+          "recordedAt": "2026-09-24T23:57:35.576Z",
+          "fingerprints": {
+            "impact": "419b0a0477ce7141e830babe9ef96d493515de6cc65ed66a56bc2d8e1afdc442",
+            "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+            "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+            "implementation": "8c50f131dade49baacb52a9237894a6eef6660419c6f72658782232c72e415c0",
+            "tests": "9ee995ad58e3eede7530ce94ed7808310e4720c02dacbc34b380fd6c73b5c5fb",
+            "tdd": "3bd8a999121505f1aa9af7f5326e84fd512d9c70c7d7bc1af7b0fea295df8824",
+            "requirementImplementations": {
+              "REQ-M5-EVIDENCE-008": {
+                "paths": [
+                  "packages/analysis/src/files.ts",
+                  "packages/analysis/src/trace.ts",
+                  "packages/domain/src/constitution.ts",
+                  "packages/domain/src/design.ts",
+                  "packages/domain/src/index.ts",
+                  "packages/domain/src/markdown.ts",
+                  "packages/domain/src/requirements.ts",
+                  "packages/domain/src/types.ts"
+                ],
+                "fingerprints": {
+                  "packages/analysis/src/files.ts": "987b2a90c079f0c391ee6ce1893de8664ddbfe43264eb7e8e65d6fb291cfa23d",
+                  "packages/analysis/src/trace.ts": "1f6eac66a2006cdd939aaaec30c27955debc3cb6a91666306ab9a6630c5e5b27",
+                  "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                  "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
+                  "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                  "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                  "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                  "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                }
+              },
+              "REQ-SESSION-SCOPED-DEVELOPMENT-001": {
+                "paths": [
+                  ".github/skills/sdd-change/SKILL.md",
+                  ".github/skills/sdd-requirements/SKILL.md"
+                ],
+                "fingerprints": {
+                  ".github/skills/sdd-change/SKILL.md": "043787ee6ccc065cf9b397905f033074b291832745350efb96bbfcb783b5221b",
+                  ".github/skills/sdd-requirements/SKILL.md": "c5d07dcc445c38b8b79c1144934b12c575189a02b0999aa57cf85abcf825b59a"
+                }
+              },
+              "REQ-SESSION-SCOPED-DEVELOPMENT-002": {
+                "paths": [
+                  ".github/skills/sdd-change/SKILL.md",
+                  ".github/skills/sdd-requirements/SKILL.md"
+                ],
+                "fingerprints": {
+                  ".github/skills/sdd-change/SKILL.md": "043787ee6ccc065cf9b397905f033074b291832745350efb96bbfcb783b5221b",
+                  ".github/skills/sdd-requirements/SKILL.md": "c5d07dcc445c38b8b79c1144934b12c575189a02b0999aa57cf85abcf825b59a"
+                }
+              }
+            }
+          },
+          "order": 1883
+        },
+        "quality": {
+          "phase": "quality",
+          "recordedAt": "2026-09-25T00:54:35.195Z",
+          "fingerprints": {
+            "impact": "15a447cd846f7be43820550c6375f62542eb770dea334136959b350f50cd527d",
+            "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+            "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+            "implementation": "190008ddbcb3bb40e8f914086ffc06d5d444e37789b6bbafb50f0f62b229ea0b",
+            "tests": "0119c01d8611608aee37a97ea2b0ef2f54b97d118e8327e36125d157db11ed3a",
+            "tdd": "be0cd4b6e60d9fc6534024604bb28806ff213f86940cb6281c11827f5c4656cd",
+            "requirementImplementations": {
+              "REQ-M5-EVIDENCE-008": {
+                "paths": [
+                  "packages/analysis/src/files.ts",
+                  "packages/analysis/src/trace.ts",
+                  "packages/domain/src/constitution.ts",
+                  "packages/domain/src/design.ts",
+                  "packages/domain/src/index.ts",
+                  "packages/domain/src/markdown.ts",
+                  "packages/domain/src/requirements.ts",
+                  "packages/domain/src/types.ts"
+                ],
+                "fingerprints": {
+                  "packages/analysis/src/files.ts": "987b2a90c079f0c391ee6ce1893de8664ddbfe43264eb7e8e65d6fb291cfa23d",
+                  "packages/analysis/src/trace.ts": "1f6eac66a2006cdd939aaaec30c27955debc3cb6a91666306ab9a6630c5e5b27",
+                  "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                  "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
+                  "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                  "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                  "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                  "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                }
+              },
+              "REQ-SESSION-SCOPED-DEVELOPMENT-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-SESSION-SCOPED-DEVELOPMENT-002": {
+                "paths": [],
+                "fingerprints": {}
+              }
+            }
+          },
+          "order": 1936,
+          "qualityOrdinal": 3
+        }
+      },
+      "generationHistory": [
+        {
+          "generation": 1,
+          "status": "abandoned",
+          "requirementIds": [
+            "REQ-M5-EVIDENCE-008"
+          ],
+          "phases": {
+            "impact": {
+              "phase": "impact",
+              "recordedAt": "2026-09-24T22:37:20.393Z",
+              "fingerprints": {
+                "impact": "66bc7567a86f444f31dc44a6283507d55e10ab8427ab0882242cdd2b55d170ba",
+                "requirements": "141184f191fbeefa078df1b107d743853563b0cea2024684b71b0967794df99d",
+                "design": "84038a9d76926878d21ffd87c0f2528426ed6f605a09686859479fc6ea841e0f",
+                "implementation": "38294a9cecc877bbfb67cc1b7d8ec801ed9e8f9eec0510c7db7b7163fb0305c0",
+                "tests": "4805e901bb04ccc0a605fcaae2c8a67a2ec46fdbcef1e1cd8797cc74f6313393",
+                "tdd": "0c08574d6e33ba7bf4c2acec3427f875c16a0cf432d19dc805e05a17a4a64ad5",
+                "requirementImplementations": {
+                  "REQ-M5-EVIDENCE-008": {
+                    "paths": [],
+                    "fingerprints": {}
+                  }
+                }
+              },
+              "order": 1868
+            }
+          },
+          "abandonment": {
+            "reason": "Requirements review found repository Skill declarations reference two undefined session-scoped requirements, making the original scope unable to pass strict trace.",
+            "approver": "nahisaho",
+            "abandonedAt": "2026-09-24T22:41:41.020Z"
+          }
+        }
+      ],
+      "tddBatches": [
+        {
+          "scopeId": "REQ-M5-EVIDENCE-008",
+          "requirementIds": [
+            "REQ-M5-EVIDENCE-008"
+          ],
+          "red": {
+            "phase": "red",
+            "recordedAt": "2026-09-25T00:01:01.170Z",
+            "fingerprints": {
+              "impact": "419b0a0477ce7141e830babe9ef96d493515de6cc65ed66a56bc2d8e1afdc442",
+              "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+              "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+              "implementation": "4d51c3e724882d786d46b80feab37ac2587dc3bf57fd58d731c8b42177f21071",
+              "tests": "9ee995ad58e3eede7530ce94ed7808310e4720c02dacbc34b380fd6c73b5c5fb",
+              "tdd": "db9f01cca5d23b0dd605e5bc9f3b2c20648828b2acc349201edef833f3141cd8",
+              "requirementImplementations": {
+                "REQ-M5-EVIDENCE-008": {
+                  "paths": [
+                    "packages/analysis/src/files.ts",
+                    "packages/analysis/src/trace.ts",
+                    "packages/domain/src/constitution.ts",
+                    "packages/domain/src/design.ts",
+                    "packages/domain/src/index.ts",
+                    "packages/domain/src/markdown.ts",
+                    "packages/domain/src/requirements.ts",
+                    "packages/domain/src/types.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/files.ts": "987b2a90c079f0c391ee6ce1893de8664ddbfe43264eb7e8e65d6fb291cfa23d",
+                    "packages/analysis/src/trace.ts": "0598bdbff7ddf37ef078d29b2f8d158ea7695165a78333dda37159c03baf3458",
+                    "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                    "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
+                    "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                    "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                    "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                    "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                  }
+                }
+              }
+            },
+            "order": 1887
+          },
+          "implementation": {
+            "phase": "implementation",
+            "recordedAt": "2026-09-25T00:01:32.512Z",
+            "fingerprints": {
+              "impact": "419b0a0477ce7141e830babe9ef96d493515de6cc65ed66a56bc2d8e1afdc442",
+              "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+              "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+              "implementation": "2ad46c8b3e94b133ae495826dda25871313b1636cf3ef26929207a562bf88649",
+              "tests": "9ee995ad58e3eede7530ce94ed7808310e4720c02dacbc34b380fd6c73b5c5fb",
+              "tdd": "db9f01cca5d23b0dd605e5bc9f3b2c20648828b2acc349201edef833f3141cd8",
+              "requirementImplementations": {
+                "REQ-M5-EVIDENCE-008": {
+                  "paths": [
+                    "packages/analysis/src/files.ts",
+                    "packages/analysis/src/trace.ts",
+                    "packages/domain/src/constitution.ts",
+                    "packages/domain/src/design.ts",
+                    "packages/domain/src/index.ts",
+                    "packages/domain/src/markdown.ts",
+                    "packages/domain/src/requirements.ts",
+                    "packages/domain/src/types.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/files.ts": "987b2a90c079f0c391ee6ce1893de8664ddbfe43264eb7e8e65d6fb291cfa23d",
+                    "packages/analysis/src/trace.ts": "1f6eac66a2006cdd939aaaec30c27955debc3cb6a91666306ab9a6630c5e5b27",
+                    "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                    "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
+                    "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                    "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                    "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                    "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                  }
+                }
+              }
+            },
+            "order": 1890
+          },
+          "green": {
+            "phase": "green",
+            "recordedAt": "2026-09-25T00:04:16.212Z",
+            "fingerprints": {
+              "impact": "419b0a0477ce7141e830babe9ef96d493515de6cc65ed66a56bc2d8e1afdc442",
+              "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+              "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+              "implementation": "d836273463150ba67f5f7b1a9fa0be3b17729c4f354d420be8e727f81f0edfa7",
+              "tests": "9ee995ad58e3eede7530ce94ed7808310e4720c02dacbc34b380fd6c73b5c5fb",
+              "tdd": "ac1d51500fe2abaac4a5bc936023d62b5090f9da9cfcbd5c213065d0e1238ca6",
+              "requirementImplementations": {
+                "REQ-M5-EVIDENCE-008": {
+                  "paths": [
+                    "packages/analysis/src/files.ts",
+                    "packages/analysis/src/trace.ts",
+                    "packages/domain/src/constitution.ts",
+                    "packages/domain/src/design.ts",
+                    "packages/domain/src/index.ts",
+                    "packages/domain/src/markdown.ts",
+                    "packages/domain/src/requirements.ts",
+                    "packages/domain/src/types.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/files.ts": "987b2a90c079f0c391ee6ce1893de8664ddbfe43264eb7e8e65d6fb291cfa23d",
+                    "packages/analysis/src/trace.ts": "1f6eac66a2006cdd939aaaec30c27955debc3cb6a91666306ab9a6630c5e5b27",
+                    "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                    "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
+                    "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                    "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                    "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                    "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                  }
+                }
+              }
+            },
+            "order": 1896
+          }
+        },
+        {
+          "scopeId": "REQ-SESSION-SCOPED-DEVELOPMENT-001",
+          "requirementIds": [
+            "REQ-SESSION-SCOPED-DEVELOPMENT-001"
+          ],
+          "red": {
+            "phase": "red",
+            "recordedAt": "2026-09-25T00:01:06.834Z",
+            "fingerprints": {
+              "impact": "419b0a0477ce7141e830babe9ef96d493515de6cc65ed66a56bc2d8e1afdc442",
+              "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+              "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+              "implementation": "4d51c3e724882d786d46b80feab37ac2587dc3bf57fd58d731c8b42177f21071",
+              "tests": "9ee995ad58e3eede7530ce94ed7808310e4720c02dacbc34b380fd6c73b5c5fb",
+              "tdd": "db9f01cca5d23b0dd605e5bc9f3b2c20648828b2acc349201edef833f3141cd8",
+              "requirementImplementations": {
+                "REQ-SESSION-SCOPED-DEVELOPMENT-001": {
+                  "paths": [],
+                  "fingerprints": {}
+                }
+              }
+            },
+            "order": 1888
+          },
+          "implementation": {
+            "phase": "implementation",
+            "recordedAt": "2026-09-25T00:03:29.645Z",
+            "fingerprints": {
+              "impact": "419b0a0477ce7141e830babe9ef96d493515de6cc65ed66a56bc2d8e1afdc442",
+              "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+              "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+              "implementation": "d836273463150ba67f5f7b1a9fa0be3b17729c4f354d420be8e727f81f0edfa7",
+              "tests": "9ee995ad58e3eede7530ce94ed7808310e4720c02dacbc34b380fd6c73b5c5fb",
+              "tdd": "db9f01cca5d23b0dd605e5bc9f3b2c20648828b2acc349201edef833f3141cd8",
+              "requirementImplementations": {
+                "REQ-SESSION-SCOPED-DEVELOPMENT-001": {
+                  "paths": [
+                    ".github/skills/sdd-change/SKILL.md",
+                    ".github/skills/sdd-requirements/SKILL.md"
+                  ],
+                  "fingerprints": {
+                    ".github/skills/sdd-change/SKILL.md": "aa01d50e986aa89a963cb6451912b1dac013ecf352684d7755b63f336b962747",
+                    ".github/skills/sdd-requirements/SKILL.md": "e3f024315552d56eb95c49d8b0195b94df16e8337b4e1f4029e01cb78e9b345c"
+                  }
+                }
+              }
+            },
+            "order": 1891
+          },
+          "green": {
+            "phase": "green",
+            "recordedAt": "2026-09-25T00:04:21.358Z",
+            "fingerprints": {
+              "impact": "419b0a0477ce7141e830babe9ef96d493515de6cc65ed66a56bc2d8e1afdc442",
+              "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+              "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+              "implementation": "d836273463150ba67f5f7b1a9fa0be3b17729c4f354d420be8e727f81f0edfa7",
+              "tests": "9ee995ad58e3eede7530ce94ed7808310e4720c02dacbc34b380fd6c73b5c5fb",
+              "tdd": "ac1d51500fe2abaac4a5bc936023d62b5090f9da9cfcbd5c213065d0e1238ca6",
+              "requirementImplementations": {
+                "REQ-SESSION-SCOPED-DEVELOPMENT-001": {
+                  "paths": [
+                    ".github/skills/sdd-change/SKILL.md",
+                    ".github/skills/sdd-requirements/SKILL.md"
+                  ],
+                  "fingerprints": {
+                    ".github/skills/sdd-change/SKILL.md": "aa01d50e986aa89a963cb6451912b1dac013ecf352684d7755b63f336b962747",
+                    ".github/skills/sdd-requirements/SKILL.md": "e3f024315552d56eb95c49d8b0195b94df16e8337b4e1f4029e01cb78e9b345c"
+                  }
+                }
+              }
+            },
+            "order": 1897
+          }
+        },
+        {
+          "scopeId": "REQ-SESSION-SCOPED-DEVELOPMENT-002",
+          "requirementIds": [
+            "REQ-SESSION-SCOPED-DEVELOPMENT-002"
+          ],
+          "red": {
+            "phase": "red",
+            "recordedAt": "2026-09-25T00:01:12.783Z",
+            "fingerprints": {
+              "impact": "419b0a0477ce7141e830babe9ef96d493515de6cc65ed66a56bc2d8e1afdc442",
+              "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+              "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+              "implementation": "4d51c3e724882d786d46b80feab37ac2587dc3bf57fd58d731c8b42177f21071",
+              "tests": "9ee995ad58e3eede7530ce94ed7808310e4720c02dacbc34b380fd6c73b5c5fb",
+              "tdd": "db9f01cca5d23b0dd605e5bc9f3b2c20648828b2acc349201edef833f3141cd8",
+              "requirementImplementations": {
+                "REQ-SESSION-SCOPED-DEVELOPMENT-002": {
+                  "paths": [],
+                  "fingerprints": {}
+                }
+              }
+            },
+            "order": 1889
+          },
+          "implementation": {
+            "phase": "implementation",
+            "recordedAt": "2026-09-25T00:03:31.728Z",
+            "fingerprints": {
+              "impact": "419b0a0477ce7141e830babe9ef96d493515de6cc65ed66a56bc2d8e1afdc442",
+              "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+              "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+              "implementation": "d836273463150ba67f5f7b1a9fa0be3b17729c4f354d420be8e727f81f0edfa7",
+              "tests": "9ee995ad58e3eede7530ce94ed7808310e4720c02dacbc34b380fd6c73b5c5fb",
+              "tdd": "db9f01cca5d23b0dd605e5bc9f3b2c20648828b2acc349201edef833f3141cd8",
+              "requirementImplementations": {
+                "REQ-SESSION-SCOPED-DEVELOPMENT-002": {
+                  "paths": [
+                    ".github/skills/sdd-change/SKILL.md",
+                    ".github/skills/sdd-requirements/SKILL.md"
+                  ],
+                  "fingerprints": {
+                    ".github/skills/sdd-change/SKILL.md": "aa01d50e986aa89a963cb6451912b1dac013ecf352684d7755b63f336b962747",
+                    ".github/skills/sdd-requirements/SKILL.md": "e3f024315552d56eb95c49d8b0195b94df16e8337b4e1f4029e01cb78e9b345c"
+                  }
+                }
+              }
+            },
+            "order": 1892
+          },
+          "green": {
+            "phase": "green",
+            "recordedAt": "2026-09-25T00:04:26.174Z",
+            "fingerprints": {
+              "impact": "419b0a0477ce7141e830babe9ef96d493515de6cc65ed66a56bc2d8e1afdc442",
+              "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+              "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+              "implementation": "d836273463150ba67f5f7b1a9fa0be3b17729c4f354d420be8e727f81f0edfa7",
+              "tests": "9ee995ad58e3eede7530ce94ed7808310e4720c02dacbc34b380fd6c73b5c5fb",
+              "tdd": "ac1d51500fe2abaac4a5bc936023d62b5090f9da9cfcbd5c213065d0e1238ca6",
+              "requirementImplementations": {
+                "REQ-SESSION-SCOPED-DEVELOPMENT-002": {
+                  "paths": [
+                    ".github/skills/sdd-change/SKILL.md",
+                    ".github/skills/sdd-requirements/SKILL.md"
+                  ],
+                  "fingerprints": {
+                    ".github/skills/sdd-change/SKILL.md": "aa01d50e986aa89a963cb6451912b1dac013ecf352684d7755b63f336b962747",
+                    ".github/skills/sdd-requirements/SKILL.md": "e3f024315552d56eb95c49d8b0195b94df16e8337b4e1f4029e01cb78e9b345c"
+                  }
+                }
+              }
+            },
+            "order": 1898
+          }
+        },
+        {
+          "scopeId": "REQ-M5-EVIDENCE-008#2",
+          "requirementIds": [
+            "REQ-M5-EVIDENCE-008"
+          ],
+          "red": {
+            "phase": "red",
+            "recordedAt": "2026-09-25T00:23:38.669Z",
+            "fingerprints": {
+              "impact": "fc2ad6659a1e0a577d564628af9f262e7eb72d936ba83dab04e42304880d1ebf",
+              "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+              "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+              "implementation": "4d51c3e724882d786d46b80feab37ac2587dc3bf57fd58d731c8b42177f21071",
+              "tests": "7064d53078fa8df596dea8168f2e3c9895f66e46fe9ab045edd44c011a57c66e",
+              "tdd": "4f91ff2494e5ea92eeea645365fb5ab938d738dc017b8a13eec8c2f46da843db",
+              "requirementImplementations": {
+                "REQ-M5-EVIDENCE-008": {
+                  "paths": [
+                    "packages/analysis/src/files.ts",
+                    "packages/analysis/src/trace.ts",
+                    "packages/domain/src/constitution.ts",
+                    "packages/domain/src/design.ts",
+                    "packages/domain/src/index.ts",
+                    "packages/domain/src/markdown.ts",
+                    "packages/domain/src/requirements.ts",
+                    "packages/domain/src/types.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/files.ts": "987b2a90c079f0c391ee6ce1893de8664ddbfe43264eb7e8e65d6fb291cfa23d",
+                    "packages/analysis/src/trace.ts": "0598bdbff7ddf37ef078d29b2f8d158ea7695165a78333dda37159c03baf3458",
+                    "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                    "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
+                    "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                    "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                    "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                    "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                  }
+                }
+              }
+            },
+            "order": 1904
+          },
+          "implementation": {
+            "phase": "implementation",
+            "recordedAt": "2026-09-25T00:23:52.416Z",
+            "fingerprints": {
+              "impact": "fc2ad6659a1e0a577d564628af9f262e7eb72d936ba83dab04e42304880d1ebf",
+              "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+              "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+              "implementation": "62fbc0cd1cf82d2ba61704eaaa486c6cb6830e520fcd6e5333b466f53e83f9f7",
+              "tests": "7064d53078fa8df596dea8168f2e3c9895f66e46fe9ab045edd44c011a57c66e",
+              "tdd": "4f91ff2494e5ea92eeea645365fb5ab938d738dc017b8a13eec8c2f46da843db",
+              "requirementImplementations": {
+                "REQ-M5-EVIDENCE-008": {
+                  "paths": [
+                    "packages/analysis/src/files.ts",
+                    "packages/analysis/src/trace.ts",
+                    "packages/domain/src/constitution.ts",
+                    "packages/domain/src/design.ts",
+                    "packages/domain/src/index.ts",
+                    "packages/domain/src/markdown.ts",
+                    "packages/domain/src/requirements.ts",
+                    "packages/domain/src/types.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/files.ts": "987b2a90c079f0c391ee6ce1893de8664ddbfe43264eb7e8e65d6fb291cfa23d",
+                    "packages/analysis/src/trace.ts": "1f6eac66a2006cdd939aaaec30c27955debc3cb6a91666306ab9a6630c5e5b27",
+                    "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                    "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
+                    "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                    "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                    "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                    "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                  }
+                }
+              }
+            },
+            "order": 1905
+          },
+          "green": {
+            "phase": "green",
+            "recordedAt": "2026-09-25T00:26:09.353Z",
+            "fingerprints": {
+              "impact": "fc2ad6659a1e0a577d564628af9f262e7eb72d936ba83dab04e42304880d1ebf",
+              "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+              "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+              "implementation": "9d922c5476b59df57e6a30b2f84054d83233715ecacc682e5ec9de73534d8df1",
+              "tests": "7064d53078fa8df596dea8168f2e3c9895f66e46fe9ab045edd44c011a57c66e",
+              "tdd": "412c07ab813b79b5d982e83c9f488802ee65446f60cf28c0791ccf2854baf397",
+              "requirementImplementations": {
+                "REQ-M5-EVIDENCE-008": {
+                  "paths": [
+                    "packages/analysis/src/files.ts",
+                    "packages/analysis/src/trace.ts",
+                    "packages/domain/src/constitution.ts",
+                    "packages/domain/src/design.ts",
+                    "packages/domain/src/index.ts",
+                    "packages/domain/src/markdown.ts",
+                    "packages/domain/src/requirements.ts",
+                    "packages/domain/src/types.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/files.ts": "987b2a90c079f0c391ee6ce1893de8664ddbfe43264eb7e8e65d6fb291cfa23d",
+                    "packages/analysis/src/trace.ts": "bea5a3132eda13b8d04c883f77b77ac8b274de0ef0d4576c530e9ae18403266e",
+                    "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                    "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
+                    "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                    "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                    "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                    "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                  }
+                }
+              }
+            },
+            "order": 1909
+          }
+        },
+        {
+          "scopeId": "REQ-M5-EVIDENCE-008#3",
+          "requirementIds": [
+            "REQ-M5-EVIDENCE-008"
+          ],
+          "red": {
+            "phase": "red",
+            "recordedAt": "2026-09-25T00:28:02.193Z",
+            "fingerprints": {
+              "impact": "e40f3616ffef482f7b031c7b65254d424ef68858539db442ce54aee04e9ce2d5",
+              "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+              "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+              "implementation": "e9b95f390ea57264cba4c35d6b004bec28dac864f21e9d740f3600c669c13064",
+              "tests": "7064d53078fa8df596dea8168f2e3c9895f66e46fe9ab045edd44c011a57c66e",
+              "tdd": "ecf6cb3e9295913c36c78756f33103fadd143909c4c7796e94a2b2aa4928a490",
+              "requirementImplementations": {
+                "REQ-M5-EVIDENCE-008": {
+                  "paths": [
+                    "packages/analysis/src/files.ts",
+                    "packages/analysis/src/trace.ts",
+                    "packages/domain/src/constitution.ts",
+                    "packages/domain/src/design.ts",
+                    "packages/domain/src/index.ts",
+                    "packages/domain/src/markdown.ts",
+                    "packages/domain/src/requirements.ts",
+                    "packages/domain/src/types.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/files.ts": "987b2a90c079f0c391ee6ce1893de8664ddbfe43264eb7e8e65d6fb291cfa23d",
+                    "packages/analysis/src/trace.ts": "abf5040293b55f076a4062df303c6c4ff75d7d908c8f8b9c431c0d0a11ba29c2",
+                    "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                    "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
+                    "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                    "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                    "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                    "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                  }
+                }
+              }
+            },
+            "order": 1911
+          },
+          "implementation": {
+            "phase": "implementation",
+            "recordedAt": "2026-09-25T00:28:29.517Z",
+            "fingerprints": {
+              "impact": "e40f3616ffef482f7b031c7b65254d424ef68858539db442ce54aee04e9ce2d5",
+              "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+              "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+              "implementation": "3eb00cc5e5b4c77a32f85d50154df4d76fd16d2a084fd6f23e19af6a3238f6f6",
+              "tests": "7064d53078fa8df596dea8168f2e3c9895f66e46fe9ab045edd44c011a57c66e",
+              "tdd": "ecf6cb3e9295913c36c78756f33103fadd143909c4c7796e94a2b2aa4928a490",
+              "requirementImplementations": {
+                "REQ-M5-EVIDENCE-008": {
+                  "paths": [
+                    "packages/analysis/src/files.ts",
+                    "packages/analysis/src/trace.ts",
+                    "packages/domain/src/constitution.ts",
+                    "packages/domain/src/design.ts",
+                    "packages/domain/src/index.ts",
+                    "packages/domain/src/markdown.ts",
+                    "packages/domain/src/requirements.ts",
+                    "packages/domain/src/types.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/files.ts": "987b2a90c079f0c391ee6ce1893de8664ddbfe43264eb7e8e65d6fb291cfa23d",
+                    "packages/analysis/src/trace.ts": "bea5a3132eda13b8d04c883f77b77ac8b274de0ef0d4576c530e9ae18403266e",
+                    "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                    "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
+                    "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                    "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                    "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                    "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                  }
+                }
+              }
+            },
+            "order": 1912
+          },
+          "green": {
+            "phase": "green",
+            "recordedAt": "2026-09-25T00:28:41.464Z",
+            "fingerprints": {
+              "impact": "e40f3616ffef482f7b031c7b65254d424ef68858539db442ce54aee04e9ce2d5",
+              "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+              "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+              "implementation": "9d922c5476b59df57e6a30b2f84054d83233715ecacc682e5ec9de73534d8df1",
+              "tests": "7064d53078fa8df596dea8168f2e3c9895f66e46fe9ab045edd44c011a57c66e",
+              "tdd": "aae4165fc079ae27edd50ede12341aded4be3dbd5c60d7c69547011055f6d144",
+              "requirementImplementations": {
+                "REQ-M5-EVIDENCE-008": {
+                  "paths": [
+                    "packages/analysis/src/files.ts",
+                    "packages/analysis/src/trace.ts",
+                    "packages/domain/src/constitution.ts",
+                    "packages/domain/src/design.ts",
+                    "packages/domain/src/index.ts",
+                    "packages/domain/src/markdown.ts",
+                    "packages/domain/src/requirements.ts",
+                    "packages/domain/src/types.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/files.ts": "987b2a90c079f0c391ee6ce1893de8664ddbfe43264eb7e8e65d6fb291cfa23d",
+                    "packages/analysis/src/trace.ts": "bea5a3132eda13b8d04c883f77b77ac8b274de0ef0d4576c530e9ae18403266e",
+                    "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                    "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
+                    "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                    "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                    "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                    "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                  }
+                }
+              }
+            },
+            "order": 1914
+          }
+        },
+        {
+          "scopeId": "REQ-M5-EVIDENCE-008#4",
+          "requirementIds": [
+            "REQ-M5-EVIDENCE-008"
+          ],
+          "red": {
+            "phase": "red",
+            "recordedAt": "2026-09-25T00:40:02.686Z",
+            "fingerprints": {
+              "impact": "faec4c8b02c550cfb06290d57c78a53d2c74b59c0b49c388b5771d52114171b5",
+              "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+              "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+              "implementation": "e9b95f390ea57264cba4c35d6b004bec28dac864f21e9d740f3600c669c13064",
+              "tests": "7305853dc2692783d9efcbe3c66af7d7e121963a0c854ba35b90c85ef9684bba",
+              "tdd": "ff9be4aecd14454584d0ba088bd52c6cac0481a3a48ae14847496f71afc34dc3",
+              "requirementImplementations": {
+                "REQ-M5-EVIDENCE-008": {
+                  "paths": [
+                    "packages/analysis/src/files.ts",
+                    "packages/analysis/src/trace.ts",
+                    "packages/domain/src/constitution.ts",
+                    "packages/domain/src/design.ts",
+                    "packages/domain/src/index.ts",
+                    "packages/domain/src/markdown.ts",
+                    "packages/domain/src/requirements.ts",
+                    "packages/domain/src/types.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/files.ts": "987b2a90c079f0c391ee6ce1893de8664ddbfe43264eb7e8e65d6fb291cfa23d",
+                    "packages/analysis/src/trace.ts": "abf5040293b55f076a4062df303c6c4ff75d7d908c8f8b9c431c0d0a11ba29c2",
+                    "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                    "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
+                    "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                    "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                    "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                    "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                  }
+                }
+              }
+            },
+            "order": 1916
+          },
+          "implementation": {
+            "phase": "implementation",
+            "recordedAt": "2026-09-25T00:40:16.436Z",
+            "fingerprints": {
+              "impact": "faec4c8b02c550cfb06290d57c78a53d2c74b59c0b49c388b5771d52114171b5",
+              "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+              "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+              "implementation": "3eb00cc5e5b4c77a32f85d50154df4d76fd16d2a084fd6f23e19af6a3238f6f6",
+              "tests": "7305853dc2692783d9efcbe3c66af7d7e121963a0c854ba35b90c85ef9684bba",
+              "tdd": "ff9be4aecd14454584d0ba088bd52c6cac0481a3a48ae14847496f71afc34dc3",
+              "requirementImplementations": {
+                "REQ-M5-EVIDENCE-008": {
+                  "paths": [
+                    "packages/analysis/src/files.ts",
+                    "packages/analysis/src/trace.ts",
+                    "packages/domain/src/constitution.ts",
+                    "packages/domain/src/design.ts",
+                    "packages/domain/src/index.ts",
+                    "packages/domain/src/markdown.ts",
+                    "packages/domain/src/requirements.ts",
+                    "packages/domain/src/types.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/files.ts": "987b2a90c079f0c391ee6ce1893de8664ddbfe43264eb7e8e65d6fb291cfa23d",
+                    "packages/analysis/src/trace.ts": "bea5a3132eda13b8d04c883f77b77ac8b274de0ef0d4576c530e9ae18403266e",
+                    "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                    "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
+                    "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                    "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                    "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                    "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                  }
+                }
+              }
+            },
+            "order": 1917
+          },
+          "green": {
+            "phase": "green",
+            "recordedAt": "2026-09-25T00:40:30.655Z",
+            "fingerprints": {
+              "impact": "faec4c8b02c550cfb06290d57c78a53d2c74b59c0b49c388b5771d52114171b5",
+              "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+              "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+              "implementation": "9d922c5476b59df57e6a30b2f84054d83233715ecacc682e5ec9de73534d8df1",
+              "tests": "7305853dc2692783d9efcbe3c66af7d7e121963a0c854ba35b90c85ef9684bba",
+              "tdd": "b8b7b0cb1533a5064dbe2af103f3a6d49003b3d86befe83afc0a31b757abd7ff",
+              "requirementImplementations": {
+                "REQ-M5-EVIDENCE-008": {
+                  "paths": [
+                    "packages/analysis/src/files.ts",
+                    "packages/analysis/src/trace.ts",
+                    "packages/domain/src/constitution.ts",
+                    "packages/domain/src/design.ts",
+                    "packages/domain/src/index.ts",
+                    "packages/domain/src/markdown.ts",
+                    "packages/domain/src/requirements.ts",
+                    "packages/domain/src/types.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/files.ts": "987b2a90c079f0c391ee6ce1893de8664ddbfe43264eb7e8e65d6fb291cfa23d",
+                    "packages/analysis/src/trace.ts": "bea5a3132eda13b8d04c883f77b77ac8b274de0ef0d4576c530e9ae18403266e",
+                    "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                    "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
+                    "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                    "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                    "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                    "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                  }
+                }
+              }
+            },
+            "order": 1919
+          }
+        },
+        {
+          "scopeId": "REQ-M5-EVIDENCE-008#5",
+          "requirementIds": [
+            "REQ-M5-EVIDENCE-008"
+          ],
+          "red": {
+            "phase": "red",
+            "recordedAt": "2026-09-25T00:50:19.620Z",
+            "fingerprints": {
+              "impact": "7f295ff0d43b6d761f909fe8075af97a7836ef8fadcfcf2b2fb9096def2eae91",
+              "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+              "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+              "implementation": "48df8f0764d89af0d4b83db02c9a252b36c3855dc5be166fa77ee32b24161e4e",
+              "tests": "0119c01d8611608aee37a97ea2b0ef2f54b97d118e8327e36125d157db11ed3a",
+              "tdd": "5568e63b0e17db3872a2e2ed1dcf9f6ded90f8b9d5d187043a75aabe105ff15b",
+              "requirementImplementations": {
+                "REQ-M5-EVIDENCE-008": {
+                  "paths": [
+                    "packages/analysis/src/files.ts",
+                    "packages/analysis/src/trace.ts",
+                    "packages/domain/src/constitution.ts",
+                    "packages/domain/src/design.ts",
+                    "packages/domain/src/index.ts",
+                    "packages/domain/src/markdown.ts",
+                    "packages/domain/src/requirements.ts",
+                    "packages/domain/src/types.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/files.ts": "987b2a90c079f0c391ee6ce1893de8664ddbfe43264eb7e8e65d6fb291cfa23d",
+                    "packages/analysis/src/trace.ts": "c2403cff582cb333e03b5b731e6b661ed8c853e7e7a0553e5fd3e7ef292d3611",
+                    "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                    "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
+                    "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                    "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                    "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                    "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                  }
+                }
+              }
+            },
+            "order": 1922
+          },
+          "implementation": {
+            "phase": "implementation",
+            "recordedAt": "2026-09-25T00:51:05.028Z",
+            "fingerprints": {
+              "impact": "7f295ff0d43b6d761f909fe8075af97a7836ef8fadcfcf2b2fb9096def2eae91",
+              "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+              "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+              "implementation": "62fbc0cd1cf82d2ba61704eaaa486c6cb6830e520fcd6e5333b466f53e83f9f7",
+              "tests": "0119c01d8611608aee37a97ea2b0ef2f54b97d118e8327e36125d157db11ed3a",
+              "tdd": "300b66c51eee58e190ca4d21c5704b19bd20a84a209e7ae57fd0ac3ae4b26f2f",
+              "requirementImplementations": {
+                "REQ-M5-EVIDENCE-008": {
+                  "paths": [
+                    "packages/analysis/src/files.ts",
+                    "packages/analysis/src/trace.ts",
+                    "packages/domain/src/constitution.ts",
+                    "packages/domain/src/design.ts",
+                    "packages/domain/src/index.ts",
+                    "packages/domain/src/markdown.ts",
+                    "packages/domain/src/requirements.ts",
+                    "packages/domain/src/types.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/files.ts": "987b2a90c079f0c391ee6ce1893de8664ddbfe43264eb7e8e65d6fb291cfa23d",
+                    "packages/analysis/src/trace.ts": "1f6eac66a2006cdd939aaaec30c27955debc3cb6a91666306ab9a6630c5e5b27",
+                    "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                    "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
+                    "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                    "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                    "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                    "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                  }
+                }
+              }
+            },
+            "order": 1927
+          },
+          "green": {
+            "phase": "green",
+            "recordedAt": "2026-09-25T00:52:51.454Z",
+            "fingerprints": {
+              "impact": "7f295ff0d43b6d761f909fe8075af97a7836ef8fadcfcf2b2fb9096def2eae91",
+              "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+              "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+              "implementation": "190008ddbcb3bb40e8f914086ffc06d5d444e37789b6bbafb50f0f62b229ea0b",
+              "tests": "0119c01d8611608aee37a97ea2b0ef2f54b97d118e8327e36125d157db11ed3a",
+              "tdd": "be0cd4b6e60d9fc6534024604bb28806ff213f86940cb6281c11827f5c4656cd",
+              "requirementImplementations": {
+                "REQ-M5-EVIDENCE-008": {
+                  "paths": [
+                    "packages/analysis/src/files.ts",
+                    "packages/analysis/src/trace.ts",
+                    "packages/domain/src/constitution.ts",
+                    "packages/domain/src/design.ts",
+                    "packages/domain/src/index.ts",
+                    "packages/domain/src/markdown.ts",
+                    "packages/domain/src/requirements.ts",
+                    "packages/domain/src/types.ts"
+                  ],
+                  "fingerprints": {
+                    "packages/analysis/src/files.ts": "987b2a90c079f0c391ee6ce1893de8664ddbfe43264eb7e8e65d6fb291cfa23d",
+                    "packages/analysis/src/trace.ts": "1f6eac66a2006cdd939aaaec30c27955debc3cb6a91666306ab9a6630c5e5b27",
+                    "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                    "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
+                    "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                    "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                    "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                    "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                  }
+                }
+              }
+            },
+            "order": 1933
+          }
+        },
+        {
+          "scopeId": "REQ-SESSION-SCOPED-DEVELOPMENT-001#2",
+          "requirementIds": [
+            "REQ-SESSION-SCOPED-DEVELOPMENT-001"
+          ],
+          "red": {
+            "phase": "red",
+            "recordedAt": "2026-09-25T00:50:40.031Z",
+            "fingerprints": {
+              "impact": "7f295ff0d43b6d761f909fe8075af97a7836ef8fadcfcf2b2fb9096def2eae91",
+              "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+              "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+              "implementation": "48df8f0764d89af0d4b83db02c9a252b36c3855dc5be166fa77ee32b24161e4e",
+              "tests": "0119c01d8611608aee37a97ea2b0ef2f54b97d118e8327e36125d157db11ed3a",
+              "tdd": "8e14997bef70ef8184f69eb5e2e7c171448f40bf97f4a3431d9b38ec8e902201",
+              "requirementImplementations": {
+                "REQ-SESSION-SCOPED-DEVELOPMENT-001": {
+                  "paths": [],
+                  "fingerprints": {}
+                }
+              }
+            },
+            "order": 1924
+          },
+          "implementation": {
+            "phase": "implementation",
+            "recordedAt": "2026-09-25T00:52:04.094Z",
+            "fingerprints": {
+              "impact": "7f295ff0d43b6d761f909fe8075af97a7836ef8fadcfcf2b2fb9096def2eae91",
+              "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+              "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+              "implementation": "a749a4a3fc63e29b82b2438dfde7ae4af66ee95a870eb22aeea79e761fd89927",
+              "tests": "0119c01d8611608aee37a97ea2b0ef2f54b97d118e8327e36125d157db11ed3a",
+              "tdd": "300b66c51eee58e190ca4d21c5704b19bd20a84a209e7ae57fd0ac3ae4b26f2f",
+              "requirementImplementations": {
+                "REQ-SESSION-SCOPED-DEVELOPMENT-001": {
+                  "paths": [
+                    ".github/skills/sdd-change/SKILL.md",
+                    ".github/skills/sdd-requirements/SKILL.md"
+                  ],
+                  "fingerprints": {
+                    ".github/skills/sdd-change/SKILL.md": "043787ee6ccc065cf9b397905f033074b291832745350efb96bbfcb783b5221b",
+                    ".github/skills/sdd-requirements/SKILL.md": "c5d07dcc445c38b8b79c1144934b12c575189a02b0999aa57cf85abcf825b59a"
+                  }
+                }
+              }
+            },
+            "order": 1928
+          },
+          "green": {
+            "phase": "green",
+            "recordedAt": "2026-09-25T00:52:55.729Z",
+            "fingerprints": {
+              "impact": "7f295ff0d43b6d761f909fe8075af97a7836ef8fadcfcf2b2fb9096def2eae91",
+              "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+              "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+              "implementation": "190008ddbcb3bb40e8f914086ffc06d5d444e37789b6bbafb50f0f62b229ea0b",
+              "tests": "0119c01d8611608aee37a97ea2b0ef2f54b97d118e8327e36125d157db11ed3a",
+              "tdd": "be0cd4b6e60d9fc6534024604bb28806ff213f86940cb6281c11827f5c4656cd",
+              "requirementImplementations": {
+                "REQ-SESSION-SCOPED-DEVELOPMENT-001": {
+                  "paths": [],
+                  "fingerprints": {}
+                }
+              }
+            },
+            "order": 1934
+          }
+        },
+        {
+          "scopeId": "REQ-SESSION-SCOPED-DEVELOPMENT-002#2",
+          "requirementIds": [
+            "REQ-SESSION-SCOPED-DEVELOPMENT-002"
+          ],
+          "red": {
+            "phase": "red",
+            "recordedAt": "2026-09-25T00:50:51.841Z",
+            "fingerprints": {
+              "impact": "7f295ff0d43b6d761f909fe8075af97a7836ef8fadcfcf2b2fb9096def2eae91",
+              "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+              "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+              "implementation": "48df8f0764d89af0d4b83db02c9a252b36c3855dc5be166fa77ee32b24161e4e",
+              "tests": "0119c01d8611608aee37a97ea2b0ef2f54b97d118e8327e36125d157db11ed3a",
+              "tdd": "300b66c51eee58e190ca4d21c5704b19bd20a84a209e7ae57fd0ac3ae4b26f2f",
+              "requirementImplementations": {
+                "REQ-SESSION-SCOPED-DEVELOPMENT-002": {
+                  "paths": [],
+                  "fingerprints": {}
+                }
+              }
+            },
+            "order": 1926
+          },
+          "implementation": {
+            "phase": "implementation",
+            "recordedAt": "2026-09-25T00:52:08.594Z",
+            "fingerprints": {
+              "impact": "7f295ff0d43b6d761f909fe8075af97a7836ef8fadcfcf2b2fb9096def2eae91",
+              "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+              "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+              "implementation": "a749a4a3fc63e29b82b2438dfde7ae4af66ee95a870eb22aeea79e761fd89927",
+              "tests": "0119c01d8611608aee37a97ea2b0ef2f54b97d118e8327e36125d157db11ed3a",
+              "tdd": "300b66c51eee58e190ca4d21c5704b19bd20a84a209e7ae57fd0ac3ae4b26f2f",
+              "requirementImplementations": {
+                "REQ-SESSION-SCOPED-DEVELOPMENT-002": {
+                  "paths": [
+                    ".github/skills/sdd-change/SKILL.md",
+                    ".github/skills/sdd-requirements/SKILL.md"
+                  ],
+                  "fingerprints": {
+                    ".github/skills/sdd-change/SKILL.md": "043787ee6ccc065cf9b397905f033074b291832745350efb96bbfcb783b5221b",
+                    ".github/skills/sdd-requirements/SKILL.md": "c5d07dcc445c38b8b79c1144934b12c575189a02b0999aa57cf85abcf825b59a"
+                  }
+                }
+              }
+            },
+            "order": 1929
+          },
+          "green": {
+            "phase": "green",
+            "recordedAt": "2026-09-25T00:52:59.935Z",
+            "fingerprints": {
+              "impact": "7f295ff0d43b6d761f909fe8075af97a7836ef8fadcfcf2b2fb9096def2eae91",
+              "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+              "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+              "implementation": "190008ddbcb3bb40e8f914086ffc06d5d444e37789b6bbafb50f0f62b229ea0b",
+              "tests": "0119c01d8611608aee37a97ea2b0ef2f54b97d118e8327e36125d157db11ed3a",
+              "tdd": "be0cd4b6e60d9fc6534024604bb28806ff213f86940cb6281c11827f5c4656cd",
+              "requirementImplementations": {
+                "REQ-SESSION-SCOPED-DEVELOPMENT-002": {
+                  "paths": [],
+                  "fingerprints": {}
+                }
+              }
+            },
+            "order": 1935
+          }
+        }
+      ],
+      "qualityHistory": [
+        {
+          "phase": "quality",
+          "recordedAt": "2026-09-25T00:15:25.162Z",
+          "fingerprints": {
+            "impact": "419b0a0477ce7141e830babe9ef96d493515de6cc65ed66a56bc2d8e1afdc442",
+            "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+            "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+            "implementation": "8c50f131dade49baacb52a9237894a6eef6660419c6f72658782232c72e415c0",
+            "tests": "9ee995ad58e3eede7530ce94ed7808310e4720c02dacbc34b380fd6c73b5c5fb",
+            "tdd": "39d196cd785851459df74155c476b3e51bdb049cfd2b777ba0221923bf819a5e",
+            "requirementImplementations": {
+              "REQ-M5-EVIDENCE-008": {
+                "paths": [
+                  "packages/analysis/src/files.ts",
+                  "packages/analysis/src/trace.ts",
+                  "packages/domain/src/constitution.ts",
+                  "packages/domain/src/design.ts",
+                  "packages/domain/src/index.ts",
+                  "packages/domain/src/markdown.ts",
+                  "packages/domain/src/requirements.ts",
+                  "packages/domain/src/types.ts"
+                ],
+                "fingerprints": {
+                  "packages/analysis/src/files.ts": "987b2a90c079f0c391ee6ce1893de8664ddbfe43264eb7e8e65d6fb291cfa23d",
+                  "packages/analysis/src/trace.ts": "1f6eac66a2006cdd939aaaec30c27955debc3cb6a91666306ab9a6630c5e5b27",
+                  "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                  "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
+                  "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                  "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                  "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                  "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                }
+              },
+              "REQ-SESSION-SCOPED-DEVELOPMENT-001": {
+                "paths": [
+                  ".github/skills/sdd-change/SKILL.md",
+                  ".github/skills/sdd-requirements/SKILL.md"
+                ],
+                "fingerprints": {
+                  ".github/skills/sdd-change/SKILL.md": "043787ee6ccc065cf9b397905f033074b291832745350efb96bbfcb783b5221b",
+                  ".github/skills/sdd-requirements/SKILL.md": "c5d07dcc445c38b8b79c1144934b12c575189a02b0999aa57cf85abcf825b59a"
+                }
+              },
+              "REQ-SESSION-SCOPED-DEVELOPMENT-002": {
+                "paths": [
+                  ".github/skills/sdd-change/SKILL.md",
+                  ".github/skills/sdd-requirements/SKILL.md"
+                ],
+                "fingerprints": {
+                  ".github/skills/sdd-change/SKILL.md": "043787ee6ccc065cf9b397905f033074b291832745350efb96bbfcb783b5221b",
+                  ".github/skills/sdd-requirements/SKILL.md": "c5d07dcc445c38b8b79c1144934b12c575189a02b0999aa57cf85abcf825b59a"
+                }
+              }
+            }
+          },
+          "order": 1902,
+          "qualityOrdinal": 1
+        },
+        {
+          "phase": "quality",
+          "recordedAt": "2026-09-25T00:41:31.035Z",
+          "fingerprints": {
+            "impact": "3b18a5adc4edf8a5278e04ff135756fe5e4382502085c807b6f1297ec94fbc44",
+            "requirements": "a820493846e4786b07222091bdb621c860690b8dd378c4b84286213e0e619de7",
+            "design": "9996ca312c38254fe5aafbdd7a1e2ccca7340156f0d8b4077aad5acfad96e10f",
+            "implementation": "9d922c5476b59df57e6a30b2f84054d83233715ecacc682e5ec9de73534d8df1",
+            "tests": "7305853dc2692783d9efcbe3c66af7d7e121963a0c854ba35b90c85ef9684bba",
+            "tdd": "b8b7b0cb1533a5064dbe2af103f3a6d49003b3d86befe83afc0a31b757abd7ff",
+            "requirementImplementations": {
+              "REQ-M5-EVIDENCE-008": {
+                "paths": [
+                  "packages/analysis/src/files.ts",
+                  "packages/analysis/src/trace.ts",
+                  "packages/domain/src/constitution.ts",
+                  "packages/domain/src/design.ts",
+                  "packages/domain/src/index.ts",
+                  "packages/domain/src/markdown.ts",
+                  "packages/domain/src/requirements.ts",
+                  "packages/domain/src/types.ts"
+                ],
+                "fingerprints": {
+                  "packages/analysis/src/files.ts": "987b2a90c079f0c391ee6ce1893de8664ddbfe43264eb7e8e65d6fb291cfa23d",
+                  "packages/analysis/src/trace.ts": "bea5a3132eda13b8d04c883f77b77ac8b274de0ef0d4576c530e9ae18403266e",
+                  "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
+                  "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
+                  "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
+                  "packages/domain/src/markdown.ts": "5c6b96486a2e31944d7d128d241f1772d0926f34464fa2b59c20748a6754487a",
+                  "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
+                  "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34"
+                }
+              },
+              "REQ-SESSION-SCOPED-DEVELOPMENT-001": {
+                "paths": [],
+                "fingerprints": {}
+              },
+              "REQ-SESSION-SCOPED-DEVELOPMENT-002": {
+                "paths": [],
+                "fingerprints": {}
+              }
+            }
+          },
+          "order": 1920,
+          "qualityOrdinal": 2
+        }
+      ]
     }
   ]
 }

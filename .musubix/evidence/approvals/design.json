@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "stage": "design",
-  "changeId": "CHANGE-0008",
-  "generation": 1,
+  "changeId": "CHANGE-0009",
+  "generation": 2,
   "artifacts": {
     ".musubix/constitution.md": "f8b47fdc486f395bab05223a94821b145cf8df70ffde2c838a28f8d71fe0fa92",
     ".musubix/decisions/ADR-0002.md": "9f41d752530613cf6cc3ab6798709567e85650e5b97426dfca4147840eb35684",
@@ -21,6 +21,8 @@
     ".musubix/decisions/ADR-0015.md": "832a1f63e6d8ab44a5c9cbda6679029e9a45f39a8a8bb6446563c41dccdf34d5",
     ".musubix/decisions/ADR-0016.md": "92d60ae029514e1d57feaea5783bfbb7d5a2637c8a2979d6f089905c3b73e731",
     ".musubix/decisions/ADR-0017.md": "e723c64fc4f0062cde0ca77cca2fa45863bcca7e664af244419f7dadbe7bd427",
+    ".musubix/decisions/ADR-0018.md": "02596130d5d62aeb19057e65ddbea3f6ea6d3a651522920821e6cd0e681f551f",
+    ".musubix/decisions/ADR-0019.md": "1e40577c3ad136158d555dbd4e25fc906736d54082cc52e3186cd2b7d23cb893",
     ".musubix/features/codegraph-performance/design.md": "3ddf90dbb97a753644deb0e4dd38adaa27420273390a27b241612ef84f4c9c97",
     ".musubix/features/codegraph-performance/requirements.md": "a5eb96722cea36c4fab7f81a09d992b1cbce62b154c7b85eab35199817d551e1",
     ".musubix/features/musubix5-clean-foundation/design.md": "14581aa3a96681d3120da678c4b3a5a170c1e6bd5904e7cf33470f3e443bf538",
@@ -28,7 +30,9 @@
     ".musubix/features/parallel-agent-development/design.md": "2d3ee454f0f131cdd21a62932790fafa0b6edc3df68d43e473d74b294d1e8a5d",
     ".musubix/features/parallel-agent-development/requirements.md": "8fee03a0f32288e18819b311c13e7965ba51230dad7cb88f46209fbffb009112",
     ".musubix/features/release-0-2-0/design.md": "6642acfea4fe6e6b565a334e9a3490605bc418915e7a64af279e7a283df2c0eb",
-    ".musubix/features/release-0-2-0/requirements.md": "9a21b40b82cd44ffc0a7975583be3e309b1541ec29e78e8eac22eb74f6eb7acf"
+    ".musubix/features/release-0-2-0/requirements.md": "9a21b40b82cd44ffc0a7975583be3e309b1541ec29e78e8eac22eb74f6eb7acf",
+    ".musubix/features/trace-skill-source-selection/design.md": "9f0b85c49499fe68692d2d220ce95994f6ad82f29c2addecdae0d62c5fcd81eb",
+    ".musubix/features/trace-skill-source-selection/requirements.md": "94fe7ab9c31b7b3e6ee7455039b71eaa66f622715db71cce155b2ca1f438c1fb"
   },
   "projection": {
     "schemaVersion": 1,
@@ -168,7 +172,7 @@
     }
   },
   "exclusions": [],
-  "artifactSha256": "665ba1c0adce9ea82b5a781830ff3120d3e3773f67393b95a5891e55ecbeb5c7",
+  "artifactSha256": "1c1f9bd834ec52a636179b68a413ad4afaddc7dea7513e7864c3b35e4299643f",
   "approver": "nahisaho",
-  "approvedAt": "2026-09-24T20:26:09.527Z"
+  "approvedAt": "2026-09-24T23:50:08.123Z"
 }
