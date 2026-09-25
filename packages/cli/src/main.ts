@@ -1194,8 +1194,8 @@ export function createProgram(): Command {
       if (!options.reopen && !options.requirement?.length) throw new Error('--requirement is required unless impact uses --reopen.');
       if (options.reopen && phase !== 'impact') throw new Error('--reopen is accepted only for impact.');
       if (options.workspace) {
-        if (phase !== 'implementation' && phase !== 'green') {
-          throw new Error('--workspace is accepted only for implementation or green.');
+        if (phase !== 'red' && phase !== 'implementation' && phase !== 'green') {
+          throw new Error('--workspace is accepted only for red, implementation, or green.');
         }
         if (options.allowUnchanged || options.reopen || options.operationId || options.dryRun) {
           throw new Error('--workspace cannot be combined with --allow-unchanged, --reopen, --operation-id, or --dry-run.');
