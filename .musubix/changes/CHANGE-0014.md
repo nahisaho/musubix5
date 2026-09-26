@@ -2,7 +2,7 @@
 schemaVersion: 1
 id: CHANGE-0014
 summary: Isolate concurrent CHANGE candidate workspaces
-status: active
+status: completed
 ---
 # CHANGE-0014: multi-change-candidate-workspaces
 
