@@ -171,6 +171,19 @@ export async function tryAcquireChangeLease(root: string, changeId: string): Pro
   return acquireNamedLease(root, `change-${changeId}`, false);
 }
 
+export async function hasLiveChangeLease(root: string, changeId: string): Promise<boolean> {
+  const leasePath = join(
+    await gitCommonDirectory(root),
+    'musubix5',
+    'leases',
+    encodeURIComponent(`change-${changeId}`),
+  );
+  const owner = await readLeaseOwner(leasePath);
+  if (owner) return owner.expiresAt > Date.now();
+  const createdAt = await leaseModifiedAt(leasePath);
+  return createdAt !== null && createdAt + leaseTtlMs > Date.now();
+}
+
 export async function assertChangeLeaseCurrent(lease: ChangeLease): Promise<void> {
   const owner = await readLeaseOwner(lease.path);
   if (owner?.token !== lease.token || owner.fencingToken !== lease.fencingToken || owner.expiresAt <= Date.now()) {

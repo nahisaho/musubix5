@@ -42,7 +42,7 @@ import {
   cleanupCandidate, cleanupCandidateIntegration,
   finalizeCandidateIntegration, loadIntegrationEvidenceContext, markCandidateReady,
   orchestrateCandidateIntegration, readCandidateRegistry, refreshCandidate, resumeCandidate,
-  resumeCandidateIntegration, withCandidateWrite,
+  resumeCandidateIntegration, hasLiveChangeLease, withCandidateWrite,
   type CandidateEvidenceContext, type CandidateRegistryEntry, type IntegrationEvidenceContext,
   type CandidateSnapshotStructuralProjection, type ClosedIntegrationVerification, type GateReport,
 } from '../../analysis/src/index.js';
@@ -209,6 +209,23 @@ async function gitCommit(root: string, revision = 'HEAD'): Promise<string> {
   return stdout.trim();
 }
 
+/** @id CODE-M5-CANDIDATE-CLI-SAFETY-001
+ * @implements REQ-M5-MULTI-CHANGE-004 REQ-M5-MULTI-CHANGE-007
+ * @design DES-M5-MULTI-CHANGE-004 DES-M5-MULTI-CHANGE-009
+ */
+export async function managedWorkspacePath(root: string, relativePath: string): Promise<string> {
+  const { stdout } = await execFileAsync(
+    'git',
+    ['-C', root, 'rev-parse', '--git-common-dir'],
+    { encoding: 'utf8' },
+  );
+  return resolve(root, stdout.trim(), relativePath);
+}
+
+export async function candidateHasLiveLease(root: string, changeId: string): Promise<boolean> {
+  return hasLiveChangeLease(root, changeId);
+}
+
 function candidateContext(candidate: CandidateRegistryEntry): CandidateEvidenceContext {
   return {
     repositoryId: candidate.repositoryId,
@@ -245,7 +262,7 @@ async function markCandidateReadyFromCli(
   selector: string,
 ): Promise<Awaited<ReturnType<typeof markCandidateReady>>> {
   const selected = await resumeCandidate(root, selector);
-  const sourceRoot = resolve(root, selected.worktreePath);
+  const sourceRoot = await managedWorkspacePath(root, selected.worktreePath);
   const context = candidateContext(selected);
   return withCandidateWrite(root, selected, async () => markCandidateReady(root, selector, {
     approvals: async () => {
@@ -659,7 +676,7 @@ async function integrationWorkspace(root: string, integrationId: string): Promis
   if (!integration) {
     throw new Error('CANDIDATE_WORKSPACE_NOT_FOUND: integration context was not found.');
   }
-  return resolve(root, integration.worktreePath);
+  return managedWorkspacePath(root, integration.worktreePath);
 }
 
 async function loadCliIntegrationEvidenceContext(
@@ -1112,7 +1129,7 @@ export function createProgram(): Command {
     const workspace = integrationContext
       ? await integrationWorkspace(controlRoot, integrationContext.integrationId)
       : candidate
-        ? resolve(controlRoot, candidate.worktreePath)
+        ? await managedWorkspacePath(controlRoot, candidate.worktreePath)
         : options.workspace;
     const report = await withWorkspaceRoot(controlRoot, workspace, (root) => runGate(root, {
       ...(options.changed === undefined ? {} : { changed: options.changed }),
@@ -1731,10 +1748,12 @@ export function createProgram(): Command {
         const root = resolve(options.root);
         const candidate = await resumeCandidate(root, options.changeId);
         const defaultCommit = await gitCommit(root);
+        const managedRoot = await managedWorkspacePath(root, '.');
         return withCandidateWrite(root, candidate, () => refreshCandidate(
           root,
           options.changeId,
           {
+            managedRoot,
             defaultCommit,
             hasLiveSnapshot: async (selected) =>
               (await listCandidateSnapshotRecords(root)).some((snapshot) =>
@@ -1742,7 +1761,16 @@ export function createProgram(): Command {
                 && snapshot.changeId === selected.changeId
                 && snapshot.generation === selected.generation
                 && snapshot.commit === selected.candidateCommit),
-            invalidateEvidence: async () => {},
+            invalidateEvidence: async (transition) => {
+              await appendCandidateTransition(root, transition.candidate, 'candidate-evidence-invalidated', {
+                candidateId: transition.candidate.candidateId,
+                changeId: transition.candidate.changeId,
+                generation: transition.candidate.generation,
+                repositoryId: transition.candidate.repositoryId,
+                previousCommit: transition.previousCommit,
+                candidateCommit: transition.candidateCommit,
+              });
+            },
             recordTransition: async (transition) => {
               await appendCandidateTransition(root, transition.candidate, 'candidate-refreshed', {
                 candidateId: transition.candidate.candidateId,
@@ -1831,7 +1859,12 @@ export function createProgram(): Command {
         const root = resolve(options.root);
         const candidate = await resumeCandidate(root, selector);
         const defaultCommit = await gitCommit(root);
+        const managedRoot = await managedWorkspacePath(root, '.');
+        if (await candidateHasLiveLease(root, candidate.changeId)) {
+          throw new Error('CANDIDATE_CLEANUP_UNSAFE: candidate has an active operation.');
+        }
         return withCandidateWrite(root, candidate, () => cleanupCandidate(root, selector, {
+          managedRoot,
           defaultCommit,
           deletedBy: options.deletedBy,
           confirm: options.confirm === true,
@@ -2121,7 +2154,7 @@ export function createProgram(): Command {
       const workspace = integrationContext
         ? await integrationWorkspace(controlRoot, integrationContext.integrationId)
         : candidate
-          ? resolve(controlRoot, candidate.worktreePath)
+          ? await managedWorkspacePath(controlRoot, candidate.worktreePath)
           : options.workspace;
       const status = await withWorkspaceRoot(
         controlRoot,

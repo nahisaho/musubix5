@@ -1,5 +1,5 @@
 import { exists, readText, within } from './files.js';
-import type { TddEvidence } from './tdd.js';
+import type { TddEvidence } from './tdd-types.js';
 import { selectCurrentTddCycle } from './tdd-cycle-resolver.js';
 import { canonicalBytes } from './canonical.js';
 import { classifyParallelTddEvidence } from './parallel-tdd-evidence.js';

@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { routeCandidateState } from '../packages/analysis/src/candidate-state.js';
 
 describe('candidate state router', () => {
   /** @id TEST-M5-CANDIDATE-STATE-CURRENT-001
    * @verifies REQ-M5-MULTI-CHANGE-001 REQ-M5-MULTI-CHANGE-002 REQ-M5-MULTI-CHANGE-004
    * @verifies REQ-M5-LIFECYCLE-005 REQ-M5-WORKTREE-005 REQ-M5-WORKTREE-006 REQ-M5-WORKTREE-007
    */
-  it('TEST-M5-CANDIDATE-STATE-CURRENT-001 preserves source and shared-state ownership', () => {
+  it('TEST-M5-CANDIDATE-STATE-CURRENT-001 preserves source and shared-state ownership', async () => {
+    const { routeCandidateState } = await import('../packages/analysis/src/candidate-state.js');
     const candidate = {
       schemaVersion: 1 as const,
       candidateId: `candidate:${'1'.repeat(64)}`,

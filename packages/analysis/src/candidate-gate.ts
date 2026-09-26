@@ -13,7 +13,7 @@ import {
   validateCandidateBinding,
   type CandidateEvidenceBinding,
   type CandidateEvidenceContext,
-} from './approval.js';
+} from './candidate-evidence-binding.js';
 
 export const candidateMatrixJobs = [
   { os: 'ubuntu', nodeMajor: 24 },

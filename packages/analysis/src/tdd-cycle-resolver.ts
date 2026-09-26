@@ -1,4 +1,4 @@
-import type { TddCycle, TddEvidence, TddPhaseEvidence } from './tdd.js';
+import type { TddCycle, TddEvidence, TddPhaseEvidence } from './tdd-types.js';
 
 interface ResolverPhaseEvidence {
   order?: number;

@@ -2052,6 +2052,220 @@
       "phase": "complete",
       "status": "completed",
       "recordedAt": "2026-09-26T00:51:43.956Z"
+    },
+    {
+      "skill": "sdd-implementation",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0014",
+      "generation": 1,
+      "requirementIds": [
+        "REQ-M5-COMPAT-013",
+        "REQ-M5-LIFECYCLE-005",
+        "REQ-M5-MULTI-CHANGE-001",
+        "REQ-M5-MULTI-CHANGE-002",
+        "REQ-M5-MULTI-CHANGE-003",
+        "REQ-M5-MULTI-CHANGE-004",
+        "REQ-M5-MULTI-CHANGE-005",
+        "REQ-M5-MULTI-CHANGE-006",
+        "REQ-M5-MULTI-CHANGE-007",
+        "REQ-M5-MULTI-CHANGE-008",
+        "REQ-M5-PARALLEL-010",
+        "REQ-M5-RELEASE-002",
+        "REQ-M5-WORKTREE-005",
+        "REQ-M5-WORKTREE-006",
+        "REQ-M5-WORKTREE-007"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-09-26T01:08:32.812Z"
+    },
+    {
+      "skill": "sdd-parallel-dispatch",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0014",
+      "generation": 1,
+      "requirementIds": [
+        "REQ-M5-COMPAT-013",
+        "REQ-M5-LIFECYCLE-005",
+        "REQ-M5-MULTI-CHANGE-001",
+        "REQ-M5-MULTI-CHANGE-002",
+        "REQ-M5-MULTI-CHANGE-003",
+        "REQ-M5-MULTI-CHANGE-004",
+        "REQ-M5-MULTI-CHANGE-005",
+        "REQ-M5-MULTI-CHANGE-006",
+        "REQ-M5-MULTI-CHANGE-007",
+        "REQ-M5-MULTI-CHANGE-008",
+        "REQ-M5-PARALLEL-010",
+        "REQ-M5-RELEASE-002",
+        "REQ-M5-WORKTREE-005",
+        "REQ-M5-WORKTREE-006",
+        "REQ-M5-WORKTREE-007"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-09-26T01:41:22.605Z"
+    },
+    {
+      "skill": "sdd-implementation",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0014",
+      "generation": 1,
+      "requirementIds": [
+        "REQ-M5-COMPAT-013",
+        "REQ-M5-LIFECYCLE-005",
+        "REQ-M5-MULTI-CHANGE-001",
+        "REQ-M5-MULTI-CHANGE-002",
+        "REQ-M5-MULTI-CHANGE-003",
+        "REQ-M5-MULTI-CHANGE-004",
+        "REQ-M5-MULTI-CHANGE-005",
+        "REQ-M5-MULTI-CHANGE-006",
+        "REQ-M5-MULTI-CHANGE-007",
+        "REQ-M5-MULTI-CHANGE-008",
+        "REQ-M5-PARALLEL-010",
+        "REQ-M5-RELEASE-002",
+        "REQ-M5-WORKTREE-005",
+        "REQ-M5-WORKTREE-006",
+        "REQ-M5-WORKTREE-007"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-09-26T01:41:23.895Z"
+    },
+    {
+      "skill": "sdd-quality",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0014",
+      "generation": 1,
+      "requirementIds": [
+        "REQ-M5-COMPAT-013",
+        "REQ-M5-LIFECYCLE-005",
+        "REQ-M5-MULTI-CHANGE-001",
+        "REQ-M5-MULTI-CHANGE-002",
+        "REQ-M5-MULTI-CHANGE-003",
+        "REQ-M5-MULTI-CHANGE-004",
+        "REQ-M5-MULTI-CHANGE-005",
+        "REQ-M5-MULTI-CHANGE-006",
+        "REQ-M5-MULTI-CHANGE-007",
+        "REQ-M5-MULTI-CHANGE-008",
+        "REQ-M5-PARALLEL-010",
+        "REQ-M5-RELEASE-002",
+        "REQ-M5-WORKTREE-005",
+        "REQ-M5-WORKTREE-006",
+        "REQ-M5-WORKTREE-007"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-09-26T01:48:13.724Z"
     }
-  ]
+  ],
+  "verification": {
+    "mode": "compatible",
+    "sourceSha256": "27a8c5291fd626d049fe2dc00689677c03954ad3453f729257ada56bb853e5f3",
+    "eventsSha256": "b4849953f63891521101f555bdbf31b79296e7c47a3a66ed3a4ce1c67329b694",
+    "verifiedAt": "2026-09-26T01:48:16.466Z",
+    "invocations": [
+      {
+        "skill": "sdd-change",
+        "toolCallId": "call_D7GhV36IpjEMhMixKTb42iDo",
+        "invokedAt": "2026-09-25T21:56:47.998Z",
+        "completedAt": "2026-09-25T21:56:48.007Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-requirements",
+        "toolCallId": "call_DxxCW95aW8WpHA0sy8z641La",
+        "invokedAt": "2026-09-25T21:56:55.438Z",
+        "completedAt": "2026-09-25T21:56:55.461Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-design",
+        "toolCallId": "call_18XJfK1EaGU1VMm3MeqXPYtv",
+        "invokedAt": "2026-09-25T21:57:20.308Z",
+        "completedAt": "2026-09-25T21:57:20.324Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-implementation",
+        "toolCallId": "call_cYpvXvmWP7YhXuDoHSACGK7d",
+        "invokedAt": "2026-09-25T23:07:21.257Z",
+        "completedAt": "2026-09-25T23:07:21.267Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-parallel-dispatch",
+        "toolCallId": "call_U3J4Q0iz9XxMyaUgMPHGAVvi",
+        "invokedAt": "2026-09-25T23:15:13.866Z",
+        "completedAt": "2026-09-25T23:15:13.880Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-agent-assignment",
+        "toolCallId": "call_hKAGeO953OTssMRX2APfJKxI",
+        "invokedAt": "2026-09-25T23:18:27.411Z",
+        "completedAt": "2026-09-25T23:18:27.413Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-agent-assignment",
+        "toolCallId": "call_eFG3DuGhjFwyu7VqJFlapccS",
+        "invokedAt": "2026-09-25T23:18:56.549Z",
+        "completedAt": "2026-09-25T23:18:56.550Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-implementation",
+        "toolCallId": "call_XKS36c0Iwnf4hoOQjT6am2zU",
+        "invokedAt": "2026-09-25T23:55:01.490Z",
+        "completedAt": "2026-09-25T23:55:01.494Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-implementation",
+        "toolCallId": "call_39humOx4c1Q1EhmyWyF555E4",
+        "invokedAt": "2026-09-26T00:28:00.668Z",
+        "completedAt": "2026-09-26T00:28:00.669Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-implementation",
+        "toolCallId": "call_72l8hAmu2zBb4hLRfkCEVdjk",
+        "invokedAt": "2026-09-26T00:36:01.629Z",
+        "completedAt": "2026-09-26T00:36:01.630Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-implementation",
+        "toolCallId": "call_kdSLC0sZENrMJKzZXtedKY0q",
+        "invokedAt": "2026-09-26T00:53:49.708Z",
+        "completedAt": "2026-09-26T00:53:49.710Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-implementation",
+        "toolCallId": "call_ryKQuoFGSOFP8rlqgCcMA1ql",
+        "invokedAt": "2026-09-26T01:10:49.737Z",
+        "completedAt": "2026-09-26T01:10:49.752Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-issue-report",
+        "toolCallId": "call_T1xNYGQsy0iWl9QMXVqeEyJn",
+        "invokedAt": "2026-09-26T01:20:11.867Z",
+        "completedAt": "2026-09-26T01:20:11.906Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-quality",
+        "toolCallId": "call_T67VwhFHEHMWm4hFPGCMB1Ox",
+        "invokedAt": "2026-09-26T01:41:27.683Z",
+        "completedAt": "2026-09-26T01:41:27.698Z",
+        "status": "completed"
+      }
+    ]
+  }
 }

@@ -921,8 +921,10 @@ export async function cleanupCandidate(
     throw new Error('CLI_ERROR: default commit must be a full lowercase Git object ID.');
   }
   const candidate = await loadCandidate(root, selector);
-  if (await options.hasLiveLease(candidate)
-    || ['integrating', 'verified'].includes(candidate.state)) {
+  if (['integrating', 'verified'].includes(candidate.state)) {
+    throw new Error('CANDIDATE_INTEGRATION_CONFLICT: candidate is owned by an active integration.');
+  }
+  if (await options.hasLiveLease(candidate)) {
     throw new Error('CANDIDATE_CLEANUP_UNSAFE: candidate has an active operation.');
   }
   const worktree = candidateWorktreeRoot(root, candidate, options.managedRoot);

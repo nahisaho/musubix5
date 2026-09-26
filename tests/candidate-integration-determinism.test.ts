@@ -1,9 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import {
-  deriveIntegrationIdentity,
-  integrationSourceManifest,
-  validateClosedIntegrationVerification,
-} from '../packages/analysis/src/candidate-integration.js';
 
 const candidate = (value: string, changeId: string) => ({
   candidateId: `candidate:${value.repeat(64)}`,
@@ -16,7 +11,12 @@ describe('deterministic candidate integration', () => {
   /** @id TEST-M5-MULTI-CHANGE-INTEGRATION-DETERMINISM-001
    * @verifies REQ-M5-MULTI-CHANGE-006
    */
-  it('TEST-M5-MULTI-CHANGE-INTEGRATION-DETERMINISM-001 derives canonical identity, source manifest, and closed verification', () => {
+  it('TEST-M5-MULTI-CHANGE-INTEGRATION-DETERMINISM-001 derives canonical identity, source manifest, and closed verification', async () => {
+    const {
+      deriveIntegrationIdentity,
+      integrationSourceManifest,
+      validateClosedIntegrationVerification,
+    } = await import('../packages/analysis/src/candidate-integration.js');
     const first = candidate('a', 'CHANGE-0014');
     const second = candidate('b', 'CHANGE-0015');
     const identity = deriveIntegrationIdentity({

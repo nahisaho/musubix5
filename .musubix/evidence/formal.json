@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-25T21:06:08.124Z",
-  "totalRequirements": 98,
-  "modeledRequirements": 0,
-  "modeledFraction": 0,
+  "generatedAt": "2026-09-26T01:48:30.646Z",
+  "totalRequirements": 106,
+  "modeledRequirements": 1,
+  "modeledFraction": 0.009433962264150943,
   "result": {
-    "valid": false,
+    "valid": true,
     "abstraction": "Consistency of explicit branch-scoped conditional, exact unit-normalized integer numeric, bounded temporal interval, deterministic state-transition, and controlled unconditional Boolean constraints; not implementation correctness.",
     "assumptions": [
       "Exact normalized subject/response pairs denote the same Boolean proposition.",
@@ -15,11 +15,24 @@
       "State transitions require one target for each declared from-state/event pair; undeclared transitions are unconstrained.",
       "Copilot supplies candidate requirements; deterministic checks do not establish their truth."
     ],
-    "literals": [],
+    "literals": [
+      {
+        "requirement": "REQ-M5-MULTI-CHANGE-003",
+        "atom": "[\"システム\",\"candidate context内で生成または評価するapproval、tdd、trace、graph、formal、performance、quality、gate、status、workflow、およびattestation証跡を、そのchange id、generation、repository identity、base commit、およびcandidate commitへ結合\"]",
+        "positive": true
+      }
+    ],
     "constraints": [],
     "unsupported": [
       "REQ-M5-GRAPH-001",
       "REQ-M5-GRAPH-002",
+      "REQ-M5-MULTI-CHANGE-001",
+      "REQ-M5-MULTI-CHANGE-002",
+      "REQ-M5-MULTI-CHANGE-004",
+      "REQ-M5-MULTI-CHANGE-005",
+      "REQ-M5-MULTI-CHANGE-006",
+      "REQ-M5-MULTI-CHANGE-007",
+      "REQ-M5-MULTI-CHANGE-008",
       "REQ-M5-COMPAT-001",
       "REQ-M5-COMPAT-002",
       "REQ-M5-COMPAT-003",
@@ -127,6 +140,41 @@
         "code": "FORMAL_UNSUPPORTED",
         "severity": "warning",
         "message": "REQ-M5-GRAPH-002 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-MULTI-CHANGE-001 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-MULTI-CHANGE-002 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-MULTI-CHANGE-004 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-MULTI-CHANGE-005 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-MULTI-CHANGE-006 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-MULTI-CHANGE-007 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-MULTI-CHANGE-008 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
       },
       {
         "code": "FORMAL_UNSUPPORTED",
@@ -609,7 +657,7 @@
         "message": "REQ-SESSION-SCOPED-DEVELOPMENT-002 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
       }
     ],
-    "consistency": "unknown",
+    "consistency": "consistent",
     "solver": {
       "requested": "none",
       "name": "none",
@@ -617,14 +665,15 @@
       "version": "",
       "status": "not-requested",
       "durationMs": 0,
-      "output": "No supported obligations; solver not run."
+      "output": "Solver execution disabled."
     }
   },
   "fingerprints": {
     ".musubix/features/codegraph-performance/requirements.md": "a5eb96722cea36c4fab7f81a09d992b1cbce62b154c7b85eab35199817d551e1",
-    ".musubix/features/musubix5-clean-foundation/requirements.md": "9926a78a9fd0e9b47cc358386358c00d2490ff4f3402766d089733e235f9f0ab",
+    ".musubix/features/multi-change-workspaces/requirements.md": "763808e7abc7966f5611e827a363026067825e1dcf456c781d7f49e7622d8880",
+    ".musubix/features/musubix5-clean-foundation/requirements.md": "3df9a035c805bbde98ac364fea202370db4ec1e7268c3c394d6aae2907133a74",
     ".musubix/features/node24-github-actions/requirements.md": "32e775df8d7bbe3336b657a2516b93e3ec5bf3ca202506b96e159569dfe95c5b",
-    ".musubix/features/parallel-agent-development/requirements.md": "8fee03a0f32288e18819b311c13e7965ba51230dad7cb88f46209fbffb009112",
+    ".musubix/features/parallel-agent-development/requirements.md": "8d0cb15a2928c593d70d03acc21f93f404a084cf8ce49f20197a2338949c24f7",
     ".musubix/features/release-0-2-0/requirements.md": "9a21b40b82cd44ffc0a7975583be3e309b1541ec29e78e8eac22eb74f6eb7acf",
     ".musubix/features/repository-tdd-currency/requirements.md": "a4bcc2d987a377ebf9a4532993455acc49864c5368a2de0a4ddccb2bf9c5b86b",
     ".musubix/features/skill-evidence-inputs/requirements.md": "454b7ed930b9eb9c66e9960e613debbdfb23beffce072add38b8e520d802c8f0",
