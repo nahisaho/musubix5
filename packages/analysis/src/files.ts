@@ -201,7 +201,7 @@ export async function evidenceInputs(root: string): Promise<string[]> {
 
 // Fixed pool size chosen to stay comfortably under common OS file-descriptor
 // limits (commonly 1024 on Linux/WSL) even on projects with large,
-// unexcluded vendored source trees (ADR-0018).
+// unexcluded vendored source trees.
 export const FILE_READ_CONCURRENCY = 256;
 
 export async function mapWithConcurrency<T, R>(items: T[], limit: number, worker: (item: T, index: number) => Promise<R>): Promise<R[]> {
