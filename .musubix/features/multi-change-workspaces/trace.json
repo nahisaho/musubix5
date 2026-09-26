@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-26T06:11:49.224Z",
+  "generatedAt": "2026-09-26T10:43:53.113Z",
   "nodes": [
     {
       "id": "CODE-SESSION-SCOPED-DEVELOPMENT-001",
@@ -201,6 +201,62 @@
       "line": 1
     },
     {
+      "id": "ADR-0028",
+      "kind": "adr",
+      "path": ".musubix/decisions/ADR-0028.md",
+      "line": 1
+    },
+    {
+      "id": "ADR-0029",
+      "kind": "adr",
+      "path": ".musubix/decisions/ADR-0029.md",
+      "line": 1
+    },
+    {
+      "id": "ADR-0030",
+      "kind": "adr",
+      "path": ".musubix/decisions/ADR-0030.md",
+      "line": 1
+    },
+    {
+      "id": "DES-M5-CANDIDATE-CLEANUP-001",
+      "kind": "design",
+      "path": ".musubix/features/candidate-cleanup-policy/design.md",
+      "line": 23
+    },
+    {
+      "id": "DES-M5-CANDIDATE-CLEANUP-002",
+      "kind": "design",
+      "path": ".musubix/features/candidate-cleanup-policy/design.md",
+      "line": 31
+    },
+    {
+      "id": "DES-M5-CANDIDATE-CLEANUP-003",
+      "kind": "design",
+      "path": ".musubix/features/candidate-cleanup-policy/design.md",
+      "line": 39
+    },
+    {
+      "id": "DES-M5-CANDIDATE-CLEANUP-004",
+      "kind": "design",
+      "path": ".musubix/features/candidate-cleanup-policy/design.md",
+      "line": 47
+    },
+    {
+      "id": "REQ-M5-WAVE1-CLEANUP-001",
+      "kind": "requirement",
+      "path": ".musubix/features/candidate-cleanup-policy/requirements.md",
+      "line": 8,
+      "mandatory": true
+    },
+    {
+      "id": "REQ-M5-WAVE1-CLEANUP-002",
+      "kind": "requirement",
+      "path": ".musubix/features/candidate-cleanup-policy/requirements.md",
+      "line": 15,
+      "mandatory": true
+    },
+    {
       "id": "DES-M5-GRAPH-001",
       "kind": "design",
       "path": ".musubix/features/codegraph-performance/design.md",
@@ -230,6 +286,32 @@
       "kind": "requirement",
       "path": ".musubix/features/codegraph-performance/requirements.md",
       "line": 20,
+      "mandatory": true
+    },
+    {
+      "id": "DES-M5-WAVE1-EVIDENCE-001",
+      "kind": "design",
+      "path": ".musubix/features/evidence-selector-guards/design.md",
+      "line": 3
+    },
+    {
+      "id": "DES-M5-WAVE1-EVIDENCE-002",
+      "kind": "design",
+      "path": ".musubix/features/evidence-selector-guards/design.md",
+      "line": 11
+    },
+    {
+      "id": "REQ-M5-WAVE1-EVIDENCE-001",
+      "kind": "requirement",
+      "path": ".musubix/features/evidence-selector-guards/requirements.md",
+      "line": 8,
+      "mandatory": true
+    },
+    {
+      "id": "REQ-M5-WAVE1-EVIDENCE-002",
+      "kind": "requirement",
+      "path": ".musubix/features/evidence-selector-guards/requirements.md",
+      "line": 15,
       "mandatory": true
     },
     {
@@ -990,6 +1072,19 @@
       "mandatory": true
     },
     {
+      "id": "DES-M5-WAVE1-PUBLISH-001",
+      "kind": "design",
+      "path": ".musubix/features/npm-registry-deadline/design.md",
+      "line": 3
+    },
+    {
+      "id": "REQ-M5-WAVE1-PUBLISH-001",
+      "kind": "requirement",
+      "path": ".musubix/features/npm-registry-deadline/requirements.md",
+      "line": 8,
+      "mandatory": true
+    },
+    {
       "id": "DES-M5-PARALLEL-001",
       "kind": "design",
       "path": ".musubix/features/parallel-agent-development/design.md",
@@ -1169,6 +1264,25 @@
       "mandatory": true
     },
     {
+      "id": "DES-M5-WAVE1-NAMING-001",
+      "kind": "design",
+      "path": ".musubix/features/product-name-guidance/design.md",
+      "line": 51
+    },
+    {
+      "id": "DES-M5-WAVE1-NAMING-002",
+      "kind": "design",
+      "path": ".musubix/features/product-name-guidance/design.md",
+      "line": 59
+    },
+    {
+      "id": "REQ-M5-WAVE1-NAMING-001",
+      "kind": "requirement",
+      "path": ".musubix/features/product-name-guidance/requirements.md",
+      "line": 8,
+      "mandatory": true
+    },
+    {
       "id": "DES-M5-REL020-001",
       "kind": "design",
       "path": ".musubix/features/release-0-2-0/design.md",
@@ -1231,6 +1345,82 @@
       "kind": "requirement",
       "path": ".musubix/features/skill-evidence-inputs/requirements.md",
       "line": 3,
+      "mandatory": true
+    },
+    {
+      "id": "DES-M5-TDD-REPAIR-001",
+      "kind": "design",
+      "path": ".musubix/features/tdd-cycle-repair/design.md",
+      "line": 63
+    },
+    {
+      "id": "DES-M5-TDD-REPAIR-002",
+      "kind": "design",
+      "path": ".musubix/features/tdd-cycle-repair/design.md",
+      "line": 71
+    },
+    {
+      "id": "DES-M5-TDD-REPAIR-003",
+      "kind": "design",
+      "path": ".musubix/features/tdd-cycle-repair/design.md",
+      "line": 79
+    },
+    {
+      "id": "DES-M5-TDD-REPAIR-004",
+      "kind": "design",
+      "path": ".musubix/features/tdd-cycle-repair/design.md",
+      "line": 87
+    },
+    {
+      "id": "DES-M5-TDD-REPAIR-005",
+      "kind": "design",
+      "path": ".musubix/features/tdd-cycle-repair/design.md",
+      "line": 95
+    },
+    {
+      "id": "REQ-M5-WAVE1-TDD-001",
+      "kind": "requirement",
+      "path": ".musubix/features/tdd-cycle-repair/requirements.md",
+      "line": 8,
+      "mandatory": true
+    },
+    {
+      "id": "REQ-M5-WAVE1-TDD-002",
+      "kind": "requirement",
+      "path": ".musubix/features/tdd-cycle-repair/requirements.md",
+      "line": 15,
+      "mandatory": true
+    },
+    {
+      "id": "DES-M5-WAVE1-TRACE-001",
+      "kind": "design",
+      "path": ".musubix/features/trace-projection-stability/design.md",
+      "line": 10
+    },
+    {
+      "id": "DES-M5-WAVE1-TRACE-002",
+      "kind": "design",
+      "path": ".musubix/features/trace-projection-stability/design.md",
+      "line": 17
+    },
+    {
+      "id": "DES-M5-WAVE1-TRACE-003",
+      "kind": "design",
+      "path": ".musubix/features/trace-projection-stability/design.md",
+      "line": 25
+    },
+    {
+      "id": "REQ-M5-WAVE1-TRACE-001",
+      "kind": "requirement",
+      "path": ".musubix/features/trace-projection-stability/requirements.md",
+      "line": 8,
+      "mandatory": true
+    },
+    {
+      "id": "REQ-M5-WAVE1-TRACE-002",
+      "kind": "requirement",
+      "path": ".musubix/features/trace-projection-stability/requirements.md",
+      "line": 15,
       "mandatory": true
     },
     {
@@ -3739,6 +3929,156 @@
       "relation": "implements"
     },
     {
+      "from": "DES-M5-CANDIDATE-CLEANUP-001",
+      "to": "REQ-M5-MULTI-CHANGE-007",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-CANDIDATE-CLEANUP-001",
+      "to": "REQ-M5-WAVE1-CLEANUP-001",
+      "relation": "satisfies"
+    },
+    {
+      "from": "ADR-0030",
+      "to": "DES-M5-CANDIDATE-CLEANUP-001",
+      "relation": "decides"
+    },
+    {
+      "from": "DES-M5-CANDIDATE-CLEANUP-001",
+      "to": "DES-M5-MULTI-CHANGE-004",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-CANDIDATE-CLEANUP-001",
+      "to": "DES-M5-MULTI-CHANGE-008",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-CANDIDATE-CLEANUP-002",
+      "to": "REQ-M5-MULTI-CHANGE-007",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-CANDIDATE-CLEANUP-002",
+      "to": "REQ-M5-WAVE1-CLEANUP-001",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-CANDIDATE-CLEANUP-002",
+      "to": "REQ-M5-WAVE1-CLEANUP-002",
+      "relation": "satisfies"
+    },
+    {
+      "from": "ADR-0025",
+      "to": "DES-M5-CANDIDATE-CLEANUP-002",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0026",
+      "to": "DES-M5-CANDIDATE-CLEANUP-002",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0027",
+      "to": "DES-M5-CANDIDATE-CLEANUP-002",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0030",
+      "to": "DES-M5-CANDIDATE-CLEANUP-002",
+      "relation": "decides"
+    },
+    {
+      "from": "DES-M5-CANDIDATE-CLEANUP-002",
+      "to": "DES-M5-CANDIDATE-CLEANUP-001",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-CANDIDATE-CLEANUP-002",
+      "to": "DES-M5-MULTI-CHANGE-002",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-CANDIDATE-CLEANUP-002",
+      "to": "DES-M5-MULTI-CHANGE-003",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-CANDIDATE-CLEANUP-003",
+      "to": "REQ-M5-MULTI-CHANGE-007",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-CANDIDATE-CLEANUP-003",
+      "to": "REQ-M5-WAVE1-CLEANUP-002",
+      "relation": "satisfies"
+    },
+    {
+      "from": "ADR-0025",
+      "to": "DES-M5-CANDIDATE-CLEANUP-003",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0027",
+      "to": "DES-M5-CANDIDATE-CLEANUP-003",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0030",
+      "to": "DES-M5-CANDIDATE-CLEANUP-003",
+      "relation": "decides"
+    },
+    {
+      "from": "DES-M5-CANDIDATE-CLEANUP-003",
+      "to": "DES-M5-MULTI-CHANGE-002",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-CANDIDATE-CLEANUP-003",
+      "to": "DES-M5-MULTI-CHANGE-003",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-CANDIDATE-CLEANUP-003",
+      "to": "DES-M5-CANDIDATE-CLEANUP-002",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-CANDIDATE-CLEANUP-004",
+      "to": "REQ-M5-MULTI-CHANGE-007",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-CANDIDATE-CLEANUP-004",
+      "to": "REQ-M5-WAVE1-CLEANUP-001",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-CANDIDATE-CLEANUP-004",
+      "to": "REQ-M5-WAVE1-CLEANUP-002",
+      "relation": "satisfies"
+    },
+    {
+      "from": "ADR-0030",
+      "to": "DES-M5-CANDIDATE-CLEANUP-004",
+      "relation": "decides"
+    },
+    {
+      "from": "DES-M5-CANDIDATE-CLEANUP-004",
+      "to": "DES-M5-CANDIDATE-CLEANUP-001",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-CANDIDATE-CLEANUP-004",
+      "to": "DES-M5-CANDIDATE-CLEANUP-003",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-CANDIDATE-CLEANUP-004",
+      "to": "DES-M5-MULTI-CHANGE-001",
+      "relation": "depends-on"
+    },
+    {
       "from": "DES-M5-GRAPH-001",
       "to": "REQ-M5-GRAPH-001",
       "relation": "satisfies"
@@ -3776,6 +4116,56 @@
     {
       "from": "DES-M5-GRAPH-003",
       "to": "DES-M5-GRAPH-001",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-WAVE1-EVIDENCE-001",
+      "to": "REQ-M5-WAVE1-EVIDENCE-001",
+      "relation": "satisfies"
+    },
+    {
+      "from": "ADR-0018",
+      "to": "DES-M5-WAVE1-EVIDENCE-001",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0021",
+      "to": "DES-M5-WAVE1-EVIDENCE-001",
+      "relation": "decides"
+    },
+    {
+      "from": "DES-M5-WAVE1-EVIDENCE-001",
+      "to": "DES-M5-EVIDENCE-SKILL-001",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-WAVE1-EVIDENCE-002",
+      "to": "REQ-M5-WAVE1-EVIDENCE-001",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-WAVE1-EVIDENCE-002",
+      "to": "REQ-M5-WAVE1-EVIDENCE-002",
+      "relation": "satisfies"
+    },
+    {
+      "from": "ADR-0018",
+      "to": "DES-M5-WAVE1-EVIDENCE-002",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0021",
+      "to": "DES-M5-WAVE1-EVIDENCE-002",
+      "relation": "decides"
+    },
+    {
+      "from": "DES-M5-WAVE1-EVIDENCE-002",
+      "to": "DES-M5-WAVE1-EVIDENCE-001",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-WAVE1-EVIDENCE-002",
+      "to": "DES-M5-EVIDENCE-SKILL-001",
       "relation": "depends-on"
     },
     {
@@ -3995,6 +4385,11 @@
     },
     {
       "from": "ADR-0026",
+      "to": "DES-M5-MULTI-CHANGE-004",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0030",
       "to": "DES-M5-MULTI-CHANGE-004",
       "relation": "decides"
     },
@@ -4310,6 +4705,11 @@
     },
     {
       "from": "ADR-0027",
+      "to": "DES-M5-MULTI-CHANGE-008",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0030",
       "to": "DES-M5-MULTI-CHANGE-008",
       "relation": "decides"
     },
@@ -5584,6 +5984,11 @@
       "relation": "decides"
     },
     {
+      "from": "ADR-0028",
+      "to": "DES-M5-014",
+      "relation": "decides"
+    },
+    {
       "from": "DES-M5-014",
       "to": "DES-M5-003",
       "relation": "depends-on"
@@ -6119,6 +6524,11 @@
       "relation": "satisfies"
     },
     {
+      "from": "DES-M5-021",
+      "to": "REQ-M5-WAVE1-PUBLISH-001",
+      "relation": "satisfies"
+    },
+    {
       "from": "ADR-0008",
       "to": "DES-M5-021",
       "relation": "decides"
@@ -6161,6 +6571,11 @@
     {
       "from": "DES-M5-021",
       "to": "DES-M5-020",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-021",
+      "to": "DES-M5-WAVE1-PUBLISH-001",
       "relation": "depends-on"
     },
     {
@@ -6207,6 +6622,16 @@
       "from": "DES-M5-CI-002",
       "to": "DES-M5-PARALLEL-007",
       "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-WAVE1-PUBLISH-001",
+      "to": "REQ-M5-WAVE1-PUBLISH-001",
+      "relation": "satisfies"
+    },
+    {
+      "from": "ADR-0011",
+      "to": "DES-M5-WAVE1-PUBLISH-001",
+      "relation": "decides"
     },
     {
       "from": "DES-M5-PARALLEL-001",
@@ -6879,6 +7304,61 @@
       "relation": "depends-on"
     },
     {
+      "from": "DES-M5-WAVE1-NAMING-001",
+      "to": "REQ-M5-WAVE1-NAMING-001",
+      "relation": "satisfies"
+    },
+    {
+      "from": "ADR-0002",
+      "to": "DES-M5-WAVE1-NAMING-001",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0018",
+      "to": "DES-M5-WAVE1-NAMING-001",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0028",
+      "to": "DES-M5-WAVE1-NAMING-001",
+      "relation": "decides"
+    },
+    {
+      "from": "DES-M5-WAVE1-NAMING-001",
+      "to": "DES-M5-WAVE1-TRACE-002",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-WAVE1-NAMING-002",
+      "to": "REQ-M5-WAVE1-NAMING-001",
+      "relation": "satisfies"
+    },
+    {
+      "from": "ADR-0002",
+      "to": "DES-M5-WAVE1-NAMING-002",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0018",
+      "to": "DES-M5-WAVE1-NAMING-002",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0028",
+      "to": "DES-M5-WAVE1-NAMING-002",
+      "relation": "decides"
+    },
+    {
+      "from": "DES-M5-WAVE1-NAMING-002",
+      "to": "DES-M5-WAVE1-NAMING-001",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-WAVE1-NAMING-002",
+      "to": "DES-M5-WAVE1-TRACE-002",
+      "relation": "depends-on"
+    },
+    {
       "from": "DES-M5-REL020-001",
       "to": "REQ-M5-REL020-001",
       "relation": "satisfies"
@@ -7026,6 +7506,261 @@
     {
       "from": "DES-M5-EVIDENCE-SKILL-001",
       "to": "DES-M5-TRACE-SKILL-001",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-TDD-REPAIR-001",
+      "to": "REQ-M5-COMPAT-013",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-TDD-REPAIR-001",
+      "to": "REQ-M5-WAVE1-TDD-001",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-TDD-REPAIR-001",
+      "to": "REQ-M5-WAVE1-TDD-002",
+      "relation": "satisfies"
+    },
+    {
+      "from": "ADR-0003",
+      "to": "DES-M5-TDD-REPAIR-001",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0015",
+      "to": "DES-M5-TDD-REPAIR-001",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0025",
+      "to": "DES-M5-TDD-REPAIR-001",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0029",
+      "to": "DES-M5-TDD-REPAIR-001",
+      "relation": "decides"
+    },
+    {
+      "from": "DES-M5-TDD-REPAIR-001",
+      "to": "DES-M5-003",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-TDD-REPAIR-001",
+      "to": "DES-M5-004",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-TDD-REPAIR-001",
+      "to": "DES-M5-TDD-REPAIR-002",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-TDD-REPAIR-002",
+      "to": "REQ-M5-WAVE1-TDD-001",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-TDD-REPAIR-002",
+      "to": "REQ-M5-WAVE1-TDD-002",
+      "relation": "satisfies"
+    },
+    {
+      "from": "ADR-0023",
+      "to": "DES-M5-TDD-REPAIR-002",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0025",
+      "to": "DES-M5-TDD-REPAIR-002",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0029",
+      "to": "DES-M5-TDD-REPAIR-002",
+      "relation": "decides"
+    },
+    {
+      "from": "DES-M5-TDD-REPAIR-002",
+      "to": "DES-M5-TDD-005",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-TDD-REPAIR-002",
+      "to": "DES-M5-PARALLEL-006",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-TDD-REPAIR-003",
+      "to": "REQ-M5-WAVE1-TDD-001",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-TDD-REPAIR-003",
+      "to": "REQ-M5-WAVE1-TDD-002",
+      "relation": "satisfies"
+    },
+    {
+      "from": "ADR-0023",
+      "to": "DES-M5-TDD-REPAIR-003",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0029",
+      "to": "DES-M5-TDD-REPAIR-003",
+      "relation": "decides"
+    },
+    {
+      "from": "DES-M5-TDD-REPAIR-003",
+      "to": "DES-M5-TDD-005",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-TDD-REPAIR-003",
+      "to": "DES-M5-TDD-REPAIR-001",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-TDD-REPAIR-003",
+      "to": "DES-M5-TDD-REPAIR-002",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-TDD-REPAIR-004",
+      "to": "REQ-M5-COMPAT-013",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-TDD-REPAIR-004",
+      "to": "REQ-M5-WAVE1-TDD-001",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-TDD-REPAIR-004",
+      "to": "REQ-M5-WAVE1-TDD-002",
+      "relation": "satisfies"
+    },
+    {
+      "from": "ADR-0009",
+      "to": "DES-M5-TDD-REPAIR-004",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0023",
+      "to": "DES-M5-TDD-REPAIR-004",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0029",
+      "to": "DES-M5-TDD-REPAIR-004",
+      "relation": "decides"
+    },
+    {
+      "from": "DES-M5-TDD-REPAIR-004",
+      "to": "DES-M5-002",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-TDD-REPAIR-004",
+      "to": "DES-M5-TDD-REPAIR-001",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-TDD-REPAIR-004",
+      "to": "DES-M5-TDD-REPAIR-002",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-TDD-REPAIR-005",
+      "to": "REQ-M5-COMPAT-013",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-TDD-REPAIR-005",
+      "to": "REQ-M5-WAVE1-TDD-001",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-TDD-REPAIR-005",
+      "to": "REQ-M5-WAVE1-TDD-002",
+      "relation": "satisfies"
+    },
+    {
+      "from": "ADR-0029",
+      "to": "DES-M5-TDD-REPAIR-005",
+      "relation": "decides"
+    },
+    {
+      "from": "DES-M5-TDD-REPAIR-005",
+      "to": "DES-M5-TDD-REPAIR-001",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-TDD-REPAIR-005",
+      "to": "DES-M5-TDD-REPAIR-003",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-TDD-REPAIR-005",
+      "to": "DES-M5-TDD-REPAIR-004",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-WAVE1-TRACE-001",
+      "to": "REQ-M5-WAVE1-TRACE-001",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-WAVE1-TRACE-001",
+      "to": "REQ-M5-WAVE1-TRACE-002",
+      "relation": "satisfies"
+    },
+    {
+      "from": "ADR-0028",
+      "to": "DES-M5-WAVE1-TRACE-001",
+      "relation": "decides"
+    },
+    {
+      "from": "DES-M5-WAVE1-TRACE-002",
+      "to": "REQ-M5-WAVE1-TRACE-002",
+      "relation": "satisfies"
+    },
+    {
+      "from": "ADR-0028",
+      "to": "DES-M5-WAVE1-TRACE-002",
+      "relation": "decides"
+    },
+    {
+      "from": "DES-M5-WAVE1-TRACE-002",
+      "to": "DES-M5-WAVE1-TRACE-001",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-WAVE1-TRACE-003",
+      "to": "REQ-M5-WAVE1-TRACE-001",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-WAVE1-TRACE-003",
+      "to": "REQ-M5-WAVE1-TRACE-002",
+      "relation": "satisfies"
+    },
+    {
+      "from": "ADR-0028",
+      "to": "DES-M5-WAVE1-TRACE-003",
+      "relation": "decides"
+    },
+    {
+      "from": "DES-M5-WAVE1-TRACE-003",
+      "to": "DES-M5-WAVE1-TRACE-001",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-WAVE1-TRACE-003",
+      "to": "DES-M5-WAVE1-TRACE-002",
       "relation": "depends-on"
     },
     {
@@ -11945,7 +12680,7 @@
     ".musubix/decisions/ADR-0008.md": "c9576edc5db5af6bf21f6d262ef66723f88f94048e468adc94f88aff32ac81d3",
     ".musubix/decisions/ADR-0009.md": "5e38a2e75f754b89ad51bcb242ad6994e36393c41c53630f2d6dd76e67d8294e",
     ".musubix/decisions/ADR-0010.md": "360bcc14ae583e7735e9542c160a3557c67ede6442ced181abef143e61d489ae",
-    ".musubix/decisions/ADR-0011.md": "f2d22f767bd150f1b2f9afa30803918aa0304a3b5d743029a25a34a05d41ec04",
+    ".musubix/decisions/ADR-0011.md": "ece6af82869f6cc5e796d6784a6636dfd769d4b8c5f4b6c9d2f4526034c40889",
     ".musubix/decisions/ADR-0012.md": "777d22a07352d2fec4cac676f0dac75e27b4e66716c964d7ba7c1c9c1bdf81ca",
     ".musubix/decisions/ADR-0013.md": "0c360dce20c0bded889a70a5bb276f8338405225941e7c088a2b3b108db4fcf4",
     ".musubix/decisions/ADR-0014.md": "40e01d0f00c5743332d253722c7f62e8e8cf2f99101398bd3cb7900cb2e1f013",
@@ -11962,22 +12697,37 @@
     ".musubix/decisions/ADR-0025.md": "2ef9c844e52f7c10a7b2dc4270a69d4080a06e9861dc6d4c563598d759f20775",
     ".musubix/decisions/ADR-0026.md": "041673119567ee9bd9d144434c27902e2e861b6baf389cc9bee19d6d13ebff91",
     ".musubix/decisions/ADR-0027.md": "9dafbeb840753f40e2531e4c897d5f152c3347c6d12863e89518903e2039478a",
+    ".musubix/decisions/ADR-0028.md": "ddf3102558e1f4f248cd61da1c6672ed01be72976bea0042a92018e3d79b51ae",
+    ".musubix/decisions/ADR-0029.md": "4740cf175a51608d15e4bacfd7558e28ef65b00fb83e8f2fc6fd2dcd51663c39",
+    ".musubix/decisions/ADR-0030.md": "cc1a17eee7708368dd02d4b3ae78924edb74456c32ecda8543c67e6799192190",
+    ".musubix/features/candidate-cleanup-policy/design.md": "54d32a6d446bbaed299860b164fe74d24362e0c5739862bc79df2e0acab20c1b",
+    ".musubix/features/candidate-cleanup-policy/requirements.md": "253a36dbca0b76a81f452c845f2988e2b33163823095ee5ac1add81519dd5462",
     ".musubix/features/codegraph-performance/design.md": "3ddf90dbb97a753644deb0e4dd38adaa27420273390a27b241612ef84f4c9c97",
     ".musubix/features/codegraph-performance/requirements.md": "a5eb96722cea36c4fab7f81a09d992b1cbce62b154c7b85eab35199817d551e1",
-    ".musubix/features/multi-change-workspaces/design.md": "112b514f1846df8517feec9e966dadf4907efe945e8d5a48cbb2b29d97165e6f",
-    ".musubix/features/multi-change-workspaces/requirements.md": "1cd717f69580676fbaa792681fe51eb7bb5a863553d16ca20aa93f4ecd7dc985",
-    ".musubix/features/musubix5-clean-foundation/design.md": "866a686fecf0bf726316593a1770ba7bd05f66f35a9ec39a44a5ac5d27edee46",
-    ".musubix/features/musubix5-clean-foundation/requirements.md": "600cc143bec911dded87fb9bcfc0f01804a45641d3175b0391289a221377bfc9",
+    ".musubix/features/evidence-selector-guards/design.md": "f6477ad027e055d5b7760e876164f316fb529d665af54eefaa965d2b69656b29",
+    ".musubix/features/evidence-selector-guards/requirements.md": "fdb70191e472f41e16eab793b2b2d86583587cd86a88db5627be59bf045ef601",
+    ".musubix/features/multi-change-workspaces/design.md": "983b94ff3fa374938c5d4e7592bcd947d3457899121269722bb2085231c28031",
+    ".musubix/features/multi-change-workspaces/requirements.md": "81124ffb506d65df8a744d19dfb8c6e0579836a2d49bd2e4fc1e9b028d321b92",
+    ".musubix/features/musubix5-clean-foundation/design.md": "585cb65f786358e27809cffdbd6778bc2f4ee885b75d0c9773d46dce75347c0d",
+    ".musubix/features/musubix5-clean-foundation/requirements.md": "d9e5ea79ea6197329a35b87d1773ed54b901988f8b7a3e5ab45683a29db4a6ae",
     ".musubix/features/node24-github-actions/design.md": "a51859b2653b1b1885c9280b8fbba0efdbbc2692e2b4cddb60b6dd75a7217cb5",
     ".musubix/features/node24-github-actions/requirements.md": "32e775df8d7bbe3336b657a2516b93e3ec5bf3ca202506b96e159569dfe95c5b",
+    ".musubix/features/npm-registry-deadline/design.md": "a46582fe0fd7e2c64ea36fcf7a50d24f1b45e7789cd2e75634da0ebf4cc29195",
+    ".musubix/features/npm-registry-deadline/requirements.md": "89ba3f12e9dd5a66c4e1e21ba3a5ed087fdfc03353d7fd72c605439d8a0b9aab",
     ".musubix/features/parallel-agent-development/design.md": "2d3ee454f0f131cdd21a62932790fafa0b6edc3df68d43e473d74b294d1e8a5d",
     ".musubix/features/parallel-agent-development/requirements.md": "8d0cb15a2928c593d70d03acc21f93f404a084cf8ce49f20197a2338949c24f7",
+    ".musubix/features/product-name-guidance/design.md": "16b8dd870f2b684b0a2688db1b2c20924f245b76dd89863f2b741715390232b9",
+    ".musubix/features/product-name-guidance/requirements.md": "a8303e07f54704341f496511865093182a8c269a701fc2a8cf8e90bb10a38f19",
     ".musubix/features/release-0-2-0/design.md": "6642acfea4fe6e6b565a334e9a3490605bc418915e7a64af279e7a283df2c0eb",
     ".musubix/features/release-0-2-0/requirements.md": "9a21b40b82cd44ffc0a7975583be3e309b1541ec29e78e8eac22eb74f6eb7acf",
     ".musubix/features/repository-tdd-currency/design.md": "65268ced8744efd297df10d2debf1cd214fb66c69cd1ca8c990383bf52b9132d",
     ".musubix/features/repository-tdd-currency/requirements.md": "a4bcc2d987a377ebf9a4532993455acc49864c5368a2de0a4ddccb2bf9c5b86b",
-    ".musubix/features/skill-evidence-inputs/design.md": "b19a3244db5668cf8a3d88ed8db01ab3ab53de8eb0a28c91b63aa56e88abbd29",
-    ".musubix/features/skill-evidence-inputs/requirements.md": "454b7ed930b9eb9c66e9960e613debbdfb23beffce072add38b8e520d802c8f0",
+    ".musubix/features/skill-evidence-inputs/design.md": "ea0474bfeea1b94696bb55399117e6c18a10679d374afed172b4e8e2267ae9c9",
+    ".musubix/features/skill-evidence-inputs/requirements.md": "1c8c6c89dafd7b7c3ce1645d9dd4599768d5c75841a916598716f65691f1faa0",
+    ".musubix/features/tdd-cycle-repair/design.md": "bb64df3adf6ae9c1cc3ddc026ec93ad37ca2b3f8f2afcd0da1f6d802f976e540",
+    ".musubix/features/tdd-cycle-repair/requirements.md": "f0928fb1f02bc22ce5f3772d5a14d9b4b3953394ca699f95329d90c74363bf8c",
+    ".musubix/features/trace-projection-stability/design.md": "108ba33f2cceda017aaabd4fff7c36959eaea7a3a83bba364def1295607522af",
+    ".musubix/features/trace-projection-stability/requirements.md": "ead614b736c8962a3141713bf59be588a865c4e6259761ae28f2125e9e25df94",
     ".musubix/features/trace-skill-source-selection/design.md": "6247746fdf14bb63b799d621f6291b9e99f1a371a33b7d4a780319fa8da2397e",
     ".musubix/features/trace-skill-source-selection/requirements.md": "94fe7ab9c31b7b3e6ee7455039b71eaa66f622715db71cce155b2ca1f438c1fb",
     "packages/analysis/src/adapters.ts": "4db9916f432a92d27520a7aa9af575db67897a729fbbed623331ddc00c020b95",
@@ -12002,7 +12752,7 @@
     "packages/analysis/src/compatibility-oracle.ts": "83aac1ddcf29d0ff7d76a8e05c9be9dfa1911f94c1ec960145578c43f2b32d98",
     "packages/analysis/src/config.ts": "b75dacf7bce0e58eaa465a32a6181e75d3492a1dafb4cbb5e09cc9220f9ffcba",
     "packages/analysis/src/evidence-registry.ts": "41bdd3f05c91734baf22cccf5289a9906eae30bfd1356236bc98c96be47da660",
-    "packages/analysis/src/files.ts": "42824643b75033341e9a2ccae2c2847a880ecd001ead978957dc14e1d2290834",
+    "packages/analysis/src/files.ts": "cfcdbf3bd72676283ef3ab80581935028880d5b62a0ca0af0f619e6a62114c7a",
     "packages/analysis/src/formal.ts": "9f5622983fed80c1e7c141cc7c7dcd217447e5c2edd39e64877db052a57b730b",
     "packages/analysis/src/gate.ts": "3021e81e8985a52af0a92b7d24560acc0e1bfa296c3d9001cf41b8c5b2505550",
     "packages/analysis/src/graph.ts": "4de84f582a8da7ca24475354e0890600f34c7533f0c7af41346e879610ae4392",

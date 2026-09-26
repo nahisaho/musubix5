@@ -482,7 +482,8 @@ requires `tdd`; a `.musubix/changes/CHANGE-*.md` document additionally requires
   features/<slug>/
     requirements.md
     design.md
-    trace.json                 # generated; never hand-edit
+  trace/
+    index.json                 # committed repository-wide generated trace; never hand-edit
   decisions/ADR-0001.md
   evidence/
     quality.json                # actual gate report, initially skipped
@@ -494,7 +495,9 @@ requires `tdd`; a `.musubix/changes/CHANGE-*.md` document additionally requires
     model-correspondence.json   # Formal model → trace → fresh passing-test correspondence evidence
     mutation.json               # fresh requirement-scoped mutation executions
     attestation.json            # optional externally signed CI provenance
-  cache/                       # ignored; generated indexes and solver inputs
+  cache/
+    trace.json                 # ignored mirror of trace/index.json
+                               # plus generated indexes and solver inputs
 ```
 
 ### Requirements and design
@@ -588,10 +591,13 @@ In PHP, use plain `/* ... */` blocks rather than `/** ... */` PHPDoc: PHPDoc res
 on requirement-ID lists inside doc comments. musubix5 reads either form.
 Mandatory implementation coverage may be direct or through a linked design;
 tests must directly verify a requirement. Links alone are not semantic proof.
-Each feature's `trace.json` holds the complete repository snapshot, including
-cross-feature edges and input SHA-256 fingerprints; copies intentionally agree.
-The cache is preferred when present; feature snapshots support cache-free checks.
-Rebuild when inputs change; stale impact queries are rejected.
+`.musubix/trace/index.json` holds the committed complete repository snapshot,
+including cross-feature edges and input SHA-256 fingerprints.
+`.musubix/cache/trace.json` is its ignored byte-identical fast-path mirror.
+The cache is preferred when present, the committed shared index supports
+cache-free checks, and migration-era `.musubix/features/*/trace.json` files are
+read-only fallback inputs until the next successful build removes them. Rebuild
+when inputs change; stale impact queries are rejected.
 
 ### Constitution and configuration
 

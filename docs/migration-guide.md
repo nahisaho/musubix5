@@ -136,7 +136,7 @@ The release manifest applies this closed first-match exclusion registry:
 | Precedence | Reason | Predicate |
 |---:|---|---|
 | 1 | `symlink` | Non-normative symbolic-link blob; symlinks at the four normative release path patterns fail with `APPROVAL_NORMATIVE_SYMLINK` instead |
-| 2 | `generated-trace` | `.musubix/features/*/trace.json` |
+| 2 | `generated-trace` | `.musubix/trace/index.json` or migration-era `.musubix/features/*/trace.json` |
 | 3 | `package-archive` | `**/*.tgz` |
 | 4 | `log-directory` | Blob below a lowercase `log`, `logs`, `session-log`, or `session-logs` directory segment |
 | 5 | `historical` | `docs/history/**` |
@@ -222,6 +222,37 @@ make a generation current and never grant evidence credit. Stale cleanup
 retains branches, removes only clean managed worktrees belonging to stale
 plans, preserves active plans, and appends only the non-credit maintenance
 record associated with the selected historical generation.
+
+## TDD repair extension
+
+musubix5 adds an append-only repair workflow for a stale parallel-bound TDD
+cycle. Normal mode is:
+
+```text
+tdd repair <test-id> --cycle <cycle-id> (--replacement-cycle <cycle-id> | --retire) --approver <name> --reason <text> --confirm
+```
+
+A pending partial repair blocks every TDD writer until it is completed with
+`tdd repair --resume <operation-id> --confirm` or audited as unrecoverable with
+`tdd repair --abandon-pending <operation-id> --approver <name> --reason <text>
+--confirm`. JSON authorization details use `domain: null` when approval domains
+are not configured. Successful abandonment is retained in the non-credit
+`repairAbandonments[]` projection; it does not create repair disposition or
+TDD credit.
+
+All added `TDD_REPAIR_*` diagnostics are domain failures with exit code 1:
+
+| Diagnostic | Meaning |
+|---|---|
+| `TDD_REPAIR_TARGET_INVALID` | The selected cycle is missing, ambiguous, foreign, not parallel-bound, not stale, or lacks an unambiguous retirement fallback |
+| `TDD_REPAIR_BINDING_MISMATCH` | Persisted cycle/order/parallel binding does not match the requested repair |
+| `TDD_REPAIR_ALREADY_RECORDED` | The target already has a completed incompatible repair |
+| `TDD_REPAIR_REPLACEMENT_INVALID` | The proposed replacement cycle is not an eligible current replacement |
+| `TDD_REPAIR_CHAIN_INVALID` | Repair would violate journal, order, or hash-chain continuity |
+| `TDD_REPAIR_AUTHORIZATION_INVALID` | Current requirements/design approval or configured domain authorization is missing, stale, or mismatched |
+| `TDD_REPAIR_PENDING` | An incomplete repair operation blocks all TDD writers; details include `operationId`, `testId`, and `targetCycleId` |
+| `TDD_REPAIR_RESUME_INVALID` | The requested operation cannot be resumed because it is missing, completed, invalid, mismatched, or has incompatible partial projections |
+| `TDD_REPAIR_ABANDON_INVALID` | The operation is not an abandonable pending repair or conflicts with existing abandonment evidence |
 
 ## Workflow declaration correction extension
 

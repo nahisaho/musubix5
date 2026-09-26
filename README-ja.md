@@ -427,7 +427,8 @@ workflow証拠があれば`workflow`、TDD証拠があれば`tdd`が自動的に
   features/<slug>/
     requirements.md
     design.md
-    trace.json                 # 生成物。手動編集しない
+  trace/
+    index.json                 # commitするrepository-wide生成trace。手動編集しない
   decisions/ADR-0001.md
   evidence/
     quality.json                # 初期状態は skipped
@@ -439,7 +440,9 @@ workflow証拠があれば`workflow`、TDD証拠があれば`tdd`が自動的に
     model-correspondence.json   # Formal model→trace→fresh passing testの対応証拠
     mutation.json               # freshな要求scope mutation実行証拠
     attestation.json            # 任意の外部署名済みCI provenance
-  cache/                       # Git除外。索引とsolver入力
+  cache/
+    trace.json                 # trace/index.jsonのGit除外byte-identical mirror
+                               # その他の索引とsolver入力
 ```
 
 ### 要求・設計
@@ -542,10 +545,12 @@ doc commentはあるがレポートをadapterが照合できない場合はRed/G
 adapterの照合ルールを確認してください。
 実装網羅性は要求への直接リンク、
 または設計経由で判定し、テストは要求への直接リンクを必要とします。
-注釈はテストの正しさを証明しません。機能別 `trace.json` は機能横断の完全な
-スナップショット（nodes/edges/diagnostics/入力SHA-256）を保持します。
-キャッシュがあれば優先し、削除後は機能別ファイルを使用します。
-変更後は再生成が必要で、古いグラフでの影響分析は拒否します。
+注釈はテストの正しさを証明しません。`.musubix/trace/index.json` は機能横断の
+完全なrepository snapshot（nodes/edges/diagnostics/入力SHA-256）をcommitして保持し、
+`.musubix/cache/trace.json` はそのGit除外byte-identical fast-path mirrorです。
+cacheがあれば優先し、cacheなしではshared indexを使用します。移行期の
+`.musubix/features/*/trace.json` は次回のsuccessful buildで削除されるまでread-only
+fallbackとして扱います。変更後は再生成が必要で、古いグラフでの影響分析は拒否します。
 
 ### 憲章・設定
 
