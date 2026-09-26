@@ -72,6 +72,9 @@ describe('shared trace index persistence', () => {
       schemaVersion: 2,
       kind: 'repository-trace-index',
     });
+    expect(Object.keys(envelope)).toEqual([
+      'schemaVersion', 'kind', 'generatedAt', 'nodes', 'edges', 'diagnostics', 'fingerprints',
+    ]);
     expect(firstShared.equals(firstCache)).toBe(true);
     expect(readFileSync(sharedPath, 'utf8').endsWith('\n')).toBe(true);
     expect(analysis.traceOperationCounters.committedArtifactRewrites).toBe(1);
