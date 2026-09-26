@@ -826,10 +826,15 @@ export function assertCandidateCleanupSafe(state: CandidateCleanupState): void {
 async function git(
   root: string,
   args: string[],
-  options: { allowFailure?: boolean; timeoutMs?: number } = {},
+  options: { allowFailure?: boolean; timeoutMs?: number; preserveLf?: boolean } = {},
 ): Promise<string> {
   try {
-    const { stdout } = await execFileAsync('git', ['-C', root, ...args], {
+    const { stdout } = await execFileAsync('git', [
+      '-c', 'core.longpaths=true',
+      ...(options.preserveLf ? ['-c', 'core.autocrlf=false'] : []),
+      '-C', root,
+      ...args,
+    ], {
       encoding: 'utf8',
       maxBuffer: 20 * 1024 * 1024,
       timeout: options.timeoutMs ?? 30_000,
@@ -842,9 +847,14 @@ async function git(
   }
 }
 
-async function gitRaw(root: string, args: string[]): Promise<string> {
+async function gitRaw(root: string, args: string[], preserveLf = false): Promise<string> {
   try {
-    const { stdout } = await execFileAsync('git', ['-C', root, ...args], {
+    const { stdout } = await execFileAsync('git', [
+      '-c', 'core.longpaths=true',
+      ...(preserveLf ? ['-c', 'core.autocrlf=false'] : []),
+      '-C', root,
+      ...args,
+    ], {
       encoding: 'utf8',
       maxBuffer: 20 * 1024 * 1024,
       timeout: 30_000,
@@ -858,7 +868,11 @@ async function gitRaw(root: string, args: string[]): Promise<string> {
 
 async function gitSucceeds(root: string, args: string[]): Promise<boolean> {
   try {
-    await execFileAsync('git', ['-C', root, ...args], {
+    await execFileAsync('git', [
+      '-c', 'core.longpaths=true',
+      '-C', root,
+      ...args,
+    ], {
       encoding: 'utf8',
       maxBuffer: 20 * 1024 * 1024,
       timeout: 30_000,
@@ -1335,7 +1349,11 @@ export async function orchestrateCandidateIntegration(
     throw integrationError('CANDIDATE_INTEGRATION_CONFLICT', 'integration worktree already exists.');
   }
   await mkdir(dirname(worktreePath), { recursive: true });
-  await git(root, ['worktree', 'add', '--detach', worktreePath, resolved.startingDefaultCommit]);
+  await git(
+    root,
+    ['worktree', 'add', '--detach', worktreePath, resolved.startingDefaultCommit],
+    { preserveLf: true },
+  );
   try {
     for (const candidateId of resolved.analysis.applyOrder) {
       const candidate = resolved.candidates.find((entry) => entry.candidateId === candidateId)!;
@@ -1349,14 +1367,21 @@ export async function orchestrateCandidateIntegration(
         `${candidate.baseCommit}..${candidate.candidateCommit}`,
       ])).split(/\r?\n/).filter(Boolean);
       for (const commit of commits) {
-        await git(worktreePath, ['cherry-pick', commit]);
+        await git(worktreePath, ['cherry-pick', commit], { preserveLf: true });
       }
     }
-    if (await gitRaw(worktreePath, ['status', '--porcelain=v1', '-z', '--untracked-files=all'])) {
+    if (await gitRaw(
+      worktreePath,
+      ['status', '--porcelain=v1', '-z', '--untracked-files=all'],
+      true,
+    )) {
       throw integrationError('CANDIDATE_INTEGRATION_CONFLICT', 'integration worktree is dirty.');
     }
   } catch (cause) {
-    await git(worktreePath, ['cherry-pick', '--abort'], { allowFailure: true });
+    await git(worktreePath, ['cherry-pick', '--abort'], {
+      allowFailure: true,
+      preserveLf: true,
+    });
     await git(root, ['worktree', 'remove', '--force', worktreePath], { allowFailure: true });
     if (cause instanceof Error && cause.message.startsWith('CANDIDATE_')) throw cause;
     throw integrationError('CANDIDATE_INTEGRATION_CONFLICT', String(cause));
@@ -1500,13 +1525,17 @@ export async function finalizeCandidateIntegration(
         controlWorktreeRefreshed: currentDefault === marker.integrationCommit,
       });
       if (recovery.action !== 'retry-before-fast-forward') {
-        await git(root, ['reset', '--hard', marker.integrationCommit]);
+        await git(root, ['reset', '--hard', marker.integrationCommit], { preserveLf: true });
         const recovered: PersistedIntegrationAttempt = { ...attempt, state: 'integrated' };
         await persistAttemptUnderLease(root, recovered, 'integrated', transaction);
         await rm(markerPath, { force: true });
         return orchestrationResult(root, recovered, true);
       }
-      await git(attempt.worktreePath, ['reset', '--hard', marker.integrationCommit]);
+      await git(
+        attempt.worktreePath,
+        ['reset', '--hard', marker.integrationCommit],
+        { preserveLf: true },
+      );
       await rm(markerPath, { force: true });
       throw integrationError(
         'CANDIDATE_INTEGRATION_CONFLICT',
@@ -1528,7 +1557,7 @@ export async function finalizeCandidateIntegration(
 
   const baseline = await operationalStateFingerprint(root);
   await materializeOperationalState(root, attempt.worktreePath);
-  await git(attempt.worktreePath, ['add', '-A']);
+  await git(attempt.worktreePath, ['add', '-A'], { preserveLf: true });
   await git(attempt.worktreePath, [
     '-c',
     'user.name=musubix5',
@@ -1538,7 +1567,7 @@ export async function finalizeCandidateIntegration(
     '--allow-empty',
     '-m',
     `Integrate ${attempt.integrationId}`,
-  ]);
+  ], { preserveLf: true });
   const integrationCommit = await git(attempt.worktreePath, ['rev-parse', 'HEAD']);
   const materializedManifestSha256 = sha256(
     Buffer.from(await gitRaw(attempt.worktreePath, ['ls-tree', '-r', '-z', integrationCommit])),
@@ -1591,10 +1620,14 @@ export async function finalizeCandidateIntegration(
         await rm(markerPath, { force: true });
         throw integrationError('CANDIDATE_BASE_STALE', 'default branch compare-and-swap failed.');
       }
-      await git(root, ['reset', '--hard', integrationCommit]);
+      await git(root, ['reset', '--hard', integrationCommit], { preserveLf: true });
       if (releaseOwner) {
         await git(root, ['update-ref', `refs/heads/${releaseOwner.branch}`, integrationCommit]);
-        await git(resolve(commonDirectory, releaseOwner.worktreePath), ['reset', '--hard', integrationCommit]);
+        await git(
+          resolve(commonDirectory, releaseOwner.worktreePath),
+          ['reset', '--hard', integrationCommit],
+          { preserveLf: true },
+        );
       }
       const integrated: PersistedIntegrationAttempt = {
         ...attempt,
