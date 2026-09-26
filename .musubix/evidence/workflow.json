@@ -2160,13 +2160,41 @@
       "phase": "complete",
       "status": "completed",
       "recordedAt": "2026-09-26T01:48:13.724Z"
+    },
+    {
+      "skill": "sdd-change",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0014",
+      "generation": 1,
+      "requirementIds": [
+        "REQ-M5-COMPAT-013",
+        "REQ-M5-LIFECYCLE-005",
+        "REQ-M5-MULTI-CHANGE-001",
+        "REQ-M5-MULTI-CHANGE-002",
+        "REQ-M5-MULTI-CHANGE-003",
+        "REQ-M5-MULTI-CHANGE-004",
+        "REQ-M5-MULTI-CHANGE-005",
+        "REQ-M5-MULTI-CHANGE-006",
+        "REQ-M5-MULTI-CHANGE-007",
+        "REQ-M5-MULTI-CHANGE-008",
+        "REQ-M5-PARALLEL-010",
+        "REQ-M5-RELEASE-002",
+        "REQ-M5-WORKTREE-005",
+        "REQ-M5-WORKTREE-006",
+        "REQ-M5-WORKTREE-007"
+      ],
+      "phase": "complete",
+      "status": "failed",
+      "reason": "Release approval blocked by required Windows candidate gate failures tracked in #39 and #40.",
+      "recordedAt": "2026-09-26T02:19:01.122Z"
     }
   ],
   "verification": {
     "mode": "compatible",
-    "sourceSha256": "27a8c5291fd626d049fe2dc00689677c03954ad3453f729257ada56bb853e5f3",
-    "eventsSha256": "b4849953f63891521101f555bdbf31b79296e7c47a3a66ed3a4ce1c67329b694",
-    "verifiedAt": "2026-09-26T01:48:16.466Z",
+    "sourceSha256": "dd9a0a51305c50ba341c30ac135b3c52c2a712bff602ba0576fac2eb4191a6f3",
+    "eventsSha256": "e6f8653344bc2a53000dd760ac12a62442fc457a73c8c214dec63bf62ece5902",
+    "verifiedAt": "2026-09-26T02:19:03.731Z",
     "invocations": [
       {
         "skill": "sdd-change",
@@ -2264,6 +2292,27 @@
         "toolCallId": "call_T67VwhFHEHMWm4hFPGCMB1Ox",
         "invokedAt": "2026-09-26T01:41:27.683Z",
         "completedAt": "2026-09-26T01:41:27.698Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-implementation",
+        "toolCallId": "call_a6lSdgrCGDh2h2mrMvH9YOmq",
+        "invokedAt": "2026-09-26T01:55:58.027Z",
+        "completedAt": "2026-09-26T01:55:58.061Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-change",
+        "toolCallId": "call_SwjdY8INuJCHs2cy6w9bI7n3",
+        "invokedAt": "2026-09-26T02:07:06.231Z",
+        "completedAt": "2026-09-26T02:07:06.256Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-issue-report",
+        "toolCallId": "call_0v5CqBLFdWb4BsYjXfeqkwjb",
+        "invokedAt": "2026-09-26T02:18:16.611Z",
+        "completedAt": "2026-09-26T02:18:16.623Z",
         "status": "completed"
       }
     ]
