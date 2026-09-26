@@ -3661,13 +3661,38 @@
       "phase": "complete",
       "status": "completed",
       "recordedAt": "2026-09-26T19:17:31.534Z"
+    },
+    {
+      "skill": "sdd-change",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0015",
+      "generation": 3,
+      "requirementIds": [
+        "REQ-M5-COMPAT-013",
+        "REQ-M5-EVIDENCE-009",
+        "REQ-M5-MULTI-CHANGE-007",
+        "REQ-M5-WAVE1-CLEANUP-001",
+        "REQ-M5-WAVE1-CLEANUP-002",
+        "REQ-M5-WAVE1-EVIDENCE-001",
+        "REQ-M5-WAVE1-EVIDENCE-002",
+        "REQ-M5-WAVE1-NAMING-001",
+        "REQ-M5-WAVE1-PUBLISH-001",
+        "REQ-M5-WAVE1-TDD-001",
+        "REQ-M5-WAVE1-TDD-002",
+        "REQ-M5-WAVE1-TRACE-001",
+        "REQ-M5-WAVE1-TRACE-002"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-09-26T21:31:27.143Z"
     }
   ],
   "verification": {
     "mode": "compatible",
     "sourceSha256": "352f012c7e0b6059288bb7dbc75e65136a20ded3ee099deea480c1fbf16f3d94",
-    "eventsSha256": "f1c519182c0c0b57b034ee0e9818972f3d606eed951e10cdcdaaa4ff867fd53f",
-    "verifiedAt": "2026-09-26T20:31:13.529Z",
+    "eventsSha256": "4a33cc4170c65a598d7dfbb6f3543c839eabaa2d78b57615d36aa980cfb76b04",
+    "verifiedAt": "2026-09-26T21:41:12.187Z",
     "invocations": [
       {
         "skill": "sdd-change",
