@@ -37,6 +37,7 @@ import { classifyParallelTddEvidence } from './parallel-tdd-evidence.js';
 import { loadTddEvidence } from './tdd.js';
 import { selectCurrentTddCycle } from './tdd-cycle-resolver.js';
 import { listCandidateSnapshotRecords } from './workspace-manager.js';
+import { parsePorcelainV1Z } from './git-status.js';
 import {
   acquireChangeLease,
   appendJournalRecord,
@@ -390,6 +391,14 @@ async function git(cwd: string, args: string[], code = 'PARALLEL_WORKTREE_CONFLI
   return result.stdout.trim();
 }
 
+async function gitRaw(cwd: string, args: string[], code = 'PARALLEL_WORKTREE_CONFLICT'): Promise<string> {
+  const result = await gitResult(cwd, args);
+  if (result.status !== 'completed' || result.exitCode !== 0) {
+    domain(code, result.stderr.trim() || `git ${args.join(' ')} failed.`);
+  }
+  return result.stdout;
+}
+
 async function gitSucceeds(cwd: string, args: string[]): Promise<boolean> {
   const result = await gitResult(cwd, args);
   return result.status === 'completed' && result.exitCode === 0;
@@ -400,20 +409,11 @@ async function isClean(cwd: string): Promise<boolean> {
 }
 
 async function isCleanOutsidePaths(cwd: string, ignoredPaths: string[]): Promise<boolean> {
-  const output = await git(cwd, ['status', '--porcelain=v1', '-z', '--untracked-files=all']);
+  const output = await gitRaw(cwd, ['status', '--porcelain=v1', '-z', '--untracked-files=all']);
   if (!output) return true;
-  const entries = output.split('\0').filter(Boolean);
-  const changedPaths: string[] = [];
-  for (let index = 0; index < entries.length; index += 1) {
-    const entry = entries[index]!;
-    const status = entry.slice(0, 2);
-    changedPaths.push(portable(entry.slice(3)));
-    if (status.includes('R') || status.includes('C')) {
-      const destination = entries[index + 1];
-      if (destination) changedPaths.push(portable(destination));
-      index += 1;
-    }
-  }
+  const changedPaths = parsePorcelainV1Z(output)
+    .flatMap((entry) => [entry.path, entry.originalPath].filter((path): path is string => path !== undefined))
+    .map(portable);
   try {
     validateOwnedPaths(changedPaths, ignoredPaths, []);
     return true;
@@ -1139,7 +1139,7 @@ async function resultTreeEntries(
   root: string,
   head: string,
 ): Promise<Array<{ path: string; mode: string; type: string }>> {
-  const output = await git(root, ['ls-tree', '-r', '-z', head]);
+  const output = await gitRaw(root, ['ls-tree', '-r', '-z', head]);
   return output.split('\0').filter(Boolean).map((entry) => {
     const match = /^(\d{6}) ([^ ]+) [a-f0-9]+\t([\s\S]+)$/.exec(entry);
     if (!match) domain('PARALLEL_RESULT_UNVERIFIED', `cannot parse result tree entry ${entry}.`);
@@ -1787,7 +1787,7 @@ export async function recordParallelAssignmentResult(
   const commits = (await git(root, ['rev-list', '--reverse', `${current.startCommit}..${head}`]))
     .split(/\r?\n/).filter(Boolean);
   if (!commits.length) domain('PARALLEL_RESULT_UNVERIFIED', 'assignment result has no commits.');
-  const changedPaths = (await git(root, [
+  const changedPaths = (await gitRaw(root, [
     'diff-tree',
     '--root',
     '--no-commit-id',

@@ -4,6 +4,7 @@ import { dirname, relative, resolve, sep } from 'node:path';
 import { promisify } from 'node:util';
 import { canonicalBytes, canonicalRepositoryIdentity, sha256 } from './canonical.js';
 import { resolveChangeContext, type ChangeContextSelection } from './change-generation.js';
+import { parsePorcelainV1Z } from './git-status.js';
 import {
   acquireChangeLease,
   appendJournalRecord,
@@ -326,16 +327,13 @@ async function dirtyPathState(root: string, status: string, path: string): Promi
  */
 export async function captureDirtyState(root: string): Promise<DirtyState> {
   const output = await gitRaw(root, ['status', '--porcelain=v1', '-z', '--untracked-files=all']);
-  const entries = output.split('\0');
   const statuses = new Map<string, string>();
-  for (let index = 0; index < entries.length; index += 1) {
-    const entry = entries[index];
-    if (!entry || entry.length < 4) continue;
-    const status = entry.slice(0, 2);
-    const path = portable(entry.slice(3));
+  for (const entry of parsePorcelainV1Z(output)) {
+    const status = entry.status;
+    const path = portable(entry.path);
     if (!generatedStatePrefixes.some((prefix) => path.startsWith(prefix))) statuses.set(path, status);
-    if (/[RC]/.test(status)) {
-      const previous = portable(entries[++index] ?? '');
+    if (entry.originalPath) {
+      const previous = portable(entry.originalPath);
       if (previous && !generatedStatePrefixes.some((prefix) => previous.startsWith(prefix))) {
         statuses.set(previous, status);
       }
