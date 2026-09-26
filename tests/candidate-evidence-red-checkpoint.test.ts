@@ -1,3 +1,4 @@
+import { resolve } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import type { ChangeEvidence, ChangeFingerprints } from '../packages/analysis/src/change-evidence.js';
 
@@ -8,8 +9,8 @@ describe('candidate worktree Red checkpoints', () => {
    */
   it('TEST-M5-CANDIDATE-WORKSPACE-RED-CHECKPOINT-001 records source-root Red fingerprints only in control state', async () => {
     const { recordChangePhaseFromWorkspace } = await import('../packages/analysis/src/tdd.js');
-    const controlRoot = '/repository/control';
-    const sourceRoot = '/repository/assignment';
+    const controlRoot = resolve('repository', 'control');
+    const sourceRoot = resolve('repository', 'assignment');
     const designFingerprints: ChangeFingerprints = {
       impact: 'impact',
       requirements: 'requirements',

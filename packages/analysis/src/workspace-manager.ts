@@ -56,6 +56,7 @@ export interface RegisteredCandidateWorkspace {
   generation: number;
   repositoryId: string;
   creationEpoch: number;
+  identityBaseCommit?: string;
   baseCommit: string;
   candidateCommit: string;
   branch: string;
@@ -68,6 +69,12 @@ export interface RegisteredCandidateWorkspace {
 export interface RegisteredCandidateWorkspaceResult extends RegisteredCandidateWorkspace {
   replayed: boolean;
 }
+
+const candidateCreationKinds = new Set([
+  'candidate-workspace-prepared',
+  'candidate-workspace-active',
+  'candidate-workspace-deleted',
+]);
 
 interface CandidateWorkspaceRegistry {
   schemaVersion: 1;
@@ -257,6 +264,8 @@ async function loadCandidateWorkspaceRegistry(root: string): Promise<CandidateWo
       || !Number.isInteger(candidate.generation) || candidate.generation < 1
       || candidate.repositoryId !== registry.repositoryId
       || !Number.isInteger(candidate.creationEpoch) || candidate.creationEpoch < 1
+      || (candidate.identityBaseCommit !== undefined
+        && !/^[a-f0-9]{40,64}$/.test(candidate.identityBaseCommit))
       || !/^[a-f0-9]{40,64}$/.test(candidate.baseCommit)
       || !/^[a-f0-9]{40,64}$/.test(candidate.candidateCommit)
       || typeof candidate.branch !== 'string' || !candidate.branch
@@ -452,9 +461,22 @@ export async function createRegisteredCandidateWorkspace(
   if (!/^[a-f0-9]{40,64}$/.test(baseCommit)) {
     throw new Error('CANDIDATE_COMMIT_UNREACHABLE: candidate creation requires an immutable HEAD.');
   }
-  const creationEpoch = 1 + Math.max(0, ...(existingRegistry?.candidates
-    .filter((candidate) => candidate.changeId === changeId)
-    .map((candidate) => candidate.creationEpoch) ?? []));
+  const journal = await verifyJournal(root);
+  const priorCreationEpochs = journal.flatMap((record) => {
+    if (record.stream !== 'normal'
+      || record.changeId !== changeId
+      || !candidateCreationKinds.has(record.kind)) return [];
+    const payload = record.payload as {
+      repositoryId?: unknown;
+      creationEpoch?: unknown;
+    };
+    return payload.repositoryId === repositoryId
+      && Number.isInteger(payload.creationEpoch)
+      && Number(payload.creationEpoch) > 0
+      ? [Number(payload.creationEpoch)]
+      : [];
+  });
+  const creationEpoch = 1 + Math.max(0, ...priorCreationEpochs);
   const candidateId = `candidate:${sha256(canonicalBytes({
     schemaVersion: 1,
     repositoryId,
@@ -479,6 +501,7 @@ export async function createRegisteredCandidateWorkspace(
       generation: context.generation,
       repositoryId,
       creationEpoch,
+      identityBaseCommit: baseCommit,
       baseCommit,
       branch,
       worktreePath,
@@ -521,6 +544,7 @@ export async function createRegisteredCandidateWorkspace(
       generation: context.generation,
       repositoryId,
       creationEpoch,
+      identityBaseCommit: baseCommit,
       baseCommit,
       candidateCommit: baseCommit,
       branch,
@@ -536,6 +560,7 @@ export async function createRegisteredCandidateWorkspace(
     generation: context.generation,
     repositoryId,
     creationEpoch,
+    identityBaseCommit: baseCommit,
     baseCommit,
     candidateCommit: baseCommit,
     branch,

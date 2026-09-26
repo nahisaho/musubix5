@@ -132,4 +132,49 @@ describe('candidate workspace lifecycle', () => {
     expect(registry).toMatchObject({ schemaVersion: 1 });
     expect(registry.candidates).toHaveLength(2);
   });
+
+  /** @id TEST-M5-MULTI-CHANGE-CANDIDATE-EPOCH-001
+   * @verifies REQ-M5-MULTI-CHANGE-001
+   */
+  it('TEST-M5-MULTI-CHANGE-CANDIDATE-EPOCH-001 advances creation epoch beyond tombstones', async () => {
+    const root = initializeRepository();
+    const { canonicalBytes, canonicalRepositoryIdentity, sha256 } = await import(
+      '../packages/analysis/src/canonical.js'
+    );
+    const { appendJournalRecord } = await import('../packages/analysis/src/journal.js');
+    const { createRegisteredCandidateWorkspace } = await import(
+      '../packages/analysis/src/workspace-manager.js'
+    );
+    const repositoryId = canonicalRepositoryIdentity(
+      'https://github.com/example/musubix5.git',
+    );
+    const baseCommit = git(root, 'rev-parse', 'HEAD');
+    await appendJournalRecord(root, {
+      stream: 'normal',
+      changeId: 'CHANGE-0007',
+      kind: 'candidate-workspace-deleted',
+      idempotencyKey: 'candidate-workspace:deleted:epoch-7',
+      payload: {
+        schemaVersion: 1,
+        candidateId: `candidate:${'7'.repeat(64)}`,
+        changeId: 'CHANGE-0007',
+        generation: 3,
+        repositoryId,
+        creationEpoch: 7,
+        deletedBy: 'test',
+      },
+    });
+
+    const candidate = await createRegisteredCandidateWorkspace(root, 'CHANGE-0007');
+
+    expect(candidate.creationEpoch).toBe(8);
+    expect(candidate.candidateId).toBe(`candidate:${sha256(canonicalBytes({
+      schemaVersion: 1,
+      repositoryId,
+      changeId: 'CHANGE-0007',
+      generation: 4,
+      baseCommit,
+      creationEpoch: 8,
+    }))}`);
+  });
 });

@@ -1875,6 +1875,7 @@ export function createProgram(): Command {
               changeId: selected.changeId,
               generation: selected.generation,
               repositoryId: selected.repositoryId,
+              creationEpoch: selected.creationEpoch,
               deletedBy,
             }),
         }));

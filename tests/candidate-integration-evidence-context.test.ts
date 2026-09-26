@@ -2,7 +2,10 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { afterEach, describe, expect, it } from 'vitest';
-import { replaceCandidateRegistry } from '../packages/analysis/src/candidate-state.js';
+import {
+  integrationStateRoot,
+  replaceCandidateRegistry,
+} from '../packages/analysis/src/candidate-state.js';
 
 const roots: string[] = [];
 
@@ -71,12 +74,7 @@ describe('integration evidence context loader', () => {
         state: 'verified',
       }],
     });
-    const path = resolve(
-      root,
-      '.musubix/candidates/integrations',
-      integrationId,
-      'integration.json',
-    );
+    const path = resolve(integrationStateRoot(root, integrationId), 'integration.json');
     mkdirSync(resolve(path, '..'), { recursive: true });
     writeFileSync(path, JSON.stringify({
       schemaVersion: 1,

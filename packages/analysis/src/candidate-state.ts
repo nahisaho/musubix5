@@ -5,6 +5,7 @@ import {
   mkdir,
   open,
   readFile,
+  readdir,
   rename,
   rm,
   writeFile,
@@ -12,6 +13,15 @@ import {
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
 import { promisify } from 'node:util';
 import { canonicalBytes } from './canonical.js';
+import {
+  candidateFilesystemKey,
+  integrationFilesystemKey,
+  logicalOwnerFromFilesystemKey,
+} from './candidate-path.js';
+export {
+  candidateFilesystemKey,
+  integrationFilesystemKey,
+} from './candidate-path.js';
 import {
   acquireChangeLease,
   assertChangeLeaseCurrent,
@@ -57,6 +67,7 @@ export interface CandidateBinding {
 export interface CandidateRegistryEntry extends CandidateBinding {
   schemaVersion: 1;
   creationEpoch: number;
+  identityBaseCommit?: string;
   branch: string;
   worktreePath: string;
   state: CandidateLifecycleState;
@@ -229,7 +240,9 @@ function assertCandidateEntry(
     throw ownershipError('candidate repository owner does not match the registry.');
   }
   assertPositiveInteger(entry.creationEpoch, 'candidate creation epoch');
-  if (!commitPattern.test(entry.baseCommit) || !commitPattern.test(entry.candidateCommit)) {
+  if (!commitPattern.test(entry.baseCommit)
+    || !commitPattern.test(entry.identityBaseCommit ?? entry.baseCommit)
+    || !commitPattern.test(entry.candidateCommit)) {
     throw ownershipError('candidate commit binding is malformed.');
   }
   if (!entry.branch || entry.branch.includes('\0')) throw ownershipError('candidate branch is malformed.');
@@ -325,9 +338,9 @@ export function validateCandidateRegistry(value: unknown): CandidateRegistry {
 }
 
 export function candidateStateRoot(controlRoot: string, candidateId: string): string {
-  assertCandidateId(candidateId);
+  const key = candidateFilesystemKey(candidateId);
   const base = resolve(controlRoot, '.musubix', 'candidates');
-  const destination = resolve(base, candidateId);
+  const destination = resolve(base, key);
   if (relative(base, destination).startsWith('..')) {
     throw ownershipError('candidate state path escapes its partition.');
   }
@@ -365,10 +378,8 @@ export function routeCandidateState(
 }
 
 export function integrationStateRoot(controlRoot: string, integrationId: string): string {
-  if (!integrationIdPattern.test(integrationId)) {
-    throw ownershipError('integration ID is malformed.');
-  }
-  return resolve(controlRoot, '.musubix', 'candidates', 'integrations', integrationId);
+  const key = integrationFilesystemKey(integrationId);
+  return resolve(controlRoot, '.musubix', 'candidates', 'integrations', key);
 }
 
 export function isOperationalStatePath(path: string): boolean {
@@ -424,6 +435,53 @@ export async function readCandidateRegistry(root: string): Promise<CandidateRegi
     if ((cause as NodeJS.ErrnoException).code === 'ENOENT') return null;
     if (cause instanceof SyntaxError) throw ownershipError('candidate registry is not valid JSON.');
     throw cause;
+  }
+}
+
+export async function assertCanonicalCandidateStateMembers(root: string): Promise<void> {
+    const candidatesRoot = resolve(root, '.musubix', 'candidates');
+    let members;
+    try {
+      members = await readdir(candidatesRoot, { withFileTypes: true });
+    } catch (cause) {
+      if ((cause as NodeJS.ErrnoException).code === 'ENOENT') return;
+      throw cause;
+    }
+    const invalid: string[] = [];
+    for (const member of members) {
+      if (member.name === 'registry.json' && member.isFile()) continue;
+      if (/^registry\.json\.\d+-[a-f0-9-]+\.tmp$/.test(member.name) && member.isFile()) continue;
+      if (member.name === 'integrations' && member.isDirectory() && !member.isSymbolicLink()) continue;
+      try {
+        const owner = logicalOwnerFromFilesystemKey(member.name);
+        if (owner.startsWith('candidate:') && member.isDirectory() && !member.isSymbolicLink()) {
+          continue;
+        }
+      } catch {
+        // Report all noncanonical state members together.
+      }
+      invalid.push(member.name);
+    }
+    const integrationsRoot = resolve(candidatesRoot, 'integrations');
+    try {
+      for (const member of await readdir(integrationsRoot, { withFileTypes: true })) {
+        try {
+          const owner = logicalOwnerFromFilesystemKey(member.name);
+          if (owner.startsWith('integration:')
+            && member.isDirectory()
+            && !member.isSymbolicLink()) {
+            continue;
+          }
+        } catch {
+          // Report all noncanonical state members together.
+        }
+        invalid.push(`integrations/${member.name}`);
+      }
+    } catch (cause) {
+      if ((cause as NodeJS.ErrnoException).code !== 'ENOENT') throw cause;
+    }
+    if (invalid.length > 0) {
+      throw ownershipError(`candidate state contains noncanonical members: ${invalid.sort().join(', ')}.`);
   }
 }
 
@@ -876,6 +934,7 @@ export async function refreshCandidate(
     const candidateCommit = await git(worktree, ['rev-parse', 'HEAD^{commit}']);
     const updated: CandidateRegistryEntry = {
       ...candidate,
+      identityBaseCommit: candidate.identityBaseCommit ?? candidate.baseCommit,
       baseCommit: options.defaultCommit,
       candidateCommit,
       state: 'active',

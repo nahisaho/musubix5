@@ -1,6 +1,8 @@
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   assertCandidateBinding,
+  candidateFilesystemKey,
   candidateStateRoot,
   isOperationalStatePath,
   operationalStatePaths,
@@ -14,7 +16,7 @@ describe('candidate state ownership', () => {
     const candidateId = `candidate:${'a'.repeat(64)}`;
     const root = candidateStateRoot('/repo', candidateId);
 
-    expect(root).toBe(`/repo/.musubix/candidates/${candidateId}`);
+    expect(root).toBe(resolve('/repo', '.musubix', 'candidates', candidateFilesystemKey(candidateId)));
     expect(operationalStatePaths).toEqual([
       '.musubix/candidates',
       '.musubix/evidence',

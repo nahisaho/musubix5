@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { candidateFilesystemKey } from '../packages/analysis/src/candidate-state.js';
 
 const candidate = {
   repositoryId: 'repository:test',
@@ -39,7 +40,9 @@ describe('candidate and integration evidence binding', () => {
   it('TEST-M5-CANDIDATE-EVIDENCE-ISOLATION-001 isolates candidate projections while preserving repository compatibility paths', async () => {
     const approval = await import('../packages/analysis/src/approval.js');
     expect(approval.candidateEvidencePath(candidate, 'evidence/quality.json'))
-      .toBe(`.musubix/candidates/${candidate.candidateId}/evidence/quality.json`);
+      .toBe(
+        `.musubix/candidates/${candidateFilesystemKey(candidate.candidateId)}/evidence/quality.json`,
+      );
     expect(approval.candidateEvidencePath(null, 'evidence/quality.json'))
       .toBe('.musubix/evidence/quality.json');
     expect(() => approval.candidateEvidencePath(candidate, '../foreign.json'))

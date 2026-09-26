@@ -42,6 +42,48 @@
       "snapshotHash": "6cde40380e2f2d86dbc77bf685a79eedfe041de595bacd6c0190c1637f2183e0",
       "previousSha256": "6be1504d2b6584410ceeb6d5c21c77f15013c8a731cea9425d483b72ea29a4c7",
       "payloadSha256": "f4903d9054fe1b32b0e547e5e315e761259367e33504fa58e6491e03d408fd92"
+    },
+    {
+      "skill": "sdd-design",
+      "phase": "complete",
+      "declarationRecordedAt": "2026-09-26T03:18:49.957Z",
+      "code": "WORKFLOW_INVOCATION_REUSED",
+      "approver": "nahisaho",
+      "reason": "CHANGE-0014 continued across resumed Copilot sessions; preserved declarations are reconciled to the available sanitized session transcript and remaining historical one-to-one mismatches are explicitly waived.",
+      "waiverRecordedAt": "2026-09-26T04:37:54.136Z",
+      "sequence": 4,
+      "snapshotVersion": 1,
+      "snapshotHash": "57e18c9ca194ceaf5b5a3aa8f7c6e347c79224e6cbeedbd6472b723f82054e18",
+      "previousSha256": "f4903d9054fe1b32b0e547e5e315e761259367e33504fa58e6491e03d408fd92",
+      "payloadSha256": "551d24ed19e7cb044b70b563f1d53ddfd1de06303e28d189792e027bdd504231"
+    },
+    {
+      "skill": "sdd-formal-codegraph",
+      "phase": "complete",
+      "declarationRecordedAt": "2026-09-26T03:03:15.562Z",
+      "code": "WORKFLOW_SKILL_NOT_INVOKED",
+      "approver": "nahisaho",
+      "reason": "CHANGE-0014 continued across resumed Copilot sessions; preserved declarations are reconciled to the available sanitized session transcript and remaining historical one-to-one mismatches are explicitly waived.",
+      "waiverRecordedAt": "2026-09-26T04:37:54.137Z",
+      "sequence": 5,
+      "snapshotVersion": 1,
+      "snapshotHash": "e10952cc3302012f1c4fbde5cc87de7bc1ce0bdc59039af1a294d145690b47e6",
+      "previousSha256": "551d24ed19e7cb044b70b563f1d53ddfd1de06303e28d189792e027bdd504231",
+      "payloadSha256": "e74422783c0078a4225ea8e6a956e2121a950b09e971a5deae7f43b829eb0ac2"
+    },
+    {
+      "skill": "sdd-requirements",
+      "phase": "complete",
+      "declarationRecordedAt": "2026-09-26T02:59:59.404Z",
+      "code": "WORKFLOW_INVOCATION_REUSED",
+      "approver": "nahisaho",
+      "reason": "CHANGE-0014 continued across resumed Copilot sessions; preserved declarations are reconciled to the available sanitized session transcript and remaining historical one-to-one mismatches are explicitly waived.",
+      "waiverRecordedAt": "2026-09-26T04:37:54.137Z",
+      "sequence": 6,
+      "snapshotVersion": 1,
+      "snapshotHash": "d558f3d202ed2c4d3d1d45ce71adbd35eb60fdbab37c6372314fa8a7a04b8ea5",
+      "previousSha256": "e74422783c0078a4225ea8e6a956e2121a950b09e971a5deae7f43b829eb0ac2",
+      "payloadSha256": "2333af0e87626b1269293f1b99fef48abc1ca007e5e1297b88db9c68e445f18c"
     }
   ]
 }

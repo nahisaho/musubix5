@@ -1,5 +1,6 @@
 import { error, type Diagnostic } from '../../domain/src/index.js';
 import { canonicalBytes, sha256 } from './canonical.js';
+import { candidateFilesystemKey } from './candidate-path.js';
 
 export interface CandidateEvidenceContext {
   repositoryId: string;
@@ -190,7 +191,7 @@ export function candidateEvidencePath(
   if (!candidateIdentity.test(context.candidateId)) {
     throw new Error('CANDIDATE_STATE_OWNERSHIP: candidate identity is invalid.');
   }
-  return `.musubix/candidates/${context.candidateId}/${normalized}`;
+  return `.musubix/candidates/${candidateFilesystemKey(context.candidateId)}/${normalized}`;
 }
 
 export function preserveEvidenceDiagnostics(diagnostics: Diagnostic[]): Diagnostic[] {

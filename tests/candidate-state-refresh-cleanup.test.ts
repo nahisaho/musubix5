@@ -30,6 +30,7 @@ function initializeRepository(): {
   git(root, 'init', '--quiet', '--initial-branch', 'main');
   git(root, 'config', 'user.email', 'test@example.com');
   git(root, 'config', 'user.name', 'Test User');
+  git(root, 'config', 'core.autocrlf', 'false');
   writeFileSync(join(root, 'base.txt'), 'base\n');
   git(root, 'add', '.');
   git(root, 'commit', '--quiet', '-m', 'base');

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-26T02:07:34.763Z",
+  "generatedAt": "2026-09-26T04:53:35.871Z",
   "nodes": [
     {
       "id": "CODE-SESSION-SCOPED-DEVELOPMENT-001",
@@ -195,6 +195,12 @@
       "line": 1
     },
     {
+      "id": "ADR-0027",
+      "kind": "adr",
+      "path": ".musubix/decisions/ADR-0027.md",
+      "line": 1
+    },
+    {
       "id": "DES-M5-GRAPH-001",
       "kind": "design",
       "path": ".musubix/features/codegraph-performance/design.md",
@@ -230,55 +236,61 @@
       "id": "DES-M5-MULTI-CHANGE-001",
       "kind": "design",
       "path": ".musubix/features/multi-change-workspaces/design.md",
-      "line": 63
+      "line": 67
     },
     {
       "id": "DES-M5-MULTI-CHANGE-002",
       "kind": "design",
       "path": ".musubix/features/multi-change-workspaces/design.md",
-      "line": 71
+      "line": 75
     },
     {
       "id": "DES-M5-MULTI-CHANGE-003",
       "kind": "design",
       "path": ".musubix/features/multi-change-workspaces/design.md",
-      "line": 79
+      "line": 83
     },
     {
       "id": "DES-M5-MULTI-CHANGE-004",
       "kind": "design",
       "path": ".musubix/features/multi-change-workspaces/design.md",
-      "line": 87
+      "line": 91
     },
     {
       "id": "DES-M5-MULTI-CHANGE-005",
       "kind": "design",
       "path": ".musubix/features/multi-change-workspaces/design.md",
-      "line": 95
+      "line": 99
     },
     {
       "id": "DES-M5-MULTI-CHANGE-006",
       "kind": "design",
       "path": ".musubix/features/multi-change-workspaces/design.md",
-      "line": 103
+      "line": 107
     },
     {
       "id": "DES-M5-MULTI-CHANGE-007",
       "kind": "design",
       "path": ".musubix/features/multi-change-workspaces/design.md",
-      "line": 111
+      "line": 115
     },
     {
       "id": "DES-M5-MULTI-CHANGE-008",
       "kind": "design",
       "path": ".musubix/features/multi-change-workspaces/design.md",
-      "line": 119
+      "line": 123
     },
     {
       "id": "DES-M5-MULTI-CHANGE-009",
       "kind": "design",
       "path": ".musubix/features/multi-change-workspaces/design.md",
-      "line": 127
+      "line": 131
+    },
+    {
+      "id": "DES-M5-MULTI-CHANGE-010",
+      "kind": "design",
+      "path": ".musubix/features/multi-change-workspaces/design.md",
+      "line": 139
     },
     {
       "id": "REQ-M5-MULTI-CHANGE-001",
@@ -1324,13 +1336,13 @@
       "id": "CODE-M5-CANDIDATE-EVIDENCE-BINDING-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-evidence-binding.ts",
-      "line": 66
+      "line": 67
     },
     {
       "id": "CODE-M5-INTEGRATION-EVIDENCE-BINDING-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-evidence-binding.ts",
-      "line": 87
+      "line": 88
     },
     {
       "id": "CODE-M5-INTEGRATION-GATE-DIAGNOSTIC-001",
@@ -1348,55 +1360,61 @@
       "id": "CODE-M5-MULTI-CHANGE-INTEGRATION-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-integration.ts",
-      "line": 293
+      "line": 300
     },
     {
       "id": "CODE-M5-MULTI-CHANGE-INTEGRATION-EVIDENCE-CONTEXT-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-integration.ts",
-      "line": 938
+      "line": 960
     },
     {
       "id": "CODE-M5-MULTI-CHANGE-INTEGRATION-ORCHESTRATION-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-integration.ts",
-      "line": 1280
+      "line": 1302
+    },
+    {
+      "id": "CODE-M5-CANDIDATE-PATH-PORTABILITY-001",
+      "kind": "code",
+      "path": "packages/analysis/src/candidate-path.ts",
+      "line": 21
     },
     {
       "id": "CODE-M5-CANDIDATE-OWNERSHIP-PATHS-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-state.ts",
-      "line": 380
+      "line": 391
     },
     {
       "id": "CODE-M5-CANDIDATE-CONTEXT-E2E-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-state.ts",
-      "line": 503
+      "line": 561
     },
     {
       "id": "CODE-M5-CANDIDATE-READINESS-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-state.ts",
-      "line": 648
+      "line": 706
     },
     {
       "id": "CODE-M5-CANDIDATE-REFRESH-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-state.ts",
-      "line": 798
+      "line": 856
     },
     {
       "id": "CODE-M5-CANDIDATE-CLEANUP-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-state.ts",
-      "line": 908
+      "line": 967
     },
     {
       "id": "CODE-M5-CANDIDATE-STATE-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-state.ts",
-      "line": 1094
+      "line": 1153
     },
     {
       "id": "CODE-M5-REPOSITORY-IDENTITY-001",
@@ -1882,61 +1900,61 @@
       "id": "CODE-M5-WORKTREE-002",
       "kind": "code",
       "path": "packages/analysis/src/workspace-manager.ts",
-      "line": 314
+      "line": 323
     },
     {
       "id": "CODE-M5-WORKTREE-004",
       "kind": "code",
       "path": "packages/analysis/src/workspace-manager.ts",
-      "line": 342
+      "line": 351
     },
     {
       "id": "CODE-M5-WORKTREE-001",
       "kind": "code",
       "path": "packages/analysis/src/workspace-manager.ts",
-      "line": 376
+      "line": 385
     },
     {
       "id": "CODE-M5-MULTI-CHANGE-CANDIDATE-001",
       "kind": "code",
       "path": "packages/analysis/src/workspace-manager.ts",
-      "line": 427
+      "line": 436
     },
     {
       "id": "CODE-M5-WORKTREE-CANDIDATE-SNAPSHOT-001",
       "kind": "code",
       "path": "packages/analysis/src/workspace-manager.ts",
-      "line": 632
+      "line": 657
     },
     {
       "id": "CODE-M5-WORKTREE-SNAPSHOT-READ-001",
       "kind": "code",
       "path": "packages/analysis/src/workspace-manager.ts",
-      "line": 827
+      "line": 852
     },
     {
       "id": "CODE-M5-WORKTREE-SNAPSHOT-DELETE-001",
       "kind": "code",
       "path": "packages/analysis/src/workspace-manager.ts",
-      "line": 977
+      "line": 1002
     },
     {
       "id": "CODE-M5-RELEASE-DETACHED-SNAPSHOT-001",
       "kind": "code",
       "path": "packages/analysis/src/workspace-manager.ts",
-      "line": 1054
+      "line": 1079
     },
     {
       "id": "CODE-M5-WORKTREE-SNAPSHOT-MANIFEST-001",
       "kind": "code",
       "path": "packages/analysis/src/workspace-manager.ts",
-      "line": 1177
+      "line": 1202
     },
     {
       "id": "CODE-M5-WORKTREE-003",
       "kind": "code",
       "path": "packages/analysis/src/workspace-manager.ts",
-      "line": 1215
+      "line": 1240
     },
     {
       "id": "CODE-M5-MULTI-CHANGE-CLI-VERIFICATION-001",
@@ -1990,19 +2008,19 @@
       "id": "CODE-M5-BOOTSTRAP-CLI-001",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 2101
+      "line": 2102
     },
     {
       "id": "CODE-M5-CLI-ERROR-ENVELOPE-001",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 2184
+      "line": 2185
     },
     {
       "id": "CODE-M5-CLI-BIN-ENTRY-001",
       "kind": "code",
       "path": "packages/cli/src/main.ts",
-      "line": 2208
+      "line": 2209
     },
     {
       "id": "CODE-M5-COMPAT-006",
@@ -2170,37 +2188,37 @@
       "id": "TEST-M5-CANDIDATE-EVIDENCE-BINDING-001",
       "kind": "test",
       "path": "tests/candidate-evidence-binding.test.ts",
-      "line": 13
+      "line": 14
     },
     {
       "id": "TEST-M5-CANDIDATE-EVIDENCE-ISOLATION-001",
       "kind": "test",
       "path": "tests/candidate-evidence-binding.test.ts",
-      "line": 35
+      "line": 36
     },
     {
       "id": "TEST-M5-CANDIDATE-SINGLE-COMPAT-001",
       "kind": "test",
       "path": "tests/candidate-evidence-binding.test.ts",
-      "line": 49
+      "line": 52
     },
     {
       "id": "TEST-M5-INTEGRATION-DIAGNOSTICS-001",
       "kind": "test",
       "path": "tests/candidate-evidence-binding.test.ts",
-      "line": 64
+      "line": 67
     },
     {
       "id": "TEST-M5-INTEGRATION-EVIDENCE-BINDING-001",
       "kind": "test",
       "path": "tests/candidate-evidence-binding.test.ts",
-      "line": 96
+      "line": 99
     },
     {
       "id": "TEST-M5-CANDIDATE-WORKSPACE-CHECKPOINT-001",
       "kind": "test",
       "path": "tests/candidate-evidence-checkpoint.test.ts",
-      "line": 5
+      "line": 6
     },
     {
       "id": "TEST-M5-INTEGRATION-CONTEXT-GATE-001",
@@ -2224,7 +2242,7 @@
       "id": "TEST-M5-CANDIDATE-WORKSPACE-RED-CHECKPOINT-001",
       "kind": "test",
       "path": "tests/candidate-evidence-red-checkpoint.test.ts",
-      "line": 5
+      "line": 6
     },
     {
       "id": "TEST-M5-RELEASE-002-EOL-001",
@@ -2290,7 +2308,7 @@
       "id": "TEST-M5-MULTI-CHANGE-INTEGRATION-EVIDENCE-CONTEXT-001",
       "kind": "test",
       "path": "tests/candidate-integration-evidence-context.test.ts",
-      "line": 14
+      "line": 17
     },
     {
       "id": "TEST-M5-MULTI-CHANGE-INTEGRATION-FENCING-RECOVERY-001",
@@ -2345,6 +2363,12 @@
       "kind": "test",
       "path": "tests/candidate-integration-verification-exit.test.ts",
       "line": 4
+    },
+    {
+      "id": "TEST-M5-CANDIDATE-PATH-PORTABILITY-001",
+      "kind": "test",
+      "path": "tests/candidate-path-portability.test.ts",
+      "line": 12
     },
     {
       "id": "TEST-M5-WORKTREE-SNAPSHOT-MANIFEST-001",
@@ -2452,7 +2476,7 @@
       "id": "TEST-M5-CANDIDATE-STATE-CURRENT-001",
       "kind": "test",
       "path": "tests/candidate-state-current.test.ts",
-      "line": 4
+      "line": 5
     },
     {
       "id": "TEST-M5-CANDIDATE-STATE-LIFECYCLE-001",
@@ -2476,7 +2500,7 @@
       "id": "TEST-M5-MULTI-CHANGE-STATE-OWNERSHIP-001",
       "kind": "test",
       "path": "tests/candidate-state-ownership.test.ts",
-      "line": 10
+      "line": 12
     },
     {
       "id": "TEST-M5-CANDIDATE-READY-RESUME-001",
@@ -2488,7 +2512,7 @@
       "id": "TEST-M5-CANDIDATE-REFRESH-CLEANUP-001",
       "kind": "test",
       "path": "tests/candidate-state-refresh-cleanup.test.ts",
-      "line": 75
+      "line": 76
     },
     {
       "id": "TEST-M5-CANDIDATE-STATE-REGISTRY-001",
@@ -2531,6 +2555,12 @@
       "kind": "test",
       "path": "tests/candidate-workspace-lifecycle.test.ts",
       "line": 59
+    },
+    {
+      "id": "TEST-M5-MULTI-CHANGE-CANDIDATE-EPOCH-001",
+      "kind": "test",
+      "path": "tests/candidate-workspace-lifecycle.test.ts",
+      "line": 136
     },
     {
       "id": "TEST-M5-QUALITY-COMPLETENESS-001",
@@ -3849,6 +3879,11 @@
       "relation": "decides"
     },
     {
+      "from": "ADR-0027",
+      "to": "DES-M5-MULTI-CHANGE-002",
+      "relation": "decides"
+    },
+    {
       "from": "DES-M5-MULTI-CHANGE-002",
       "to": "DES-M5-003",
       "relation": "depends-on"
@@ -3861,6 +3896,11 @@
     {
       "from": "DES-M5-MULTI-CHANGE-002",
       "to": "DES-M5-012",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-MULTI-CHANGE-002",
+      "to": "DES-M5-MULTI-CHANGE-010",
       "relation": "depends-on"
     },
     {
@@ -4039,6 +4079,11 @@
       "relation": "decides"
     },
     {
+      "from": "ADR-0027",
+      "to": "DES-M5-MULTI-CHANGE-005",
+      "relation": "decides"
+    },
+    {
       "from": "DES-M5-MULTI-CHANGE-005",
       "to": "DES-M5-006",
       "relation": "depends-on"
@@ -4076,6 +4121,11 @@
     {
       "from": "DES-M5-MULTI-CHANGE-005",
       "to": "DES-M5-MULTI-CHANGE-002",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-MULTI-CHANGE-005",
+      "to": "DES-M5-MULTI-CHANGE-010",
       "relation": "depends-on"
     },
     {
@@ -4259,6 +4309,11 @@
       "relation": "decides"
     },
     {
+      "from": "ADR-0027",
+      "to": "DES-M5-MULTI-CHANGE-008",
+      "relation": "decides"
+    },
+    {
       "from": "DES-M5-MULTI-CHANGE-008",
       "to": "DES-M5-006",
       "relation": "depends-on"
@@ -4301,6 +4356,11 @@
     {
       "from": "DES-M5-MULTI-CHANGE-008",
       "to": "DES-M5-MULTI-CHANGE-007",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-MULTI-CHANGE-008",
+      "to": "DES-M5-MULTI-CHANGE-010",
       "relation": "depends-on"
     },
     {
@@ -4411,6 +4471,46 @@
     {
       "from": "DES-M5-MULTI-CHANGE-009",
       "to": "DES-M5-MULTI-CHANGE-008",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-MULTI-CHANGE-010",
+      "to": "REQ-M5-COMPAT-013",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-MULTI-CHANGE-010",
+      "to": "REQ-M5-CI-001",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-MULTI-CHANGE-010",
+      "to": "REQ-M5-MULTI-CHANGE-004",
+      "relation": "satisfies"
+    },
+    {
+      "from": "ADR-0007",
+      "to": "DES-M5-MULTI-CHANGE-010",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0025",
+      "to": "DES-M5-MULTI-CHANGE-010",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0026",
+      "to": "DES-M5-MULTI-CHANGE-010",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0027",
+      "to": "DES-M5-MULTI-CHANGE-010",
+      "relation": "decides"
+    },
+    {
+      "from": "DES-M5-MULTI-CHANGE-010",
+      "to": "DES-M5-012",
       "relation": "depends-on"
     },
     {
@@ -7259,6 +7359,16 @@
       "relation": "implements"
     },
     {
+      "from": "CODE-M5-CANDIDATE-PATH-PORTABILITY-001",
+      "to": "REQ-M5-MULTI-CHANGE-004",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-CANDIDATE-PATH-PORTABILITY-001",
+      "to": "DES-M5-MULTI-CHANGE-010",
+      "relation": "implements"
+    },
+    {
       "from": "CODE-M5-CANDIDATE-OWNERSHIP-PATHS-001",
       "to": "REQ-M5-MULTI-CHANGE-004",
       "relation": "implements"
@@ -9719,6 +9829,16 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-CANDIDATE-PATH-PORTABILITY-001",
+      "to": "REQ-M5-CI-001",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-CANDIDATE-PATH-PORTABILITY-001",
+      "to": "REQ-M5-MULTI-CHANGE-004",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-WORKTREE-SNAPSHOT-MANIFEST-001",
       "to": "REQ-M5-WORKTREE-005",
       "relation": "verifies"
@@ -9960,6 +10080,11 @@
     },
     {
       "from": "TEST-M5-MULTI-CHANGE-CANDIDATE-001",
+      "to": "REQ-M5-MULTI-CHANGE-001",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-MULTI-CHANGE-CANDIDATE-EPOCH-001",
       "to": "REQ-M5-MULTI-CHANGE-001",
       "relation": "verifies"
     },
@@ -11834,14 +11959,15 @@
     ".musubix/decisions/ADR-0022.md": "7c635784df01ac4a51b99feac2d34891416dcbea17d461e199f07daedf9d4a74",
     ".musubix/decisions/ADR-0023.md": "4308013a832dd1d2183b1eee79176e08da4b30501ada4fb66ac763bab08a10fe",
     ".musubix/decisions/ADR-0024.md": "dab62ae03853e1eb3a0fefdfcee64084b50fa87916e8893a9028f6eb95a88289",
-    ".musubix/decisions/ADR-0025.md": "3935050fe5dbf18cb9d0a0507943e72011e31c9145a9abf21492c6fedf847be7",
-    ".musubix/decisions/ADR-0026.md": "ce43c81711990e317b061642fe8d25ac937b770cee81ef4093809ec8e20e4827",
+    ".musubix/decisions/ADR-0025.md": "c522f520b830a28c51d21f0701cb0a5fd58b6b4f475a785af704a3c89c9098a3",
+    ".musubix/decisions/ADR-0026.md": "5e6c63c451a9ad8b30b83ffd4ba35934907f6a2403f72bfe75c9002fe171ae44",
+    ".musubix/decisions/ADR-0027.md": "4830cca5df82c633bc0d2a74cbe95f3fbab20976cab5eab8036326616b525404",
     ".musubix/features/codegraph-performance/design.md": "3ddf90dbb97a753644deb0e4dd38adaa27420273390a27b241612ef84f4c9c97",
     ".musubix/features/codegraph-performance/requirements.md": "a5eb96722cea36c4fab7f81a09d992b1cbce62b154c7b85eab35199817d551e1",
-    ".musubix/features/multi-change-workspaces/design.md": "d7b9c3477a4b3a333784a86d3d7004f0528fde7dd4dd1ae7f29309c5e3bed42d",
-    ".musubix/features/multi-change-workspaces/requirements.md": "763808e7abc7966f5611e827a363026067825e1dcf456c781d7f49e7622d8880",
+    ".musubix/features/multi-change-workspaces/design.md": "112b514f1846df8517feec9e966dadf4907efe945e8d5a48cbb2b29d97165e6f",
+    ".musubix/features/multi-change-workspaces/requirements.md": "1cd717f69580676fbaa792681fe51eb7bb5a863553d16ca20aa93f4ecd7dc985",
     ".musubix/features/musubix5-clean-foundation/design.md": "866a686fecf0bf726316593a1770ba7bd05f66f35a9ec39a44a5ac5d27edee46",
-    ".musubix/features/musubix5-clean-foundation/requirements.md": "3df9a035c805bbde98ac364fea202370db4ec1e7268c3c394d6aae2907133a74",
+    ".musubix/features/musubix5-clean-foundation/requirements.md": "600cc143bec911dded87fb9bcfc0f01804a45641d3175b0391289a221377bfc9",
     ".musubix/features/node24-github-actions/design.md": "a51859b2653b1b1885c9280b8fbba0efdbbc2692e2b4cddb60b6dd75a7217cb5",
     ".musubix/features/node24-github-actions/requirements.md": "32e775df8d7bbe3336b657a2516b93e3ec5bf3ca202506b96e159569dfe95c5b",
     ".musubix/features/parallel-agent-development/design.md": "2d3ee454f0f131cdd21a62932790fafa0b6edc3df68d43e473d74b294d1e8a5d",
@@ -11863,10 +11989,11 @@
     "packages/analysis/src/attestation.ts": "a062a7acd7b2c67c544dac10e401173157f560bb5dee70bdb0116e865e903f36",
     "packages/analysis/src/bootstrap-runner.ts": "4167b10f413af1cdc39858f16f94110e407b7778ca8c09d8c0179e497f52550e",
     "packages/analysis/src/budget-ledger.ts": "c7e4fa74032e066491708685359ca7115ab34c44a0d2af18337bd15a4da25590",
-    "packages/analysis/src/candidate-evidence-binding.ts": "cdc26fe7f454e56d50b11c025ff31b57e23458b7602414b887486f82ca7687da",
+    "packages/analysis/src/candidate-evidence-binding.ts": "b1a0f978e747939dcae508f8a91e1fd8a6681d98c6d3887b9ee43468cf7d307a",
     "packages/analysis/src/candidate-gate.ts": "038f6579e630f9571c97f396020d4955c2271df9e6af571847b00bf7c8994b01",
-    "packages/analysis/src/candidate-integration.ts": "68c7de46065785a51e7e7e8dc2f0e70c9e011484208fc63f297efd61a32af8c7",
-    "packages/analysis/src/candidate-state.ts": "c22a10f7ec77be17b4b654ba7b5dcf20882301e9c2e111e1b34ea0a2fc5ccdd4",
+    "packages/analysis/src/candidate-integration.ts": "3631482b4ba5a2cb22fce6ce80998c22d7d55b6f87d294bb02d1a3ed9e5b824c",
+    "packages/analysis/src/candidate-path.ts": "12be923afca597681dfae8edea1bb143f33d148ebb79bfbf5c0e4d2e0e8123b3",
+    "packages/analysis/src/candidate-state.ts": "8e53f2590f1d809a8351ab0a8b0eb17cdf3c2fb38420e4a4bb7f155b8faf9032",
     "packages/analysis/src/canonical.ts": "4135d7521ba529d61a695586a206e71081b4e300938a5ae160dcfda770e73195",
     "packages/analysis/src/change-evidence.ts": "349a7712d72ffecba2f7894b11302270d21b20dff1bf7303da2733b7aedb055a",
     "packages/analysis/src/change-generation.ts": "f97f773b39665aee35b81556c54beed0b2bb5c11fa770456753c0fc93bb5d3e2",
@@ -11879,7 +12006,7 @@
     "packages/analysis/src/formal.ts": "9f5622983fed80c1e7c141cc7c7dcd217447e5c2edd39e64877db052a57b730b",
     "packages/analysis/src/gate.ts": "3021e81e8985a52af0a92b7d24560acc0e1bfa296c3d9001cf41b8c5b2505550",
     "packages/analysis/src/graph.ts": "4de84f582a8da7ca24475354e0890600f34c7533f0c7af41346e879610ae4392",
-    "packages/analysis/src/index.ts": "bd53591f8efe7a41d400762473c66b009b8ddd5e10437ad26431c6991d4dead8",
+    "packages/analysis/src/index.ts": "98aeb852b39a9bb7be29b69ccad929af2fca863a4162d22785b729130f29fd13",
     "packages/analysis/src/journal.ts": "93846d232a4853efab07bfbe2e124c64ae4861cdf2e9cb100657a80bac5ba716",
     "packages/analysis/src/knowledge.ts": "31313a4519c711ac98648313059359daf69959403e39deb1509dea90840182b4",
     "packages/analysis/src/lifecycle.ts": "6dfcd2fd1915ea8edbc8d611da3d35aadd8a09581796c029e83d41a2a6fc7fc2",
@@ -11908,9 +12035,9 @@
     "packages/analysis/src/workflow-types.ts": "4fa0d85248bd9373eed4dc7043f1320c9b918f08fc8874dd982c528876b74783",
     "packages/analysis/src/workflow-waiver.ts": "77a93cc41b1a917bf08f8a26eacafc0ce32edcf3b3d90a2b5ccca5d792d014ac",
     "packages/analysis/src/workflow.ts": "be7453fb403d96dbc5943dfbdf8c027eda866a54599a937d345d685671794140",
-    "packages/analysis/src/workspace-manager.ts": "cb2f5168f0afdbaeca905e1b2deab464ef75750288d7a7561171bf494ebaf52b",
+    "packages/analysis/src/workspace-manager.ts": "f9dd06ed10f553503a125a22c6a8c5ee93260db1378fc65097a1da0476b80e33",
     "packages/cli/src/install.ts": "4b33a24e19958e2c88af806dc1261f4f4a74d6e56cb9fe95c0dabf7cc20cef7f",
-    "packages/cli/src/main.ts": "c2c8f54f42fc700d105f7955179b411017f81b301db0783a554eb86b401c81ee",
+    "packages/cli/src/main.ts": "8d21af5d3d7869f0f437a31fe82e275b20efa8ddbc363a157c185dcb300d788a",
     "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
     "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
     "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
@@ -11934,36 +12061,37 @@
     "tests/budget-limits.test.ts": "190f30d101797850227644e32cfffefba0b5f2606de21bfb606d6fbd4daa8742",
     "tests/budget-reservation.test.ts": "f7ee772c7546cba05001013d89cfce0fd692096fc9062e4e7e7c7ad1732def7c",
     "tests/budget-usage.test.ts": "45bf344f884740b91adfaf18a41830a72a3095a314aa71193a8750186752689f",
-    "tests/candidate-evidence-binding.test.ts": "9d891b7a692ce54519f70cfa81cb71edb617bb40e13c650f468f592db4cd22ff",
-    "tests/candidate-evidence-checkpoint.test.ts": "e4936824a45182b66612b6178e9fdc4145a8e9f2e9b9b4c7f4b60b71d7e5d3f6",
+    "tests/candidate-evidence-binding.test.ts": "600faef9b573be440d41f19e18ef9d8adcd6efb93f6d847fbe32f60cda106cbf",
+    "tests/candidate-evidence-checkpoint.test.ts": "29a854ac96c4806623d559b77d9fb717ec9c44b81763c207744ec84116de69f8",
     "tests/candidate-evidence-integration-context.test.ts": "13a051d2e571f0f7ed451ab9210e26155518ad4a2d645eb6f1a19f50c6c7c2fa",
     "tests/candidate-evidence-integration-status.test.ts": "0dea86cc49799d45497b4e703785e525171458aa171e464d8936d6c1ef485c14",
-    "tests/candidate-evidence-red-checkpoint.test.ts": "ccd1ad5432fa2fdcc14fcf6a2ea4c3c17b63b1f8659fe40adf5cf20340c9b768",
+    "tests/candidate-evidence-red-checkpoint.test.ts": "6e4a0082b3fb95999db915c83777fbb2ae8c8a0990b122d65d385c6a054f60c9",
     "tests/candidate-gate-eol.test.ts": "db72054d71bb5bb2cb986c7a5ccb7b31d714b6c863e5901fd7d1fe723e8a1ad4",
     "tests/candidate-gate-trust.test.ts": "67839542db934c1e1658aab3e15899df189c9ba4f7c23170dc18de1d3c9b9a42",
     "tests/candidate-gate.test.ts": "0bf94156513d2774b42dfb2e9089305dedb724dea72179e6c289b8293efc2939",
     "tests/candidate-integration-dependencies.test.ts": "cf7b57b88909268baceb4d17eb0a5acab080011e20c37739746502d7758e5553",
     "tests/candidate-integration-determinism.test.ts": "72dd197925de5226dcacae00cac1187b9cf1cdbeb7970b199849e2113ae185f6",
-    "tests/candidate-integration-evidence-context.test.ts": "589b2d3df1e01113ab52410afda8b13a475848772187b5c9fa0032648c0f61e2",
+    "tests/candidate-integration-evidence-context.test.ts": "851dca5786e5778387e570b1c44b3280c7fa90e27c728c7ceef0e75187fef88a",
     "tests/candidate-integration-fencing-recovery.test.ts": "dd3b3961da100beba413ce1de1716ea830dd63177cf4ccae3d1c761fdcc289a5",
     "tests/candidate-integration-orchestration.test.ts": "e65aa1f78ce127fbc9020ad9a1af5bcd9b197f0c22b5cd184d9dcf35dae5d0fa",
     "tests/candidate-integration-recovery.test.ts": "3993ea88f2df57c3967e8363335d476260a26b30c55eb1b45cd2a2fb2e8abf52",
     "tests/candidate-integration-review-regressions.test.ts": "db43a92f9a99e3ad749a7fd91e09d1e8e67a9274944e5c654df4eac92e0fb6e0",
     "tests/candidate-integration-verification-exit.test.ts": "6e61bddcd25eaf638449bdff8d2b7106023f84c44be5475ba23d2b4db72af1eb",
+    "tests/candidate-path-portability.test.ts": "a48146572d8c4967fd16bbc24be0ea0faf05d3f33210e2ad1d0528985e62f953",
     "tests/candidate-snapshot-lifecycle.test.ts": "1a7edd521f0718b7fd95271c5f0c1e554a80ca49330c88cb2cb8a7b95945e171",
     "tests/candidate-snapshot-repository-binding.test.ts": "17b1d63cacfb98061293bae8c4fb1218cc27f5576b1c67e73d529b511a936b28",
     "tests/candidate-state-context.test.ts": "e1aee8c5114fd144abce621fa04816dc7cafa297cf1d6f9505564e7d3498adf4",
-    "tests/candidate-state-current.test.ts": "4debfee5c88c10d30e9d77cad5cae1b2bec0b0f29162d7dbf3079794be1f005b",
+    "tests/candidate-state-current.test.ts": "141ed03ca18c918f1f007967d3054f1b109bfd4b8305c92cb8ca1a2ba42bf4c1",
     "tests/candidate-state-lifecycle.test.ts": "38c00e9750cdfa648a4a359cf223015c03a8cb6d2ed94dad025cb11724461b40",
     "tests/candidate-state-ownership-routing.test.ts": "377ab36d58be8a2798bf3080e47e1265dbd0bed950bef102ee0cfceac4d81381",
-    "tests/candidate-state-ownership.test.ts": "70b87ced3399ce3c5a024a8f8604c70db1d85887fea19ca47f7665ae95d64cf1",
+    "tests/candidate-state-ownership.test.ts": "9ff3ea8d689ac4c04f421db3f411e1c9c789d2533953f169bbbe1d7602db3528",
     "tests/candidate-state-readiness.test.ts": "297234a5c521616857501de3abde6fdac98c999e16aced66230d21aff66fa20d",
-    "tests/candidate-state-refresh-cleanup.test.ts": "d0e90e980fd2350018d7ab57b6f682e98964bd25bea7f2c0fba9e5fae4d3eb0a",
+    "tests/candidate-state-refresh-cleanup.test.ts": "4ae9e7c08ba77a8cd1c553797ebda3e953dc6e2626afae20a79f0b9a0a4aadb2",
     "tests/candidate-state-registry.test.ts": "23a259b0f76b02bba507084cc84f8ab008964c848f468d17c8afdab91b1d5106",
     "tests/candidate-workspace-cli-lifecycle.test.ts": "b8c017ec845b65253a6d410535e1c4b380bab4dc38045988ea76dcf4544ad1c7",
     "tests/candidate-workspace-cli-safety.test.ts": "9875263becf3411072f1d11bd0431715bbe11f3341a6a5e3cc6241b5bbfb3067",
     "tests/candidate-workspace-context.test.ts": "73228d2e89700f838c32dcd0ff72788d60a44f0aa7adb24a3b7f783be4777680",
-    "tests/candidate-workspace-lifecycle.test.ts": "ccaf3c0d528c2f3fa4eee1cc777953a9d2c8e90796e8f13bc8715c4a0a37454e",
+    "tests/candidate-workspace-lifecycle.test.ts": "a86d4681f622a2ad499dfe35170f7ef0eee512e399f526a6a9d1d254d1c05fde",
     "tests/change-completeness-current.test.ts": "0c57842880dd7f10cabdae01c8f9f5a5cbdf19f1ce19c3fd0d39deddd35c3ca6",
     "tests/change-current-evidence.test.ts": "c99fdd1c6899a96367bcd99714871aff4fef962d2996b85d19c85d7fd1503bec",
     "tests/change-generation-binding.test.ts": "8ee76fba7e222d5c1d109d4ba333d7c9007461ac1cb5caea80ec068bb8ad1d56",

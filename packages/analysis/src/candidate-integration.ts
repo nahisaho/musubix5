@@ -13,6 +13,13 @@ import { dirname, relative, resolve, sep } from 'node:path';
 import { promisify } from 'node:util';
 import { canonicalBytes, sha256 } from './canonical.js';
 import {
+  integrationWorktreeRelativePath,
+  logicalOwnerFromFilesystemKey,
+  normalizeCandidatePathError,
+} from './candidate-path.js';
+import {
+  assertCanonicalCandidateStateMembers,
+  integrationStateRoot,
   isOperationalStatePath,
   readCandidateRegistry,
   replaceCandidateRegistry,
@@ -866,36 +873,31 @@ async function gitCommonDirectory(root: string): Promise<string> {
   return resolve(root, await git(root, ['rev-parse', '--git-common-dir']));
 }
 
-function integrationRelativePath(integrationId: string): string {
-  return `musubix5/workspaces/integrations/${integrationId.slice('integration:'.length)}`;
+function integrationRecordPath(root: string, integrationId: string): string {
+  return resolve(integrationStateRoot(root, integrationId), 'integration.json');
 }
 
-function integrationRecordPath(root: string, integrationId: string): string {
-  return resolve(
-    root,
-    '.musubix',
-    'candidates',
-    'integrations',
-    integrationId,
-    'integration.json',
-  );
-}
+export { integrationWorktreeRelativePath };
 
 async function writeCanonicalJson(path: string, value: unknown): Promise<void> {
-  await mkdir(dirname(path), { recursive: true });
-  const temporary = `${path}.${process.pid}.tmp`;
-  const handle = await open(temporary, 'wx');
   try {
-    await handle.writeFile(canonicalBytes(value));
-    await handle.sync();
-  } finally {
-    await handle.close();
-  }
-  try {
-    await rename(temporary, path);
+    await mkdir(dirname(path), { recursive: true });
+    const temporary = `${path}.${process.pid}.tmp`;
+    const handle = await open(temporary, 'wx');
+    try {
+      await handle.writeFile(canonicalBytes(value));
+      await handle.sync();
+    } finally {
+      await handle.close();
+    }
+    try {
+      await rename(temporary, path);
+    } catch (cause) {
+      await rm(temporary, { force: true });
+      throw cause;
+    }
   } catch (cause) {
-    await rm(temporary, { force: true });
-    throw cause;
+    throw normalizeCandidatePathError(cause);
   }
 }
 
@@ -925,8 +927,28 @@ async function listIntegrationAttempts(root: string): Promise<PersistedIntegrati
     const entries = await readdir(directory, { withFileTypes: true });
     const attempts: PersistedIntegrationAttempt[] = [];
     for (const entry of entries.sort((left, right) => byteCompare(left.name, right.name))) {
-      if (!entry.isDirectory() || !integrationIdPattern.test(entry.name)) continue;
-      attempts.push(await readIntegrationAttempt(root, entry.name));
+      if (!entry.isDirectory() || entry.isSymbolicLink()) {
+        throw integrationError(
+          'CANDIDATE_STATE_OWNERSHIP',
+          `integration state member ${entry.name} is not a canonical directory.`,
+        );
+      }
+      let integrationId: string;
+      try {
+        integrationId = logicalOwnerFromFilesystemKey(entry.name);
+      } catch {
+        throw integrationError(
+          'CANDIDATE_STATE_OWNERSHIP',
+          `integration state member ${entry.name} is not canonical.`,
+        );
+      }
+      if (!integrationIdPattern.test(integrationId)) {
+        throw integrationError(
+          'CANDIDATE_STATE_OWNERSHIP',
+          `integration state member ${entry.name} has another owner type.`,
+        );
+      }
+      attempts.push(await readIntegrationAttempt(root, integrationId));
     }
     return attempts;
   } catch (cause) {
@@ -1307,7 +1329,7 @@ export async function orchestrateCandidateIntegration(
   }
 
   const commonDirectory = await gitCommonDirectory(root);
-  const worktreeRelativePath = integrationRelativePath(identity.integrationId);
+  const worktreeRelativePath = integrationWorktreeRelativePath(identity.integrationId);
   const worktreePath = resolve(commonDirectory, worktreeRelativePath);
   if (await lstat(worktreePath).then(() => true, () => false)) {
     throw integrationError('CANDIDATE_INTEGRATION_CONFLICT', 'integration worktree already exists.');
@@ -1392,6 +1414,7 @@ async function operationalStateFingerprint(root: string): Promise<string> {
 }
 
 async function materializeOperationalState(controlRoot: string, integrationRoot: string): Promise<void> {
+  await assertCanonicalCandidateStateMembers(controlRoot);
   for (const path of ['.musubix/candidates', '.musubix/evidence', '.musubix/journal']) {
     const source = resolve(controlRoot, path);
     const destination = resolve(integrationRoot, path);

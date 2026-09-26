@@ -13,7 +13,8 @@ Requirements: REQ-M5-COMPAT-013 REQ-M5-LIFECYCLE-005 REQ-M5-WORKTREE-005 REQ-M5-
 Feature and behavior change. GitHub Issue #5 requires independent candidate
 workspaces and evidence contexts for multiple concurrently active CHANGE
 documents while preserving fail-closed repository-wide integration and release
-behavior.
+behavior. Issue #39 blocks that behavior on Windows because logical identities
+contain a colon that cannot be used as a Windows directory component.
 
 ## Confirmed intent
 
@@ -41,6 +42,15 @@ behavior.
   `REQ-M5-WORKTREE-007`, `REQ-M5-RELEASE-002`, and `REQ-M5-PARALLEL-010`
   so explicit candidate contexts are valid while implicit mixed-CHANGE
   operations remain fail-closed.
+- Amend `REQ-M5-MULTI-CHANGE-004` so
+  logical candidate and integration identities remain unchanged in evidence
+  while every persisted directory component uses one deterministic
+  Windows-safe filesystem key.
+- Treat #40 as a conformance defect against the existing Node.js 24
+  Ubuntu/Windows/macOS verification matrix in `REQ-M5-CI-001`; it changes
+  tests, not normative behavior.
+- Resolve #39 through `REQ-M5-MULTI-CHANGE-004` without changing logical
+  candidate/integration identities.
 
 ## Expected design impact
 
@@ -52,6 +62,9 @@ behavior.
   and a common candidate selector used by approval, TDD, gate, and status
   surfaces.
 - Record ADRs for state routing and deterministic integration ownership.
+- Define one canonical logical-ID-to-filesystem-key encoder, platform-native
+  in-process path forms, persisted path forms, invalid-directory rejection,
+  and the no-legacy-fallback policy.
 
 ## Expected implementation impact
 
@@ -67,6 +80,10 @@ behavior.
 - Add pre-integration conflict/dependency checks and clean integration
   verification.
 - Add fail-closed resume and cleanup behavior.
+- Centralize candidate/integration filesystem-key encoding without legacy
+  fallback and without changing logical IDs or public CLI output.
+- Replace POSIX-only absolute-path and LF assumptions in candidate tests with
+  platform-native path construction and deterministic Git fixture settings.
 
 ## Expected verification
 
@@ -77,6 +94,14 @@ behavior.
 - Integration reruns all configured commands, strict trace, graph gate, changed
   gate, and status in a clean integration worktree.
 - Existing single-CHANGE and in-CHANGE parallel tests remain passing.
+- Node.js 24 Ubuntu, Windows, and macOS jobs create, resume, materialize,
+  commit, and freshly check out encoded candidate/integration state paths.
+- Byte-sensitive Git fixtures use repository-equivalent LF attributes or
+  disable checkout conversion; platform-native absolute paths are asserted
+  with path APIs rather than POSIX literals.
+- #39/#40 regression tests trace to the existing `REQ-M5-CI-001` three-OS
+  matrix and to `REQ-M5-MULTI-CHANGE-004` where they assert encoded state
+  paths.
 
 ## Residual risks
 

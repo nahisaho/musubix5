@@ -1,3 +1,4 @@
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 describe('candidate state router', () => {
@@ -6,7 +7,12 @@ describe('candidate state router', () => {
    * @verifies REQ-M5-LIFECYCLE-005 REQ-M5-WORKTREE-005 REQ-M5-WORKTREE-006 REQ-M5-WORKTREE-007
    */
   it('TEST-M5-CANDIDATE-STATE-CURRENT-001 preserves source and shared-state ownership', async () => {
-    const { routeCandidateState } = await import('../packages/analysis/src/candidate-state.js');
+    const {
+      candidateFilesystemKey,
+      routeCandidateState,
+    } = await import('../packages/analysis/src/candidate-state.js');
+    const controlRoot = resolve('control');
+    const sourceRoot = resolve('source');
     const candidate = {
       schemaVersion: 1 as const,
       candidateId: `candidate:${'1'.repeat(64)}`,
@@ -24,11 +30,16 @@ describe('candidate state router', () => {
       dependencyIds: [],
     };
 
-    expect(routeCandidateState('/control', '/source', candidate)).toEqual({
+    expect(routeCandidateState(controlRoot, sourceRoot, candidate)).toEqual({
       kind: 'candidate',
-      sourceRoot: '/source',
-      controlRoot: '/control',
-      projectionRoot: `/control/.musubix/candidates/${candidate.candidateId}`,
+      sourceRoot,
+      controlRoot,
+      projectionRoot: resolve(
+        controlRoot,
+        '.musubix',
+        'candidates',
+        candidateFilesystemKey(candidate.candidateId),
+      ),
       binding: {
         candidateId: candidate.candidateId,
         changeId: 'CHANGE-0014',
