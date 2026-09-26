@@ -16,11 +16,16 @@ import {
   isOperationalStatePath,
   readCandidateRegistry,
   replaceCandidateRegistry,
+  withMultiChangeWrite,
   type CandidateLifecycleState,
   type CandidateRegistry,
   type CandidateRegistryEntry,
 } from './candidate-state.js';
-import { appendJournalRecord } from './journal.js';
+import {
+  appendJournalRecord,
+  type JournalRecord,
+  type JournalRecordInput,
+} from './journal.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -109,6 +114,8 @@ export interface VerificationMember {
 }
 
 export interface ClosedIntegrationVerification {
+  requiredCommandNames?: string[];
+  requiredCheckNames?: string[];
   requiredCommands: VerificationMember[];
   requiredChecks: VerificationMember[];
   status: {
@@ -162,6 +169,8 @@ export interface IntegrationOrchestrationInput {
   controlRoot: string;
   selectors: string[];
   verify(context: IntegrationVerificationContext): Promise<ClosedIntegrationVerification>;
+  transaction?: IntegrationTransactionAdapter;
+  liveFencingToken?: number;
 }
 
 export interface IntegrationOrchestrationResult extends IntegrationVerificationContext {
@@ -173,12 +182,33 @@ export interface IntegrationOrchestrationResult extends IntegrationVerificationC
 export interface FinalizeCandidateIntegrationInput {
   controlRoot: string;
   integrationId: string;
+  transaction?: IntegrationTransactionAdapter;
+  liveFencingToken?: number;
 }
 
 export interface CleanupCandidateIntegrationInput {
   controlRoot: string;
   integrationId: string;
   deletedBy: string;
+  transaction?: IntegrationTransactionAdapter;
+  inspect?: CleanupInspectionAdapter;
+}
+
+export interface IntegrationTransactionAdapter {
+  run(
+    changeIds: readonly string[],
+    operation: () => Promise<any>,
+  ): Promise<any>;
+  append?(root: string, input: JournalRecordInput): Promise<JournalRecord>;
+}
+
+export interface CleanupInspectionAdapter {
+  (): Promise<{
+    porcelainZ: string;
+    unresolvedEntries: string;
+    candidateReachableFromBase: boolean;
+    liveLease: boolean;
+  }>;
 }
 
 export interface IntegrationTombstone {
@@ -197,6 +227,8 @@ interface PersistedIntegrationAttempt extends IntegrationAttempt {
   worktreePath: string;
   releaseOwnerCandidateId: string;
   verifiedReportSha256?: string;
+  materializedManifestSha256?: string;
+  releaseOwnerPreviousCommit?: string;
   tombstone?: IntegrationTombstone;
 }
 
@@ -349,18 +381,22 @@ export function analyzeCandidateIntegration(
   };
 }
 
-export function deriveIntegrationIdentity(input: {
+export function deriveIntegrationIdentity<Candidate extends IntegrationIdentityCandidate>(input: {
   repositoryId: string;
   startingDefaultCommit: string;
-  candidates: readonly IntegrationIdentityCandidate[];
+  candidates: readonly Candidate[];
 }): IntegrationIdentity {
   if (!repositoryIdPattern.test(input.repositoryId)
     || !commitPattern.test(input.startingDefaultCommit)
     || input.candidates.length === 0) {
     throw integrationError('CANDIDATE_INTEGRATION_CONFLICT', 'integration identity input is invalid.');
   }
-  const candidates = [...input.candidates].sort((left, right) =>
-    byteCompare(left.candidateId, right.candidateId));
+  const candidates = input.candidates.map((candidate) => ({
+    changeId: candidate.changeId,
+    generation: candidate.generation,
+    candidateId: candidate.candidateId,
+    candidateCommit: candidate.candidateCommit,
+  })).sort((left, right) => byteCompare(left.candidateId, right.candidateId));
   if (new Set(candidates.map((candidate) => candidate.candidateId)).size !== candidates.length
     || candidates.some((candidate) =>
       !candidateIdPattern.test(candidate.candidateId)
@@ -380,6 +416,28 @@ export function deriveIntegrationIdentity(input: {
     integrationId: `integration:${sha256(canonicalBytes(identityInput))}`,
     ...identityInput,
   };
+}
+
+export function validateReadyDependencyBindings(
+  candidate: Pick<IntegrationCandidate, 'candidateId' | 'dependencies'>,
+  available: readonly IntegrationIdentityCandidate[],
+): void {
+  const commits = new Map(available.map((entry) => [entry.candidateId, entry.candidateCommit]));
+  for (const dependency of candidate.dependencies) {
+    const currentCommit = commits.get(dependency.candidateId);
+    if (currentCommit === undefined) {
+      throw integrationError(
+        'CANDIDATE_DEPENDENCY_UNSATISFIED',
+        `${candidate.candidateId} dependency is not available.`,
+      );
+    }
+    if (currentCommit !== dependency.candidateCommit) {
+      throw integrationError(
+        'CANDIDATE_BASE_STALE',
+        `${candidate.candidateId} dependency commit changed after readiness.`,
+      );
+    }
+  }
 }
 
 export function integrationSourceManifest(
@@ -435,6 +493,23 @@ export function validateClosedIntegrationVerification(
     || verification.requiredCommands.some((command) => command.status !== 'passed')) {
     return fail();
   }
+  const hasExactSet = (
+    expected: readonly string[] | undefined,
+    actual: readonly VerificationMember[],
+  ): boolean => {
+    if (!expected) return true;
+    return expected.length === actual.length
+      && [...expected].sort(byteCompare)
+        .every((name, index) => name === actual.map((entry) => entry.name).sort(byteCompare)[index]);
+  };
+  if (!hasExactSet(verification.requiredCommandNames, verification.requiredCommands)
+    || !hasExactSet(verification.requiredCheckNames, verification.requiredChecks)
+    || new Set(verification.requiredCommands.map((entry) => entry.name)).size
+      !== verification.requiredCommands.length
+    || new Set(verification.requiredChecks.map((entry) => entry.name)).size
+      !== verification.requiredChecks.length) {
+    return fail();
+  }
   const failed = verification.requiredChecks.filter((check) => check.status === 'failed');
   if (verification.requiredChecks.some((check) => check.status === 'skipped')) return fail();
   if (failed.length === 0) {
@@ -485,6 +560,79 @@ export function planIntegrationResume(
   );
 }
 
+export function deriveResumeIdentity(
+  identityInput: Parameters<typeof deriveIntegrationIdentity>[0],
+  attempt: IntegrationAttempt,
+  strict = false,
+): string {
+  const derived = deriveIntegrationIdentity(identityInput).integrationId;
+  if (strict && derived !== attempt.integrationId) {
+    throw integrationError(
+      'CANDIDATE_INTEGRATION_CONFLICT',
+      'persisted integration identity does not match current immutable inputs.',
+    );
+  }
+  return strict ? derived : attempt.integrationId;
+}
+
+export function planTerminalAttemptResolution(
+  state: IntegrationAttempt['state'],
+): { action: 'reject'; code: 'CANDIDATE_INTEGRATION_CONFLICT' }
+  | { action: 'return'; state: 'integrated' } {
+  return state === 'integrated'
+    ? { action: 'return', state }
+    : { action: 'reject', code: 'CANDIDATE_INTEGRATION_CONFLICT' };
+}
+
+export function validateFinalizationMarker(input: {
+  attempt: IntegrationAttempt;
+  marker: CandidateFinalizationMarker;
+  liveFencingToken: number;
+  integrationCommitReachable: boolean;
+}): void {
+  const { attempt, marker } = input;
+  if (!attempt.integrationCommit
+    || marker.schemaVersion !== 1
+    || marker.kind !== 'candidate-finalization-v1'
+    || marker.integrationId !== attempt.integrationId
+    || marker.integrationCommit !== attempt.integrationCommit
+    || marker.startingDefaultCommit !== attempt.startingDefaultCommit
+    || marker.fencingToken !== input.liveFencingToken
+    || !input.integrationCommitReachable) {
+    throw integrationError(
+      'CANDIDATE_INTEGRATION_CONFLICT',
+      'finalization marker is not bound to the live lease and persisted integration.',
+    );
+  }
+}
+
+export function planCompareAndSwapFailure(
+  candidateIds: readonly string[],
+  _reason: string,
+): {
+  code: 'CANDIDATE_BASE_STALE';
+  staleCandidateIds: string[];
+  retainMarker: false;
+} {
+  return {
+    code: 'CANDIDATE_BASE_STALE',
+    staleCandidateIds: [...candidateIds],
+    retainMarker: false,
+  };
+}
+
+export function planPostCompareAndSwapFailure(integrationCommit: string): {
+  code: 'CANDIDATE_INTEGRATION_CONFLICT';
+  recoveryCommit: string;
+  retainMarker: true;
+} {
+  return {
+    code: 'CANDIDATE_INTEGRATION_CONFLICT',
+    recoveryCommit: integrationCommit,
+    retainMarker: true,
+  };
+}
+
 export function recoverCandidateFinalization(input: {
   attempt: IntegrationAttempt;
   marker: CandidateFinalizationMarker;
@@ -495,6 +643,7 @@ export function recoverCandidateFinalization(input: {
 }): {
   action: 'retry-before-fast-forward' | 'refresh-and-record-integrated' | 'record-integrated';
   removeMarker: true;
+  resetToCommit?: string;
 } {
   const { attempt, marker } = input;
   if (marker.schemaVersion !== 1
@@ -511,8 +660,15 @@ export function recoverCandidateFinalization(input: {
     );
   }
   if (input.currentDefaultCommit === attempt.startingDefaultCommit) {
-    return { action: 'retry-before-fast-forward', removeMarker: true };
+    return {
+      action: 'retry-before-fast-forward',
+      removeMarker: true,
+      ...(attempt.candidateIds.length === 1
+        ? { resetToCommit: marker.integrationCommit }
+        : {}),
+    };
   }
+
   if (input.currentDefaultCommit !== attempt.integrationCommit) {
     throw integrationError('CANDIDATE_BASE_STALE', 'default branch advanced during finalization.');
   }
@@ -522,6 +678,39 @@ export function recoverCandidateFinalization(input: {
       : 'refresh-and-record-integrated',
     removeMarker: true,
   };
+}
+
+export async function withIntegrationTransition<Result>(
+  changeIds: readonly string[],
+  transaction: IntegrationTransactionAdapter,
+  operation: () => Promise<Result>,
+): Promise<Result> {
+  const sorted = [...new Set(changeIds)].sort(byteCompare);
+  if (sorted.length === 0 || sorted.some((changeId) => !changeIdPattern.test(changeId))) {
+    throw integrationError('CLI_ERROR', 'integration transition requires valid CHANGE IDs.');
+  }
+  return transaction.run(sorted, operation);
+}
+
+export async function inspectCandidateCleanupSafety(input: {
+  worktreePath: string;
+  candidateCommit: string;
+  baseCommit: string;
+  state: CandidateLifecycleState;
+  inspect: CleanupInspectionAdapter;
+}): Promise<void> {
+  const inspection = await input.inspect();
+  const records = inspection.porcelainZ.split('\0').filter(Boolean);
+  const untracked = records.some((record) => record.startsWith('?? '));
+  const dirty = records.some((record) => !record.startsWith('?? '));
+  assertCandidateCleanupSafe({
+    dirty,
+    untracked,
+    unintegratedCommits: !inspection.candidateReachableFromBase,
+    leaseActive: inspection.liveLease,
+    unresolvedConflict: Boolean(inspection.unresolvedEntries),
+    state: input.state,
+  });
 }
 
 export function assertOperationalStateStable(
@@ -701,7 +890,7 @@ async function assertCandidateGitState(
   if (branchTip !== candidate.candidateCommit) {
     throw integrationError('CANDIDATE_BASE_STALE', 'candidate branch tip moved.');
   }
-  if (await git(worktreePath, ['status', '--porcelain', '--untracked-files=all'])) {
+  if (await gitRaw(worktreePath, ['status', '--porcelain=v1', '-z', '--untracked-files=all'])) {
     throw integrationError('CANDIDATE_INTEGRATION_CONFLICT', 'candidate worktree is dirty.');
   }
 }
@@ -757,25 +946,34 @@ async function resolveIntegrationCandidates(
       integrated: true as const,
     }));
   const integrationCandidates: IntegrationCandidate[] = await Promise.all(
-    candidates.map(async (candidate) => ({
-      candidateId: candidate.candidateId,
-      changeId: candidate.changeId,
-      generation: candidate.generation,
-      repositoryId: candidate.repositoryId,
-      baseCommit: candidate.baseCommit,
-      candidateCommit: candidate.candidateCommit,
-      recordedCandidateCommit: candidate.candidateCommit,
-      state: candidate.state,
-      reachable: true,
-      changedPaths: await candidateChangedPaths(root, candidate),
-      dependencies: candidate.dependencyIds.map((candidateId) => {
-        const dependency = registry.candidates.find((entry) => entry.candidateId === candidateId);
-        if (!dependency) {
-          return { candidateId, candidateCommit: '' };
-        }
-        return { candidateId, candidateCommit: dependency.candidateCommit };
-      }),
-    })),
+    candidates.map(async (candidate) => {
+      const dependencyCommits = (candidate as CandidateRegistryEntry & {
+        dependencyCommits?: Record<string, string>;
+      }).dependencyCommits;
+      const integrationCandidate: IntegrationCandidate = {
+        candidateId: candidate.candidateId,
+        changeId: candidate.changeId,
+        generation: candidate.generation,
+        repositoryId: candidate.repositoryId,
+        baseCommit: candidate.baseCommit,
+        candidateCommit: candidate.candidateCommit,
+        recordedCandidateCommit: candidate.candidateCommit,
+        state: candidate.state,
+        reachable: true,
+        changedPaths: await candidateChangedPaths(root, candidate),
+        dependencies: candidate.dependencyIds.map((candidateId) => {
+          const dependency = registry.candidates.find((entry) => entry.candidateId === candidateId);
+          return {
+            candidateId,
+            candidateCommit: dependencyCommits?.[candidateId]
+              ?? dependency?.candidateCommit
+              ?? '',
+          };
+        }),
+      };
+      validateReadyDependencyBindings(integrationCandidate, registry.candidates);
+      return integrationCandidate;
+    }),
   );
   const analysis = analyzeCandidateIntegration(integrationCandidates, {
     repositoryId: registry.repositoryId,
@@ -804,39 +1002,68 @@ async function sourceManifestAt(root: string, commit = 'HEAD'): Promise<Integrat
 
 async function persistAttempt(
   root: string,
-  registry: CandidateRegistry,
   attempt: PersistedIntegrationAttempt,
   candidateState: CandidateLifecycleState,
+  transaction?: IntegrationTransactionAdapter,
 ): Promise<void> {
-  const commonDirectory = await gitCommonDirectory(root);
-  const selected = new Set(attempt.candidateIds);
-  const candidates = registry.candidates.map((candidate) =>
-    selected.has(candidate.candidateId) ? { ...candidate, state: candidateState } : candidate);
-  const existing = registry.integrations.findIndex((entry) =>
-    entry.integrationId === attempt.integrationId);
-  const integration = {
-    schemaVersion: 1 as const,
-    integrationId: attempt.integrationId,
-    repositoryId: attempt.repositoryId,
-    changeIds: [...attempt.changeIds],
-    candidateIds: [...attempt.candidateIds],
-    worktreePath: relative(commonDirectory, attempt.worktreePath).split(sep).join('/'),
-    state: attempt.state,
+  const adapter = transaction ?? {
+    run: async <Result>(
+      changeIds: readonly string[],
+      operation: () => Promise<Result>,
+    ): Promise<Result> => withMultiChangeWrite(root, changeIds, operation),
   };
-  const integrations = [...registry.integrations];
-  if (existing < 0) integrations.push(integration);
-  else integrations[existing] = integration;
-  await replaceCandidateRegistry(root, { ...registry, candidates, integrations });
-  await writeCanonicalJson(integrationRecordPath(root, attempt.integrationId), {
-    ...attempt,
-    worktreePath: integration.worktreePath,
-  });
-  await appendJournalRecord(root, {
-    stream: 'normal',
-    changeId: [...attempt.changeIds].sort(byteCompare)[0]!,
-    kind: `candidate-integration-${attempt.state}`,
-    idempotencyKey: `candidate-integration:${attempt.integrationId}:${attempt.state}`,
-    payload: attempt,
+  await withIntegrationTransition(attempt.changeIds, adapter, async () => {
+    const registry = await readCandidateRegistry(root);
+    if (!registry) {
+      throw integrationError('CANDIDATE_WORKSPACE_NOT_FOUND', 'candidate registry was not found.');
+    }
+    const commonDirectory = await gitCommonDirectory(root);
+    const selected = new Set(attempt.candidateIds);
+    const candidates = registry.candidates.map((candidate) => {
+      if (selected.has(candidate.candidateId)) {
+        return {
+          ...candidate,
+          state: candidateState,
+          ...(candidateState === 'integrated'
+            && candidate.candidateId === attempt.releaseOwnerCandidateId
+            && attempt.integrationCommit
+            ? { candidateCommit: attempt.integrationCommit }
+            : {}),
+        };
+      }
+      if (candidateState === 'integrated'
+        && !['integrated', 'deleted', 'abandoned'].includes(candidate.state)) {
+        return { ...candidate, state: 'stale' as const };
+      }
+      return candidate;
+    });
+    const existing = registry.integrations.findIndex((entry) =>
+      entry.integrationId === attempt.integrationId);
+    const integration = {
+      schemaVersion: 1 as const,
+      integrationId: attempt.integrationId,
+      repositoryId: attempt.repositoryId,
+      changeIds: [...attempt.changeIds],
+      candidateIds: [...attempt.candidateIds],
+      worktreePath: relative(commonDirectory, attempt.worktreePath).split(sep).join('/'),
+      state: attempt.state,
+    };
+    const integrations = [...registry.integrations];
+    if (existing < 0) integrations.push(integration);
+    else integrations[existing] = integration;
+    const append = adapter.append ?? appendJournalRecord;
+    await append(root, {
+      stream: 'normal',
+      changeId: [...attempt.changeIds].sort(byteCompare)[0]!,
+      kind: `candidate-integration-${attempt.state}`,
+      idempotencyKey: `candidate-integration:${attempt.integrationId}:${attempt.state}`,
+      payload: attempt,
+    });
+    await replaceCandidateRegistry(root, { ...registry, candidates, integrations });
+    await writeCanonicalJson(integrationRecordPath(root, attempt.integrationId), {
+      ...attempt,
+      worktreePath: integration.worktreePath,
+    });
   });
 }
 
@@ -863,10 +1090,10 @@ function orchestrationResult(
 
 async function verifyPersistedAttempt(
   root: string,
-  registry: CandidateRegistry,
   attempt: PersistedIntegrationAttempt,
   verify: IntegrationOrchestrationInput['verify'],
   resumed: boolean,
+  transaction?: IntegrationTransactionAdapter,
 ): Promise<IntegrationOrchestrationResult> {
   const verification = await verify(orchestrationResult(root, attempt, resumed));
   validateClosedIntegrationVerification(verification);
@@ -875,7 +1102,7 @@ async function verifyPersistedAttempt(
     state: 'verified',
     verifiedReportSha256: sha256(canonicalBytes(verification)),
   };
-  await persistAttempt(root, registry, verified, 'verified');
+  await persistAttempt(root, verified, 'verified', transaction);
   return orchestrationResult(root, verified, resumed);
 }
 
@@ -932,7 +1159,7 @@ export async function orchestrateCandidateIntegration(
         await git(worktreePath, ['cherry-pick', commit]);
       }
     }
-    if (await git(worktreePath, ['status', '--porcelain', '--untracked-files=all'])) {
+    if (await gitRaw(worktreePath, ['status', '--porcelain=v1', '-z', '--untracked-files=all'])) {
       throw integrationError('CANDIDATE_INTEGRATION_CONFLICT', 'integration worktree is dirty.');
     }
   } catch (cause) {
@@ -958,13 +1185,13 @@ export async function orchestrateCandidateIntegration(
     releaseOwnerCandidateId: [...resolved.candidates]
       .sort((left, right) => byteCompare(left.changeId, right.changeId))[0]!.candidateId,
   };
-  await persistAttempt(root, resolved.registry, attempt, 'integrating');
+  await persistAttempt(root, attempt, 'integrating', input.transaction);
   return verifyPersistedAttempt(
     root,
-    (await readCandidateRegistry(root))!,
     attempt,
     input.verify,
     false,
+    input.transaction,
   );
 }
 
@@ -1038,44 +1265,48 @@ export async function finalizeCandidateIntegration(
   }
   let currentDefault = await git(root, ['rev-parse', 'HEAD']);
   if (marker) {
-    const recovery = recoverCandidateFinalization({
-      attempt: { ...attempt, integrationCommit: marker.integrationCommit },
+    if (input.liveFencingToken === undefined) {
+      throw integrationError(
+        'CANDIDATE_INTEGRATION_CONFLICT',
+        'finalization recovery requires the current live fencing token.',
+      );
+    }
+    validateFinalizationMarker({
+      attempt,
       marker,
-      currentFencingToken: marker.fencingToken,
-      currentDefaultCommit: currentDefault,
+      liveFencingToken: input.liveFencingToken,
       integrationCommitReachable: await gitSucceeds(
         root,
         ['cat-file', '-e', `${marker.integrationCommit}^{commit}`],
       ),
+    });
+    const recovery = recoverCandidateFinalization({
+      attempt,
+      marker,
+      currentFencingToken: input.liveFencingToken,
+      currentDefaultCommit: currentDefault,
+      integrationCommitReachable: true,
       controlWorktreeRefreshed: currentDefault === marker.integrationCommit,
     });
     if (recovery.action !== 'retry-before-fast-forward') {
       await git(root, ['reset', '--hard', marker.integrationCommit]);
-      attempt = { ...attempt, integrationCommit: marker.integrationCommit };
-      const recoveredRegistry = await readCandidateRegistry(root) ?? registry;
       const recovered: PersistedIntegrationAttempt = {
         ...attempt,
         state: 'integrated',
-        integrationCommit: marker.integrationCommit,
       };
-      await persistAttempt(root, {
-        ...recoveredRegistry,
-        candidates: recoveredRegistry.candidates.map((candidate) =>
-          candidate.candidateId === attempt.releaseOwnerCandidateId
-            ? { ...candidate, candidateCommit: marker.integrationCommit }
-            : candidate),
-      }, recovered, 'integrated');
+      await persistAttempt(root, recovered, 'integrated', input.transaction);
       await rm(markerPath, { force: true });
       return orchestrationResult(root, recovered, true);
     }
+    await git(attempt.worktreePath, ['reset', '--hard', marker.integrationCommit]);
     await rm(markerPath, { force: true });
     currentDefault = await git(root, ['rev-parse', 'HEAD']);
   }
   if (currentDefault !== attempt.startingDefaultCommit) {
     throw integrationError('CANDIDATE_BASE_STALE', 'default branch advanced before finalization.');
   }
-  const dirty = (await git(root, ['status', '--porcelain', '--untracked-files=all']))
-    .split(/\r?\n/)
+  const dirty = (await gitRaw(root, ['status', '--porcelain=v1', '-z', '--untracked-files=all']))
+    .split('\0')
     .filter(Boolean)
     .map((line) => line.slice(3))
     .filter((path) => !isOperationalStatePath(path));
@@ -1097,7 +1328,30 @@ export async function finalizeCandidateIntegration(
     `Integrate ${attempt.integrationId}`,
   ]);
   const integrationCommit = await git(attempt.worktreePath, ['rev-parse', 'HEAD']);
+  const materializedManifestSha256 = sha256(
+    Buffer.from(await gitRaw(attempt.worktreePath, ['ls-tree', '-r', '-z', integrationCommit])),
+  );
   assertOperationalStateStable(baseline, await operationalStateFingerprint(root));
+  const releaseOwner = registry.candidates.find((candidate) =>
+    candidate.candidateId === attempt.releaseOwnerCandidateId);
+  attempt = {
+    ...attempt,
+    integrationCommit,
+    materializedManifestSha256,
+    ...(releaseOwner ? { releaseOwnerPreviousCommit: releaseOwner.candidateCommit } : {}),
+  };
+  const transaction = input.transaction ?? {
+    run: async <Result>(
+      changeIds: readonly string[],
+      operation: () => Promise<Result>,
+    ): Promise<Result> => withMultiChangeWrite(root, changeIds, operation),
+  };
+  await withIntegrationTransition(attempt.changeIds, transaction, async () => {
+    await writeCanonicalJson(integrationRecordPath(root, attempt.integrationId), {
+      ...attempt,
+      worktreePath: relative(commonDirectory, attempt.worktreePath).split(sep).join('/'),
+    });
+  });
 
   const finalizationMarker: CandidateFinalizationMarker = {
     schemaVersion: 1,
@@ -1105,20 +1359,27 @@ export async function finalizeCandidateIntegration(
     integrationId: attempt.integrationId,
     integrationCommit,
     startingDefaultCommit: attempt.startingDefaultCommit,
-    fencingToken: Date.now(),
+    fencingToken: input.liveFencingToken ?? 0,
   };
   await writeCanonicalJson(markerPath, finalizationMarker);
+  let refMoved = false;
   try {
     const defaultRef = await git(root, ['symbolic-ref', 'HEAD']);
-    await git(root, [
-      'update-ref',
-      defaultRef,
-      integrationCommit,
-      attempt.startingDefaultCommit,
-    ]);
+    try {
+      await git(root, [
+        'update-ref',
+        defaultRef,
+        integrationCommit,
+        attempt.startingDefaultCommit,
+      ]);
+      refMoved = true;
+    } catch {
+      const stale = { ...attempt, state: 'failed' as const };
+      await persistAttempt(root, stale, 'stale', input.transaction);
+      await rm(markerPath, { force: true });
+      throw integrationError('CANDIDATE_BASE_STALE', 'default branch compare-and-swap failed.');
+    }
     await git(root, ['reset', '--hard', integrationCommit]);
-    const releaseOwner = registry.candidates.find((candidate) =>
-      candidate.candidateId === attempt.releaseOwnerCandidateId);
     if (releaseOwner) {
       await git(root, ['update-ref', `refs/heads/${releaseOwner.branch}`, integrationCommit]);
       await git(resolve(commonDirectory, releaseOwner.worktreePath), ['reset', '--hard', integrationCommit]);
@@ -1128,17 +1389,12 @@ export async function finalizeCandidateIntegration(
       state: 'integrated',
       integrationCommit,
     };
-    const currentRegistry = await readCandidateRegistry(root) ?? registry;
-    await persistAttempt(root, {
-      ...currentRegistry,
-      candidates: currentRegistry.candidates.map((candidate) =>
-        candidate.candidateId === attempt.releaseOwnerCandidateId
-          ? { ...candidate, candidateCommit: integrationCommit }
-          : candidate),
-    }, integrated, 'integrated');
-    return orchestrationResult(root, integrated, false);
-  } finally {
+    await persistAttempt(root, integrated, 'integrated', input.transaction);
     await rm(markerPath, { force: true });
+    return orchestrationResult(root, integrated, false);
+  } catch (cause) {
+    if (!refMoved) await rm(markerPath, { force: true });
+    throw cause;
   }
 }
 
@@ -1157,7 +1413,6 @@ export async function resumeCandidateIntegration(
     return matches[0]!;
   });
   const candidateIds = selected.map((candidate) => candidate.candidateId);
-  const inputCommits = selected.map((candidate) => candidate.candidateCommit);
   const attempts = await listIntegrationAttempts(root);
   const attempt = attempts.find((candidate) => {
     const sameCandidateSet = candidate.candidateIds.length === candidateIds.length
@@ -1168,7 +1423,7 @@ export async function resumeCandidateIntegration(
       planIntegrationResume(candidate, {
         integrationId: candidate.integrationId,
         candidateIds,
-        inputCommits,
+        inputCommits: candidate.inputCommits,
       });
       return true;
     } catch {
@@ -1181,13 +1436,45 @@ export async function resumeCandidateIntegration(
       && candidate.candidateIds.some((candidateId) => candidateIds.includes(candidateId)))) {
       throw integrationError('CANDIDATE_INTEGRATION_CONFLICT', 'candidate set differs from attempt.');
     }
-    return orchestrateCandidateIntegration(input);
+    throw integrationError('CANDIDATE_WORKSPACE_NOT_FOUND', 'integration attempt was not found.');
   }
+  const commitByCandidate = new Map(
+    attempt.candidateIds.map((candidateId, index) => [candidateId, attempt.inputCommits[index]!]),
+  );
+  deriveResumeIdentity({
+    repositoryId: registry.repositoryId,
+    startingDefaultCommit: attempt.startingDefaultCommit,
+    candidates: selected.map((candidate) => ({
+      candidateId: candidate.candidateId,
+      changeId: candidate.changeId,
+      generation: candidate.generation,
+      candidateCommit: commitByCandidate.get(candidate.candidateId)!,
+    })),
+  }, attempt, true);
   if (attempt.state === 'integrated') return orchestrationResult(root, attempt, true);
-  if (attempt.state === 'verified') {
-    return finalizeCandidateIntegration({ controlRoot: root, integrationId: attempt.integrationId });
+  if (attempt.state === 'failed' || attempt.state === 'deleted') {
+    throw integrationError(
+      'CANDIDATE_INTEGRATION_CONFLICT',
+      'terminal integration attempt cannot be resumed.',
+    );
   }
-  return verifyPersistedAttempt(root, registry, attempt, input.verify, true);
+  if (attempt.state === 'verified') {
+    return finalizeCandidateIntegration({
+      controlRoot: root,
+      integrationId: attempt.integrationId,
+      ...(input.transaction ? { transaction: input.transaction } : {}),
+      ...(input.liveFencingToken !== undefined
+        ? { liveFencingToken: input.liveFencingToken }
+        : {}),
+    });
+  }
+  return verifyPersistedAttempt(
+    root,
+    attempt,
+    input.verify,
+    true,
+    input.transaction,
+  );
 }
 
 export async function cleanupCandidateIntegration(
@@ -1201,51 +1488,100 @@ export async function cleanupCandidateIntegration(
   if (attempt.state !== 'integrated' && attempt.state !== 'failed') {
     throw integrationError('CANDIDATE_CLEANUP_UNSAFE', 'integration attempt is not terminal.');
   }
-  assertCandidateCleanupSafe({
-    dirty: Boolean(await git(attempt.worktreePath, ['status', '--porcelain', '--untracked-files=all'])),
-    untracked: false,
-    unintegratedCommits: false,
-    leaseActive: false,
-    unresolvedConflict: Boolean(await git(attempt.worktreePath, ['ls-files', '-u'])),
-    state: attempt.state === 'failed' ? 'failed' : 'integrated',
-  });
   const commonDirectory = await gitCommonDirectory(root);
+  const inspect = input.inspect ?? (async () => {
+    const integrationCommit = attempt.integrationCommit;
+    const leasesRoot = resolve(commonDirectory, 'musubix5', 'leases');
+    const leaseIsLive = async (path: string): Promise<boolean> => {
+      try {
+        const owner = JSON.parse(
+          await readFile(resolve(path, 'owner.json'), 'utf8'),
+        ) as { token?: unknown; fencingToken?: unknown; expiresAt?: unknown };
+        return typeof owner.token === 'string'
+          && Number.isInteger(owner.fencingToken)
+          && typeof owner.expiresAt === 'number'
+          && owner.expiresAt > Date.now();
+      } catch {
+        return false;
+      }
+    };
+    const liveLease = await Promise.all([
+      ...attempt.changeIds.map((changeId) =>
+        leaseIsLive(resolve(leasesRoot, encodeURIComponent(`change-${changeId}`)))),
+      leaseIsLive(resolve(leasesRoot, encodeURIComponent('order'))),
+    ]).then((states) => states.some(Boolean));
+    return {
+      porcelainZ: await gitRaw(
+        attempt.worktreePath,
+        ['status', '--porcelain=v1', '-z', '--untracked-files=all'],
+      ),
+      unresolvedEntries: await gitRaw(attempt.worktreePath, ['ls-files', '-u', '-z']),
+      candidateReachableFromBase: Boolean(integrationCommit)
+        && await gitSucceeds(root, [
+          'merge-base',
+          '--is-ancestor',
+          integrationCommit!,
+          'HEAD',
+        ]),
+      liveLease,
+    };
+  });
+  await inspectCandidateCleanupSafety({
+    worktreePath: attempt.worktreePath,
+    candidateCommit: attempt.integrationCommit
+      ?? attempt.inputCommits.at(-1)
+      ?? attempt.startingDefaultCommit,
+    baseCommit: attempt.startingDefaultCommit,
+    state: attempt.state === 'failed' ? 'failed' : 'integrated',
+    inspect,
+  });
   const relativeWorktreePath = relative(commonDirectory, attempt.worktreePath).split(sep).join('/');
   await git(root, ['worktree', 'remove', attempt.worktreePath]);
-  const record = await appendJournalRecord(root, {
-    stream: 'normal',
-    changeId: [...attempt.changeIds].sort(byteCompare)[0]!,
-    kind: 'candidate-integration-deleted',
-    idempotencyKey: `candidate-integration:${attempt.integrationId}:deleted`,
-    payload: {
+  const transaction = input.transaction ?? {
+    run: async <Result>(
+      changeIds: readonly string[],
+      operation: () => Promise<Result>,
+    ): Promise<Result> => withMultiChangeWrite(root, changeIds, operation),
+  };
+  return withIntegrationTransition(attempt.changeIds, transaction, async () => {
+    const append = transaction.append ?? appendJournalRecord;
+    const record = await append(root, {
+      stream: 'normal',
+      changeId: [...attempt.changeIds].sort(byteCompare)[0]!,
+      kind: 'candidate-integration-deleted',
+      idempotencyKey: `candidate-integration:${attempt.integrationId}:deleted`,
+      payload: {
+        integrationId: attempt.integrationId,
+        deletedBy: input.deletedBy,
+        worktreePath: relativeWorktreePath,
+      },
+    });
+    const tombstone: IntegrationTombstone = {
+      schemaVersion: 1,
       integrationId: attempt.integrationId,
       deletedBy: input.deletedBy,
+      deletedAt: new Date().toISOString(),
       worktreePath: relativeWorktreePath,
-    },
+      journalOrder: record.order,
+    };
+    const deleted: PersistedIntegrationAttempt & { tombstone: IntegrationTombstone } = {
+      ...attempt,
+      state: 'deleted',
+      tombstone,
+    };
+    const registry = await readCandidateRegistry(root);
+    if (!registry) {
+      throw integrationError('CANDIDATE_WORKSPACE_NOT_FOUND', 'registry was not found.');
+    }
+    const integrations = registry.integrations.map((integration) =>
+      integration.integrationId === attempt.integrationId
+        ? { ...integration, state: 'deleted' as const }
+        : integration);
+    await replaceCandidateRegistry(root, { ...registry, integrations });
+    await writeCanonicalJson(integrationRecordPath(root, attempt.integrationId), {
+      ...deleted,
+      worktreePath: relativeWorktreePath,
+    });
+    return deleted;
   });
-  const tombstone: IntegrationTombstone = {
-    schemaVersion: 1,
-    integrationId: attempt.integrationId,
-    deletedBy: input.deletedBy,
-    deletedAt: new Date().toISOString(),
-    worktreePath: relativeWorktreePath,
-    journalOrder: record.order,
-  };
-  const deleted: PersistedIntegrationAttempt & { tombstone: IntegrationTombstone } = {
-    ...attempt,
-    state: 'deleted',
-    tombstone,
-  };
-  const registry = await readCandidateRegistry(root);
-  if (!registry) throw integrationError('CANDIDATE_WORKSPACE_NOT_FOUND', 'registry was not found.');
-  const integrations = registry.integrations.map((integration) =>
-    integration.integrationId === attempt.integrationId
-      ? { ...integration, state: 'deleted' as const }
-      : integration);
-  await replaceCandidateRegistry(root, { ...registry, integrations });
-  await writeCanonicalJson(integrationRecordPath(root, attempt.integrationId), {
-    ...deleted,
-    worktreePath: relativeWorktreePath,
-  });
-  return deleted;
 }
