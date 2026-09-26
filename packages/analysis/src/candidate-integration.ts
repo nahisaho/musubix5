@@ -141,7 +141,8 @@ export interface CandidateFinalizationMarker {
   integrationId: string;
   integrationCommit: string;
   startingDefaultCommit: string;
-  fencingToken: number;
+  fencingToken: number | string;
+  leaseContext?: IntegrationLeaseContext;
 }
 
 export interface CandidateCleanupState {
@@ -180,7 +181,6 @@ export interface IntegrationOrchestrationInput {
   selectors: string[];
   verify(context: IntegrationVerificationContext): Promise<ClosedIntegrationVerification>;
   transaction?: IntegrationTransactionAdapter;
-  liveFencingToken?: number;
 }
 
 export interface IntegrationOrchestrationResult extends IntegrationVerificationContext {
@@ -193,7 +193,6 @@ export interface FinalizeCandidateIntegrationInput {
   controlRoot: string;
   integrationId: string;
   transaction?: IntegrationTransactionAdapter;
-  liveFencingToken?: number;
 }
 
 export interface CleanupCandidateIntegrationInput {
@@ -207,9 +206,19 @@ export interface CleanupCandidateIntegrationInput {
 export interface IntegrationTransactionAdapter {
   run(
     changeIds: readonly string[],
-    operation: () => Promise<any>,
+    operation: (context?: IntegrationLeaseContext) => Promise<any>,
   ): Promise<any>;
   append?(root: string, input: JournalRecordInput): Promise<JournalRecord>;
+}
+
+export interface IntegrationLeaseBinding {
+  changeId: string;
+  fencingToken: number;
+}
+
+export interface IntegrationLeaseContext {
+  leases: IntegrationLeaseBinding[];
+  finalizationToken: string;
 }
 
 export interface CleanupInspectionAdapter {
@@ -239,6 +248,7 @@ interface PersistedIntegrationAttempt extends IntegrationAttempt {
   verifiedReportSha256?: string;
   materializedManifestSha256?: string;
   releaseOwnerPreviousCommit?: string;
+  finalizationLeaseContext?: IntegrationLeaseContext;
   tombstone?: IntegrationTombstone;
 }
 
@@ -603,20 +613,66 @@ export function planTerminalAttemptResolution(
     : { action: 'reject', code: 'CANDIDATE_INTEGRATION_CONFLICT' };
 }
 
+export function deriveIntegrationLeaseContext(
+  leases: readonly IntegrationLeaseBinding[],
+): IntegrationLeaseContext {
+  const sorted = [...leases].sort((left, right) => byteCompare(left.changeId, right.changeId));
+  if (sorted.length === 0
+    || new Set(sorted.map((lease) => lease.changeId)).size !== sorted.length
+    || sorted.some((lease) =>
+      !changeIdPattern.test(lease.changeId)
+      || !Number.isInteger(lease.fencingToken)
+      || lease.fencingToken < 1)) {
+    throw integrationError('CANDIDATE_INTEGRATION_CONFLICT', 'live lease context is invalid.');
+  }
+  return {
+    leases: sorted,
+    finalizationToken: `fencing:${sha256(canonicalBytes(sorted))}`,
+  };
+}
+
+export function assertFinalizationLeaseLineage(
+  persisted: IntegrationLeaseContext,
+  live: IntegrationLeaseContext,
+): void {
+  if (persisted.leases.length !== live.leases.length
+    || persisted.leases.some((lease, index) =>
+      lease.changeId !== live.leases[index]?.changeId
+      || live.leases[index]!.fencingToken < lease.fencingToken)) {
+    throw integrationError(
+      'CANDIDATE_INTEGRATION_CONFLICT',
+      'live leases do not descend from the persisted finalization lineage.',
+    );
+  }
+}
+
 export function validateFinalizationMarker(input: {
   attempt: IntegrationAttempt;
   marker: CandidateFinalizationMarker;
-  liveFencingToken: number;
+  liveLeaseContext?: IntegrationLeaseContext;
+  liveFencingToken?: number;
   integrationCommitReachable: boolean;
 }): void {
   const { attempt, marker } = input;
+  const persistedAttempt = attempt as IntegrationAttempt & {
+    finalizationLeaseContext?: IntegrationLeaseContext;
+  };
+  if (input.liveLeaseContext && persistedAttempt.finalizationLeaseContext) {
+    assertFinalizationLeaseLineage(
+      persistedAttempt.finalizationLeaseContext,
+      input.liveLeaseContext,
+    );
+  }
+  const tokenMatches = input.liveLeaseContext
+    ? marker.fencingToken === persistedAttempt.finalizationLeaseContext?.finalizationToken
+    : marker.fencingToken === input.liveFencingToken;
   if (!attempt.integrationCommit
     || marker.schemaVersion !== 1
     || marker.kind !== 'candidate-finalization-v1'
     || marker.integrationId !== attempt.integrationId
     || marker.integrationCommit !== attempt.integrationCommit
     || marker.startingDefaultCommit !== attempt.startingDefaultCommit
-    || marker.fencingToken !== input.liveFencingToken
+    || !tokenMatches
     || !input.integrationCommitReachable) {
     throw integrationError(
       'CANDIDATE_INTEGRATION_CONFLICT',
@@ -655,7 +711,7 @@ export function planPostCompareAndSwapFailure(integrationCommit: string): {
 export function recoverCandidateFinalization(input: {
   attempt: IntegrationAttempt;
   marker: CandidateFinalizationMarker;
-  currentFencingToken: number;
+  currentFencingToken: number | string;
   currentDefaultCommit: string;
   integrationCommitReachable: boolean;
   controlWorktreeRefreshed: boolean;
@@ -702,7 +758,7 @@ export function recoverCandidateFinalization(input: {
 export async function withIntegrationTransition<Result>(
   changeIds: readonly string[],
   transaction: IntegrationTransactionAdapter,
-  operation: () => Promise<Result>,
+  operation: (context?: IntegrationLeaseContext) => Promise<Result>,
 ): Promise<Result> {
   const sorted = [...new Set(changeIds)].sort(byteCompare);
   if (sorted.length === 0 || sorted.some((changeId) => !changeIdPattern.test(changeId))) {
@@ -1109,10 +1165,26 @@ async function persistAttempt(
   const adapter = transaction ?? {
     run: async <Result>(
       changeIds: readonly string[],
-      operation: () => Promise<Result>,
-    ): Promise<Result> => withMultiChangeWrite(root, changeIds, operation),
+      operation: (context?: IntegrationLeaseContext) => Promise<Result>,
+    ): Promise<Result> => withMultiChangeWrite(root, changeIds, (leases) =>
+      operation(deriveIntegrationLeaseContext(
+        leases.map((lease, index) => ({
+          changeId: [...new Set(changeIds)].sort(byteCompare)[index]!,
+          fencingToken: lease.fencingToken,
+        })),
+      ))),
   };
   await withIntegrationTransition(attempt.changeIds, adapter, async () => {
+    await persistAttemptUnderLease(root, attempt, candidateState, adapter);
+  });
+}
+
+async function persistAttemptUnderLease(
+  root: string,
+  attempt: PersistedIntegrationAttempt,
+  candidateState: CandidateLifecycleState,
+  adapter: IntegrationTransactionAdapter,
+): Promise<void> {
     const registry = await readCandidateRegistry(root);
     if (!registry) {
       throw integrationError('CANDIDATE_WORKSPACE_NOT_FOUND', 'candidate registry was not found.');
@@ -1164,7 +1236,6 @@ async function persistAttempt(
       ...attempt,
       worktreePath: integration.worktreePath,
     });
-  });
 }
 
 function orchestrationResult(
@@ -1344,6 +1415,21 @@ function finalizationMarkerPath(commonDirectory: string, integrationId: string):
   );
 }
 
+function defaultIntegrationTransaction(root: string): IntegrationTransactionAdapter {
+  return {
+    run: async <Result>(
+      changeIds: readonly string[],
+      operation: (context?: IntegrationLeaseContext) => Promise<Result>,
+    ): Promise<Result> => withMultiChangeWrite(root, changeIds, (leases) =>
+      operation(deriveIntegrationLeaseContext(
+        leases.map((lease, index) => ({
+          changeId: [...new Set(changeIds)].sort(byteCompare)[index]!,
+          fencingToken: lease.fencingToken,
+        })),
+      ))),
+  };
+}
+
 export async function finalizeCandidateIntegration(
   input: FinalizeCandidateIntegrationInput,
 ): Promise<IntegrationOrchestrationResult> {
@@ -1356,6 +1442,7 @@ export async function finalizeCandidateIntegration(
   const registry = await readCandidateRegistry(root);
   if (!registry) throw integrationError('CANDIDATE_WORKSPACE_NOT_FOUND', 'registry was not found.');
   const commonDirectory = await gitCommonDirectory(root);
+  const transaction = input.transaction ?? defaultIntegrationTransaction(root);
   const markerPath = finalizationMarkerPath(commonDirectory, attempt.integrationId);
   let marker: CandidateFinalizationMarker | null = null;
   try {
@@ -1365,42 +1452,44 @@ export async function finalizeCandidateIntegration(
   }
   let currentDefault = await git(root, ['rev-parse', 'HEAD']);
   if (marker) {
-    if (input.liveFencingToken === undefined) {
+    return withIntegrationTransition(attempt.changeIds, transaction, async (liveContext) => {
+      if (!liveContext || !attempt.finalizationLeaseContext) {
+        throw integrationError(
+          'CANDIDATE_INTEGRATION_CONFLICT',
+          'finalization recovery requires transaction lease context.',
+        );
+      }
+      validateFinalizationMarker({
+        attempt,
+        marker,
+        liveLeaseContext: liveContext,
+        integrationCommitReachable: await gitSucceeds(
+          root,
+          ['cat-file', '-e', `${marker.integrationCommit}^{commit}`],
+        ),
+      });
+      const recovery = recoverCandidateFinalization({
+        attempt,
+        marker,
+        currentFencingToken: marker.fencingToken,
+        currentDefaultCommit: currentDefault,
+        integrationCommitReachable: true,
+        controlWorktreeRefreshed: currentDefault === marker.integrationCommit,
+      });
+      if (recovery.action !== 'retry-before-fast-forward') {
+        await git(root, ['reset', '--hard', marker.integrationCommit]);
+        const recovered: PersistedIntegrationAttempt = { ...attempt, state: 'integrated' };
+        await persistAttemptUnderLease(root, recovered, 'integrated', transaction);
+        await rm(markerPath, { force: true });
+        return orchestrationResult(root, recovered, true);
+      }
+      await git(attempt.worktreePath, ['reset', '--hard', marker.integrationCommit]);
+      await rm(markerPath, { force: true });
       throw integrationError(
         'CANDIDATE_INTEGRATION_CONFLICT',
-        'finalization recovery requires the current live fencing token.',
+        'pre-fast-forward recovery reset completed; retry finalization.',
       );
-    }
-    validateFinalizationMarker({
-      attempt,
-      marker,
-      liveFencingToken: input.liveFencingToken,
-      integrationCommitReachable: await gitSucceeds(
-        root,
-        ['cat-file', '-e', `${marker.integrationCommit}^{commit}`],
-      ),
     });
-    const recovery = recoverCandidateFinalization({
-      attempt,
-      marker,
-      currentFencingToken: input.liveFencingToken,
-      currentDefaultCommit: currentDefault,
-      integrationCommitReachable: true,
-      controlWorktreeRefreshed: currentDefault === marker.integrationCommit,
-    });
-    if (recovery.action !== 'retry-before-fast-forward') {
-      await git(root, ['reset', '--hard', marker.integrationCommit]);
-      const recovered: PersistedIntegrationAttempt = {
-        ...attempt,
-        state: 'integrated',
-      };
-      await persistAttempt(root, recovered, 'integrated', input.transaction);
-      await rm(markerPath, { force: true });
-      return orchestrationResult(root, recovered, true);
-    }
-    await git(attempt.worktreePath, ['reset', '--hard', marker.integrationCommit]);
-    await rm(markerPath, { force: true });
-    currentDefault = await git(root, ['rev-parse', 'HEAD']);
   }
   if (currentDefault !== attempt.startingDefaultCommit) {
     throw integrationError('CANDIDATE_BASE_STALE', 'default branch advanced before finalization.');
@@ -1440,62 +1529,63 @@ export async function finalizeCandidateIntegration(
     materializedManifestSha256,
     ...(releaseOwner ? { releaseOwnerPreviousCommit: releaseOwner.candidateCommit } : {}),
   };
-  const transaction = input.transaction ?? {
-    run: async <Result>(
-      changeIds: readonly string[],
-      operation: () => Promise<Result>,
-    ): Promise<Result> => withMultiChangeWrite(root, changeIds, operation),
-  };
-  await withIntegrationTransition(attempt.changeIds, transaction, async () => {
+  return withIntegrationTransition(attempt.changeIds, transaction, async (leaseContext) => {
+    if (!leaseContext) {
+      throw integrationError(
+        'CANDIDATE_INTEGRATION_CONFLICT',
+        'finalization requires transaction lease context.',
+      );
+    }
+    attempt = { ...attempt, finalizationLeaseContext: leaseContext };
     await writeCanonicalJson(integrationRecordPath(root, attempt.integrationId), {
       ...attempt,
       worktreePath: relative(commonDirectory, attempt.worktreePath).split(sep).join('/'),
     });
-  });
-
-  const finalizationMarker: CandidateFinalizationMarker = {
-    schemaVersion: 1,
-    kind: 'candidate-finalization-v1',
-    integrationId: attempt.integrationId,
-    integrationCommit,
-    startingDefaultCommit: attempt.startingDefaultCommit,
-    fencingToken: input.liveFencingToken ?? 0,
-  };
-  await writeCanonicalJson(markerPath, finalizationMarker);
-  let refMoved = false;
-  try {
-    const defaultRef = await git(root, ['symbolic-ref', 'HEAD']);
-    try {
-      await git(root, [
-        'update-ref',
-        defaultRef,
-        integrationCommit,
-        attempt.startingDefaultCommit,
-      ]);
-      refMoved = true;
-    } catch {
-      const stale = { ...attempt, state: 'failed' as const };
-      await persistAttempt(root, stale, 'stale', input.transaction);
-      await rm(markerPath, { force: true });
-      throw integrationError('CANDIDATE_BASE_STALE', 'default branch compare-and-swap failed.');
-    }
-    await git(root, ['reset', '--hard', integrationCommit]);
-    if (releaseOwner) {
-      await git(root, ['update-ref', `refs/heads/${releaseOwner.branch}`, integrationCommit]);
-      await git(resolve(commonDirectory, releaseOwner.worktreePath), ['reset', '--hard', integrationCommit]);
-    }
-    const integrated: PersistedIntegrationAttempt = {
-      ...attempt,
-      state: 'integrated',
+    const finalizationMarker: CandidateFinalizationMarker = {
+      schemaVersion: 1,
+      kind: 'candidate-finalization-v1',
+      integrationId: attempt.integrationId,
       integrationCommit,
+      startingDefaultCommit: attempt.startingDefaultCommit,
+      fencingToken: leaseContext.finalizationToken,
+      leaseContext,
     };
-    await persistAttempt(root, integrated, 'integrated', input.transaction);
-    await rm(markerPath, { force: true });
-    return orchestrationResult(root, integrated, false);
-  } catch (cause) {
-    if (!refMoved) await rm(markerPath, { force: true });
-    throw cause;
-  }
+    await writeCanonicalJson(markerPath, finalizationMarker);
+    let refMoved = false;
+    try {
+      const defaultRef = await git(root, ['symbolic-ref', 'HEAD']);
+      try {
+        await git(root, [
+          'update-ref',
+          defaultRef,
+          integrationCommit,
+          attempt.startingDefaultCommit,
+        ]);
+        refMoved = true;
+      } catch {
+        const stale = { ...attempt, state: 'failed' as const };
+        await persistAttemptUnderLease(root, stale, 'stale', transaction);
+        await rm(markerPath, { force: true });
+        throw integrationError('CANDIDATE_BASE_STALE', 'default branch compare-and-swap failed.');
+      }
+      await git(root, ['reset', '--hard', integrationCommit]);
+      if (releaseOwner) {
+        await git(root, ['update-ref', `refs/heads/${releaseOwner.branch}`, integrationCommit]);
+        await git(resolve(commonDirectory, releaseOwner.worktreePath), ['reset', '--hard', integrationCommit]);
+      }
+      const integrated: PersistedIntegrationAttempt = {
+        ...attempt,
+        state: 'integrated',
+        integrationCommit,
+      };
+      await persistAttemptUnderLease(root, integrated, 'integrated', transaction);
+      await rm(markerPath, { force: true });
+      return orchestrationResult(root, integrated, false);
+    } catch (cause) {
+      if (!refMoved) await rm(markerPath, { force: true });
+      throw cause;
+    }
+  });
 }
 
 export async function resumeCandidateIntegration(
@@ -1563,9 +1653,6 @@ export async function resumeCandidateIntegration(
       controlRoot: root,
       integrationId: attempt.integrationId,
       ...(input.transaction ? { transaction: input.transaction } : {}),
-      ...(input.liveFencingToken !== undefined
-        ? { liveFencingToken: input.liveFencingToken }
-        : {}),
     });
   }
   return verifyPersistedAttempt(
@@ -1640,8 +1727,14 @@ export async function cleanupCandidateIntegration(
   const transaction = input.transaction ?? {
     run: async <Result>(
       changeIds: readonly string[],
-      operation: () => Promise<Result>,
-    ): Promise<Result> => withMultiChangeWrite(root, changeIds, operation),
+      operation: (context?: IntegrationLeaseContext) => Promise<Result>,
+    ): Promise<Result> => withMultiChangeWrite(root, changeIds, (leases) =>
+      operation(deriveIntegrationLeaseContext(
+        leases.map((lease, index) => ({
+          changeId: [...new Set(changeIds)].sort(byteCompare)[index]!,
+          fencingToken: lease.fencingToken,
+        })),
+      ))),
   };
   return withIntegrationTransition(attempt.changeIds, transaction, async () => {
     const append = transaction.append ?? appendJournalRecord;
