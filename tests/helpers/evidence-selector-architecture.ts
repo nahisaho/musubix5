@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
 import ts from 'typescript';
 
-import { files } from '../../packages/analysis/src/files.js';
+import { files, portable } from '../../packages/analysis/src/files.js';
 
 const selectorPath = 'packages/analysis/src/files.ts';
 const chronologyPaths = [
@@ -171,7 +171,10 @@ export async function evidenceChronologyViolations(root: string): Promise<string
       if (field === 'recordedAt') {
         const owner = namedFunction(node);
         const sourcePath = owner?.getSourceFile().fileName;
-        const relativePath = sourcePaths.find((path) => resolve(root, path) === sourcePath);
+        const normalizedSourcePath = sourcePath ? portable(sourcePath) : undefined;
+        const relativePath = sourcePaths.find(
+          (path) => portable(resolve(root, path)) === normalizedSourcePath,
+        );
         violations.add(`${relativePath ?? sourcePath}#${owner?.name?.text ?? '<anonymous>'}:recordedAt`);
       }
       if (ts.isCallExpression(node)) {

@@ -427,29 +427,32 @@ describe('TDD repair safety', () => {
 
   it('uses control evidence only for the exact provisional integration commit', () => {
     const commit = 'a'.repeat(40);
+    const controlRoot = resolve('/repo');
+    const integrationWorktree = resolve('/repo/integration');
+    const linkedWorktree = resolve('/repo/linked-worktree');
     const input = {
       status: 'provisional' as const,
-      integrationWorktree: '/repo/integration',
+      integrationWorktree,
       integrationCommit: commit,
     };
     expect(selectParallelIntegrationEvidenceRoot({
       ...input,
-      controlRoot: '/repo',
-      evaluationRoot: '/repo/integration',
+      controlRoot,
+      evaluationRoot: integrationWorktree,
       currentCommit: commit,
-    })).toBe('/repo');
+    })).toBe(controlRoot);
     expect(selectParallelIntegrationEvidenceRoot({
       ...input,
-      controlRoot: '/repo',
-      evaluationRoot: '/repo/linked-worktree',
+      controlRoot,
+      evaluationRoot: linkedWorktree,
       currentCommit: commit,
-    })).toBe('/repo/linked-worktree');
+    })).toBe(linkedWorktree);
     expect(selectParallelIntegrationEvidenceRoot({
       ...input,
-      controlRoot: '/repo',
-      evaluationRoot: '/repo/integration',
+      controlRoot,
+      evaluationRoot: integrationWorktree,
       currentCommit: 'b'.repeat(40),
-    })).toBe('/repo/integration');
+    })).toBe(integrationWorktree);
   });
 
   it('accepts provisional evidence only at its exact integration commit', () => {
