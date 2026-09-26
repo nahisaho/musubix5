@@ -55,11 +55,11 @@ improvement covering GitHub Issues #2, #11, #18, #25, #35, and #38.
 
 | Issue | Requirement batch | Integration |
 |---|---|---|
-| #25 | `REQ-M5-EVIDENCE-009`, `REQ-M5-WAVE1-TRACE-001`, `REQ-M5-WAVE1-TRACE-002` | Parallel assignment owning shared trace, the `trace.ts` missing-graph guidance token, release-exclusion, evidence-input, foundation implementation, and affected existing trace/evidence tests; predecessor of #11 and #35. |
-| #2 | `REQ-M5-WAVE1-PUBLISH-001` | Independent parallel assignment owning the npm deadline design, DES-M5-021 registry clauses, release policy, committed verifier, workflow, and focused release tests. |
+| #25 | `REQ-M5-EVIDENCE-009`, `REQ-M5-WAVE1-TRACE-001`, `REQ-M5-WAVE1-TRACE-002` | Parallel assignment owning shared trace source under `packages/**`, the `trace.ts` missing-graph guidance token, release-exclusion, evidence-input, foundation implementation, and affected existing trace/evidence tests; predecessor of #11 and #35. |
+| #2 | `REQ-M5-WAVE1-PUBLISH-001` | Independent parallel assignment owning the committed npm registry verifier, publish workflow, and focused release tests; the requirement, DES-M5-021 clauses, and release policy remain integrator-owned pre-dispatch artifacts. |
 | #11 | `REQ-M5-WAVE1-NAMING-001` | Parallel assignment with explicit dependency on completed #25; its Red uses the other five legacy-name surfaces and its Green verifies all six. |
 | #18 | `REQ-M5-WAVE1-EVIDENCE-001`, `REQ-M5-WAVE1-EVIDENCE-002` | Independent parallel assignment. |
-| #35 | `REQ-M5-COMPAT-013`, `REQ-M5-WAVE1-TDD-001`, `REQ-M5-WAVE1-TDD-002` | Parallel assignment depending on #25 because both amend shared compatibility requirements; predecessor of #38 because both touch `main.ts`. |
+| #35 | `REQ-M5-COMPAT-013`, `REQ-M5-WAVE1-TDD-001`, `REQ-M5-WAVE1-TDD-002` | Parallel assignment depending on #25 because its implementation consumes shared trace and evidence-selection plumbing owned by #25; predecessor of #38 because both touch `main.ts`. |
 | #38 | `REQ-M5-MULTI-CHANGE-007`, `REQ-M5-WAVE1-CLEANUP-001`, `REQ-M5-WAVE1-CLEANUP-002` | Parallel assignment with explicit dependency on completed #35. |
 
 Execution uses one CHANGE-0015 `parallel plan`, not six candidate-workspace
@@ -110,7 +110,8 @@ source tree before verification.
   `13ce77e4af7f49e9701304af16955cb691c47fc0`.
 - The verified attempt passed every configured required command: typecheck,
   build, full Vitest, codegraph tests, compatibility tests, package checks, and
-  package smoke tests.
+  package smoke tests. The same required-command suite was rerun after the
+  Windows portability corrections before freezing the release candidate.
 - Strict trace and graph gates pass. The current
   `.musubix/evidence/quality.json` shows that every required check passes except
   release approval after recording the generation 3 quality checkpoint.
@@ -122,29 +123,45 @@ source tree before verification.
   transcript is sanitized without truncation, but strict terminal verification
   remains pending because the shared Copilot CLI runtime has not emitted that
   session's terminal result or routine shutdown event.
+- Candidate matrix rehearsals exposed and verified two Windows portability
+  corrections before the final freeze: normalized TypeScript source-path
+  comparison and OS-resolved synthetic roots, plus candidate refresh fixtures
+  isolated from concurrent repository graph scans.
+- This document is a fingerprinted quality input and is frozen before the
+  final immutable snapshot. Snapshot, signed matrix-envelope, and release
+  approval records appended after the freeze are the authoritative
+  candidate-bound release evidence.
 
 ## Residual risks before release approval
 
-- Release approval and an immutable CHANGE-0015 candidate snapshot are not yet
-  recorded. Existing Ubuntu/Windows/macOS Node 24 envelopes bind CHANGE-0014
-  candidate `bbef77c4bd4f9e9c1006bb7eeb88bb2c54b1ce33`; no envelopes yet bind
-  CHANGE-0015 candidate `13ce77e4af7f49e9701304af16955cb691c47fc0`.
+- At document freeze, release approval and the final immutable candidate
+  snapshot are not yet recorded. Pre-freeze snapshot
+  `snapshot-000000000434` is retired because this fingerprinted document
+  changed; its creation and tombstone remain append-only audit records. After
+  the freeze, release readiness requires one live snapshot plus fresh strict
+  GitHub OIDC-bound Ubuntu, Windows, and macOS Node 24 envelopes for that exact
+  candidate.
 - Strict verification of predecessor session
   `6371e116-6cba-4444-b5c7-90b0fab03829` cannot complete until its owning
   Copilot CLI runtime emits a terminal lifecycle event; compatible
   reconciliation is not claimed as strict proof. The current session
-  `7e0225ea-dc31-49c2-a63e-4adf28641cb8` must also be re-sanitized after its
-  terminal lifecycle event because the latest quality declaration post-dates
-  the presently captured compatible transcript.
+  `7e0225ea-dc31-49c2-a63e-4adf28641cb8` is re-sanitized through the candidate
+  gate import declarations in compatible mode and must be refreshed again
+  after its final completion declaration.
 - Six historical workflow waiver records remain in
   `.musubix/evidence/workflow-waivers.json` with stale error diagnostics. They
   are inert (`workflowWaivers: []`) and are not active release exceptions.
+- `.musubix/evidence/release/gates/` also retains historical envelopes from
+  earlier changes and matrices. Candidate validation selects only the exact
+  CHANGE generation, candidate commit, fingerprint, and required closed matrix;
+  historical records are not accepted as current CHANGE-0015 evidence.
 - The handoff cleanliness parser currently trims the leading status space from
   the first unstaged porcelain entry. Staging integrator-owned `.musubix/**`
   evidence avoids the false `dirty-at-base` classification without changing
   evidence content. The defect is tracked in #41; the workaround is required
   for future handoffs until that issue is fixed.
-- Parallel cleanup retained three dirty historical assignment worktrees and the
-  dirty verified integration worktree while removing three eligible clean
-  assignment worktrees. The retained CHANGE-0015 branch inventory remains
-  available for audit.
+- The final cleanup invocation removed three selected clean assignment
+  worktrees and retained three selected dirty assignment worktrees plus the
+  dirty verified integration worktree. Including earlier attempts outside that
+  cleanup selection, 30 CHANGE-0015 worktrees and 46 local CHANGE-0015 branches
+  remain registered for audit.
