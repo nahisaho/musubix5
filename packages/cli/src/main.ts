@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 import { Command, CommanderError, InvalidArgumentError, Option } from 'commander';
+import { execFile } from 'node:child_process';
 import { realpathSync } from 'node:fs';
 import { cp, mkdtemp, rename, rm } from 'node:fs/promises';
 import { basename, dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 import {
-  c4Diagram, validateConstitution, validateDesign, validateRequirements, type Diagnostic,
+  c4Diagram, validateConstitution, validateDesign, validateRequirements, type Diagnostic, type Evidence,
 } from '../../domain/src/index.js';
 
 import {
@@ -36,8 +38,13 @@ import {
   currentChangeFingerprints, deleteCandidateSnapshot, listCandidateSnapshotRecords, loadChangeEvidence,
   createRegisteredCandidateWorkspace, listRegisteredCandidateWorkspaces,
   persistCandidateSnapshot, showCandidateSnapshotRecord, showRegisteredCandidateWorkspace,
-  resolveChangeContext,
-  type CandidateSnapshotStructuralProjection,
+  resolveChangeContext, appendJournalRecord, canonicalBytes, sha256,
+  cleanupCandidate, cleanupCandidateIntegration,
+  finalizeCandidateIntegration, loadIntegrationEvidenceContext, markCandidateReady,
+  orchestrateCandidateIntegration, readCandidateRegistry, refreshCandidate, resumeCandidate,
+  resumeCandidateIntegration, withCandidateWrite,
+  type CandidateEvidenceContext, type CandidateRegistryEntry, type IntegrationEvidenceContext,
+  type CandidateSnapshotStructuralProjection, type ClosedIntegrationVerification, type GateReport,
 } from '../../analysis/src/index.js';
 
 const compatibleWorkflowSanitizationDescription =
@@ -45,6 +52,7 @@ const compatibleWorkflowSanitizationDescription =
 import { install, pluginInstall, upgradeSkills } from './install.js';
 
 const packageRoot = fileURLToPath(new URL('../../../../', import.meta.url));
+const execFileAsync = promisify(execFile);
 
 function output(value: unknown, json: boolean, summary?: string): void {
   if (json || !summary) console.log(JSON.stringify(value, null, 2));
@@ -129,6 +137,222 @@ async function candidateWorkspaceAction(
     else console.error(`${code}: ${detail}`);
     process.exitCode = code === 'CLI_ERROR' ? 2 : 1;
   }
+}
+
+function checkFingerprint(value: unknown): string {
+  return sha256(canonicalBytes(value));
+}
+
+function verificationMember(check: Evidence) {
+  return {
+    name: check.name,
+    status: check.status === 'pass'
+      ? 'passed' as const
+      : check.status === 'fail'
+        ? 'failed' as const
+        : 'skipped' as const,
+    ...(check.diagnostics?.length
+      ? {
+          diagnostics: check.diagnostics.map((diagnostic) => {
+            const provenance = diagnostic as Diagnostic & {
+              sourceStage?: string;
+              domain?: string | null;
+            };
+            return {
+              code: diagnostic.code,
+              ...(diagnostic.detail === undefined ? {} : { detail: diagnostic.detail }),
+              ...(provenance.sourceStage === undefined
+                ? {}
+                : {
+                    sourceStage: provenance.sourceStage,
+                    domain: provenance.domain ?? null,
+                  }),
+            };
+          }),
+        }
+      : {}),
+  };
+}
+
+/** @id CODE-M5-MULTI-CHANGE-CLI-VERIFICATION-001
+ * @implements REQ-M5-MULTI-CHANGE-006
+ * @design DES-M5-MULTI-CHANGE-008 DES-M5-MULTI-CHANGE-009
+ */
+export function closedIntegrationVerificationFromGate(
+  report: GateReport,
+): ClosedIntegrationVerification {
+  const required = report.checks.filter((check) => check.required);
+  const requiredCommands = required
+    .filter((check) => check.name.startsWith('command:'))
+    .sort((left, right) => left.name.localeCompare(right.name));
+  const requiredChecks = required
+    .filter((check) => !check.name.startsWith('command:'))
+    .sort((left, right) => left.name.localeCompare(right.name));
+  return {
+    requiredCommandNames: requiredCommands.map((check) => check.name),
+    requiredCheckNames: requiredChecks.map((check) => check.name),
+    requiredCommands: requiredCommands.map(verificationMember),
+    requiredChecks: requiredChecks.map(verificationMember),
+    status: {
+      exitCode: report.status === 'pass' ? 0 : 1,
+      ready: report.status === 'pass',
+    },
+  };
+}
+
+async function gitCommit(root: string, revision = 'HEAD'): Promise<string> {
+  const { stdout } = await execFileAsync(
+    'git',
+    ['-C', root, 'rev-parse', `${revision}^{commit}`],
+    { encoding: 'utf8' },
+  );
+  return stdout.trim();
+}
+
+function candidateContext(candidate: CandidateRegistryEntry): CandidateEvidenceContext {
+  return {
+    repositoryId: candidate.repositoryId,
+    candidateId: candidate.candidateId,
+    changeId: candidate.changeId,
+    generation: candidate.generation,
+    baseCommit: candidate.baseCommit,
+    candidateCommit: candidate.candidateCommit,
+  };
+}
+
+async function appendCandidateTransition(
+  root: string,
+  candidate: CandidateRegistryEntry,
+  kind: string,
+  payload: unknown,
+): Promise<number> {
+  const record = await appendJournalRecord(root, {
+    stream: 'normal',
+    changeId: candidate.changeId,
+    kind,
+    idempotencyKey: `${kind}:${candidate.candidateId}:${checkFingerprint(payload)}`,
+    payload,
+  });
+  return record.order;
+}
+
+/** @id CODE-M5-MULTI-CHANGE-CLI-READINESS-001
+ * @implements REQ-M5-MULTI-CHANGE-007
+ * @design DES-M5-MULTI-CHANGE-005 DES-M5-MULTI-CHANGE-007 DES-M5-MULTI-CHANGE-009
+ */
+async function markCandidateReadyFromCli(
+  root: string,
+  selector: string,
+): Promise<Awaited<ReturnType<typeof markCandidateReady>>> {
+  const selected = await resumeCandidate(root, selector);
+  const sourceRoot = resolve(root, selected.worktreePath);
+  const context = candidateContext(selected);
+  return withCandidateWrite(root, selected, async () => markCandidateReady(root, selector, {
+    approvals: async () => {
+      const config = await loadConfig(root);
+      const validation = await validateApprovals(root, config.approval, context);
+      const stages = validation.domains
+        ? validation.domains.flatMap((domain) => domain.stages)
+        : validation.stages;
+      const current = ['requirements', 'design'].every((stage) =>
+        stages.some((entry) => entry.stage === stage && entry.status === 'approved'));
+      return {
+        status: current ? 'current' : 'failed',
+        fingerprint: checkFingerprint(stages.filter((entry) =>
+          entry.stage === 'requirements' || entry.stage === 'design')),
+      };
+    },
+    tdd: async () => {
+      const validation = await validateTddEvidence(root, 'readiness', context);
+      return {
+        status: validation.present && validation.valid ? 'current' : 'failed',
+        fingerprint: checkFingerprint(validation),
+      };
+    },
+    quality: async () => {
+      const evidence = await loadChangeEvidence(root);
+      const change = evidence?.changes.find((entry) => entry.changeId === selected.changeId);
+      const quality = change?.phases.quality;
+      const current = await withWorkspaceRoot(
+        root,
+        sourceRoot,
+        (workspace) => currentChangeFingerprints(
+          workspace,
+          selected.changeId,
+          change?.requirementIds ?? [],
+        ),
+      );
+      const terminal = quality !== undefined
+        && quality.fingerprints.implementation === current.implementation
+        && quality.fingerprints.tests === current.tests
+        && quality.fingerprints.tdd === current.tdd;
+      return {
+        status: terminal ? 'current' : 'drift',
+        fingerprint: checkFingerprint({ quality: quality ?? null, current }),
+      };
+    },
+    workspace: async () => {
+      const [{ stdout: porcelain }, head, branchTip] = await Promise.all([
+        execFileAsync(
+          'git',
+          ['-C', sourceRoot, 'status', '--porcelain=v1', '--untracked-files=all'],
+          { encoding: 'utf8' },
+        ),
+        gitCommit(sourceRoot),
+        gitCommit(sourceRoot, selected.branch),
+      ]);
+      const current = porcelain.length === 0
+        && head === selected.candidateCommit
+        && branchTip === selected.candidateCommit;
+      return {
+        status: current ? 'current' : 'failed',
+        fingerprint: checkFingerprint({ porcelain, head, branchTip }),
+      };
+    },
+    snapshot: async () => {
+      const snapshots = (await listCandidateSnapshotRecords(root)).filter((snapshot) =>
+        !snapshot.deleted
+        && snapshot.changeId === selected.changeId
+        && snapshot.repositoryId === selected.repositoryId);
+      const current = snapshots.length === 1
+        && snapshots[0]!.generation === selected.generation
+        && snapshots[0]!.commit === selected.candidateCommit
+        && snapshots[0]!.commitStatus === 'reachable'
+        && snapshots[0]!.repositoryStatus === 'match';
+      return {
+        status: current ? 'current' : 'failed',
+        fingerprint: checkFingerprint(snapshots),
+      };
+    },
+    gate: async () => {
+      const gateContext = await candidateGateContext(
+        root,
+        selected.changeId,
+        selected.generation,
+        selected.candidateCommit,
+      );
+      const validation = validateCandidateGateSet(
+        gateContext,
+        await loadCandidateGateResults(root),
+      );
+      return {
+        status: validation.valid ? 'current' : 'failed',
+        fingerprint: checkFingerprint({ gateContext, validation }),
+      };
+    },
+    recordTransition: async ({ candidate, state, bindings, checks }) => {
+      await appendCandidateTransition(root, candidate, 'candidate-readiness-transition', {
+        candidateId: candidate.candidateId,
+        changeId: candidate.changeId,
+        generation: candidate.generation,
+        repositoryId: candidate.repositoryId,
+        previousState: candidate.state,
+        state,
+        bindings,
+        checks,
+      });
+    },
+  }));
 }
 
 interface CandidateSnapshotProjectionEvaluation {
@@ -426,6 +650,74 @@ async function validateParallelVerificationContext(
     throw new Error('CLI_ERROR: parallel verification context does not match the provisional integration.');
   }
   return true;
+}
+
+async function integrationWorkspace(root: string, integrationId: string): Promise<string> {
+  const registry = await readCandidateRegistry(root);
+  const integration = registry?.integrations.find((entry) =>
+    entry.integrationId === integrationId);
+  if (!integration) {
+    throw new Error('CANDIDATE_WORKSPACE_NOT_FOUND: integration context was not found.');
+  }
+  return resolve(root, integration.worktreePath);
+}
+
+async function loadCliIntegrationEvidenceContext(
+  root: string,
+  integrationId: string,
+): Promise<IntegrationEvidenceContext> {
+  const [context, registry] = await Promise.all([
+    loadIntegrationEvidenceContext(root, integrationId),
+    readCandidateRegistry(root),
+  ]);
+  if (!registry) {
+    throw new Error('CANDIDATE_WORKSPACE_NOT_FOUND: candidate registry was not found.');
+  }
+  return {
+    repositoryId: context.repositoryId,
+    integrationId: context.integrationId,
+    startingDefaultCommit: context.startingDefaultCommit,
+    candidates: context.candidates.map((identity) => {
+      const candidate = registry.candidates.find((entry) =>
+        entry.candidateId === identity.candidateId);
+      if (!candidate) {
+        throw new Error('CANDIDATE_STATE_OWNERSHIP: integration candidate is not registered.');
+      }
+      return {
+        repositoryId: candidate.repositoryId,
+        candidateId: identity.candidateId,
+        changeId: identity.changeId,
+        generation: identity.generation,
+        baseCommit: candidate.baseCommit,
+        candidateCommit: identity.candidateCommit,
+      };
+    }),
+    applyOrder: context.applyOrder,
+    sourceManifestSha256: context.sourceManifestSha256,
+    ...(context.integrationCommit === undefined
+      ? {}
+      : { integrationCommit: context.integrationCommit }),
+  };
+}
+
+async function verifyCandidateIntegration(
+  controlRoot: string,
+  context: { integrationId: string; worktreePath: string },
+): Promise<ClosedIntegrationVerification> {
+  const evidenceContext = await loadCliIntegrationEvidenceContext(
+    controlRoot,
+    context.integrationId,
+  );
+  const report = await withWorkspaceRoot(
+    controlRoot,
+    context.worktreePath,
+    (root) => runGate(root, {
+      changed: true,
+      evidenceContext,
+      tddPurpose: 'integration-verification',
+    }),
+  );
+  return closedIntegrationVerificationFromGate(report);
 }
 
 function pathQuery(root: string, query: string): string {
@@ -800,18 +1092,38 @@ export function createProgram(): Command {
     });
   async function executeGate(options: {
     root: string; json?: boolean; changed?: boolean; feature?: string; matrix?: boolean; workspace?: string;
-    parallelVerification?: string;
+    parallelVerification?: string; changeId?: string; multiChangeVerification?: string;
   }): Promise<void> {
+    if (options.changeId && options.multiChangeVerification) {
+      throw new Error('CLI_ERROR: --change-id and --multi-change-verification are mutually exclusive.');
+    }
     const parallelVerification = await validateParallelVerificationContext(
       options.root,
       options.workspace,
       options.parallelVerification,
     );
-    const report = await withWorkspaceRoot(options.root, options.workspace, (root) => runGate(root, {
+    const controlRoot = resolve(options.root);
+    const integrationContext = options.multiChangeVerification
+      ? await loadCliIntegrationEvidenceContext(controlRoot, options.multiChangeVerification)
+      : undefined;
+    const candidate = options.changeId
+      ? await resumeCandidate(controlRoot, options.changeId)
+      : undefined;
+    const workspace = integrationContext
+      ? await integrationWorkspace(controlRoot, integrationContext.integrationId)
+      : candidate
+        ? resolve(controlRoot, candidate.worktreePath)
+        : options.workspace;
+    const report = await withWorkspaceRoot(controlRoot, workspace, (root) => runGate(root, {
       ...(options.changed === undefined ? {} : { changed: options.changed }),
       ...(options.feature === undefined ? {} : { feature: options.feature }),
       persistenceMode: options.matrix ? 'matrix' : 'normal',
-      ...(parallelVerification ? { tddPurpose: 'integration-verification' as const } : {}),
+      ...(parallelVerification || integrationContext
+        ? { tddPurpose: 'integration-verification' as const }
+        : {}),
+      ...(integrationContext
+        ? { evidenceContext: integrationContext }
+        : candidate ? { evidenceContext: candidateContext(candidate) } : {}),
     }));
     const scopeNote = report.mode === 'feature' ? ` [feature-scoped: ${report.feature}; not the repository-wide gate]` : '';
     output(report, !!options.json, `${report.status.toUpperCase()}${scopeNote}\n${report.checks.map((c) => `${c.status.padEnd(7)} ${c.name}${c.required ? ' [required]' : ' [optional]'}: ${c.summary}`).join('\n')}`);
@@ -820,6 +1132,8 @@ export function createProgram(): Command {
   common(program.command('gate').description('Run actual configured commands and deterministic SDD checks'))
     .option('--changed', 'Report changed/impacted files; keep all checks to avoid unsafe skips')
     .option('--feature <name>', 'Restrict requirements/design/trace/tdd/change checks to one feature; diagnostic view only, not a substitute for the repository-wide gate')
+    .option('--change-id <id>', 'Evaluate one registered candidate CHANGE context')
+    .option('--multi-change-verification <integration-id>', 'Evaluate one registered integration context')
     .addOption(new Option('--workspace <directory>').hideHelp())
     .addOption(new Option('--parallel-verification <plan-id>').hideHelp())
     .addOption(new Option('--matrix').hideHelp())
@@ -1383,7 +1697,7 @@ export function createProgram(): Command {
    * @design DES-M5-MULTI-CHANGE-001 DES-M5-MULTI-CHANGE-009
    */
   const candidateWorkspace = program.command('candidate-workspace')
-    .description('Create and inspect isolated CHANGE candidate workspaces');
+    .description('Manage isolated CHANGE candidate workspace lifecycles');
   common(candidateWorkspace.command('create'))
     .requiredOption('--change-id <id>', 'Explicit active CHANGE owner')
     .action(async (options: { root: string; json?: boolean; changeId: string }) => {
@@ -1399,6 +1713,139 @@ export function createProgram(): Command {
     .action(async (selector: string, options: { root: string; json?: boolean }) => {
       await candidateWorkspaceAction(!!options.json, async () =>
         showRegisteredCandidateWorkspace(resolve(options.root), selector));
+    });
+  common(candidateWorkspace.command('ready <selector>'))
+    .action(async (selector: string, options: { root: string; json?: boolean }) => {
+      await candidateWorkspaceAction(!!options.json, () =>
+        markCandidateReadyFromCli(resolve(options.root), selector));
+    });
+  common(candidateWorkspace.command('resume <selector>'))
+    .action(async (selector: string, options: { root: string; json?: boolean }) => {
+      await candidateWorkspaceAction(!!options.json, () =>
+        resumeCandidate(resolve(options.root), selector));
+    });
+  common(candidateWorkspace.command('refresh'))
+    .requiredOption('--change-id <id>', 'Explicit candidate CHANGE owner')
+    .action(async (options: { root: string; json?: boolean; changeId: string }) => {
+      await candidateWorkspaceAction(!!options.json, async () => {
+        const root = resolve(options.root);
+        const candidate = await resumeCandidate(root, options.changeId);
+        const defaultCommit = await gitCommit(root);
+        return withCandidateWrite(root, candidate, () => refreshCandidate(
+          root,
+          options.changeId,
+          {
+            defaultCommit,
+            hasLiveSnapshot: async (selected) =>
+              (await listCandidateSnapshotRecords(root)).some((snapshot) =>
+                !snapshot.deleted
+                && snapshot.changeId === selected.changeId
+                && snapshot.generation === selected.generation
+                && snapshot.commit === selected.candidateCommit),
+            invalidateEvidence: async () => {},
+            recordTransition: async (transition) => {
+              await appendCandidateTransition(root, transition.candidate, 'candidate-refreshed', {
+                candidateId: transition.candidate.candidateId,
+                changeId: transition.candidate.changeId,
+                generation: transition.candidate.generation,
+                repositoryId: transition.candidate.repositoryId,
+                previousCommit: transition.previousCommit,
+                candidateCommit: transition.candidateCommit,
+                defaultCommit: transition.defaultCommit,
+              });
+            },
+          },
+        ));
+      });
+    });
+  common(candidateWorkspace.command('integrate <selectors...>'))
+    .option('--confirm', 'Confirm candidate integration')
+    .action(async (selectors: string[], options: {
+      root: string; json?: boolean; confirm?: boolean;
+    }) => {
+      await candidateWorkspaceAction(!!options.json, async () => {
+        if (!options.confirm) throw new Error('CLI_ERROR: --confirm is required.');
+        if (selectors.length === 0) throw new Error('CLI_ERROR: at least one candidate selector is required.');
+        const root = resolve(options.root);
+        const verified = await orchestrateCandidateIntegration({
+          controlRoot: root,
+          selectors,
+          verify: (context) => verifyCandidateIntegration(root, context),
+        });
+        return finalizeCandidateIntegration({
+          controlRoot: root,
+          integrationId: verified.integrationId,
+        });
+      });
+    });
+  common(candidateWorkspace.command('integration-resume <selectors...>'))
+    .option('--confirm', 'Confirm integration resume')
+    .action(async (selectors: string[], options: {
+      root: string; json?: boolean; confirm?: boolean;
+    }) => {
+      await candidateWorkspaceAction(!!options.json, async () => {
+        if (!options.confirm) throw new Error('CLI_ERROR: --confirm is required.');
+        const root = resolve(options.root);
+        return resumeCandidateIntegration({
+          controlRoot: root,
+          selectors,
+          verify: (context) => verifyCandidateIntegration(root, context),
+        });
+      });
+    });
+  common(candidateWorkspace.command('integration-finalize <integration-id>'))
+    .option('--confirm', 'Confirm integration finalization')
+    .action(async (integrationId: string, options: {
+      root: string; json?: boolean; confirm?: boolean;
+    }) => {
+      await candidateWorkspaceAction(!!options.json, async () => {
+        if (!options.confirm) throw new Error('CLI_ERROR: --confirm is required.');
+        return finalizeCandidateIntegration({
+          controlRoot: resolve(options.root),
+          integrationId,
+        });
+      });
+    });
+  common(candidateWorkspace.command('integration-cleanup <integration-id>'))
+    .requiredOption('--deleted-by <name>', 'Cleanup actor')
+    .option('--confirm', 'Confirm integration cleanup')
+    .action(async (integrationId: string, options: {
+      root: string; json?: boolean; deletedBy: string; confirm?: boolean;
+    }) => {
+      await candidateWorkspaceAction(!!options.json, async () => {
+        if (!options.confirm) throw new Error('CLI_ERROR: --confirm is required.');
+        return cleanupCandidateIntegration({
+          controlRoot: resolve(options.root),
+          integrationId,
+          deletedBy: options.deletedBy,
+        });
+      });
+    });
+  common(candidateWorkspace.command('cleanup <selector>'))
+    .requiredOption('--deleted-by <name>', 'Cleanup actor')
+    .option('--confirm', 'Confirm candidate cleanup')
+    .action(async (selector: string, options: {
+      root: string; json?: boolean; deletedBy: string; confirm?: boolean;
+    }) => {
+      await candidateWorkspaceAction(!!options.json, async () => {
+        const root = resolve(options.root);
+        const candidate = await resumeCandidate(root, selector);
+        const defaultCommit = await gitCommit(root);
+        return withCandidateWrite(root, candidate, () => cleanupCandidate(root, selector, {
+          defaultCommit,
+          deletedBy: options.deletedBy,
+          confirm: options.confirm === true,
+          hasLiveLease: async () => false,
+          appendTombstone: async ({ candidate: selected, deletedBy }) =>
+            appendCandidateTransition(root, selected, 'candidate-workspace-deleted', {
+              candidateId: selected.candidateId,
+              changeId: selected.changeId,
+              generation: selected.generation,
+              repositoryId: selected.repositoryId,
+              deletedBy,
+            }),
+        }));
+      });
     });
 
   const approval = program.command('approval').description('Prepare, record and validate explicit artifact-bound human approvals');
@@ -1654,9 +2101,33 @@ export function createProgram(): Command {
       output(state, !!options.json, `Bootstrap ${state.runId}: ${state.status}`);
     });
   common(program.command('status').description('One-shot artifact and gate readiness summary'))
+    .option('--change-id <id>', 'Evaluate one registered candidate CHANGE context')
+    .option('--multi-change-verification <integration-id>', 'Evaluate one registered integration context')
     .addOption(new Option('--workspace <directory>').hideHelp())
-    .action(async (options: { root: string; json?: boolean; workspace?: string }) => {
-      const status = await withWorkspaceRoot(options.root, options.workspace, projectStatus);
+    .action(async (options: {
+      root: string; json?: boolean; workspace?: string;
+      changeId?: string; multiChangeVerification?: string;
+    }) => {
+      if (options.changeId && options.multiChangeVerification) {
+        throw new Error('CLI_ERROR: --change-id and --multi-change-verification are mutually exclusive.');
+      }
+      const controlRoot = resolve(options.root);
+      const integrationContext = options.multiChangeVerification
+        ? await loadCliIntegrationEvidenceContext(controlRoot, options.multiChangeVerification)
+        : undefined;
+      const candidate = options.changeId
+        ? await resumeCandidate(controlRoot, options.changeId)
+        : undefined;
+      const workspace = integrationContext
+        ? await integrationWorkspace(controlRoot, integrationContext.integrationId)
+        : candidate
+          ? resolve(controlRoot, candidate.worktreePath)
+          : options.workspace;
+      const status = await withWorkspaceRoot(
+        controlRoot,
+        workspace,
+        (root) => projectStatus(root, integrationContext),
+      );
       const approvalSummary = status.approvals
         ? status.approvals.stages.map((stage) => `${stage.stage}=${stage.status}`).join(', ')
         : 'unconfigured';
@@ -1687,7 +2158,7 @@ async function main(): Promise<void> {
   } catch (cause) {
     if (cause instanceof CommanderError && cause.exitCode === 0) return;
     const message = cause instanceof Error ? cause.message : String(cause);
-    const domainFailure = /^(CLI_ERROR|CACHE_WRITE_FAILED|(?:PARALLEL_[A-Z0-9_]+)|CHANGE_GENERATION_[A-Z0-9_]+|CHANGE_CHECKPOINT_JOURNAL_INVALID|WORKFLOW_CHANGE_MISMATCH|WORKFLOW_DECLARATION_CORRECTION_INVALID|JOURNAL_IDEMPOTENCY_CONFLICT|LEASE_FENCED):\s*(.*)$/.exec(message);
+    const domainFailure = /^(CLI_ERROR|CACHE_WRITE_FAILED|(?:CANDIDATE_[A-Z0-9_]+)|(?:PARALLEL_[A-Z0-9_]+)|CHANGE_GENERATION_[A-Z0-9_]+|CHANGE_CHECKPOINT_JOURNAL_INVALID|WORKFLOW_CHANGE_MISMATCH|WORKFLOW_DECLARATION_CORRECTION_INVALID|JOURNAL_IDEMPOTENCY_CONFLICT|LEASE_FENCED):\s*(.*)$/.exec(message);
     if (domainFailure) {
       const [, code, detail] = domainFailure;
       if (process.argv.includes('--json')) console.log(JSON.stringify({ error: { code, message: detail } }));

@@ -41,8 +41,37 @@ describe('CLI help compatibility', () => {
         expected = expected.replace(
           '  approval                                         Prepare, record and validate explicit artifact-bound human approvals',
           '  candidate-snapshot                               Create and inspect immutable candidate snapshot lifecycle evidence\n'
-            + '  candidate-workspace                              Create and inspect isolated CHANGE candidate workspaces\n'
+            + '  candidate-workspace                              Manage isolated CHANGE candidate workspace lifecycles\n'
             + '  approval                                         Prepare, record and validate explicit artifact-bound human approvals',
+        );
+      } else if (snapshot.command === 'musubix3 gate') {
+        expected = expected.replace(
+          '  --root <directory>  Project root / プロジェクトルート (default: ".")\n'
+            + '  --json              Machine-readable JSON\n'
+            + '  --changed           Report changed/impacted files; keep all checks to avoid\n'
+            + '                      unsafe skips\n'
+            + '  --feature <name>    Restrict requirements/design/trace/tdd/change checks to\n'
+            + '                      one feature; diagnostic view only, not a substitute for\n'
+            + '                      the repository-wide gate\n'
+            + '  -h, --help          display help for command',
+          '  --root <directory>                            Project root / プロジェクトルート (default: ".")\n'
+            + '  --json                                        Machine-readable JSON\n'
+            + '  --changed                                     Report changed/impacted files; keep all checks to avoid unsafe skips\n'
+            + '  --feature <name>                              Restrict requirements/design/trace/tdd/change checks to one feature; diagnostic view only, not a substitute for the repository-wide gate\n'
+            + '  --change-id <id>                              Evaluate one registered candidate CHANGE context\n'
+            + '  --multi-change-verification <integration-id>  Evaluate one registered integration context\n'
+            + '  -h, --help                                    display help for command',
+        );
+      } else if (snapshot.command === 'musubix3 status') {
+        expected = expected.replace(
+          '  --root <directory>  Project root / プロジェクトルート (default: ".")\n'
+            + '  --json              Machine-readable JSON\n'
+            + '  -h, --help          display help for command',
+          '  --root <directory>                            Project root / プロジェクトルート (default: ".")\n'
+            + '  --json                                        Machine-readable JSON\n'
+            + '  --change-id <id>                              Evaluate one registered candidate CHANGE context\n'
+            + '  --multi-change-verification <integration-id>  Evaluate one registered integration context\n'
+            + '  -h, --help                                    display help for command',
         );
       } else if (snapshot.command === 'musubix3 workflow-sanitize') {
         expected = expected.replace(
