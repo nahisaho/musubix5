@@ -31,6 +31,7 @@ describe('release approval manifest scope', () => {
       'docs/history/old-change.md',
       '.musubix/runs/CHANGE-0002/run-1/draft.json',
       '.musubix/features/example/trace.json',
+      '.musubix/trace/index.json',
       '.musubix/evidence/current.json',
       '.musubix/evidence/foreign.json',
       '.musubix/evidence/broken.json',
@@ -70,6 +71,7 @@ describe('release approval manifest scope', () => {
       ['.musubix/evidence/quality.json', 'gate-self-reference'],
       ['.musubix/features/example/trace.json', 'generated-trace'],
       ['.musubix/runs/CHANGE-0002/run-1/draft.json', 'run-local'],
+      ['.musubix/trace/index.json', 'generated-trace'],
       ['docs/history/old-change.md', 'historical'],
       ['session-log/run/output.txt', 'log-directory'],
     ]);

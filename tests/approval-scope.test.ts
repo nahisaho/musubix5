@@ -40,6 +40,7 @@ describe('approval manifest scope', () => {
       'ADRs: ADR-0001',
       '',
     ].join('\n'));
+    write(root, '.musubix/trace/index.json', '{}\n');
     write(root, '.musubix/features/sample/trace.json', '{}\n');
     write(root, '.musubix/decisions/ADR-0001.md', '# ADR\n');
     write(root, '.musubix/evidence/current.json', '{"changeId":"CHANGE-0002"}\n');
@@ -117,6 +118,7 @@ describe('approval manifest scope', () => {
     });
     expect(Object.keys(release.artifacts)).toContain('src/index.ts');
     expect(release.exclusions.map((entry) => [entry.path, entry.reason])).toEqual(expect.arrayContaining([
+      ['.musubix/trace/index.json', 'generated-trace'],
       ['.musubix/features/sample/trace.json', 'generated-trace'],
       ['.musubix/evidence/foreign.json', 'foreign-change-evidence'],
       ['archive.tgz', 'package-archive'],

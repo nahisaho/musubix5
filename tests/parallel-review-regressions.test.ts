@@ -374,6 +374,6 @@ describe('continued CHANGE-0003 generation 5 review regressions', () => {
 
     expect(existsSync(join(root, '.musubix/cache/trace.json'))).toBe(true);
     expect(JSON.parse(readFileSync(join(root, '.musubix/cache/trace.json'), 'utf8')))
-      .toMatchObject({ schemaVersion: 1 });
+      .toMatchObject({ schemaVersion: 2, kind: 'repository-trace-index' });
   });
 });

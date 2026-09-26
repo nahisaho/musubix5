@@ -27,6 +27,7 @@ function fixture(manifest: unknown): string {
   if (manifest !== undefined) write(root, 'package.json', manifest);
   write(root, '.github/skills/example/SKILL.md', '# Skill\n');
   write(root, '.github/skills/example/notes.md', '# Notes\n');
+  write(root, '.musubix/trace/index.json', '{}\n');
   write(root, '.musubix/features/sample/trace.json', '{}\n');
   write(root, 'logs/run/output.txt', 'log\n');
   write(root, 'archive.tgz', 'archive\n');
@@ -157,6 +158,7 @@ describe('repository Skill evidence inputs', () => {
     expect(analysis.evidenceInputPaths([
       '.github/skills/example/SKILL.md',
       '.github/skills/example/notes.md',
+      '.musubix/trace/index.json',
       '.musubix/features/sample/trace.json',
       'archive.tgz',
       'logs/run/output.txt',

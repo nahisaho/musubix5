@@ -46,7 +46,8 @@ export function releaseExclusionReason(input: {
 }): string | null {
   const { path } = input;
   if (input.symbolicLink) return 'symlink';
-  if (/^\.musubix\/features\/[^/]+\/trace\.json$/.test(path)) return 'generated-trace';
+  if (path === '.musubix/trace/index.json'
+    || /^\.musubix\/features\/[^/]+\/trace\.json$/.test(path)) return 'generated-trace';
   if (path.endsWith('.tgz')) return 'package-archive';
   if (/(?:^|\/)(?:log|logs|session-log|session-logs)\//.test(path)) return 'log-directory';
   if (path.startsWith('docs/history/')) return 'historical';

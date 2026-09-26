@@ -252,7 +252,7 @@ async function createSplitRootLifecycleFixture(options: { stubCli?: boolean } = 
     'update-index',
     '--assume-unchanged',
     '.musubix/evidence/changes.json',
-    '.musubix/features/consumer/trace.json',
+    '.musubix/trace/index.json',
   ]);
   return { fixture, commandLog };
 }

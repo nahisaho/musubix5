@@ -162,7 +162,8 @@ export function isArtifact(path: string): boolean {
 
 export function evidenceInputPaths(paths: string[]): string[] {
   return paths.filter((path) =>
-    !/^\.musubix\/features\/[^/]+\/trace\.json$/.test(path)
+    path !== '.musubix/trace/index.json'
+    && !/^\.musubix\/features\/[^/]+\/trace\.json$/.test(path)
     && !path.endsWith('.tgz')
     && !/^\.github\/skills\//.test(path)
     && !/(?:^|\/)(?:logs?|session-logs)\//.test(path));

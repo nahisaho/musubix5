@@ -44,6 +44,7 @@ describe('release candidate tree approval', () => {
     write(root, '.musubix/constitution.md', '# Constitution\n');
     write(root, '.musubix/features/sample/requirements.md', '# Requirements\n');
     write(root, '.musubix/features/sample/design.md', '# Design\n');
+    write(root, '.musubix/trace/index.json', '{}\n');
     write(root, '.musubix/features/sample/trace.json', '{}\n');
     write(root, '.musubix/decisions/ADR-0001.md', '# ADR\n');
     write(root, '.musubix/changes/CHANGE-0002.md', '# CHANGE-0002\n');
@@ -80,6 +81,7 @@ describe('release candidate tree approval', () => {
       ['.musubix/evidence/approvals/native/release.json', 'release-self-reference'],
       ['.musubix/evidence/approvals/release.json', 'release-self-reference'],
       ['.musubix/features/sample/trace.json', 'generated-trace'],
+      ['.musubix/trace/index.json', 'generated-trace'],
     ]);
 
     write(root, 'src/index.ts', 'export const value = 999;\n');

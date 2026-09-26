@@ -1,6 +1,17 @@
 import { readdir, mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { buildTrace, defaultConfig, defaultPolicyBaseline, exists, readText, safePath, writeJson, writeText, runProcess, type Runner } from '../../analysis/src/index.js';
+import {
+  buildTrace,
+  defaultConfig,
+  defaultPolicyBaseline,
+  exists,
+  files,
+  readText,
+  safePath,
+  writeText,
+  runProcess,
+  type Runner,
+} from '../../analysis/src/index.js';
 
 export const skillNames = [
   'sdd-change',
@@ -19,9 +30,13 @@ export const skillNames = [
 
 export interface InstallAction {
   path: string;
-  action: 'create' | 'replace' | 'preserve' | 'unchanged' | 'merge';
+  action: 'create' | 'replace' | 'preserve' | 'unchanged' | 'merge' | 'remove';
 }
 
+/** @id CODE-M5-WAVE1-TRACE-INSTALL-001
+ * @implements REQ-M5-WAVE1-TRACE-001 REQ-M5-WAVE1-TRACE-002
+ * @design DES-M5-WAVE1-TRACE-003
+ */
 export async function install(root: string, packageRoot: string, options: { dryRun?: boolean; force?: boolean; feature?: string } = {}): Promise<{ dryRun: boolean; actions: InstallAction[] }> {
   root = resolve(root);
   const feature = options.feature ?? 'example';
@@ -62,20 +77,20 @@ export async function install(root: string, packageRoot: string, options: { dryR
     writes.set('.gitignore', `${oldIgnore}${oldIgnore && !oldIgnore.endsWith('\n') ? '\n' : ''}\n# musubix3 generated caches\n/.musubix/cache/\n`);
     actions.push({ path: '.gitignore', action: oldIgnore ? 'merge' : 'create' });
   } else actions.push({ path: '.gitignore', action: 'unchanged' });
-  const tracePath = `.musubix/features/${feature}/trace.json`;
-  const traceExists = await exists(await safePath(root, tracePath));
-  const generateTrace = !traceExists || options.force;
-  actions.push({ path: tracePath, action: !traceExists ? 'create' : options.force ? 'replace' : 'preserve' });
-  const cachePath = await safePath(root, '.musubix/cache');
+  for (const path of ['.musubix/trace/index.json', '.musubix/cache/trace.json']) {
+    actions.push({
+      path,
+      action: await exists(await safePath(root, path)) ? 'unchanged' : 'create',
+    });
+  }
+  const legacyTraces = (await files(root))
+    .filter((path) => /^\.musubix\/features\/[^/]+\/trace\.json$/.test(path))
+    .sort();
+  for (const path of legacyTraces) actions.push({ path, action: 'remove' });
   if (!options.dryRun) {
     await mkdir(root, { recursive: true });
     for (const [path, text] of writes) await writeText(root, path, text);
-    await mkdir(cachePath, { recursive: true });
-    if (generateTrace) {
-      const trace = await buildTrace(root, false);
-      await writeJson(root, tracePath, trace);
-      await writeJson(root, '.musubix/cache/trace.json', trace);
-    }
+    await buildTrace(root);
   }
   return { dryRun: options.dryRun ?? false, actions };
 }
