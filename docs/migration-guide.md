@@ -44,6 +44,25 @@ persists no record. Historical candidate snapshots can therefore report
 Any in-flight candidate created before this change must rerun candidate gates
 to produce Ubuntu/24, Windows/24, and macOS/24 evidence before release approval.
 
+## Portable candidate state paths
+
+Candidate and integration logical IDs remain unchanged in journal, evidence,
+CLI, and JSON contracts, but persisted owner directories now use canonical
+`candidate-<64-lowercase-hex>` and `integration-<64-lowercase-hex>` filesystem
+keys. Raw colon-bearing logical-ID directories, percent-encoded aliases, case
+variants, symlink aliases, and other noncanonical owner members are not read or
+automatically migrated.
+
+Repositories with unreleased candidate state created under a noncanonical
+directory must recreate that candidate state with the current CLI. Detection is
+fail-closed with `CANDIDATE_STATE_OWNERSHIP`; the CLI does not delete or merge
+unknown state automatically. Deep checkout locations can also exceed the
+platform path API limit even though the fixed repository-relative owner-root
+budgets remain within 95 characters for candidates and 112 characters for
+integrations. Move the repository to a shorter absolute path before recreating
+the candidate only when `CANDIDATE_STATE_OWNERSHIP` reports that platform path
+rejection.
+
 ## Approval manifest extensions
 
 Native musubix5 approvals use `approval-manifest-schema-v1`. Requirements and

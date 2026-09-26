@@ -48,7 +48,8 @@ contain a colon that cannot be used as a Windows directory component.
   Windows-safe filesystem key.
 - Treat #40 as a conformance defect against the existing Node.js 24
   Ubuntu/Windows/macOS verification matrix in `REQ-M5-CI-001`; it changes
-  tests, not normative behavior.
+  tests, not normative behavior, so `REQ-M5-CI-001` is not part of this
+  CHANGE's normative `Requirements:` set.
 - Resolve #39 through `REQ-M5-MULTI-CHANGE-004` without changing logical
   candidate/integration identities.
 
@@ -103,6 +104,28 @@ contain a colon that cannot be used as a Windows directory component.
   matrix and to `REQ-M5-MULTI-CHANGE-004` where they assert encoded state
   paths.
 
+## Release evidence (pre-approval)
+
+- Live candidate snapshot: `snapshot-000000000184`.
+- Candidate commit: `57a3b163b619e52a3595910e7df112049b520b1b`.
+- Candidate gate run: GitHub Actions run `36220081063`.
+- Signed Ubuntu, Windows, and macOS Node.js 24 envelopes are ingested in
+  `.musubix/evidence/release/gates/ubuntu-node24.json`,
+  `.musubix/evidence/release/gates/windows-node24.json`, and
+  `.musubix/evidence/release/gates/macos-node24.json`; all required commands
+  passed and candidate-gate validation reports no diagnostics.
+- Other Node.js 20/22 records under `.musubix/evidence/release/gates/` are
+  historical evidence for earlier CHANGEs and are not release evidence for
+  this candidate.
+- Moving ADR-0025, ADR-0026, and ADR-0027 to `accepted` makes the prior design
+  approval stale. Design must be re-approved before preparing the CHANGE-0014
+  generation 1 release approval, after which the final gate and status must be
+  regenerated.
+- No workflow waiver currently suppresses a diagnostic. Workflow
+  reconciliation relies on five append-only declaration corrections. Six stale
+  waiver records remain as audit history: three recorded during CHANGE-0014 and
+  three that predate it; none is applied.
+
 ## Residual risks
 
 - The feature adds persistent workspace lifecycle state and Git worktrees,
@@ -111,3 +134,16 @@ contain a colon that cannot be used as a Windows directory component.
   cross-candidate evidence contamination.
 - Integration ordering cannot eliminate semantic conflicts between disjoint
   files; complete verification remains mandatory.
+- Existing noncanonical candidate state has no legacy read fallback and must be
+  recreated manually after `CANDIDATE_STATE_OWNERSHIP`; unknown state is never
+  migrated or deleted automatically.
+- Repository-relative owner-root budgets remain fixed at 95 characters for
+  candidates and 112 characters for integrations. Independently, a deep
+  absolute Windows checkout can be rejected by the platform path API and
+  surfaces as the same `CANDIDATE_STATE_OWNERSHIP` diagnostic; relocating the
+  repository addresses only that absolute-path failure.
+- Local quality evidence is unsigned; cryptographic provenance for the release
+  decision comes from the three GitHub OIDC-bound candidate-gate envelopes.
+- Formal model correspondence currently covers only a small subset of the
+  repository requirements, and mutation testing is not configured as a
+  required check for this candidate.
