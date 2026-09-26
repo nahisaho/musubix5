@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { unlink } from 'node:fs/promises';
-import { validateConstitution, validateDesign, validateRequirements, type Diagnostic, type Evidence } from '../../domain/src/index.js';
+import { error, validateConstitution, validateDesign, validateRequirements, type Diagnostic, type Evidence } from '../../domain/src/index.js';
 import { loadConfig, loadPolicyBaseline, policyDiagnostics, commandCwd, type Config } from './config.js';
 import { digest, evidenceInputs, exists, files, readText, safePath, snapshot, within, writeJson } from './files.js';
 import { graphGate, graphImpact, indexGraph } from './graph.js';
@@ -37,6 +37,7 @@ import {
 } from './approval.js';
 import {
   candidateEvidenceBinding,
+  integrationApprovalContext,
   integrationEvidenceBinding,
   preserveEvidenceDiagnostics,
   validateCandidateBinding,
@@ -167,6 +168,49 @@ export function gateEvidenceChangeIds(
     : [context.changeId])
     .filter((changeId, index, all) => all.indexOf(changeId) === index)
     .sort((left, right) => Buffer.compare(Buffer.from(left), Buffer.from(right)));
+}
+
+export interface IntegrationStatusGate {
+  status: 'pass' | 'fail' | 'skipped' | 'stale';
+  generatedAt: string | null;
+  ready: false;
+  binding: IntegrationEvidenceBinding;
+  diagnostics: Diagnostic[];
+}
+
+/** @id CODE-M5-INTEGRATION-STATUS-CONTEXT-001
+ * @implements REQ-M5-MULTI-CHANGE-003 REQ-M5-MULTI-CHANGE-008 REQ-M5-PARALLEL-010
+ * @design DES-M5-MULTI-CHANGE-005 DES-M5-MULTI-CHANGE-008
+ */
+export function integrationStatusProjection(
+  context: IntegrationEvidenceContext,
+  evidence: Partial<GateReport> | null,
+  currentFingerprints?: Record<string, string>,
+): IntegrationStatusGate {
+  const binding = gateEvidenceBinding(context);
+  const diagnostics: Diagnostic[] = [];
+  const bindingCurrent = evidence?.binding !== undefined
+    && JSON.stringify(evidence.binding) === JSON.stringify(binding);
+  if (!bindingCurrent) {
+    diagnostics.push(error(
+      'CANDIDATE_EVIDENCE_MISMATCH',
+      `Quality evidence is not bound to integration ${context.integrationId}.`,
+    ));
+  }
+  const recognized = evidence?.status === 'pass' || evidence?.status === 'fail'
+    || evidence?.status === 'skipped';
+  const inputsCurrent = currentFingerprints === undefined
+    || qualityInputsCurrent(evidence?.fingerprints, currentFingerprints);
+  const status = !recognized || !bindingCurrent || !inputsCurrent
+    ? 'stale'
+    : evidence.status!;
+  return {
+    status,
+    generatedAt: evidence?.generatedAt ?? null,
+    ready: false,
+    binding,
+    diagnostics,
+  };
 }
 
 export async function runGate(root: string, options: {
@@ -790,14 +834,23 @@ export async function runGate(root: string, options: {
  * @implements REQ-M5-COMPAT-005 REQ-M5-COMPAT-006 REQ-M5-COMPAT-007 REQ-M5-COMPAT-013 REQ-M5-LIFECYCLE-005
  * @design DES-M5-002
  */
-export async function projectStatus(root: string): Promise<{
+export async function projectStatus(
+  root: string,
+  evidenceContext?: IntegrationEvidenceContext,
+): Promise<{
   initialized: boolean;
   artifacts: { requirements: number; designs: number; decisions: number };
   codeGraph: Config['codeGraph'] | null;
   approvals: ApprovalValidation | null;
   change: ChangeGenerationSummary | null;
   changeDiagnostics: Diagnostic[];
-  gate: { status: 'pass' | 'fail' | 'skipped' | 'stale'; generatedAt: string | null; ready: boolean };
+  gate: {
+    status: 'pass' | 'fail' | 'skipped' | 'stale';
+    generatedAt: string | null;
+    ready: boolean;
+    binding?: IntegrationEvidenceBinding;
+    diagnostics?: Diagnostic[];
+  };
   next: string[];
   waivers: Array<{ changeId: string; code: string; requirementId?: string; detail?: string; approver: string; reason: string; recordedAt: string }>;
   workflowWaivers: Array<{ skill: string; phase: string; declarationRecordedAt: string; index?: number; code: string; approver: string; reason: string; waiverRecordedAt: string }>;
@@ -819,22 +872,33 @@ export async function projectStatus(root: string): Promise<{
   const changeEvidence = await loadChangeEvidence(root);
   const changeDiagnostics: Diagnostic[] = [];
   let changeContext: Awaited<ReturnType<typeof resolveChangeContext>> = null;
-  try {
-    changeContext = await resolveChangeContext(root, { maintenance: true });
-  } catch (cause) {
-    const message = cause instanceof Error ? cause.message : String(cause);
-    const known = /^(CHANGE_GENERATION_PHASE|CHANGE_GENERATION_MIXED):\s*(.*)$/.exec(message);
-    if (!known) throw cause;
-    changeDiagnostics.push({
-      code: known[1]!,
-      severity: 'error',
-      message: known[2]!,
-    });
+  if (evidenceContext) {
+    const owner = integrationApprovalContext(evidenceContext);
+    changeContext = {
+      changeId: owner.changeId,
+      generation: owner.generation,
+      requirementIds: changeEvidence?.changes.find((entry) =>
+        entry.changeId === owner.changeId)?.requirementIds ?? [],
+      documentStatus: 'active',
+    };
+  } else {
+    try {
+      changeContext = await resolveChangeContext(root, { maintenance: true });
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : String(cause);
+      const known = /^(CHANGE_GENERATION_PHASE|CHANGE_GENERATION_MIXED):\s*(.*)$/.exec(message);
+      if (!known) throw cause;
+      changeDiagnostics.push({
+        code: known[1]!,
+        severity: 'error',
+        message: known[2]!,
+      });
+    }
   }
   const inactiveChangeId = changeContext?.generation === null ? changeContext.changeId : null;
   const generationInactive = inactiveChangeId !== null;
   const approvals = config && changeDiagnostics.length === 0 && !generationInactive
-    ? await validateApprovals(root, config.approval)
+    ? await validateApprovals(root, config.approval, evidenceContext)
     : null;
   const changeRecord = changeContext
     ? changeEvidence?.changes.find((entry) => entry.changeId === changeContext.changeId)
@@ -877,7 +941,7 @@ export async function projectStatus(root: string): Promise<{
       JSON.stringify(changeRecord.phases.quality.fingerprints) === JSON.stringify(fingerprints);
   }
   const candidateRecoveryActions: string[] = [];
-  if (changeContext && changeContext.generation !== null) {
+  if (!evidenceContext && changeContext && changeContext.generation !== null) {
     let live: Awaited<ReturnType<typeof listCandidateSnapshotRecords>> = [];
     try {
       live = (await listCandidateSnapshotRecords(root))
@@ -937,10 +1001,18 @@ export async function projectStatus(root: string): Promise<{
   const evidencePath = '.musubix/evidence/quality.json';
   let status: 'pass' | 'fail' | 'skipped' | 'stale' = 'skipped';
   let generatedAt: string | null = null;
+  let integrationGate: IntegrationStatusGate | null = null;
   if (await exists(within(root, evidencePath))) {
     const evidence = JSON.parse(await readText(root, evidencePath)) as Partial<GateReport>;
     if (evidence.schemaVersion !== 1 || !['pass', 'fail', 'skipped'].includes(String(evidence.status))) throw new Error('Invalid quality evidence; run gate.');
-    if (evidence.status === 'pass' || evidence.status === 'fail') {
+    if (evidenceContext) {
+      integrationGate = integrationStatusProjection(
+        evidenceContext,
+        evidence,
+        await evidenceSnapshot(root),
+      );
+      status = integrationGate.status;
+    } else if (evidence.status === 'pass' || evidence.status === 'fail') {
       status = qualityInputsCurrent(evidence.fingerprints, await evidenceSnapshot(root)) ? evidence.status : 'stale';
       if (status === 'pass' && (!evidence.checks?.length || aggregateStatus(evidence.checks) !== 'pass')) status = 'stale';
       if (status === 'pass') {
@@ -960,7 +1032,7 @@ export async function projectStatus(root: string): Promise<{
     workflowWaiverDiagnostics: [],
   };
   if (changeDiagnostics.length === 0 && !generationInactive) {
-    const workflow = await validateWorkflow(root);
+    const workflow = await validateWorkflow(root, undefined, evidenceContext);
     workflowAudit = deriveWorkflowWaiverAudit(workflow.workflowWaiverContext);
   }
   const { workflowWaivers, workflowWaiverDiagnostics } = workflowAudit;
@@ -976,7 +1048,12 @@ export async function projectStatus(root: string): Promise<{
     gate: {
       status,
       generatedAt,
-      ready: initialized && status === 'pass' && approvals?.valid === true && generationReady,
+      ready: evidenceContext
+        ? false
+        : initialized && status === 'pass' && approvals?.valid === true && generationReady,
+      ...(integrationGate
+        ? { binding: integrationGate.binding, diagnostics: integrationGate.diagnostics }
+        : {}),
     },
     waivers,
     workflowWaivers,
