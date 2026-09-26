@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -23,8 +24,8 @@ function initializeRepository(): {
   defaultTip: string;
 } {
   const suffix = `${process.pid}-${randomUUID()}`;
-  const root = join(process.cwd(), `.candidate-refresh-${suffix}`);
-  const candidateRoot = join(process.cwd(), `.candidate-refresh-worktree-${suffix}`);
+  const root = join(tmpdir(), `musubix5-candidate-refresh-${suffix}`);
+  const candidateRoot = join(tmpdir(), `musubix5-candidate-refresh-worktree-${suffix}`);
   roots.push(root, candidateRoot);
   mkdirSync(root, { recursive: true });
   git(root, 'init', '--quiet', '--initial-branch', 'main');
