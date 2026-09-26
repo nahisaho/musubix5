@@ -2,7 +2,7 @@
 schemaVersion: 1
 id: CHANGE-0015
 summary: Stabilize Wave 1 maintenance workflows
-status: active
+status: completed
 ---
 # CHANGE-0015: stabilize-maintenance-workflows
 
