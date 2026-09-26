@@ -37,10 +37,14 @@ import {
 } from './approval.js';
 import {
   candidateEvidenceBinding,
+  integrationEvidenceBinding,
   preserveEvidenceDiagnostics,
   validateCandidateBinding,
   type CandidateEvidenceBinding,
   type CandidateEvidenceContext,
+  type EvidenceBinding,
+  type IntegrationEvidenceBinding,
+  type IntegrationEvidenceContext,
 } from './approval.js';
 import { listCandidateSnapshotRecords } from './workspace-manager.js';
 import { requiredCommandDiagnostics } from './quality-policy.js';
@@ -66,7 +70,7 @@ export interface GateReport {
   waivers?: Array<{ changeId: string; code: string; requirementId?: string; detail?: string; approver: string; reason: string; recordedAt: string }>;
   workflowWaivers?: Array<{ skill: string; phase: string; declarationRecordedAt: string; index?: number; code: string; approver: string; reason: string; waiverRecordedAt: string }>;
   waiverDiagnostics?: Diagnostic[];
-  binding?: CandidateEvidenceBinding;
+  binding?: EvidenceBinding;
 }
 
 export interface FormalEvidence {
@@ -140,6 +144,31 @@ export function candidateStatus(
   return { ready, diagnostics };
 }
 
+/** @id CODE-M5-INTEGRATION-GATE-CONTEXT-001
+ * @implements REQ-M5-MULTI-CHANGE-003 REQ-M5-MULTI-CHANGE-008 REQ-M5-RELEASE-002 REQ-M5-PARALLEL-010
+ * @design DES-M5-MULTI-CHANGE-005 DES-M5-MULTI-CHANGE-008
+ */
+export function gateEvidenceBinding(context: IntegrationEvidenceContext): IntegrationEvidenceBinding;
+export function gateEvidenceBinding(context: CandidateEvidenceContext): CandidateEvidenceBinding;
+export function gateEvidenceBinding(context: CandidateEvidenceContext | IntegrationEvidenceContext): EvidenceBinding;
+export function gateEvidenceBinding(
+  context: CandidateEvidenceContext | IntegrationEvidenceContext,
+): EvidenceBinding {
+  return 'integrationId' in context
+    ? integrationEvidenceBinding(context)
+    : candidateEvidenceBinding(context);
+}
+
+export function gateEvidenceChangeIds(
+  context: CandidateEvidenceContext | IntegrationEvidenceContext,
+): string[] {
+  return ('integrationId' in context
+    ? context.candidates.map((candidate) => candidate.changeId)
+    : [context.changeId])
+    .filter((changeId, index, all) => all.indexOf(changeId) === index)
+    .sort((left, right) => Buffer.compare(Buffer.from(left), Buffer.from(right)));
+}
+
 export async function runGate(root: string, options: {
   changed?: boolean;
   feature?: string;
@@ -149,7 +178,7 @@ export async function runGate(root: string, options: {
   attestationOptions?: AttestationVerificationOptions;
   persistenceMode?: 'normal' | 'matrix';
   tddPurpose?: 'readiness' | 'integration-verification';
-  evidenceContext?: CandidateEvidenceContext;
+  evidenceContext?: CandidateEvidenceContext | IntegrationEvidenceContext;
 } = {}): Promise<GateReport> {
   const config = options.config ?? await loadConfig(root);
   const runner = options.runner ?? runProcess;
@@ -250,7 +279,7 @@ export async function runGate(root: string, options: {
     diagnostics: formalDiagnostics,
     durationMs: formalResult.solver.durationMs,
   });
-  const workflow = await validateWorkflow(root, config.workflow);
+  const workflow = await validateWorkflow(root, config.workflow, options.evidenceContext);
   const workflowErrors = countErrors(workflow.diagnostics);
   checks.push({
     name: 'workflow',
@@ -265,7 +294,7 @@ export async function runGate(root: string, options: {
   });
   const { workflowWaivers, workflowWaiverDiagnostics } = deriveWorkflowWaiverAudit(workflow.workflowWaiverContext);
   const tddPurpose = options.tddPurpose ?? 'readiness';
-  const tdd = await validateTddEvidence(root, tddPurpose);
+  const tdd = await validateTddEvidence(root, tddPurpose, options.evidenceContext);
   const tddDiagnostics = tdd.diagnostics.filter(scopedToFeature);
   checks.push({
     name: 'tdd',
@@ -278,11 +307,21 @@ export async function runGate(root: string, options: {
     root,
     tddPurpose === 'integration-verification' ? 'integration-verification' : 'phase-validation',
   );
-  const changeDiagnostics = changes.diagnostics.filter(scopedToFeature);
+  const selectedChangeIds = options.evidenceContext
+    ? new Set(gateEvidenceChangeIds(options.evidenceContext))
+    : null;
+  const selectedDiagnostic = (diagnostic: Diagnostic): boolean => {
+    if (!selectedChangeIds) return true;
+    if (diagnostic.changeId) return selectedChangeIds.has(diagnostic.changeId);
+    const attributed = diagnostic.path?.match(/(?:^|\/)(CHANGE-\d+)(?:\.md|\/|$)/)?.[1]
+      ?? diagnostic.message.match(/\bCHANGE-\d+\b/)?.[0];
+    return attributed === undefined || selectedChangeIds.has(attributed);
+  };
+  const changeDiagnostics = changes.diagnostics.filter(scopedToFeature).filter(selectedDiagnostic);
   checks.push({
     name: 'change-history',
     required: required('change-history') || hasChangeDocuments,
-    status: !changes.present ? 'skipped' : (featureDir ? countErrors(changeDiagnostics) === 0 : changes.valid) ? 'pass' : 'fail',
+    status: !changes.present ? 'skipped' : countErrors(changeDiagnostics) === 0 ? 'pass' : 'fail',
     summary: changes.present ? `${changes.changes} staged change(s) checked for ordered artifact and TDD evidence.` : 'No staged change chronology evidence is available.',
     diagnostics: changeDiagnostics,
   });
@@ -290,13 +329,16 @@ export async function runGate(root: string, options: {
   let completenessEvidence: Evidence | undefined;
   const completenessCheck = async (performanceReportRoot?: string): Promise<Evidence> => {
     const completeness = await validateChangeCompleteness(root, tddPurpose, performanceReportRoot);
-    const completenessDiagnostics = completeness.diagnostics.filter(scopedToFeature);
+    const completenessDiagnostics = completeness.diagnostics.filter(scopedToFeature).filter(selectedDiagnostic);
+    const selectedChanges = selectedChangeIds
+      ? completeness.changes.filter((change) => selectedChangeIds.has(change.changeId))
+      : completeness.changes;
     return {
       name: 'change-completeness',
       required: required('change-completeness') || hasChangeDocuments,
-      status: !completeness.present ? 'skipped' : (featureDir ? countErrors(completenessDiagnostics) === 0 : completeness.valid) ? 'pass' : 'fail',
+      status: !completeness.present ? 'skipped' : countErrors(completenessDiagnostics) === 0 ? 'pass' : 'fail',
       summary: completeness.present
-        ? `${completeness.changes.filter((change) => change.valid).length}/${completeness.changes.length} staged change(s) have complete requirement, design, ADR, code, test, TDD and trace evidence.`
+        ? `${selectedChanges.filter((change) => change.valid).length}/${selectedChanges.length} staged change(s) have complete requirement, design, ADR, code, test, TDD and trace evidence.`
         : 'No staged change evidence is available.',
       diagnostics: completenessDiagnostics,
     };
@@ -595,9 +637,9 @@ export async function runGate(root: string, options: {
     const resolvedDomains = await resolveDomains(root, config.approval);
     const owningDomain = domainOwning(resolvedDomains, options.feature!);
     if (!owningDomain) throw new Error(`Feature "${options.feature}" is not owned by any configured approval domain.`);
-    approvals = await validateApprovalsForFeatureGate(root, config.approval, owningDomain);
+    approvals = await validateApprovalsForFeatureGate(root, config.approval, owningDomain, options.evidenceContext);
   } else {
-    approvals = await validateApprovals(root, config.approval);
+    approvals = await validateApprovals(root, config.approval, options.evidenceContext);
   }
   const approvalStages = domainsOn
     ? [...(approvals.domains?.flatMap((d) => d.stages) ?? []), ...(approvals.release ? [approvals.release] : [])]
@@ -737,7 +779,7 @@ export async function runGate(root: string, options: {
     workflowWaivers,
     waiverDiagnostics,
     ...(options.evidenceContext
-      ? { binding: candidateEvidenceBinding(options.evidenceContext) }
+      ? { binding: gateEvidenceBinding(options.evidenceContext) }
       : {}),
   };
   if (!featureDir && !matrixMode) await writeJson(root, evidencePath, report);

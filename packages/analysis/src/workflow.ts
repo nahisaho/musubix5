@@ -23,6 +23,7 @@ import {
   validateCandidateBinding,
   type CandidateEvidenceBinding,
   type CandidateEvidenceContext,
+  type IntegrationEvidenceContext,
 } from './approval.js';
 
 export * from './workflow-types.js';
@@ -123,6 +124,20 @@ function activeWorkflowEvents(
   return workflow.events.flatMap((event, index) => {
     const generation = event.generation ?? 1;
     return event.changeId === change.changeId && generation === change.generation
+      ? [{ event, index }]
+      : [];
+  });
+}
+
+function contextualWorkflowEvents(
+  workflow: WorkflowManifest,
+  context: CandidateEvidenceContext | IntegrationEvidenceContext,
+): Array<{ event: WorkflowEvent; index: number }> {
+  const candidates = 'integrationId' in context ? context.candidates : [context];
+  return workflow.events.flatMap((event, index) => {
+    const candidate = candidates.find((entry) =>
+      event.changeId === entry.changeId && (event.generation ?? 1) === entry.generation);
+    return candidate && validateCandidateBinding(event, candidate).valid
       ? [{ event, index }]
       : [];
   });
@@ -769,6 +784,7 @@ export async function validateLoadedWorkflow(
   workflow: WorkflowManifest | null,
   options: WorkflowVerificationOptions = { mode: 'compatible' },
   preloadedWaiverEvidence?: LoadedWorkflowWaiverEvidence | null,
+  evidenceContext?: CandidateEvidenceContext | IntegrationEvidenceContext,
 ): Promise<{
   present: boolean;
   verified: boolean;
@@ -777,8 +793,10 @@ export async function validateLoadedWorkflow(
   diagnostics: Diagnostic[];
   workflowWaiverContext: WorkflowWaiverContext;
 }> {
-  const change = await activeChangeContext(root);
-  const activeEvents = workflow ? activeWorkflowEvents(workflow, change) : [];
+  const change = evidenceContext ? null : await activeChangeContext(root);
+  const activeEvents = workflow
+    ? evidenceContext ? contextualWorkflowEvents(workflow, evidenceContext) : activeWorkflowEvents(workflow, change)
+    : [];
   const present = activeEvents.length > 0;
   const rawDiagnostics: Diagnostic[] = [];
   const correctionContext = await loadWorkflowDeclarationCorrectionContext(root, workflow);
@@ -903,6 +921,7 @@ export async function validateLoadedWorkflow(
 export async function validateWorkflow(
   root: string,
   options: WorkflowVerificationOptions = { mode: 'compatible' },
+  evidenceContext?: CandidateEvidenceContext | IntegrationEvidenceContext,
 ): Promise<{
   present: boolean;
   verified: boolean;
@@ -912,7 +931,7 @@ export async function validateWorkflow(
   workflowWaiverContext: WorkflowWaiverContext;
 }> {
   const workflow = await loadWorkflow(root);
-  return validateLoadedWorkflow(root, workflow, options);
+  return validateLoadedWorkflow(root, workflow, options, undefined, evidenceContext);
 }
 
 export async function activeWorkflowWaivers(root: string): Promise<ReturnType<typeof deriveWorkflowWaiverAudit>['workflowWaivers']> {

@@ -200,6 +200,14 @@ export function integrationEvidenceBinding(
   };
 }
 
+export function integrationApprovalContext(
+  context: IntegrationEvidenceContext,
+): { changeId: string; generation: number } {
+  const owner = integrationEvidenceBinding(context).candidates
+    .sort((left, right) => Buffer.compare(Buffer.from(left.changeId), Buffer.from(right.changeId)))[0]!;
+  return { changeId: owner.changeId, generation: owner.generation };
+}
+
 function candidateBindingOf(record: unknown): CandidateEvidenceBinding | null {
   if (!record || typeof record !== 'object' || Array.isArray(record)) return null;
   const value = record as Record<string, unknown>;
@@ -271,6 +279,9 @@ const integrationApprovalDetails: Readonly<Record<string, string>> = {
   APPROVAL_CANDIDATE_MISSING: 'integration-candidate-snapshot-missing',
   APPROVAL_MISSING: 'integration-release-approval-missing',
   APPROVAL_STALE: 'integration-release-approval-stale',
+  RELEASE_GATE_EVIDENCE_MISSING: 'integration-candidate-gate-missing',
+  RELEASE_GATE_EVIDENCE_STALE: 'integration-candidate-context-mismatch',
+  RELEASE_GATE_CANDIDATE_MISMATCH: 'integration-candidate-context-mismatch',
 };
 
 export function classifyIntegrationApprovalDiagnostic(
@@ -283,6 +294,20 @@ export function classifyIntegrationApprovalDiagnostic(
   }
   const detail = integrationApprovalDetails[diagnostic.code];
   return detail ? { ...preserveEvidenceDiagnostics([diagnostic])[0]!, detail } : preserveEvidenceDiagnostics([diagnostic])[0]!;
+}
+
+function approvalDiagnosticsForContext(
+  diagnostics: Diagnostic[],
+  stage: ApprovalStage,
+  domain: string | undefined,
+  context: CandidateEvidenceContext | IntegrationEvidenceContext | undefined,
+): Diagnostic[] {
+  if (!context || !('integrationId' in context)) return diagnostics;
+  return diagnostics.map((diagnostic) => ({
+    ...classifyIntegrationApprovalDiagnostic(diagnostic, stage, domain),
+    sourceStage: stage,
+    ...(domain ? { domain } : {}),
+  }));
 }
 
 export function approvalPath(stage: ApprovalStage, domain?: string): string {
@@ -304,16 +329,23 @@ export async function approvalManifest(
   stage: ApprovalStage,
   domain?: ResolvedDomain,
   releaseChangeId?: string,
-  evidenceContext?: CandidateEvidenceContext,
+  evidenceContext?: CandidateEvidenceContext | IntegrationEvidenceContext,
 ): Promise<ApprovalManifest> {
   if (stage === 'release' && domain) {
     throw new Error('APPROVAL_DOMAIN_MISMATCH: release approval is repository-wide.');
   }
   let projection: unknown = null;
   const binding = evidenceContext
-    ? candidateEvidenceBinding(evidenceContext, evidenceContext.candidateCommit)
+    ? 'integrationId' in evidenceContext
+      ? integrationEvidenceBinding(evidenceContext)
+      : candidateEvidenceBinding(evidenceContext, evidenceContext.candidateCommit)
     : undefined;
-  const activeChange = await activeChangeContext(root);
+  const explicitChange = evidenceContext
+    ? 'integrationId' in evidenceContext
+      ? integrationApprovalContext(evidenceContext)
+      : { changeId: evidenceContext.changeId, generation: evidenceContext.generation }
+    : null;
+  const activeChange = explicitChange ?? await activeChangeContext(root);
   if (stage !== 'release') {
     const config = await loadApprovalProjectionConfig(root);
     const projectedConfig = materializeExecutionPolicy(config);
@@ -463,7 +495,10 @@ export async function validateApprovalStage(
   stage: ApprovalStage,
   config: ApprovalConfig,
   domain?: ResolvedDomain,
+  evidenceContext?: CandidateEvidenceContext | IntegrationEvidenceContext,
 ): Promise<ApprovalStageValidation> {
+  const contextualize = (diagnostics: Diagnostic[]): Diagnostic[] =>
+    approvalDiagnosticsForContext(diagnostics, stage, domain?.name, evidenceContext);
   const path = approvalPath(stage, domain?.name);
   const present = await exists(within(root, path));
   let evidence: ApprovalEvidence | null;
@@ -477,8 +512,8 @@ export async function validateApprovalStage(
       path,
     )];
     try {
-      const current = await approvalManifest(root, stage, domain);
-      return { stage, ...(domain ? { domain: domain.name } : {}), required, present, status: 'stale', evidence: null, currentArtifactSha256: current.artifactSha256, diagnostics };
+      const current = await approvalManifest(root, stage, domain, undefined, evidenceContext);
+      return { stage, ...(domain ? { domain: domain.name } : {}), required, present, status: 'stale', evidence: null, currentArtifactSha256: current.artifactSha256, diagnostics: contextualize(diagnostics) };
     } catch (manifestCause) {
       const message = manifestCause instanceof Error ? manifestCause.message : String(manifestCause);
       const code = message.split(':', 1)[0]!;
@@ -500,14 +535,14 @@ export async function validateApprovalStage(
           stage,
           diagnostic: code,
         })),
-        diagnostics,
+        diagnostics: contextualize(diagnostics),
       };
     }
   }
   const required = config.mode === 'required';
   let current: ApprovalManifest;
   try {
-    current = await approvalManifest(root, stage, domain, stage === 'release' ? evidence?.changeId : undefined);
+    current = await approvalManifest(root, stage, domain, stage === 'release' ? evidence?.changeId : undefined, evidenceContext);
   } catch (cause) {
     const message = cause instanceof Error ? cause.message : String(cause);
     const code = message.split(':', 1)[0]!;
@@ -527,14 +562,14 @@ export async function validateApprovalStage(
       status: evidence ? 'stale' : 'missing',
       evidence,
       currentArtifactSha256: diagnosticSha256,
-      diagnostics,
+      diagnostics: contextualize(diagnostics),
     };
   }
   if (!evidence) {
     const diagnostics = required
       ? [error('APPROVAL_MISSING', `Current ${stage} approval is required.`, path)]
       : [];
-    return { stage, ...(domain ? { domain: domain.name } : {}), required, present: false, status: 'missing', evidence: null, currentArtifactSha256: current.artifactSha256, diagnostics };
+    return { stage, ...(domain ? { domain: domain.name } : {}), required, present: false, status: 'missing', evidence: null, currentArtifactSha256: current.artifactSha256, diagnostics: contextualize(diagnostics) };
   }
   const stale = evidence.artifactSha256 !== current.artifactSha256
     || JSON.stringify(evidence.artifacts) !== JSON.stringify(current.artifacts)
@@ -551,7 +586,7 @@ export async function validateApprovalStage(
     status: stale ? 'stale' : 'approved',
     evidence,
     currentArtifactSha256: current.artifactSha256,
-    diagnostics,
+    diagnostics: contextualize(diagnostics),
   };
 }
 
@@ -581,9 +616,14 @@ export async function readReleaseApprovalDigest(
   return validation.evidence.artifactSha256;
 }
 
-export async function validateApprovals(root: string, config: ApprovalConfig): Promise<ApprovalValidation> {
+export async function validateApprovals(
+  root: string,
+  config: ApprovalConfig,
+  evidenceContext?: CandidateEvidenceContext | IntegrationEvidenceContext,
+): Promise<ApprovalValidation> {
   if (!domainsConfigured(config)) {
-    const stages = await Promise.all(approvalStages.map((stage) => validateApprovalStage(root, stage, config)));
+    const stages = await Promise.all(approvalStages.map((stage) =>
+      validateApprovalStage(root, stage, config, undefined, evidenceContext)));
     const diagnostics = stages.flatMap((stage) => stage.diagnostics);
     return {
       schemaVersion: 1,
@@ -597,9 +637,10 @@ export async function validateApprovals(root: string, config: ApprovalConfig): P
   const resolved = await resolveDomains(root, config);
   const domains = await Promise.all(resolved.map(async (domain): Promise<DomainApprovalValidation> => ({
     name: domain.name,
-    stages: await Promise.all((['requirements', 'design'] as const).map((stage) => validateApprovalStage(root, stage, config, domain))),
+    stages: await Promise.all((['requirements', 'design'] as const).map((stage) =>
+      validateApprovalStage(root, stage, config, domain, evidenceContext))),
   })));
-  const release = await validateApprovalStage(root, 'release', config);
+  const release = await validateApprovalStage(root, 'release', config, undefined, evidenceContext);
   const diagnostics = [...domains.flatMap((d) => d.stages.flatMap((s) => s.diagnostics)), ...release.diagnostics];
   return {
     schemaVersion: 1,
@@ -633,9 +674,14 @@ export async function validateApprovalsForDomain(root: string, config: ApprovalC
   };
 }
 
-export async function validateApprovalsForFeatureGate(root: string, config: ApprovalConfig, domainName: string): Promise<ApprovalValidation> {
+export async function validateApprovalsForFeatureGate(
+  root: string,
+  config: ApprovalConfig,
+  domainName: string,
+  evidenceContext?: CandidateEvidenceContext | IntegrationEvidenceContext,
+): Promise<ApprovalValidation> {
   const base = await validateApprovalsForDomain(root, config, domainName);
-  const release = await validateApprovalStage(root, 'release', config);
+  const release = await validateApprovalStage(root, 'release', config, undefined, evidenceContext);
   const diagnostics = [...base.diagnostics, ...release.diagnostics];
   return { ...base, release, diagnostics, valid: diagnostics.length === 0 };
 }

@@ -29,6 +29,7 @@ import {
   validateCandidateBinding,
   type CandidateEvidenceBinding,
   type CandidateEvidenceContext,
+  type IntegrationEvidenceContext,
 } from './approval.js';
 export { parseMusubixTestReport, type MusubixTestReport } from './test-report.js';
 
@@ -1111,7 +1112,7 @@ export async function runTddPhase(
 export async function validateTddEvidence(
   root: string,
   purpose = 'readiness',
-  evidenceContext?: CandidateEvidenceContext,
+  evidenceContext?: CandidateEvidenceContext | IntegrationEvidenceContext,
 ): Promise<{
   present: boolean; valid: boolean; diagnostics: Diagnostic[]; cycles: number;
   voided: Array<{ testId: string; cycleId: string; void: { approver: string; reason: string; recordedAt: string } }>;
@@ -1120,12 +1121,22 @@ export async function validateTddEvidence(
   if (!evidence?.cycles.length) return { present: false, valid: false, diagnostics: [], cycles: 0, voided: [] };
   const diagnostics: Diagnostic[] = [];
   const order = await inspectEvidenceOrder(root);
-  const activeChange = await activeChangeContext(root);
-  const activeCycle = activeScope(activeChange);
+  const activeChange = evidenceContext ? null : await activeChangeContext(root);
+  const selectedCandidates = evidenceContext
+    ? 'integrationId' in evidenceContext ? evidenceContext.candidates : [evidenceContext]
+    : [];
+  const activeCycle: TddCycleScopePredicate = evidenceContext
+    ? (cycle) => selectedCandidates.some((candidate) =>
+      cycle.changeId === candidate.changeId
+      && (cycle.generation ?? 1) === candidate.generation
+      && validateCandidateBinding(cycle, candidate).valid)
+    : activeScope(activeChange);
   diagnostics.push(...order.diagnostics);
   if (evidenceContext) {
     for (const cycle of evidence.cycles) {
-      diagnostics.push(...validateCandidateBinding(cycle, evidenceContext).diagnostics);
+      const candidate = selectedCandidates.find((entry) =>
+        cycle.changeId === entry.changeId && (cycle.generation ?? 1) === entry.generation);
+      if (candidate) diagnostics.push(...validateCandidateBinding(cycle, candidate).diagnostics);
     }
   }
   if (!evidence.chain) {
@@ -1215,7 +1226,16 @@ export async function validateTddEvidence(
     currencyChainIndex,
   );
   const trace = await buildTrace(root, false);
-  const activeRequirementIds = activeChange ? new Set(activeChange.requirementIds) : null;
+  const selectedChangeIds = new Set(selectedCandidates.map((candidate) => candidate.changeId));
+  const selectedChangeEvidence = evidenceContext ? await loadChangeEvidence(root) : null;
+  const activeRequirementIds = evidenceContext
+    ? new Set(selectedChangeEvidence?.changes
+      .filter((change) => selectedChangeIds.has(change.changeId)
+        && selectedCandidates.some((candidate) =>
+          candidate.changeId === change.changeId
+          && candidate.generation === activeChangeGeneration(change)))
+      .flatMap((change) => change.requirementIds) ?? [])
+    : activeChange ? new Set(activeChange.requirementIds) : null;
   for (const requirement of trace.nodes.filter((node) =>
     node.kind === 'requirement'
     && node.mandatory

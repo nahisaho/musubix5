@@ -357,11 +357,20 @@ const integrationCandidateGateDetails: Readonly<Record<string, string>> = {
  */
 export function classifyIntegrationCandidateGateDiagnostic(
   diagnostic: Diagnostic,
+  sourceStage = 'release',
+  domain?: string,
 ): Diagnostic {
   const preserved = preserveEvidenceDiagnostics([diagnostic])[0]!;
-  if (preserved.detail !== undefined) return preserved;
+  const provenance = {
+    ...(preserved as Diagnostic & { sourceStage?: string; domain?: string }),
+    ...((preserved as Diagnostic & { sourceStage?: string }).sourceStage
+      ? {}
+      : { sourceStage }),
+    ...((preserved as Diagnostic & { domain?: string }).domain || !domain ? {} : { domain }),
+  };
+  if (preserved.detail !== undefined) return provenance;
   const detail = integrationCandidateGateDetails[preserved.code];
-  return detail ? { ...preserved, detail } : preserved;
+  return detail ? { ...provenance, detail } : provenance;
 }
 
 export function projectCandidateGate(
