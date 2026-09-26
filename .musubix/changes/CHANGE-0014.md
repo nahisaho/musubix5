@@ -106,21 +106,23 @@ contain a colon that cannot be used as a Windows directory component.
 
 ## Release evidence (pre-approval)
 
-- Live candidate snapshot: `snapshot-000000000184`.
-- Candidate commit: `57a3b163b619e52a3595910e7df112049b520b1b`.
-- Candidate gate run: GitHub Actions run `36220081063`.
-- Signed Ubuntu, Windows, and macOS Node.js 24 envelopes are ingested in
+- The snapshot journal identifies the current immutable candidate snapshot, the
+  release approval manifest binds its candidate commit and gate fingerprint,
+  and the three gate records identify the GitHub Actions run. The approval
+  request presents those exact values; these mutable lifecycle identifiers are
+  intentionally not embedded in this candidate document.
+- Signed Ubuntu, Windows, and macOS Node.js 24 envelopes are ingested into
   `.musubix/evidence/release/gates/ubuntu-node24.json`,
   `.musubix/evidence/release/gates/windows-node24.json`, and
-  `.musubix/evidence/release/gates/macos-node24.json`; all required commands
-  passed and candidate-gate validation reports no diagnostics.
+  `.musubix/evidence/release/gates/macos-node24.json` before release approval;
+  all required commands must pass and candidate-gate validation must report no
+  diagnostics for the manifest-selected candidate.
 - Other Node.js 20/22 records under `.musubix/evidence/release/gates/` are
   historical evidence for earlier CHANGEs and are not release evidence for
   this candidate.
-- Moving ADR-0025, ADR-0026, and ADR-0027 to `accepted` makes the prior design
-  approval stale. Design must be re-approved before preparing the CHANGE-0014
-  generation 1 release approval, after which the final gate and status must be
-  regenerated.
+- Any later change to ADRs or design artifacts requires re-recording the design
+  approval before preparing release approval; the final gate and status are
+  then regenerated.
 - No workflow waiver currently suppresses a diagnostic. Workflow
   reconciliation relies on five append-only declaration corrections. Six stale
   waiver records remain as audit history: three recorded during CHANGE-0014 and
