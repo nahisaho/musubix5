@@ -34,8 +34,8 @@ export interface InstallAction {
 }
 
 /** @id CODE-M5-WAVE1-TRACE-INSTALL-001
- * @implements REQ-M5-WAVE1-TRACE-001 REQ-M5-WAVE1-TRACE-002
- * @design DES-M5-WAVE1-TRACE-003
+ * @implements REQ-M5-WAVE1-TRACE-001 REQ-M5-WAVE1-TRACE-002 REQ-M5-WAVE1-NAMING-001
+ * @design DES-M5-WAVE1-TRACE-003 DES-M5-WAVE1-NAMING-001
  */
 export async function install(root: string, packageRoot: string, options: { dryRun?: boolean; force?: boolean; feature?: string } = {}): Promise<{ dryRun: boolean; actions: InstallAction[] }> {
   root = resolve(root);
@@ -60,7 +60,7 @@ export async function install(root: string, packageRoot: string, options: { dryR
   planned.set(`.musubix/features/${feature}/requirements.md`, await featureAsset('requirements'));
   planned.set(`.musubix/features/${feature}/design.md`, await featureAsset('design'));
   planned.set('.musubix/decisions/ADR-0001.md', await readText(packageRoot, 'assets/ADR-0001.md'));
-  planned.set('.musubix/evidence/quality.json', `${JSON.stringify({ schemaVersion: 1, status: 'skipped', generatedAt: null, checks: [], reason: 'No checks have run. Configure commands and run musubix3 gate.' }, null, 2)}\n`);
+  planned.set('.musubix/evidence/quality.json', `${JSON.stringify({ schemaVersion: 1, status: 'skipped', generatedAt: null, checks: [], reason: 'No checks have run. Configure commands and run musubix5 gate.' }, null, 2)}\n`);
   const actions: InstallAction[] = [];
   const writes = new Map<string, string>();
   for (const [path, content] of planned) {
@@ -74,7 +74,7 @@ export async function install(root: string, packageRoot: string, options: { dryR
   const ignorePath = await safePath(root, '.gitignore');
   const oldIgnore = await exists(ignorePath) ? await readText(root, '.gitignore') : '';
   if (!oldIgnore.split(/\r?\n/).some((line) => line.trim() === '/.musubix/cache/')) {
-    writes.set('.gitignore', `${oldIgnore}${oldIgnore && !oldIgnore.endsWith('\n') ? '\n' : ''}\n# musubix3 generated caches\n/.musubix/cache/\n`);
+    writes.set('.gitignore', `${oldIgnore}${oldIgnore && !oldIgnore.endsWith('\n') ? '\n' : ''}\n# musubix5 generated caches\n/.musubix/cache/\n`);
     actions.push({ path: '.gitignore', action: oldIgnore ? 'merge' : 'create' });
   } else actions.push({ path: '.gitignore', action: 'unchanged' });
   for (const path of ['.musubix/trace/index.json', '.musubix/cache/trace.json']) {

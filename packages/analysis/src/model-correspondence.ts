@@ -216,6 +216,10 @@ async function currentReport(root: string, commandName: string, reportPath: stri
   };
 }
 
+/** @id CODE-M5-WAVE1-NAMING-CORRESPONDENCE-001
+ * @implements REQ-M5-WAVE1-NAMING-001
+ * @design DES-M5-WAVE1-NAMING-001
+ */
 export async function validateModelCorrespondenceEvidence(root: string): Promise<{
   present: boolean;
   valid: boolean;
@@ -235,7 +239,7 @@ export async function validateModelCorrespondenceEvidence(root: string): Promise
         ? [error(
             'MODEL_CORRESPONDENCE_MISSING',
             'Requirements with explicit Formal JSON require model correspondence evidence. '
-              + 'Run `npx musubix3 evidence refresh` to generate .musubix/evidence/model-correspondence.json.',
+              + 'Run `npx musubix5 evidence refresh` to generate .musubix/evidence/model-correspondence.json.',
             path,
           )]
         : [],
