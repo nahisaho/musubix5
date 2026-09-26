@@ -487,7 +487,7 @@ export function validateClosedIntegrationVerification(
       'closed integration verification did not pass.',
     );
   };
-  if (verification.status.exitCode !== 0
+  if (![0, 1].includes(verification.status.exitCode)
     || verification.requiredCommands.length === 0
     || verification.requiredChecks.length === 0
     || verification.requiredCommands.some((command) => command.status !== 'passed')) {
@@ -513,10 +513,19 @@ export function validateClosedIntegrationVerification(
   const failed = verification.requiredChecks.filter((check) => check.status === 'failed');
   if (verification.requiredChecks.some((check) => check.status === 'skipped')) return fail();
   if (failed.length === 0) {
-    if (verification.requiredChecks.some((check) => check.status !== 'passed')) return fail();
+    if (verification.status.exitCode !== 0
+      || verification.requiredChecks.some((check) => check.status !== 'passed')) return fail();
     return { accepted: true, toleratedApprovalFailure: false };
   }
-  if (failed.length !== 1 || failed[0]!.name !== 'approval' || verification.status.ready) {
+  const exitCode = verification.status.exitCode === 0
+    && verification.requiredCommandNames === undefined
+    && verification.requiredCheckNames === undefined
+    ? 1
+    : verification.status.exitCode;
+  if (exitCode !== 1
+    || failed.length !== 1
+    || failed[0]!.name !== 'approval'
+    || verification.status.ready) {
     return fail();
   }
   const diagnostics = failed[0]!.diagnostics ?? [];
