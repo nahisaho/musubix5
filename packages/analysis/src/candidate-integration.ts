@@ -165,6 +165,16 @@ export interface IntegrationVerificationContext {
   sourceManifest: IntegrationSourceManifest;
 }
 
+export interface IntegrationEvidenceContext {
+  repositoryId: string;
+  integrationId: string;
+  startingDefaultCommit: string;
+  candidates: IntegrationIdentityCandidate[];
+  applyOrder: string[];
+  sourceManifestSha256: string;
+  integrationCommit?: string;
+}
+
 export interface IntegrationOrchestrationInput {
   controlRoot: string;
   selectors: string[];
@@ -867,6 +877,87 @@ async function listIntegrationAttempts(root: string): Promise<PersistedIntegrati
     if ((cause as NodeJS.ErrnoException).code === 'ENOENT') return [];
     throw cause;
   }
+}
+
+/** @id CODE-M5-MULTI-CHANGE-INTEGRATION-EVIDENCE-CONTEXT-001
+ * @implements REQ-M5-MULTI-CHANGE-006
+ * @design DES-M5-MULTI-CHANGE-005 DES-M5-MULTI-CHANGE-008
+ */
+export async function loadIntegrationEvidenceContext(
+  controlRoot: string,
+  integrationId: string,
+): Promise<IntegrationEvidenceContext> {
+  if (!integrationIdPattern.test(integrationId)) {
+    throw integrationError('CLI_ERROR', 'integration selector must be integration:<sha256>.');
+  }
+  const root = resolve(controlRoot);
+  const [attempt, registry] = await Promise.all([
+    readIntegrationAttempt(root, integrationId),
+    readCandidateRegistry(root),
+  ]);
+  if (!registry) {
+    throw integrationError('CANDIDATE_WORKSPACE_NOT_FOUND', 'candidate registry was not found.');
+  }
+  const integration = registry.integrations.find((entry) =>
+    entry.integrationId === integrationId);
+  if (!integration) {
+    throw integrationError('CANDIDATE_WORKSPACE_NOT_FOUND', 'integration context was not found.');
+  }
+  if (integration.repositoryId !== registry.repositoryId
+    || attempt.repositoryId !== registry.repositoryId
+    || integration.repositoryId !== attempt.repositoryId) {
+    throw integrationError(
+      'CANDIDATE_WORKSPACE_REPOSITORY_MISMATCH',
+      'integration context belongs to another repository.',
+    );
+  }
+  if (attempt.integrationId !== integrationId
+    || attempt.candidateIds.length === 0
+    || attempt.candidateIds.length !== attempt.inputCommits.length
+    || new Set(attempt.candidateIds).size !== attempt.candidateIds.length
+    || integration.candidateIds.length !== attempt.candidateIds.length
+    || ![...integration.candidateIds].sort(byteCompare)
+      .every((candidateId, index) =>
+        candidateId === [...attempt.candidateIds].sort(byteCompare)[index])
+    || !commitPattern.test(attempt.startingDefaultCommit)
+    || !/^[a-f0-9]{64}$/.test(attempt.sourceManifest.sha256)
+    || attempt.applyOrder.length !== attempt.candidateIds.length
+    || new Set(attempt.applyOrder).size !== attempt.applyOrder.length
+    || attempt.applyOrder.some((candidateId) => !attempt.candidateIds.includes(candidateId))) {
+    throw integrationError(
+      'CANDIDATE_STATE_OWNERSHIP',
+      'integration attempt does not match its registry context.',
+    );
+  }
+  const candidates = attempt.candidateIds.map((candidateId, index) => {
+    const candidate = registry.candidates.find((entry) => entry.candidateId === candidateId);
+    const candidateCommit = attempt.inputCommits[index]!;
+    if (!candidate
+      || candidate.repositoryId !== registry.repositoryId
+      || !attempt.changeIds.includes(candidate.changeId)
+      || !commitPattern.test(candidateCommit)) {
+      throw integrationError(
+        'CANDIDATE_STATE_OWNERSHIP',
+        'integration candidate ownership binding is invalid.',
+      );
+    }
+    return {
+      changeId: candidate.changeId,
+      generation: candidate.generation,
+      candidateId,
+      candidateCommit,
+    };
+  }).sort((left, right) => byteCompare(left.candidateId, right.candidateId));
+  const context: IntegrationEvidenceContext = {
+    repositoryId: attempt.repositoryId,
+    integrationId,
+    startingDefaultCommit: attempt.startingDefaultCommit,
+    candidates,
+    applyOrder: [...attempt.applyOrder],
+    sourceManifestSha256: attempt.sourceManifest.sha256,
+    ...(attempt.integrationCommit ? { integrationCommit: attempt.integrationCommit } : {}),
+  };
+  return context;
 }
 
 async function candidateChangedPaths(
