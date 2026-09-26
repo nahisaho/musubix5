@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-25T23:53:03.076Z",
+  "generatedAt": "2026-09-25T23:55:29.745Z",
   "nodes": [
     {
       "id": "CODE-SESSION-SCOPED-DEVELOPMENT-001",
@@ -11169,6 +11169,11 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-WORKTREE-001",
+      "to": "REQ-M5-MULTI-CHANGE-001",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-WORKTREE-002",
       "to": "REQ-M5-WORKTREE-003",
       "relation": "verifies"
@@ -11287,7 +11292,7 @@
     "packages/analysis/src/workflow.ts": "27694cb552a20a3bfee8828605d2d5784f3a481eaa63561006acabf331bc1889",
     "packages/analysis/src/workspace-manager.ts": "4e1b6fd6535ddc2ca7293a50efcd58305db2094c96bc555022cf719a76f57f35",
     "packages/cli/src/install.ts": "4b33a24e19958e2c88af806dc1261f4f4a74d6e56cb9fe95c0dabf7cc20cef7f",
-    "packages/cli/src/main.ts": "83c9004a19ab7906498b9e94638e56dfc90e007e612e3c8a926d5e3532872a3f",
+    "packages/cli/src/main.ts": "fb086b1c7ceb74b02e777fc8a87006f97e38cb281b8e3d132525e34825fe68a3",
     "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
     "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
     "packages/domain/src/index.ts": "43243e9279e3826b23cd8d8b4365854974112ce4cf17cfb0f0ee32e6b28e9cc6",
@@ -11404,7 +11409,7 @@
     "tests/workflow-declaration-correction-regressions.test.ts": "4a5f75009254776b002102e4878d8767f31471974e75c4a0fa7905f6d9d75df6",
     "tests/workflow-declaration-correction.test.ts": "c818422c7e69ad13adbbb0eb33ee25fb411246d2ecab9993a8fc2996646a0bf6",
     "tests/workflow-generation-reconciliation.test.ts": "897e85fd1cdb51b09310b14ba038e6b46cd0ef9230239de0d23f95fd17e30152",
-    "tests/workspace-isolation.test.ts": "2b2fb7376f1834916cc56b244fea870efa6ae40b78164a5c35b5ccb3db9ab923",
+    "tests/workspace-isolation.test.ts": "2b06a278bc118350e0ee2f5b1f1ab6d984e63d42229e3f7902117f2de8d6cb50",
     "tests/workspace-ownership.test.ts": "29a82dab0567a09e186c127b8f25fe33a73d7a4943154acb01566382ac66744c",
     "vitest.config.ts": "8538524a369c5b641662dc0badbfa238273dd537260c3ad06622c8276e0a041b"
   }

@@ -166,7 +166,7 @@ export interface IntegrationVerificationContext {
   sourceManifest: IntegrationSourceManifest;
 }
 
-export interface IntegrationEvidenceContext {
+export interface CandidateIntegrationEvidenceContext {
   repositoryId: string;
   integrationId: string;
   startingDefaultCommit: string;
@@ -942,7 +942,7 @@ async function listIntegrationAttempts(root: string): Promise<PersistedIntegrati
 export async function loadIntegrationEvidenceContext(
   controlRoot: string,
   integrationId: string,
-): Promise<IntegrationEvidenceContext> {
+): Promise<CandidateIntegrationEvidenceContext> {
   if (!integrationIdPattern.test(integrationId)) {
     throw integrationError('CLI_ERROR', 'integration selector must be integration:<sha256>.');
   }
@@ -1004,7 +1004,7 @@ export async function loadIntegrationEvidenceContext(
       candidateCommit,
     };
   }).sort((left, right) => byteCompare(left.candidateId, right.candidateId));
-  const context: IntegrationEvidenceContext = {
+  const context: CandidateIntegrationEvidenceContext = {
     repositoryId: attempt.repositoryId,
     integrationId,
     startingDefaultCommit: attempt.startingDefaultCommit,

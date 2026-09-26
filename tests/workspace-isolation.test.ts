@@ -19,7 +19,7 @@ afterEach(() => {
 describe('workspace isolation', () => {
   /**
    * @id TEST-M5-WORKTREE-001
-   * @verifies REQ-M5-WORKTREE-001 REQ-M5-WORKTREE-002 REQ-M5-WORKTREE-004
+   * @verifies REQ-M5-WORKTREE-001 REQ-M5-WORKTREE-002 REQ-M5-WORKTREE-004 REQ-M5-MULTI-CHANGE-001
    */
   it('TEST-M5-WORKTREE-001 separates baseline, candidate, and QA without changing dirty paths', async () => {
     const root = mkdtempSync(join(tmpdir(), 'musubix5-workspace-'));
@@ -51,6 +51,7 @@ describe('workspace isolation', () => {
     const baseline = await captureBaseline(root, 'CHANGE-0002');
     expect(baseline.commitSha).toBe(baselineCommit);
     const candidate = await createCandidateWorkspace(root, baseline);
+    expect(candidate.branch).toBe('musubix5/CHANGE-0002/candidate');
     expect(git(candidate.path, ['status', '--porcelain'])).toBe('');
     expect(git(candidate.path, ['rev-parse', 'HEAD'])).toBe(baselineCommit);
     expect(await captureDirtyState(root)).toMatchObject(before);

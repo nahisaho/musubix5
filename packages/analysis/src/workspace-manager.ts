@@ -384,7 +384,7 @@ export async function createCandidateWorkspace(
   const commonDirectory = await gitCommonDirectory(root);
   const relativePath = `musubix5/workspaces/${baseline.changeId}/candidate`;
   const path = resolve(commonDirectory, relativePath);
-  const branch = `musubix5/${baseline.changeId}`;
+  const branch = `musubix5/${baseline.changeId}/candidate`;
   await mkdir(dirname(path), { recursive: true });
   if (await pathExists(path)) {
     const existingHead = await git(path, ['rev-parse', 'HEAD'], true);

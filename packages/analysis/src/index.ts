@@ -14,6 +14,8 @@ export * from './planner-output.js';
 export * from './approval-boundary.js';
 export * from './run-local-workspace.js';
 export * from './tdd-cycle-resolver.js';
+export * from './candidate-state.js';
+export * from './candidate-integration.js';
 export * from './workspace-manager.js';
 export * from './bootstrap-runner.js';
 export * from './compatibility-oracle.js';
