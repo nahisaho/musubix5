@@ -12,6 +12,66 @@ import {
   type WorkflowManifest,
 } from '../packages/analysis/src/index.js';
 
+/** @id TEST-M5-WAVE0-COMPLETION-003
+ * @verifies REQ-M5-WAVE0-COMPLETION-001
+ */
+test('TEST-M5-WAVE0-COMPLETION-003 scopes completed validation and requires its terminal declaration', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'musubix5-workflow-completed-'));
+  await mkdir(join(root, '.musubix', 'evidence'), { recursive: true });
+  await mkdir(join(root, '.musubix', 'changes'), { recursive: true });
+  await writeFile(join(root, '.musubix', 'changes', 'CHANGE-0003.md'), [
+    '---',
+    'schemaVersion: 1',
+    'id: CHANGE-0003',
+    'status: completed',
+    '---',
+    '# CHANGE-0003',
+    '',
+  ].join('\n'));
+  await writeFile(join(root, '.musubix', 'evidence', 'changes.json'), JSON.stringify({
+    schemaVersion: 1,
+    changes: [{
+      changeId: 'CHANGE-0003',
+      activeGeneration: 5,
+      requirementIds: ['REQ-M5-WAVE0-COMPLETION-001'],
+      phases: { quality: { order: 6 } },
+    }],
+  }));
+  const events: Array<WorkflowEvent & { changeId: string; generation: number }> = [
+    {
+      skill: 'unrelated-history',
+      version: '0.1.8',
+      provenance: 'self-reported',
+      phase: 'complete',
+      status: 'completed',
+      recordedAt: '2026-01-01T00:00:01.000Z',
+      changeId: 'CHANGE-0002',
+      generation: 9,
+    },
+    {
+      skill: 'sdd-quality',
+      version: '0.1.8',
+      provenance: 'self-reported',
+      phase: 'complete',
+      status: 'completed',
+      recordedAt: '2026-01-01T00:00:02.000Z',
+      changeId: 'CHANGE-0003',
+      generation: 5,
+    },
+  ];
+  const result = await validateLoadedWorkflow(root, {
+    schemaVersion: 1,
+    events,
+  });
+
+  assert.equal(result.events, 1);
+  assert.equal(result.skills, 1);
+  assert.equal(result.diagnostics.some((diagnostic) =>
+    diagnostic.code === 'CHANGE_COMPLETION_DECLARATION_MISSING'), true);
+  assert.equal(result.diagnostics.some((diagnostic) =>
+    diagnostic.message.includes('unrelated-history')), false);
+});
+
 /** @id TEST-M5-EVIDENCE-006
  * @verifies REQ-M5-EVIDENCE-006
  */

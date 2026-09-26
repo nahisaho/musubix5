@@ -45,7 +45,11 @@ export {
 import {
   resolveNormativeArtifacts, snapshotNormativeArtifacts,
 } from './approval-normative.js';
-import { activeChangeContext } from './change-generation.js';
+import {
+  activeChangeContext,
+  resolveValidationChangeContext,
+  type ChangeContextSelection,
+} from './change-generation.js';
 
 export {
   domainsConfigured, domainOwning, featureOwningDesignFile, featureOwningRequirement, resolveDomains,
@@ -159,6 +163,7 @@ export async function approvalManifest(
   domain?: ResolvedDomain,
   releaseChangeId?: string,
   evidenceContext?: CandidateEvidenceContext | IntegrationEvidenceContext,
+  validationContext?: ChangeContextSelection | null,
 ): Promise<ApprovalManifest> {
   if (stage === 'release' && domain) {
     throw new Error('APPROVAL_DOMAIN_MISMATCH: release approval is repository-wide.');
@@ -174,7 +179,13 @@ export async function approvalManifest(
       ? integrationApprovalContext(evidenceContext)
       : { changeId: evidenceContext.changeId, generation: evidenceContext.generation }
     : null;
-  const activeChange = explicitChange ?? await activeChangeContext(root);
+  const resolvedChange = validationContext === undefined
+    ? await activeChangeContext(root)
+    : validationContext;
+  const selectedChange = explicitChange ?? resolvedChange;
+  const activeChange = selectedChange && selectedChange.generation !== null
+    ? { changeId: selectedChange.changeId, generation: selectedChange.generation }
+    : null;
   if (stage !== 'release') {
     const config = await loadApprovalProjectionConfig(root);
     const projectedConfig = materializeExecutionPolicy(config);
@@ -325,6 +336,7 @@ export async function validateApprovalStage(
   config: ApprovalConfig,
   domain?: ResolvedDomain,
   evidenceContext?: CandidateEvidenceContext | IntegrationEvidenceContext,
+  validationContext?: ChangeContextSelection | null,
 ): Promise<ApprovalStageValidation> {
   const contextualize = (diagnostics: Diagnostic[]): Diagnostic[] =>
     approvalDiagnosticsForContext(diagnostics, stage, domain?.name, evidenceContext);
@@ -341,7 +353,9 @@ export async function validateApprovalStage(
       path,
     )];
     try {
-      const current = await approvalManifest(root, stage, domain, undefined, evidenceContext);
+      const current = await approvalManifest(
+        root, stage, domain, undefined, evidenceContext, validationContext,
+      );
       return { stage, ...(domain ? { domain: domain.name } : {}), required, present, status: 'stale', evidence: null, currentArtifactSha256: current.artifactSha256, diagnostics: contextualize(diagnostics) };
     } catch (manifestCause) {
       const message = manifestCause instanceof Error ? manifestCause.message : String(manifestCause);
@@ -371,7 +385,14 @@ export async function validateApprovalStage(
   const required = config.mode === 'required';
   let current: ApprovalManifest;
   try {
-    current = await approvalManifest(root, stage, domain, stage === 'release' ? evidence?.changeId : undefined, evidenceContext);
+    current = await approvalManifest(
+      root,
+      stage,
+      domain,
+      stage === 'release' ? evidence?.changeId : undefined,
+      evidenceContext,
+      validationContext,
+    );
   } catch (cause) {
     const message = cause instanceof Error ? cause.message : String(cause);
     const code = message.split(':', 1)[0]!;
@@ -449,10 +470,16 @@ export async function validateApprovals(
   root: string,
   config: ApprovalConfig,
   evidenceContext?: CandidateEvidenceContext | IntegrationEvidenceContext,
+  validationContext?: ChangeContextSelection | null,
 ): Promise<ApprovalValidation> {
+  const selectedContext = evidenceContext
+    ? undefined
+    : validationContext === undefined
+      ? await resolveValidationChangeContext(root)
+      : validationContext;
   if (!domainsConfigured(config)) {
     const stages = await Promise.all(approvalStages.map((stage) =>
-      validateApprovalStage(root, stage, config, undefined, evidenceContext)));
+      validateApprovalStage(root, stage, config, undefined, evidenceContext, selectedContext)));
     const diagnostics = stages.flatMap((stage) => stage.diagnostics);
     return {
       schemaVersion: 1,
@@ -467,9 +494,11 @@ export async function validateApprovals(
   const domains = await Promise.all(resolved.map(async (domain): Promise<DomainApprovalValidation> => ({
     name: domain.name,
     stages: await Promise.all((['requirements', 'design'] as const).map((stage) =>
-      validateApprovalStage(root, stage, config, domain, evidenceContext))),
+      validateApprovalStage(root, stage, config, domain, evidenceContext, selectedContext))),
   })));
-  const release = await validateApprovalStage(root, 'release', config, undefined, evidenceContext);
+  const release = await validateApprovalStage(
+    root, 'release', config, undefined, evidenceContext, selectedContext,
+  );
   const diagnostics = [...domains.flatMap((d) => d.stages.flatMap((s) => s.diagnostics)), ...release.diagnostics];
   return {
     schemaVersion: 1,
@@ -483,13 +512,25 @@ export async function validateApprovals(
   };
 }
 
-export async function validateApprovalsForDomain(root: string, config: ApprovalConfig, domainName: string): Promise<ApprovalValidation> {
+export async function validateApprovalsForDomain(
+  root: string,
+  config: ApprovalConfig,
+  domainName: string,
+  evidenceContext?: CandidateEvidenceContext | IntegrationEvidenceContext,
+  validationContext?: ChangeContextSelection | null,
+): Promise<ApprovalValidation> {
+  const selectedContext = evidenceContext
+    ? undefined
+    : validationContext === undefined
+      ? await resolveValidationChangeContext(root)
+      : validationContext;
   const resolved = await resolveDomains(root, config);
   const domain = resolved.find((d) => d.name === domainName);
   if (!domain) {
     throw new Error(`Unknown approval domain "${domainName}"; configured domains: ${config.domains.map((d) => d.name).join(', ')}.`);
   }
-  const stages = await Promise.all((['requirements', 'design'] as const).map((stage) => validateApprovalStage(root, stage, config, domain)));
+  const stages = await Promise.all((['requirements', 'design'] as const).map((stage) =>
+    validateApprovalStage(root, stage, config, domain, evidenceContext, selectedContext)));
   const diagnostics = stages.flatMap((s) => s.diagnostics);
   return {
     schemaVersion: 1,
@@ -508,9 +549,19 @@ export async function validateApprovalsForFeatureGate(
   config: ApprovalConfig,
   domainName: string,
   evidenceContext?: CandidateEvidenceContext | IntegrationEvidenceContext,
+  validationContext?: ChangeContextSelection | null,
 ): Promise<ApprovalValidation> {
-  const base = await validateApprovalsForDomain(root, config, domainName);
-  const release = await validateApprovalStage(root, 'release', config, undefined, evidenceContext);
+  const selectedContext = evidenceContext
+    ? undefined
+    : validationContext === undefined
+      ? await resolveValidationChangeContext(root)
+      : validationContext;
+  const base = await validateApprovalsForDomain(
+    root, config, domainName, evidenceContext, selectedContext,
+  );
+  const release = await validateApprovalStage(
+    root, 'release', config, undefined, evidenceContext, selectedContext,
+  );
   const diagnostics = [...base.diagnostics, ...release.diagnostics];
   return { ...base, release, diagnostics, valid: diagnostics.length === 0 };
 }

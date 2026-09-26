@@ -14,7 +14,10 @@ import {
   type ChangeGenerationSummary,
 } from './change.js';
 import { resolveParallelIntegrationEvidenceRoot } from './parallel-tdd-evidence.js';
-import { resolveChangeContext } from './change-generation.js';
+import {
+  resolveValidationChangeContext,
+  type ChangeContextSelection,
+} from './change-generation.js';
 import { activeWaivers, waiverEvidenceDiagnostics } from './change-waiver.js';
 import { deriveWorkflowWaiverAudit } from './workflow-waiver.js';
 import { changedFiles, runProcess, type Runner } from './process.js';
@@ -226,6 +229,9 @@ export async function runGate(root: string, options: {
   evidenceContext?: CandidateEvidenceContext | IntegrationEvidenceContext;
 } = {}): Promise<GateReport> {
   const config = options.config ?? await loadConfig(root);
+  const validationContext = options.evidenceContext
+    ? undefined
+    : await resolveValidationChangeContext(root);
   const runner = options.runner ?? runProcess;
   const gateRunId = randomUUID();
   const matrixMode = options.persistenceMode === 'matrix';
@@ -324,7 +330,9 @@ export async function runGate(root: string, options: {
     diagnostics: formalDiagnostics,
     durationMs: formalResult.solver.durationMs,
   });
-  const workflow = await validateWorkflow(root, config.workflow, options.evidenceContext);
+  const workflow = await validateWorkflow(
+    root, config.workflow, options.evidenceContext, validationContext,
+  );
   const workflowErrors = countErrors(workflow.diagnostics);
   checks.push({
     name: 'workflow',
@@ -699,9 +707,13 @@ export async function runGate(root: string, options: {
     const resolvedDomains = await resolveDomains(root, config.approval);
     const owningDomain = domainOwning(resolvedDomains, options.feature!);
     if (!owningDomain) throw new Error(`Feature "${options.feature}" is not owned by any configured approval domain.`);
-    approvals = await validateApprovalsForFeatureGate(root, config.approval, owningDomain, options.evidenceContext);
+    approvals = await validateApprovalsForFeatureGate(
+      root, config.approval, owningDomain, options.evidenceContext, validationContext,
+    );
   } else {
-    approvals = await validateApprovals(root, config.approval, options.evidenceContext);
+    approvals = await validateApprovals(
+      root, config.approval, options.evidenceContext, validationContext,
+    );
   }
   const approvalStages = domainsOn
     ? [...(approvals.domains?.flatMap((d) => d.stages) ?? []), ...(approvals.release ? [approvals.release] : [])]
@@ -889,7 +901,7 @@ export async function projectStatus(
   const codeGraph = config?.codeGraph ?? null;
   const changeEvidence = await loadChangeEvidence(root);
   const changeDiagnostics: Diagnostic[] = [];
-  let changeContext: Awaited<ReturnType<typeof resolveChangeContext>> = null;
+  let changeContext: ChangeContextSelection | null = null;
   if (evidenceContext) {
     const owner = integrationApprovalContext(evidenceContext);
     changeContext = {
@@ -901,10 +913,10 @@ export async function projectStatus(
     };
   } else {
     try {
-      changeContext = await resolveChangeContext(root, { maintenance: true });
+      changeContext = await resolveValidationChangeContext(root);
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : String(cause);
-      const known = /^(CHANGE_GENERATION_PHASE|CHANGE_GENERATION_MIXED):\s*(.*)$/.exec(message);
+      const known = /^(CHANGE_GENERATION_PHASE|CHANGE_GENERATION_MIXED|WORKFLOW_CHANGE_MISMATCH):\s*(.*)$/.exec(message);
       if (!known) throw cause;
       changeDiagnostics.push({
         code: known[1]!,
@@ -916,7 +928,7 @@ export async function projectStatus(
   const inactiveChangeId = changeContext?.generation === null ? changeContext.changeId : null;
   const generationInactive = inactiveChangeId !== null;
   const approvals = config && changeDiagnostics.length === 0 && !generationInactive
-    ? await validateApprovals(root, config.approval, evidenceContext)
+    ? await validateApprovals(root, config.approval, evidenceContext, changeContext)
     : null;
   const changeRecord = changeContext
     ? changeEvidence?.changes.find((entry) => entry.changeId === changeContext.changeId)
@@ -1050,7 +1062,7 @@ export async function projectStatus(
     workflowWaiverDiagnostics: [],
   };
   if (changeDiagnostics.length === 0 && !generationInactive) {
-    const workflow = await validateWorkflow(root, undefined, evidenceContext);
+    const workflow = await validateWorkflow(root, undefined, evidenceContext, changeContext);
     workflowAudit = deriveWorkflowWaiverAudit(workflow.workflowWaiverContext);
   }
   const { workflowWaivers, workflowWaiverDiagnostics } = workflowAudit;
@@ -1078,8 +1090,12 @@ export async function projectStatus(
     waiverDiagnostics,
     next: changeDiagnostics.some((diagnostic) => diagnostic.code === 'CHANGE_GENERATION_MIXED')
       ? ['Review .musubix/changes and leave exactly one CHANGE document with status: active.']
+      : changeDiagnostics.some((diagnostic) => diagnostic.code === 'WORKFLOW_CHANGE_MISMATCH')
+        ? ['Repair malformed or duplicate CHANGE document identifiers before continuing.']
       : changeDiagnostics.some((diagnostic) => diagnostic.code === 'CHANGE_GENERATION_PHASE')
-        ? ['Restore .musubix/evidence/changes.json for the active CHANGE before continuing.']
+        ? [changeDiagnostics.some((diagnostic) => diagnostic.message.includes('completed CHANGE'))
+          ? 'Restore the completed CHANGE to a positive current generation with a quality checkpoint before continuing.'
+          : 'Restore .musubix/evidence/changes.json for the active CHANGE before continuing.']
         : generationInactive
           ? [`musubix5 change-record ${inactiveChangeId} impact --reopen`]
       : !initialized

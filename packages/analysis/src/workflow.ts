@@ -4,7 +4,13 @@ import { mkdir, open, readFile, rename, unlink } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { error, type Diagnostic } from '../../domain/src/index.js';
 import { loadConfig } from './config.js';
-import { activeChangeContext, resolveChangeContext, type ActiveChangeContext } from './change-generation.js';
+import {
+  activeChangeContext,
+  resolveChangeContext,
+  resolveValidationChangeContext,
+  type ActiveChangeContext,
+  type ChangeContextSelection,
+} from './change-generation.js';
 import { digest, exists, safePath, writeJson } from './files.js';
 import {
   CURRENT_SNAPSHOT_VERSION, WORKFLOW_WAIVABLE_CODES, WORKFLOW_WAIVER_PATH, authoritativeIndex, buildWorkflowWaiverContext,
@@ -118,9 +124,10 @@ async function resolveWorkflowChangeContext(root: string, changeId: string): Pro
  */
 function activeWorkflowEvents(
   workflow: WorkflowManifest,
-  change: ActiveChangeContext | null,
+  change: Pick<ChangeContextSelection, 'changeId' | 'generation'> | null,
 ): Array<{ event: WorkflowEvent; index: number }> {
   if (!change) return workflow.events.map((event, index) => ({ event, index }));
+  if (change.generation === null) return [];
   return workflow.events.flatMap((event, index) => {
     const generation = event.generation ?? 1;
     return event.changeId === change.changeId && generation === change.generation
@@ -785,6 +792,7 @@ export async function validateLoadedWorkflow(
   options: WorkflowVerificationOptions = { mode: 'compatible' },
   preloadedWaiverEvidence?: LoadedWorkflowWaiverEvidence | null,
   evidenceContext?: CandidateEvidenceContext | IntegrationEvidenceContext,
+  validationContext?: ChangeContextSelection | null,
 ): Promise<{
   present: boolean;
   verified: boolean;
@@ -793,12 +801,26 @@ export async function validateLoadedWorkflow(
   diagnostics: Diagnostic[];
   workflowWaiverContext: WorkflowWaiverContext;
 }> {
-  const change = evidenceContext ? null : await activeChangeContext(root);
+  const change = evidenceContext
+    ? null
+    : validationContext === undefined
+      ? await resolveValidationChangeContext(root)
+      : validationContext;
   const activeEvents = workflow
     ? evidenceContext ? contextualWorkflowEvents(workflow, evidenceContext) : activeWorkflowEvents(workflow, change)
     : [];
   const present = activeEvents.length > 0;
   const rawDiagnostics: Diagnostic[] = [];
+  if (change?.documentStatus === 'completed'
+    && !activeEvents.some(({ event }) =>
+      event.skill === 'sdd-change'
+      && event.phase === 'complete'
+      && event.status === 'completed')) {
+    rawDiagnostics.push(error(
+      'CHANGE_COMPLETION_DECLARATION_MISSING',
+      `Completed CHANGE ${change.changeId} generation ${change.generation} has no terminal sdd-change complete declaration. Restore status: active, record the declaration once, then complete the CHANGE document again.`,
+    ));
+  }
   const correctionContext = await loadWorkflowDeclarationCorrectionContext(root, workflow);
   rawDiagnostics.push(...correctionContext.diagnostics);
   if (workflow?.events.length && activeEvents.length) {
@@ -922,6 +944,7 @@ export async function validateWorkflow(
   root: string,
   options: WorkflowVerificationOptions = { mode: 'compatible' },
   evidenceContext?: CandidateEvidenceContext | IntegrationEvidenceContext,
+  validationContext?: ChangeContextSelection | null,
 ): Promise<{
   present: boolean;
   verified: boolean;
@@ -931,7 +954,7 @@ export async function validateWorkflow(
   workflowWaiverContext: WorkflowWaiverContext;
 }> {
   const workflow = await loadWorkflow(root);
-  return validateLoadedWorkflow(root, workflow, options, undefined, evidenceContext);
+  return validateLoadedWorkflow(root, workflow, options, undefined, evidenceContext, validationContext);
 }
 
 export async function activeWorkflowWaivers(root: string): Promise<ReturnType<typeof deriveWorkflowWaiverAudit>['workflowWaivers']> {

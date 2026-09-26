@@ -3,7 +3,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { defaultConfig } from '../packages/analysis/src/config.js';
-import { activeChangeContext } from '../packages/analysis/src/change-generation.js';
+import {
+  activeChangeContext,
+  resolveValidationChangeContext,
+} from '../packages/analysis/src/change-generation.js';
 import { projectStatus } from '../packages/analysis/src/gate.js';
 
 const temporaryDirectories: string[] = [];
@@ -21,6 +24,90 @@ afterEach(() => {
 });
 
 describe('active CHANGE context', () => {
+  /** @id TEST-M5-WAVE0-COMPLETION-001
+   * @verifies REQ-M5-WAVE0-COMPLETION-001
+   */
+  it('TEST-M5-WAVE0-COMPLETION-001 resolves the newest eligible completed CHANGE for read-only validation', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'musubix5-completed-change-'));
+    temporaryDirectories.push(root);
+    for (const changeId of ['CHANGE-0002', 'CHANGE-0003']) {
+      write(root, `.musubix/changes/${changeId}.md`, [
+        '---',
+        'schemaVersion: 1',
+        `id: ${changeId}`,
+        'status: completed',
+        '---',
+        `# ${changeId}`,
+        '',
+      ].join('\n'));
+    }
+    write(root, '.musubix/evidence/changes.json', JSON.stringify({
+      schemaVersion: 1,
+      changes: [
+        {
+          changeId: 'CHANGE-0002',
+          activeGeneration: 8,
+          requirementIds: ['REQ-OLD-001'],
+          phases: { quality: { order: 9 } },
+        },
+        {
+          changeId: 'CHANGE-0003',
+          activeGeneration: 5,
+          requirementIds: ['REQ-M5-WAVE0-COMPLETION-001'],
+          phases: { quality: { order: 6 } },
+        },
+      ],
+    }));
+
+    await expect(activeChangeContext(root)).resolves.toBeNull();
+    await expect(resolveValidationChangeContext(root)).resolves.toEqual({
+      changeId: 'CHANGE-0003',
+      generation: 5,
+      requirementIds: ['REQ-M5-WAVE0-COMPLETION-001'],
+      documentStatus: 'completed',
+    });
+  });
+
+  /** @id TEST-M5-WAVE0-COMPLETION-002
+   * @verifies REQ-M5-WAVE0-COMPLETION-001
+   */
+  it('TEST-M5-WAVE0-COMPLETION-002 does not skip an ineligible newer completed CHANGE', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'musubix5-completed-change-'));
+    temporaryDirectories.push(root);
+    for (const changeId of ['CHANGE-0002', 'CHANGE-0003']) {
+      write(root, `.musubix/changes/${changeId}.md`, [
+        '---',
+        'schemaVersion: 1',
+        `id: ${changeId}`,
+        'status: completed',
+        '---',
+        `# ${changeId}`,
+        '',
+      ].join('\n'));
+    }
+    write(root, '.musubix/evidence/changes.json', JSON.stringify({
+      schemaVersion: 1,
+      changes: [
+        {
+          changeId: 'CHANGE-0002',
+          activeGeneration: 8,
+          requirementIds: ['REQ-OLD-001'],
+          phases: { quality: { order: 9 } },
+        },
+        {
+          changeId: 'CHANGE-0003',
+          activeGeneration: null,
+          requirementIds: ['REQ-M5-WAVE0-COMPLETION-001'],
+          phases: { quality: { order: 6 } },
+        },
+      ],
+    }));
+
+    await expect(resolveValidationChangeContext(root)).rejects.toThrow(
+      /CHANGE_GENERATION_PHASE.*CHANGE-0003/,
+    );
+  });
+
   /** @id TEST-M5-LIFECYCLE-LEGACY-DOCUMENT-STATUS-001
    * @verifies REQ-M5-LIFECYCLE-005 REQ-M5-COMPAT-013
    */

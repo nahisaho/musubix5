@@ -64,5 +64,37 @@ describe('approval effective projection', () => {
     });
     expect(native.projection).toEqual(compatibility.projection);
     expect(native.artifactSha256).toBe(compatibility.artifactSha256);
+
+    write(root, '.musubix/changes/CHANGE-0003.md', [
+      '---',
+      'schemaVersion: 1',
+      'id: CHANGE-0003',
+      'status: completed',
+      '---',
+      '# CHANGE-0003',
+      '',
+    ].join('\n'));
+    write(root, '.musubix/evidence/changes.json', JSON.stringify({
+      schemaVersion: 1,
+      changes: [{
+        changeId: 'CHANGE-0003',
+        activeGeneration: 5,
+        requirementIds: ['REQ-M5-WAVE0-COMPLETION-001'],
+        phases: { quality: { order: 6 } },
+      }],
+    }));
+    const { resolveValidationChangeContext } =
+      await import('../packages/analysis/src/change-generation.js');
+    const validationContext = await resolveValidationChangeContext(root);
+    const preparationManifest = await approvalManifest(root, 'design');
+    const validationManifest = await approvalManifest(
+      root, 'design', undefined, undefined, undefined, validationContext,
+    );
+
+    expect(preparationManifest.changeId).toBeUndefined();
+    expect(validationManifest).toMatchObject({
+      changeId: 'CHANGE-0003',
+      generation: 5,
+    });
   });
 });
