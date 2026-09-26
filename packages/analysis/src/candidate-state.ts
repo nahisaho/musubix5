@@ -964,8 +964,22 @@ export async function refreshCandidate(
   }
 }
 
+/** @id CODE-M5-CANDIDATE-CLEANUP-POLICY-001
+ * @implements REQ-M5-MULTI-CHANGE-007 REQ-M5-WAVE1-CLEANUP-001 REQ-M5-WAVE1-CLEANUP-002
+ */
+export function assertCandidateCleanupPolicySafe(
+  state: CandidateLifecycleState,
+  integrated: boolean,
+): void {
+  const effectiveState: CandidateLifecycleState = integrated ? 'integrated' : state;
+  if (!['integrated', 'failed', 'abandoned', 'stale'].includes(effectiveState)) {
+    throw new Error('CANDIDATE_CLEANUP_UNSAFE: candidate has unintegrated commits.');
+  }
+}
+
 /** @id CODE-M5-CANDIDATE-CLEANUP-001
  * @implements REQ-M5-MULTI-CHANGE-004 REQ-M5-MULTI-CHANGE-007
+ *   REQ-M5-WAVE1-CLEANUP-001 REQ-M5-WAVE1-CLEANUP-002
  * @design DES-M5-MULTI-CHANGE-002 DES-M5-MULTI-CHANGE-004
  */
 export async function cleanupCandidate(
@@ -996,9 +1010,7 @@ export async function cleanupCandidate(
     worktree,
     ['merge-base', '--is-ancestor', candidate.candidateCommit, options.defaultCommit],
   );
-  if (!integrated) {
-    throw new Error('CANDIDATE_CLEANUP_UNSAFE: candidate has unintegrated commits.');
-  }
+  assertCandidateCleanupPolicySafe(candidate.state, integrated);
   const tombstoneOrder = await options.appendTombstone({
     candidate,
     deletedBy: options.deletedBy,
