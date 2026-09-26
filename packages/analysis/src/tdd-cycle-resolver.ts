@@ -188,7 +188,10 @@ export function selectCurrentTddCycle(
   ], redOrder);
   const cycles: TddCycle[] = [];
   const activeGeneration = change.activeGeneration ?? change.generation ?? 1;
-  for (const cycle of evidence.cycles.filter((entry) => entry.requirementId === requirementId)) {
+  const repairedTargets = new Set((evidence.repairs ?? []).map((repair) => repair.targetCycleId));
+  for (const cycle of evidence.cycles.filter((entry) =>
+    entry.requirementId === requirementId
+    && (!entry.cycleId || !repairedTargets.has(entry.cycleId)))) {
     if ((cycle.generation ?? 1) !== activeGeneration || (cycle.changeId !== undefined && cycle.changeId !== change.changeId)) {
       excluded.push({ subject: `cycle:${cycle.cycleId ?? cycle.testId}`, reason: 'superseded-generation' });
       continue;

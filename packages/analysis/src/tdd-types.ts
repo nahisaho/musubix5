@@ -23,7 +23,7 @@ export interface TddPhaseEvidence {
   warnings?: Diagnostic[];
 }
 
-export type TddChainPhase = TddPhase | 'migrate' | 'void';
+export type TddChainPhase = TddPhase | 'migrate' | 'void' | 'repair';
 
 export interface TddMigrationEvidence {
   phase: 'migrate';
@@ -82,8 +82,73 @@ export interface TddChainRecord {
   recordSha256: string;
 }
 
+export type TddRepairDisposition = 'replacement' | 'retirement';
+
+export interface TddRepairRequest {
+  schemaVersion: 1;
+  testId: string;
+  targetCycleId: string;
+  disposition: TddRepairDisposition;
+  replacementCycleId: string | null;
+  approver: string;
+  reason: string;
+}
+
+export interface TddRepairRecord {
+  operationId: string;
+  requestSha256: string;
+  targetCycleId: string;
+  testId: string;
+  requirementId: string;
+  changeId: string;
+  generation: number;
+  binding?: CandidateEvidenceBinding;
+  parallel: NonNullable<TddCycle['parallel']>;
+  replacementCycleId?: string;
+  retired?: true;
+  fallbackCycleId?: string;
+  approver: string;
+  reason: string;
+  order: number;
+  recordedAt: string;
+}
+
+export type TddRepairFailureCause =
+  | 'journal-invalid'
+  | 'identity-mismatch'
+  | 'partial-projection-mismatch';
+
+export interface TddRepairPartialFragment {
+  kind: 'order' | 'repair-projection' | 'repair-chain';
+  index: number;
+  sha256: string;
+}
+
+export interface TddRepairAbandonmentRecord {
+  operationId: string;
+  testId: string;
+  targetCycleId: string;
+  failureCause: TddRepairFailureCause;
+  pendingJournalSha256: string;
+  partialFragments: TddRepairPartialFragment[];
+  approver: string;
+  reason: string;
+  order: number;
+  recordedAt: string;
+}
+
+export interface TddRepairJournalPayload {
+  schemaVersion: 'tdd-repair-v1';
+  operationId: string;
+  requestSha256: string;
+  request: TddRepairRequest;
+  record: TddRepairRecord;
+}
+
 export interface TddEvidence {
   schemaVersion: 1;
   cycles: TddCycle[];
   chain?: TddChainRecord[];
+  repairs?: TddRepairRecord[];
+  repairAbandonments?: TddRepairAbandonmentRecord[];
 }

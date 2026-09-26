@@ -1,6 +1,7 @@
 import { error, ids, validateDesign, validateRequirements, type Diagnostic, type Requirement } from '../../domain/src/index.js';
 import { digest, exists, files, snapshot, within, writeJson, readText } from './files.js';
-import { loadTddEvidence } from './tdd.js';
+import { loadTddEvidence, type TddEvidence } from './tdd.js';
+import { selectCurrentTddCycle } from './tdd-cycle-resolver.js';
 import { buildTrace } from './trace.js';
 import { indexGraph, prepareGraphAdjacency } from './graph.js';
 import { validatePerformanceEvidence } from './performance.js';
@@ -14,7 +15,6 @@ import { loadChangeWaiverEvidence, buildWaiverContext, diagnosticDetail, errorFo
 import {
   abandonChangeGeneration, activeChangeGeneration, batchFor, batchForRecording, batchKey, changePhases, effectiveBatches,
   generationOrderPhase,
-  selectCurrentChangeTddCycle,
   loadChangeEvidence, nextBatchScopeId, nextPhaseCheckpointOrdinal, nextQualityOrdinal,
   qualityFingerprintPreviouslyRecorded, reopenChangeGeneration, supersedeApprovedPhase, supersedeQualityPhase,
   type ChangeCompleteness, type ChangeEvidence, type ChangeFingerprints, type ChangePhase,
@@ -24,12 +24,67 @@ import {
   acquireChangeLease, appendJournalRecord, assertChangeLeaseCurrent, loadJournalRecords, releaseChangeLease,
   type JournalRecord,
 } from './journal.js';
+import {
+  classifyParallelTddEvidence,
+  resolveParallelIntegrationEvidenceRoot,
+} from './parallel-tdd-evidence.js';
 
 export * from './change-evidence.js';
 
 const MEASURABLE_KEYWORD_RE = /(?:\d|test|check|verif|assert|given|when|then|return|status|pass|fail|report|error|reject|contain|unaffected|unchanged|invalid|missing|stale|silently|substring|naming|configur|exit|omit|affect|raise|cannot|preserve|every|duplicate|same|separate|identical|exact|record|without|only|each|テスト|確認|検証|以下|以上)/i;
 
 const PLACEHOLDER_PREFIX_RE = /^(?:TODO|TBD|N\/A|none|未定)(?:\s*[:\-—].*)?$/i;
+
+async function selectCurrentChangeTddCycleFromEvidence(
+  root: string,
+  evidenceRoot: string,
+  change: ChangeRecord,
+  requirementId: string,
+  tdd: TddEvidence,
+  purpose: string,
+): Promise<ReturnType<typeof selectCurrentTddCycle> & {
+  parallelStatus: 'pass' | 'PARALLEL_TDD_UNCONSUMED' | null;
+}> {
+  const generation = change.activeGeneration ?? change.generation ?? 1;
+  const authoritativeCycles: TddEvidence['cycles'] = [];
+  for (const cycle of tdd.cycles) {
+    if (!cycle.parallel) {
+      authoritativeCycles.push(cycle);
+      continue;
+    }
+    if (cycle.changeId !== change.changeId
+      || (cycle.generation ?? 1) !== generation
+      || cycle.requirementId !== requirementId) continue;
+    const status = await classifyParallelTddEvidence(root, {
+      changeId: change.changeId,
+      generation,
+      requirementId,
+      cycleId: cycle.cycleId ?? null,
+      purpose,
+      evidenceRoot,
+    });
+    if (status === 'pass') authoritativeCycles.push(cycle);
+  }
+  const authoritative = selectCurrentTddCycle(change, requirementId, {
+    ...tdd,
+    cycles: authoritativeCycles,
+  });
+  if (authoritative.selected) return { ...authoritative, parallelStatus: authoritative.selected.cycle.parallel ? 'pass' : null };
+
+  const resolution = selectCurrentTddCycle(change, requirementId, tdd);
+  if (!resolution.selected) return { ...resolution, parallelStatus: null };
+  const parallelStatus = await classifyParallelTddEvidence(root, {
+    changeId: change.changeId,
+    generation,
+    requirementId,
+    cycleId: resolution.selected.cycle.cycleId ?? null,
+    purpose,
+    evidenceRoot,
+  });
+  return parallelStatus === 'PARALLEL_TDD_UNCONSUMED'
+    ? { ...resolution, selected: null, parallelStatus }
+    : { ...resolution, parallelStatus };
+}
 
 export function hasMeasurableAcceptance(acceptance: string): boolean {
   const trimmed = acceptance.trim();
@@ -872,26 +927,22 @@ function collectRecordedAtEntries(change: ChangeRecord): { label: string; order:
   }
   return candidates
     .filter((candidate): candidate is { label: string; order: number; recordedAt: string } =>
-      Number.isInteger(candidate.order) && orderCounts.get(candidate.order!) === 1 && isCanonicalIsoRecordedAt(candidate.recordedAt))
+      Number.isInteger(candidate.order) && orderCounts.get(candidate.order!) === 1)
     .sort((a, b) => a.order - b.order);
 }
 
-function recordedAtOutOfOrderDiagnostics(change: ChangeRecord): Diagnostic[] {
-  const entries = collectRecordedAtEntries(change);
-  const diagnostics: Diagnostic[] = [];
-  for (let i = 1; i < entries.length; i += 1) {
-    const previous = entries[i - 1]!;
-    const current = entries[i]!;
-    if (current.recordedAt < previous.recordedAt) {
-      diagnostics.push({
-        code: 'CHANGE_RECORDEDAT_OUT_OF_ORDER',
-        severity: 'warning',
-        changeId: change.changeId,
-        message: `${change.changeId}: recordedAt for ${current.label} (order ${current.order}) is earlier than ${previous.label} (order ${previous.order}).`,
-      });
-    }
-  }
-  return diagnostics;
+export function recordedAtIntegrityDiagnostics(
+  changeId: string,
+  entries: Array<{ label: string; order: number; recordedAt: string }>,
+): Diagnostic[] {
+  return entries
+    .filter((entry) => !isCanonicalIsoRecordedAt(entry.recordedAt))
+    .map((entry) => ({
+      code: 'CHANGE_RECORDEDAT_INVALID',
+      severity: 'error' as const,
+      changeId,
+      message: `${changeId}: recordedAt for ${entry.label} (order ${entry.order}) is not a canonical ISO timestamp.`,
+    }));
 }
 
 /** @id CODE-M5-CHANGE-CURRENT-001
@@ -901,15 +952,19 @@ function recordedAtOutOfOrderDiagnostics(change: ChangeRecord): Diagnostic[] {
 export async function validateChangeEvidence(
   root: string,
   purpose = 'phase-validation',
+  evidenceRoot = root,
 ): Promise<{
   present: boolean;
   valid: boolean;
   changes: number;
   diagnostics: Diagnostic[];
 }> {
-  const evidence = await loadChangeEvidence(root);
-  const tdd = await loadTddEvidence(root);
-  const waiverContext = await buildWaiverContext(root, evidence, tdd);
+  const authoritativeEvidenceRoot = evidenceRoot === root
+    ? await resolveParallelIntegrationEvidenceRoot(root, purpose)
+    : evidenceRoot;
+  const evidence = await loadChangeEvidence(authoritativeEvidenceRoot);
+  const tdd = await loadTddEvidence(authoritativeEvidenceRoot);
+  const waiverContext = await buildWaiverContext(authoritativeEvidenceRoot, evidence, tdd);
   const waiverDiagnostics = reportWaiverEvidenceDiagnostics(waiverContext, evidence, tdd);
   const documents = (await files(root))
     .filter((path) => /^\.musubix\/changes\/CHANGE-\d+\.md$/.test(path))
@@ -929,7 +984,7 @@ export async function validateChangeEvidence(
   }
   const diagnostics: Diagnostic[] = [...waiverDiagnostics];
   try {
-    await phaseCheckpointRecords(root);
+    await phaseCheckpointRecords(authoritativeEvidenceRoot);
   } catch (cause) {
     const message = cause instanceof Error ? cause.message : String(cause);
     const invalid = /^CHANGE_CHECKPOINT_JOURNAL_INVALID:\s*(.*)$/.exec(message);
@@ -1107,8 +1162,8 @@ export async function validateChangeEvidence(
     const selectedBatchScopes = new Set<string>();
     if (tdd) {
       for (const requirementId of change.requirementIds) {
-        const selected = (await selectCurrentChangeTddCycle(
-          root, change, requirementId, tdd, purpose,
+        const selected = (await selectCurrentChangeTddCycleFromEvidence(
+          root, authoritativeEvidenceRoot, change, requirementId, tdd, purpose,
         )).selected?.batch;
         if (selected) selectedBatchScopes.add(selected.scopeId ?? batchKey(selected.requirementIds));
       }
@@ -1148,10 +1203,12 @@ export async function validateChangeEvidence(
         }
       }
     }
-    diagnostics.push(...recordedAtOutOfOrderDiagnostics(change));
+    diagnostics.push(...recordedAtIntegrityDiagnostics(change.changeId, collectRecordedAtEntries(change)));
     for (const requirementId of change.requirementIds) {
       const resolution = tdd
-        ? await selectCurrentChangeTddCycle(root, change, requirementId, tdd, purpose)
+        ? await selectCurrentChangeTddCycleFromEvidence(
+            root, authoritativeEvidenceRoot, change, requirementId, tdd, purpose,
+          )
         : { selected: null };
       const batch = resolution.selected?.batch ?? batchFor(batches, requirementId);
       const red = batch?.red;
@@ -1184,15 +1241,19 @@ export async function validateChangeCompleteness(
   root: string,
   purpose = 'readiness',
   performanceReportRoot?: string,
+  evidenceRoot = root,
 ): Promise<{
   present: boolean;
   valid: boolean;
   changes: ChangeCompleteness[];
   diagnostics: Diagnostic[];
 }> {
-  const evidence = await loadChangeEvidence(root);
-  const tdd = await loadTddEvidence(root);
-  const waiverContext = await buildWaiverContext(root, evidence, tdd);
+  const authoritativeEvidenceRoot = evidenceRoot === root
+    ? await resolveParallelIntegrationEvidenceRoot(root, purpose)
+    : evidenceRoot;
+  const evidence = await loadChangeEvidence(authoritativeEvidenceRoot);
+  const tdd = await loadTddEvidence(authoritativeEvidenceRoot);
+  const waiverContext = await buildWaiverContext(authoritativeEvidenceRoot, evidence, tdd);
   const waiverDiagnostics = reportWaiverEvidenceDiagnostics(waiverContext, evidence, tdd);
   if (!evidence?.changes.length) {
     return {
@@ -1265,7 +1326,9 @@ export async function validateChangeCompleteness(
       }
       const measurableAcceptance = hasMeasurableAcceptance(requirement?.acceptance ?? '');
       const resolution = tdd
-        ? await selectCurrentChangeTddCycle(root, change, requirementId, tdd, purpose)
+        ? await selectCurrentChangeTddCycleFromEvidence(
+            root, authoritativeEvidenceRoot, change, requirementId, tdd, purpose,
+          )
         : { selected: null, parallelStatus: null };
       const hasTdd = resolution.selected !== null;
       if (resolution.parallelStatus === 'PARALLEL_TDD_UNCONSUMED') {

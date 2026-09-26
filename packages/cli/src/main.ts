@@ -16,6 +16,7 @@ import {
   formalDoctor, generateFormalArtifacts, readText, runGate, traceImpact, type Solver,
   abandonPersistedChangeGeneration, changePhases, recordChangePhase, recordChangePhaseFromWorkspace, recordWorkflow,
   runTddPhase, sanitizeWorkflowLogFile,
+  abandonPendingTddRepair, appendTddRepair, resumeTddRepair,
   validateTddEvidence, verifyWorkflowLogFile, migrateTddFingerprint, voidTddCycle, type ChangePhase, type TddPhase,
   attestationSigningPayload, createUnsignedAttestation, githubOidcAudience, verifyEvidenceAttestation,
   mutationDoctor, mutationIdentity, validateMutationEvidence, validateModelCorrespondenceEvidence, within,
@@ -100,6 +101,29 @@ async function parallelAction(
     if (json) console.log(JSON.stringify({ error: { code, message: detail, ...(details ? { details } : {}) } }));
     else console.error(`${code}: ${detail}`);
     process.exitCode = parallelExitCode(code);
+  }
+}
+
+async function tddRepairAction(
+  json: boolean,
+  action: () => Promise<unknown>,
+  summary: (value: any) => string,
+): Promise<void> {
+  try {
+    const value = await action();
+    output(value, json, summary(value));
+  } catch (cause) {
+    const message = cause instanceof Error ? cause.message : String(cause);
+    const failure = /^(CLI_ERROR|TDD_REPAIR_[A-Z0-9_]+):\s*(.*)$/.exec(message);
+    if (!failure) throw cause;
+    const code = failure[1]!;
+    const rawDetail = failure[2]!;
+    const detailsMatch = /^(.*)\s(\{.*\})$/.exec(rawDetail);
+    const detail = detailsMatch?.[1] ?? rawDetail;
+    const details = detailsMatch ? JSON.parse(detailsMatch[2]!) as Record<string, unknown> : undefined;
+    if (json) console.log(JSON.stringify({ error: { code, message: detail, ...(details ? { details } : {}) } }));
+    else console.error(`${code}: ${detail}`);
+    process.exitCode = code === 'CLI_ERROR' ? 2 : 1;
   }
 }
 
@@ -1509,8 +1533,7 @@ export function createProgram(): Command {
   common(program.command('change-record <change-id> <phase>')
     .description('Record an ordered staged-change fingerprint checkpoint; rejects an unchanged fingerprint since the preceding phase. '
       + 'Each recorded phase/batch stores both order (the verified, gate-checked logical append sequence from order.json — the only field '
-      + 'guaranteed correct and monotonic per change) and recordedAt (an independently captured wall-clock timestamp with no ordering guarantee; '
-      + 'gate reports it via CHANGE_RECORDEDAT_OUT_OF_ORDER, a non-blocking warning, when it disagrees with order)'))
+      + 'guaranteed correct and monotonic per change) and recordedAt (an independently captured wall-clock timestamp with no ordering guarantee)'))
     .option('--requirement <ids...>', 'Requirement IDs affected by this change')
     .option('--allow-unchanged', 'Record requirements even if unchanged since impact (defect fixes only)')
     .option('--reopen', 'Start or resume the next CHANGE generation (impact only)')
@@ -2066,6 +2089,96 @@ export function createProgram(): Command {
         if (!evidence.valid) process.exitCode = 1;
       });
   }
+  common(tdd.command('repair [test-id]')
+    .description('Append an authorized replacement or retirement for one stale parallel-bound TDD cycle')
+    .option('--cycle <cycle-id>', 'Stable target cycle identity')
+    .option('--replacement-cycle <cycle-id>', 'Current authoritative replacement cycle')
+    .option('--retire', 'Retire the target and retain exactly one eligible fallback', false)
+    .option('--approver <name>', 'Human approver authorizing the repair')
+    .option('--reason <text>', 'Auditable reason for the repair')
+    .option('--resume <operation-id>', 'Resume one journaled repair operation')
+    .option('--abandon-pending <operation-id>', 'Audit and abandon one unrecoverable pending repair')
+    .option('--confirm', 'Confirm the repair is reviewed and intended', false))
+    .action(async (testId: string | undefined, options: {
+      root: string;
+      json?: boolean;
+      cycle?: string;
+      replacementCycle?: string;
+      retire?: boolean;
+      approver?: string;
+      reason?: string;
+      resume?: string;
+      abandonPending?: string;
+      confirm?: boolean;
+    }) => {
+      const operationPattern = /^tdd-repair:[a-f0-9]{64}$/;
+      const targetOptions = testId !== undefined
+        || options.cycle !== undefined
+        || options.replacementCycle !== undefined
+        || options.retire === true;
+      if (options.resume !== undefined) {
+        if (!options.confirm) throw new Error('CLI_ERROR: TDD repair resume requires --confirm.');
+        if (!operationPattern.test(options.resume)) {
+          throw new Error('CLI_ERROR: --resume must match ^tdd-repair:[a-f0-9]{64}$.');
+        }
+        if (targetOptions || options.abandonPending !== undefined
+          || options.approver !== undefined || options.reason !== undefined) {
+          throw new Error('CLI_ERROR: --resume cannot be combined with repair target or disposition options.');
+        }
+        await tddRepairAction(
+          !!options.json,
+          () => resumeTddRepair(resolve(options.root), options.resume!),
+          (value) => `REPAIR: PASS operation=${value.operationId} test=${value.testId} cycle=${value.targetCycleId}`,
+        );
+        return;
+      }
+      if (options.abandonPending !== undefined) {
+        if (!options.confirm) throw new Error('CLI_ERROR: TDD repair abandonment requires --confirm.');
+        if (!operationPattern.test(options.abandonPending)) {
+          throw new Error('CLI_ERROR: --abandon-pending must match ^tdd-repair:[a-f0-9]{64}$.');
+        }
+        if (targetOptions) {
+          throw new Error('CLI_ERROR: --abandon-pending cannot be combined with repair target, disposition, or resume options.');
+        }
+        if (options.approver === undefined) throw new Error('CLI_ERROR: --approver is required.');
+        if (!options.approver.trim()) throw new Error('CLI_ERROR: --approver must not be blank.');
+        if (options.reason === undefined) throw new Error('CLI_ERROR: --reason is required.');
+        if (!options.reason.trim()) throw new Error('CLI_ERROR: --reason must not be blank.');
+        await tddRepairAction(
+          !!options.json,
+          () => abandonPendingTddRepair(
+            resolve(options.root),
+            options.abandonPending!,
+            options.approver!,
+            options.reason!,
+          ),
+          (value) => `REPAIR ABANDON: PASS operation=${value.operationId} test=${value.testId} cycle=${value.targetCycleId} cause=${value.failureCause}`,
+        );
+        return;
+      }
+      if (testId === undefined) throw new Error('CLI_ERROR: <test-id> is required.');
+      if (!options.confirm) throw new Error('CLI_ERROR: TDD repair requires --confirm.');
+      if (options.cycle === undefined) throw new Error('CLI_ERROR: --cycle is required.');
+      if ((options.replacementCycle === undefined) === (options.retire !== true)) {
+        throw new Error('CLI_ERROR: exactly one of --replacement-cycle or --retire is required.');
+      }
+      if (options.approver === undefined) throw new Error('CLI_ERROR: --approver is required.');
+      if (!options.approver.trim()) throw new Error('CLI_ERROR: --approver must not be blank.');
+      if (options.reason === undefined) throw new Error('CLI_ERROR: --reason is required.');
+      if (!options.reason.trim()) throw new Error('CLI_ERROR: --reason must not be blank.');
+      await tddRepairAction(
+        !!options.json,
+        () => appendTddRepair(resolve(options.root), {
+          testId,
+          targetCycleId: options.cycle!,
+          ...(options.replacementCycle ? { replacementCycleId: options.replacementCycle } : {}),
+          ...(options.retire ? { retire: true } : {}),
+          approver: options.approver!,
+          reason: options.reason!,
+        }),
+        (value) => `REPAIR: PASS operation=${value.operationId} test=${value.testId} cycle=${value.targetCycleId}`,
+      );
+    });
   common(tdd.command('migrate <test-id>'))
     .requiredOption('--approver <name>', 'Human approver recording this fingerprint migration')
     .option('--confirm', 'Confirm the migration is reviewed and intended', false)
@@ -2192,12 +2305,17 @@ async function main(): Promise<void> {
   } catch (cause) {
     if (cause instanceof CommanderError && cause.exitCode === 0) return;
     const message = cause instanceof Error ? cause.message : String(cause);
-    const domainFailure = /^(CLI_ERROR|CACHE_WRITE_FAILED|(?:CANDIDATE_[A-Z0-9_]+)|(?:PARALLEL_[A-Z0-9_]+)|CHANGE_GENERATION_[A-Z0-9_]+|CHANGE_CHECKPOINT_JOURNAL_INVALID|WORKFLOW_CHANGE_MISMATCH|WORKFLOW_DECLARATION_CORRECTION_INVALID|JOURNAL_IDEMPOTENCY_CONFLICT|LEASE_FENCED):\s*(.*)$/.exec(message);
+    const domainFailure = /^(CLI_ERROR|CACHE_WRITE_FAILED|(?:CANDIDATE_[A-Z0-9_]+)|(?:PARALLEL_[A-Z0-9_]+)|(?:TDD_REPAIR_[A-Z0-9_]+)|CHANGE_GENERATION_[A-Z0-9_]+|CHANGE_CHECKPOINT_JOURNAL_INVALID|WORKFLOW_CHANGE_MISMATCH|WORKFLOW_DECLARATION_CORRECTION_INVALID|JOURNAL_IDEMPOTENCY_CONFLICT|LEASE_FENCED):\s*(.*)$/.exec(message);
     if (domainFailure) {
-      const [, code, detail] = domainFailure;
-      if (process.argv.includes('--json')) console.log(JSON.stringify({ error: { code, message: detail } }));
+      const [, code, rawDetail] = domainFailure;
+      const detailsMatch = /^(.*)\s(\{.*\})$/.exec(rawDetail!);
+      const detail = detailsMatch?.[1] ?? rawDetail;
+      const details = detailsMatch ? JSON.parse(detailsMatch[2]!) as Record<string, unknown> : undefined;
+      if (process.argv.includes('--json')) {
+        console.log(JSON.stringify({ error: { code, message: detail, ...(details ? { details } : {}) } }));
+      }
       else console.error(`${code}: ${detail}`);
-      process.exitCode = parallelExitCode(code!);
+      process.exitCode = code === 'CLI_ERROR' ? 2 : parallelExitCode(code!);
       return;
     }
     if (process.argv.includes('--json')) console.log(JSON.stringify({ error: { code: 'CLI_ERROR', message } }));

@@ -13,6 +13,7 @@ import {
   currentChangeFingerprints, validateChangeCompleteness, validateChangeEvidence,
   type ChangeGenerationSummary,
 } from './change.js';
+import { resolveParallelIntegrationEvidenceRoot } from './parallel-tdd-evidence.js';
 import { resolveChangeContext } from './change-generation.js';
 import { activeWaivers, waiverEvidenceDiagnostics } from './change-waiver.js';
 import { deriveWorkflowWaiverAudit } from './workflow-waiver.js';
@@ -338,7 +339,13 @@ export async function runGate(root: string, options: {
   });
   const { workflowWaivers, workflowWaiverDiagnostics } = deriveWorkflowWaiverAudit(workflow.workflowWaiverContext);
   const tddPurpose = options.tddPurpose ?? 'readiness';
-  const tdd = await validateTddEvidence(root, tddPurpose, options.evidenceContext);
+  const readinessEvidenceRoot = await resolveParallelIntegrationEvidenceRoot(root, tddPurpose);
+  const tdd = await validateTddEvidence(
+    root,
+    tddPurpose,
+    options.evidenceContext,
+    readinessEvidenceRoot,
+  );
   const tddDiagnostics = tdd.diagnostics.filter(scopedToFeature);
   checks.push({
     name: 'tdd',
@@ -350,6 +357,7 @@ export async function runGate(root: string, options: {
   const changes = await validateChangeEvidence(
     root,
     tddPurpose === 'integration-verification' ? 'integration-verification' : 'phase-validation',
+    readinessEvidenceRoot,
   );
   const selectedChangeIds = options.evidenceContext
     ? new Set(gateEvidenceChangeIds(options.evidenceContext))
@@ -372,7 +380,12 @@ export async function runGate(root: string, options: {
   const completenessIndex = checks.length;
   let completenessEvidence: Evidence | undefined;
   const completenessCheck = async (performanceReportRoot?: string): Promise<Evidence> => {
-    const completeness = await validateChangeCompleteness(root, tddPurpose, performanceReportRoot);
+    const completeness = await validateChangeCompleteness(
+      root,
+      tddPurpose,
+      performanceReportRoot,
+      readinessEvidenceRoot,
+    );
     const completenessDiagnostics = completeness.diagnostics.filter(scopedToFeature).filter(selectedDiagnostic);
     const selectedChanges = selectedChangeIds
       ? completeness.changes.filter((change) => selectedChangeIds.has(change.changeId))
@@ -643,7 +656,12 @@ export async function runGate(root: string, options: {
       : `${correspondence.coveredRequirements.length}/${correspondence.requirements} explicitly modeled requirement(s) correspond to current authoritative passing tests.`,
     diagnostics: correspondence.diagnostics,
   });
-  const refreshedCompleteness = await validateChangeCompleteness(root, tddPurpose, matrixReportRoot);
+  const refreshedCompleteness = await validateChangeCompleteness(
+    root,
+    tddPurpose,
+    matrixReportRoot,
+    readinessEvidenceRoot,
+  );
   const refreshedCompletenessDiagnostics = refreshedCompleteness.diagnostics.filter(scopedToFeature);
   if (!completenessEvidence) throw new Error('Change completeness evidence was not initialized.');
   completenessEvidence.status = !refreshedCompleteness.present ? 'skipped' : (featureDir ? countErrors(refreshedCompletenessDiagnostics) === 0 : refreshedCompleteness.valid) ? 'pass' : 'fail';

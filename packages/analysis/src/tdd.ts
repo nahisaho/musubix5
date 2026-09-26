@@ -7,10 +7,21 @@ import { digest, evidenceInputs, exists, files, isSource, readText, safePath, sn
 import { runProcess, type Runner } from './process.js';
 import { buildTrace, type TraceNode } from './trace.js';
 import { adapterInvocation, clearAdapterOutput, mergeAdapterArgs, normalizeAdapterReport, readAdapterOutput } from './adapters.js';
-import { appendEvidenceOrder, evidenceOrderRecord, inspectEvidenceOrder, type validateEvidenceOrderLog } from './order.js';
-import { requireApproval, resolveRequirementDomain } from './approval.js';
+import {
+  appendEvidenceOrder,
+  evidenceOrderRecord,
+  inspectEvidenceOrder,
+  loadEvidenceOrder,
+  type validateEvidenceOrderLog,
+} from './order.js';
+import { requireApproval, resolveRequirementDomain, validateApprovalStage } from './approval.js';
 import { activeChangeContext, resolveChangeContext, type ActiveChangeContext } from './change-generation.js';
-import { classifyParallelTddEvidence } from './parallel-tdd-evidence.js';
+import {
+  classifyParallelTddEvidence,
+  supersededParallelTddCycles,
+} from './parallel-tdd-evidence.js';
+import { appendJournalRecord, loadJournalRecords, type JournalRecord } from './journal.js';
+import { canonicalBytes, sha256 } from './canonical.js';
 import { parseMusubixTestReport, type MusubixTestReport } from './test-report.js';
 import { indexGraph, prepareGraphAdjacency } from './graph.js';
 import {
@@ -38,6 +49,11 @@ import type {
   TddMigrationEvidence,
   TddPhase,
   TddPhaseEvidence,
+  TddRepairAbandonmentRecord,
+  TddRepairFailureCause,
+  TddRepairJournalPayload,
+  TddRepairRecord,
+  TddRepairRequest,
   TddVoidEvidence,
 } from './tdd-types.js';
 export { parseMusubixTestReport, type MusubixTestReport } from './test-report.js';
@@ -49,6 +65,11 @@ export type {
   TddMigrationEvidence,
   TddPhase,
   TddPhaseEvidence,
+  TddRepairAbandonmentRecord,
+  TddRepairFailureCause,
+  TddRepairJournalPayload,
+  TddRepairRecord,
+  TddRepairRequest,
   TddVoidEvidence,
 } from './tdd-types.js';
 
@@ -593,6 +614,7 @@ export async function migrateTddFingerprint(root: string, testId: string, approv
   if (!approver.trim()) throw new Error('An approver is required to migrate TDD fingerprint evidence.');
   const evidence = await loadTddEvidence(root);
   if (!evidence) throw new Error('No TDD evidence found.');
+  await requireNoPendingTddRepair(root, evidence);
   if (!evidence.cycles.some((entry) => entry.testId === testId)) {
     throw new Error(`No TDD cycle found for ${testId}.`);
   }
@@ -656,6 +678,641 @@ export async function loadTddEvidence(root: string): Promise<TddEvidence | null>
   return value;
 }
 
+export interface TddRepairIdentity {
+  operationId: string;
+  requestSha256: string;
+  request: TddRepairRequest;
+}
+
+export interface TddRepairResult {
+  repaired: true;
+  replayed: boolean;
+  resumed: boolean;
+  operationId: string;
+  testId: string;
+  targetCycleId: string;
+  disposition: 'replacement' | 'retirement';
+  replacementCycleId?: string;
+  fallbackCycleId?: string;
+  approver: string;
+  reason: string;
+  order: number;
+}
+
+export interface TddRepairAbandonmentResult {
+  abandoned: true;
+  replayed: boolean;
+  operationId: string;
+  testId: string;
+  targetCycleId: string;
+  failureCause: TddRepairFailureCause;
+  approver: string;
+  reason: string;
+  order: number;
+}
+
+function repairError(code: string, message: string, details?: object): never {
+  throw new Error(`${code}: ${message}${details ? ` ${JSON.stringify(details)}` : ''}`);
+}
+
+export function tddRepairOperationIdentity(input: {
+  testId: string;
+  targetCycleId: string;
+  disposition: 'replacement' | 'retirement';
+  replacementCycleId?: string;
+  approver: string;
+  reason: string;
+}): TddRepairIdentity {
+  const request: TddRepairRequest = {
+    schemaVersion: 1,
+    testId: input.testId,
+    targetCycleId: input.targetCycleId,
+    disposition: input.disposition,
+    replacementCycleId: input.disposition === 'replacement' ? input.replacementCycleId ?? null : null,
+    approver: input.approver.trim(),
+    reason: input.reason.trim(),
+  };
+  const requestSha256 = sha256(canonicalBytes(request));
+  return { operationId: `tdd-repair:${requestSha256}`, requestSha256, request };
+}
+
+function repairRecordResult(
+  repair: TddRepairRecord,
+  replayed: boolean,
+  resumed: boolean,
+): TddRepairResult {
+  return {
+    repaired: true,
+    replayed,
+    resumed,
+    operationId: repair.operationId,
+    testId: repair.testId,
+    targetCycleId: repair.targetCycleId,
+    disposition: repair.retired ? 'retirement' : 'replacement',
+    ...(repair.replacementCycleId ? { replacementCycleId: repair.replacementCycleId } : {}),
+    ...(repair.fallbackCycleId ? { fallbackCycleId: repair.fallbackCycleId } : {}),
+    approver: repair.approver,
+    reason: repair.reason,
+    order: repair.order,
+  };
+}
+
+function repairJournalPayload(record: JournalRecord): TddRepairJournalPayload | null {
+  if (record.kind !== 'tdd-repair-v1' || !record.payload || typeof record.payload !== 'object') return null;
+  return record.payload as TddRepairJournalPayload;
+}
+
+export function validateTddRepairLedger(evidence: TddEvidence): {
+  valid: boolean;
+  repairs: TddRepairRecord[];
+} {
+  const repairs: TddRepairRecord[] = [];
+  const operations = new Set<string>();
+  const targets = new Set<string>();
+  const replacements = new Set<string>();
+  for (const repair of evidence.repairs ?? []) {
+    const identity = tddRepairOperationIdentity({
+      testId: repair.testId,
+      targetCycleId: repair.targetCycleId,
+      disposition: repair.retired ? 'retirement' : 'replacement',
+      ...(repair.replacementCycleId ? { replacementCycleId: repair.replacementCycleId } : {}),
+      approver: repair.approver,
+      reason: repair.reason,
+    });
+    const dispositionValid = repair.retired === true
+      ? !repair.replacementCycleId && typeof repair.fallbackCycleId === 'string'
+      : typeof repair.replacementCycleId === 'string' && repair.retired === undefined
+        && repair.fallbackCycleId === undefined;
+    if (!dispositionValid
+      || repair.operationId !== identity.operationId
+      || repair.requestSha256 !== identity.requestSha256
+      || operations.has(repair.operationId)
+      || targets.has(repair.targetCycleId)
+      || (repair.replacementCycleId !== undefined && replacements.has(repair.replacementCycleId))) {
+      return { valid: false, repairs: [] };
+    }
+    operations.add(repair.operationId);
+    targets.add(repair.targetCycleId);
+    if (repair.replacementCycleId) replacements.add(repair.replacementCycleId);
+    repairs.push(repair);
+  }
+  return { valid: true, repairs };
+}
+
+export function repairAwareCycles(evidence: TddEvidence): TddCycle[] {
+  const ledger = validateTddRepairLedger(evidence);
+  if (!ledger.valid) return evidence.cycles;
+  const suppressed = new Set(ledger.repairs.map((repair) => repair.targetCycleId));
+  return evidence.cycles.filter((cycle) => !cycle.cycleId || !suppressed.has(cycle.cycleId));
+}
+
+export function pendingTddRepair(
+  journal: JournalRecord[],
+  evidence: TddEvidence,
+): { operationId: string; testId: string; targetCycleId: string } | null {
+  const completed = new Set([
+    ...(evidence.repairs ?? []).map((repair) => repair.operationId),
+    ...(evidence.repairAbandonments ?? []).map((repair) => repair.operationId),
+  ]);
+  for (const record of journal) {
+    const payload = repairJournalPayload(record);
+    if (!payload || completed.has(record.idempotencyKey)) continue;
+    const testId = payload.record?.testId ?? payload.request?.testId;
+    const targetCycleId = payload.record?.targetCycleId ?? payload.request?.targetCycleId;
+    if (typeof testId === 'string' && typeof targetCycleId === 'string') {
+      return { operationId: record.idempotencyKey, testId, targetCycleId };
+    }
+  }
+  return null;
+}
+
+async function requireNoPendingTddRepair(root: string, evidence?: TddEvidence): Promise<void> {
+  const current = evidence ?? await loadTddEvidence(root) ?? { schemaVersion: 1, cycles: [] };
+  const pending = pendingTddRepair(await loadJournalRecords(root), current);
+  if (pending) {
+    repairError(
+      'TDD_REPAIR_PENDING',
+      `pending repair ${pending.operationId} for ${pending.testId}:${pending.targetCycleId} must be resumed or abandoned before TDD evidence can change.`,
+      pending,
+    );
+  }
+}
+
+function completeRepairChainValid(evidence: TddEvidence): boolean {
+  if (!evidence.chain) return evidence.cycles.length <= 1 && !(evidence.repairs?.length);
+  for (const [index, record] of evidence.chain.entries()) {
+    const expectedPrevious = index === 0 ? null : evidence.chain[index - 1]!.recordSha256;
+    const { recordSha256, ...payload } = record;
+    if (record.sequence !== index + 1
+      || record.previousSha256 !== expectedPrevious
+      || recordSha256 !== chainRecordSha256(payload)) return false;
+  }
+  return validateTddRepairLedger(evidence).valid;
+}
+
+function appendRepairChainRecord(evidence: TddEvidence, target: TddCycle, repair: TddRepairRecord): void {
+  if (!target.cycleId) repairError('TDD_REPAIR_BINDING_MISMATCH', 'Target cycle lacks a stable identity.');
+  evidence.chain ??= [];
+  const previous = evidence.chain.at(-1);
+  const payload: Omit<TddChainRecord, 'recordSha256'> = {
+    sequence: evidence.chain.length + 1,
+    cycleId: target.cycleId,
+    changeId: repair.changeId,
+    generation: repair.generation,
+    ...(repair.binding ? { binding: repair.binding } : {}),
+    requirementId: repair.requirementId,
+    testId: repair.testId,
+    testPath: target.testPath,
+    commandName: target.commandName,
+    parallel: repair.parallel,
+    phase: 'repair',
+    phaseEvidenceSha256: digest(JSON.stringify(repair)),
+    previousSha256: previous?.recordSha256 ?? null,
+  };
+  evidence.chain.push({ ...payload, recordSha256: chainRecordSha256(payload) });
+}
+
+async function requireRepairAuthorization(
+  root: string,
+  target: TddCycle,
+): Promise<void> {
+  const config = await loadConfig(root);
+  let domain;
+  try {
+    domain = await resolveRequirementDomain(root, config.approval, target.requirementId);
+  } catch {
+    repairError(
+      'TDD_REPAIR_AUTHORIZATION_INVALID',
+      `Design approval is not authorized for ${target.requirementId}.`,
+      { requirementId: target.requirementId, domain: null, status: 'domain-mismatch' },
+    );
+  }
+  const validation = await validateApprovalStage(root, 'design', config.approval, domain);
+  if (validation.status !== 'approved') {
+    repairError(
+      'TDD_REPAIR_AUTHORIZATION_INVALID',
+      `Design approval is ${validation.status} for ${target.requirementId}.`,
+      {
+        requirementId: target.requirementId,
+        domain: domain?.name ?? null,
+        status: validation.status === 'missing' ? 'missing' : 'stale',
+      },
+    );
+  }
+}
+
+function targetInvalid(
+  cause: 'cycle-not-found' | 'cycle-id-ambiguous' | 'foreign-operation-scope'
+    | 'target-not-parallel-bound' | 'target-parallel-binding-not-stale'
+    | 'retirement-fallback-missing' | 'retirement-fallback-ambiguous',
+  testId: string,
+  targetCycleId: string,
+): never {
+  repairError(
+    'TDD_REPAIR_TARGET_INVALID',
+    `${testId}:${targetCycleId} is not an eligible TDD repair target (${cause}).`,
+    { cause, testId, targetCycleId },
+  );
+}
+
+function resolveRepairCycle(evidence: TddEvidence, cycleId: string, testId: string): TddCycle {
+  const matches = evidence.cycles.filter((cycle) => cycle.cycleId === cycleId);
+  if (matches.length === 0) targetInvalid('cycle-not-found', testId, cycleId);
+  if (matches.length > 1) targetInvalid('cycle-id-ambiguous', testId, cycleId);
+  const target = matches[0]!;
+  if (target.testId !== testId) {
+    repairError('TDD_REPAIR_BINDING_MISMATCH', `${testId}:${cycleId} does not match the recorded test binding.`);
+  }
+  return target;
+}
+
+function authoritativeRepairCycle(cycle: TddCycle): boolean {
+  return cycle.red.valid === true
+    && cycle.green?.valid === true
+    && cycle.red.testStatus === 'failed'
+    && cycle.green.testStatus === 'passed'
+    && Number.isInteger(cycle.red.order)
+    && Number.isInteger(cycle.green.order)
+    && cycle.red.order! < cycle.green.order!
+    && cycle.red.commandSha256 === cycle.green.commandSha256;
+}
+
+async function repairCycleSourceCurrent(root: string, cycle: TddCycle): Promise<boolean> {
+  const trace = await buildTrace(root, false);
+  const test = trace.nodes.find((node) =>
+    node.kind === 'test' && node.id === cycle.testId && node.path === cycle.testPath);
+  if (!test) return false;
+  const fingerprint = await testFingerprint(root, test);
+  return cycle.red.testFingerprint === fingerprint
+    && cycle.green?.testFingerprint === fingerprint;
+}
+
+async function persistRepairProjection(
+  root: string,
+  payload: TddRepairJournalPayload,
+  evidence: TddEvidence,
+  resumed: boolean,
+): Promise<TddRepairResult> {
+  const repair = payload.record;
+  const existing = (evidence.repairs ?? []).find((entry) => entry.operationId === repair.operationId);
+  if (existing) return repairRecordResult(existing, !resumed, resumed);
+  const order = await inspectEvidenceOrder(root);
+  if (!order.valid) repairError('TDD_REPAIR_CHAIN_INVALID', 'TDD repair evidence has invalid order, hash-chain, operation, or disposition linkage.');
+  const orderEntry = evidenceOrderRecord(order.records, 'tdd', repair.targetCycleId, `repair:${repair.operationId}`);
+  if (orderEntry && orderEntry.sequence !== repair.order) {
+    repairError('TDD_REPAIR_RESUME_INVALID', `${repair.operationId} cannot be resumed.`, {
+      operationId: repair.operationId,
+      cause: 'partial-projection-mismatch',
+    });
+  }
+  if (!orderEntry) {
+    const appended = await appendEvidenceOrder(root, {
+      kind: 'tdd',
+      entityId: repair.targetCycleId,
+      phase: `repair:${repair.operationId}`,
+      testId: repair.testId,
+    });
+    if (appended.sequence !== repair.order) {
+      repairError('TDD_REPAIR_RESUME_INVALID', `${repair.operationId} cannot be resumed.`, {
+        operationId: repair.operationId,
+        cause: 'partial-projection-mismatch',
+      });
+    }
+  }
+  const target = resolveRepairCycle(evidence, repair.targetCycleId, repair.testId);
+  evidence.repairs ??= [];
+  evidence.repairs.push(repair);
+  appendRepairChainRecord(evidence, target, repair);
+  await writeJson(root, '.musubix/evidence/tdd.json', evidence);
+  return repairRecordResult(repair, false, resumed);
+}
+
+/** @id CODE-M5-WAVE1-TDD-REPAIR-001
+ * @implements REQ-M5-COMPAT-013 REQ-M5-WAVE1-TDD-001 REQ-M5-WAVE1-TDD-002
+ * @design DES-M5-TDD-REPAIR-001 DES-M5-TDD-REPAIR-002 DES-M5-TDD-REPAIR-004
+ */
+export async function appendTddRepair(root: string, input: {
+  testId: string;
+  targetCycleId: string;
+  replacementCycleId?: string;
+  retire?: boolean;
+  approver: string;
+  reason: string;
+}): Promise<TddRepairResult> {
+  const evidence = await loadTddEvidence(root);
+  if (!evidence) repairError('TDD_REPAIR_TARGET_INVALID', 'No TDD evidence found.', {
+    cause: 'cycle-not-found',
+    testId: input.testId,
+    targetCycleId: input.targetCycleId,
+  });
+  await requireNoPendingTddRepair(root, evidence);
+  if (!completeRepairChainValid(evidence)) {
+    repairError('TDD_REPAIR_CHAIN_INVALID', 'TDD repair evidence has invalid order, hash-chain, operation, or disposition linkage.');
+  }
+  const operationIdentity = tddRepairOperationIdentity({
+    testId: input.testId,
+    targetCycleId: input.targetCycleId,
+    disposition: input.retire ? 'retirement' : 'replacement',
+    ...(input.replacementCycleId ? { replacementCycleId: input.replacementCycleId } : {}),
+    approver: input.approver,
+    reason: input.reason,
+  });
+  const replay = (evidence.repairs ?? []).find((repair) => repair.operationId === operationIdentity.operationId);
+  if (replay) return repairRecordResult(replay, true, false);
+  const target = resolveRepairCycle(evidence, input.targetCycleId, input.testId);
+  if ((evidence.repairs ?? []).some((repair) => repair.targetCycleId === input.targetCycleId)) {
+    repairError('TDD_REPAIR_ALREADY_RECORDED', `${input.testId}:${input.targetCycleId} already has a TDD repair.`);
+  }
+  await requireRepairAuthorization(root, target);
+  const context = await maintenanceChangeContext(root);
+  if (!context || target.changeId !== context.changeId || (target.generation ?? 1) !== context.generation) {
+    targetInvalid('foreign-operation-scope', input.testId, input.targetCycleId);
+  }
+  if (!target.parallel) targetInvalid('target-not-parallel-bound', input.testId, input.targetCycleId);
+  if (!await repairCycleSourceCurrent(root, target)) {
+    repairError('TDD_REPAIR_BINDING_MISMATCH', `${input.testId}:${input.targetCycleId} does not match current authoritative test source.`);
+  }
+  const provenance = await classifyParallelTddEvidence(root, {
+    changeId: context.changeId,
+    generation: context.generation,
+    requirementId: target.requirementId,
+    cycleId: target.cycleId ?? null,
+    purpose: 'tdd-repair',
+  });
+  if (provenance !== 'PARALLEL_TDD_UNCONSUMED') {
+    targetInvalid('target-parallel-binding-not-stale', input.testId, input.targetCycleId);
+  }
+  let replacement: TddCycle | undefined;
+  let fallback: TddCycle | undefined;
+  if (input.retire) {
+    const candidates = repairAwareCycles(evidence).filter((cycle) =>
+      cycle !== target
+      && cycle.testId === target.testId
+      && cycle.requirementId === target.requirementId
+      && authoritativeRepairCycle(cycle));
+    if (candidates.length === 0) targetInvalid('retirement-fallback-missing', input.testId, input.targetCycleId);
+    if (candidates.length > 1) targetInvalid('retirement-fallback-ambiguous', input.testId, input.targetCycleId);
+    fallback = candidates[0]!;
+  } else {
+    replacement = resolveRepairCycle(evidence, input.replacementCycleId!, input.testId);
+    if (replacement === target
+      || replacement.requirementId !== target.requirementId
+      || replacement.changeId !== target.changeId
+      || replacement.generation !== target.generation
+      || JSON.stringify(replacement.binding ?? null) !== JSON.stringify(target.binding ?? null)
+      || !authoritativeRepairCycle(replacement)
+      || !await repairCycleSourceCurrent(root, replacement)
+      || (evidence.repairs ?? []).some((repair) =>
+        repair.targetCycleId === replacement!.cycleId || repair.replacementCycleId === replacement!.cycleId)) {
+      repairError('TDD_REPAIR_REPLACEMENT_INVALID', `${input.replacementCycleId} is not the current authoritative replacement cycle.`);
+    }
+    if (replacement.parallel) {
+      const replacementProvenance = await classifyParallelTddEvidence(root, {
+        changeId: context.changeId,
+        generation: context.generation,
+        requirementId: target.requirementId,
+        cycleId: replacement.cycleId ?? null,
+        purpose: 'tdd-repair',
+      });
+      if (replacementProvenance !== 'pass') {
+        repairError('TDD_REPAIR_REPLACEMENT_INVALID', `${input.replacementCycleId} is not the current authoritative replacement cycle.`);
+      }
+    }
+  }
+  const order = await inspectEvidenceOrder(root);
+  if (!order.valid) repairError('TDD_REPAIR_CHAIN_INVALID', 'TDD repair evidence has invalid order, hash-chain, operation, or disposition linkage.');
+  const recordedAt = new Date().toISOString();
+  const record: TddRepairRecord = {
+    operationId: operationIdentity.operationId,
+    requestSha256: operationIdentity.requestSha256,
+    targetCycleId: target.cycleId!,
+    testId: target.testId,
+    requirementId: target.requirementId,
+    changeId: target.changeId ?? context.changeId,
+    generation: target.generation ?? context.generation,
+    ...(target.binding ? { binding: target.binding } : {}),
+    parallel: target.parallel,
+    ...(replacement ? { replacementCycleId: replacement.cycleId! } : {
+      retired: true as const,
+      fallbackCycleId: fallback!.cycleId!,
+    }),
+    approver: operationIdentity.request.approver,
+    reason: operationIdentity.request.reason,
+    order: order.records.size + 1,
+    recordedAt,
+  };
+  const payload: TddRepairJournalPayload = {
+    schemaVersion: 'tdd-repair-v1',
+    operationId: operationIdentity.operationId,
+    requestSha256: operationIdentity.requestSha256,
+    request: operationIdentity.request,
+    record,
+  };
+  await appendJournalRecord(root, {
+    stream: 'normal',
+    changeId: record.changeId,
+    kind: 'tdd-repair-v1',
+    idempotencyKey: operationIdentity.operationId,
+    payload,
+  });
+  return persistRepairProjection(root, payload, evidence, false);
+}
+
+export async function resumeTddRepair(root: string, operationId: string): Promise<TddRepairResult> {
+  const evidence = await loadTddEvidence(root) ?? { schemaVersion: 1, cycles: [] };
+  const completed = (evidence.repairs ?? []).find((repair) => repair.operationId === operationId);
+  if (completed) repairError('TDD_REPAIR_RESUME_INVALID', `${operationId} cannot be resumed.`, {
+    operationId,
+    cause: 'already-completed',
+  });
+  const journal = await loadJournalRecords(root);
+  const record = journal.find((entry) => entry.idempotencyKey === operationId);
+  if (!record) repairError('TDD_REPAIR_RESUME_INVALID', `${operationId} cannot be resumed.`, {
+    operationId,
+    cause: 'not-found',
+  });
+  const payload = repairJournalPayload(record);
+  if (!payload || payload.schemaVersion !== 'tdd-repair-v1') {
+    repairError('TDD_REPAIR_RESUME_INVALID', `${operationId} cannot be resumed.`, {
+      operationId,
+      cause: 'journal-invalid',
+    });
+  }
+  const identity = tddRepairOperationIdentity({
+    testId: payload.request.testId,
+    targetCycleId: payload.request.targetCycleId,
+    disposition: payload.request.disposition,
+    ...(payload.request.replacementCycleId
+      ? { replacementCycleId: payload.request.replacementCycleId }
+      : {}),
+    approver: payload.request.approver,
+    reason: payload.request.reason,
+  });
+  if (payload.operationId !== operationId
+    || record.idempotencyKey !== operationId
+    || payload.requestSha256 !== identity.requestSha256
+    || identity.operationId !== operationId
+    || payload.record.operationId !== operationId) {
+    repairError('TDD_REPAIR_RESUME_INVALID', `${operationId} cannot be resumed.`, {
+      operationId,
+      cause: 'identity-mismatch',
+    });
+  }
+  return persistRepairProjection(root, payload, evidence, true);
+}
+
+function abandonmentResult(
+  record: TddRepairAbandonmentRecord,
+  replayed: boolean,
+): TddRepairAbandonmentResult {
+  return {
+    abandoned: true,
+    replayed,
+    operationId: record.operationId,
+    testId: record.testId,
+    targetCycleId: record.targetCycleId,
+    failureCause: record.failureCause,
+    approver: record.approver,
+    reason: record.reason,
+    order: record.order,
+  };
+}
+
+export async function abandonPendingTddRepair(
+  root: string,
+  operationId: string,
+  approver: string,
+  reason: string,
+): Promise<TddRepairAbandonmentResult> {
+  const evidence = await loadTddEvidence(root) ?? { schemaVersion: 1, cycles: [] };
+  if ((evidence.repairs ?? []).some((repair) => repair.operationId === operationId)) {
+    repairError('TDD_REPAIR_ABANDON_INVALID', `${operationId} is not one abandonable pending TDD repair.`, {
+      operationId,
+      cause: 'already-completed',
+    });
+  }
+  const existing = (evidence.repairAbandonments ?? []).find((entry) => entry.operationId === operationId);
+  if (existing) {
+    if (existing.approver === approver.trim() && existing.reason === reason.trim()) {
+      return abandonmentResult(existing, true);
+    }
+    repairError('TDD_REPAIR_ABANDON_INVALID', `${operationId} is not one abandonable pending TDD repair.`, {
+      operationId,
+      cause: 'already-abandoned',
+    });
+  }
+  const journal = await loadJournalRecords(root);
+  const pendingRecord = journal.find((entry) =>
+    entry.kind === 'tdd-repair-v1' && entry.idempotencyKey === operationId);
+  if (!pendingRecord) {
+    repairError('TDD_REPAIR_ABANDON_INVALID', `${operationId} is not one abandonable pending TDD repair.`, {
+      operationId,
+      cause: 'not-found',
+    });
+  }
+  const payload = repairJournalPayload(pendingRecord);
+  if (!payload
+    || typeof payload.record?.testId !== 'string'
+    || typeof payload.record?.targetCycleId !== 'string') {
+    repairError('TDD_REPAIR_ABANDON_INVALID', `${operationId} is not one abandonable pending TDD repair.`, {
+      operationId,
+      cause: 'journal-envelope-invalid',
+    });
+  }
+  const identity = tddRepairOperationIdentity({
+    testId: payload.request.testId,
+    targetCycleId: payload.request.targetCycleId,
+    disposition: payload.request.disposition,
+    ...(payload.request.replacementCycleId
+      ? { replacementCycleId: payload.request.replacementCycleId }
+      : {}),
+    approver: payload.request.approver,
+    reason: payload.request.reason,
+  });
+  let failureCause: TddRepairFailureCause | null = null;
+  if (payload.operationId !== operationId
+    || payload.requestSha256 !== identity.requestSha256
+    || identity.operationId !== operationId
+    || payload.record.operationId !== operationId) {
+    failureCause = 'identity-mismatch';
+  }
+  const orderLog = await loadEvidenceOrder(root);
+  const partialFragments: TddRepairAbandonmentRecord['partialFragments'] = [];
+  for (const [index, record] of (orderLog?.records ?? []).entries()) {
+    if (record.kind === 'tdd'
+      && record.entityId === payload.record.targetCycleId
+      && record.phase === `repair:${operationId}`) {
+      partialFragments.push({ kind: 'order', index, sha256: sha256(canonicalBytes(record)) });
+    }
+  }
+  for (const [index, repair] of (evidence.repairs ?? []).entries()) {
+    if (repair.operationId === operationId) {
+      partialFragments.push({ kind: 'repair-projection', index, sha256: sha256(canonicalBytes(repair)) });
+    }
+  }
+  for (const [index, chain] of (evidence.chain ?? []).entries()) {
+    if (chain.phase === 'repair'
+      && chain.cycleId === payload.record.targetCycleId
+      && chain.phaseEvidenceSha256 === digest(JSON.stringify(payload.record))) {
+      partialFragments.push({ kind: 'repair-chain', index, sha256: sha256(canonicalBytes(chain)) });
+    }
+  }
+  if (!failureCause && partialFragments.length > 0) failureCause = 'partial-projection-mismatch';
+  if (!failureCause) {
+    repairError('TDD_REPAIR_ABANDON_INVALID', `${operationId} is not one abandonable pending TDD repair.`, {
+      operationId,
+      cause: 'resumable',
+    });
+  }
+  const precedence = new Map([['order', 0], ['repair-projection', 1], ['repair-chain', 2]]);
+  partialFragments.sort((left, right) =>
+    precedence.get(left.kind)! - precedence.get(right.kind)! || left.index - right.index);
+  const inspected = await inspectEvidenceOrder(root);
+  if (!inspected.valid || !completeRepairChainValid(evidence)) {
+    repairError('TDD_REPAIR_CHAIN_INVALID', 'TDD repair evidence has invalid order, hash-chain, operation, or disposition linkage.');
+  }
+  const recordedAt = new Date().toISOString();
+  const abandonment: TddRepairAbandonmentRecord = {
+    operationId,
+    testId: payload.record.testId,
+    targetCycleId: payload.record.targetCycleId,
+    failureCause,
+    pendingJournalSha256: sha256(canonicalBytes(pendingRecord)),
+    partialFragments,
+    approver: approver.trim(),
+    reason: reason.trim(),
+    order: inspected.records.size + 1,
+    recordedAt,
+  };
+  const abandonmentKey = `${operationId}:abandon:${sha256(canonicalBytes({
+    approver: abandonment.approver,
+    reason: abandonment.reason,
+  }))}`;
+  await appendJournalRecord(root, {
+    stream: 'normal',
+    changeId: payload.record.changeId,
+    kind: 'tdd-repair-abandonment-v1',
+    idempotencyKey: abandonmentKey,
+    payload: {
+      schemaVersion: 'tdd-repair-abandonment-v1',
+      record: abandonment,
+    },
+  });
+  const order = await appendEvidenceOrder(root, {
+    kind: 'tdd',
+    entityId: operationId,
+    phase: `repair-abandonment:${operationId}`,
+    testId: abandonment.testId,
+  });
+  if (order.sequence !== abandonment.order) {
+    repairError('TDD_REPAIR_CHAIN_INVALID', 'TDD repair evidence has invalid order, hash-chain, operation, or disposition linkage.');
+  }
+  evidence.repairAbandonments ??= [];
+  evidence.repairAbandonments.push(abandonment);
+  await writeJson(root, '.musubix/evidence/tdd.json', evidence);
+  return abandonmentResult(abandonment, false);
+}
+
 /** Answers "is this cycle's recorded phase evidence genuinely intact" against
  * both the monotonic order log and the append-only hash chain, reused for
  * void-linkage validation (REQ-TDD-CYCLE-VOID-005..007) and for Green-candidate
@@ -670,7 +1327,12 @@ function phaseLinkageValid(
   phaseEvidence: unknown,
 ): boolean {
   if (!order.valid || !cycle.cycleId || !chain) return false;
-  const phaseOrder = phase === 'void' ? cycle.void?.order : phase === 'migrate' ? cycle.migrate?.order : cycle[phase]?.order;
+  if (phase === 'repair') return false;
+  const phaseOrder = phase === 'void'
+    ? cycle.void?.order
+    : phase === 'migrate'
+      ? cycle.migrate?.order
+      : cycle[phase]?.order;
   if (phaseOrder === undefined) return false;
   const orderRecord = evidenceOrderRecord(order.records, 'tdd', cycle.cycleId, phase);
   if (!orderRecord || orderRecord.sequence !== phaseOrder) return false;
@@ -728,6 +1390,7 @@ export async function voidTddCycle(root: string, testId: string, approver: strin
   if (!reason?.trim()) throw new Error('A reason is required to void a TDD cycle.');
   const evidence = await loadTddEvidence(root);
   if (!evidence) throw new Error('No TDD evidence found.');
+  await requireNoPendingTddRepair(root, evidence);
   const testCycles = evidence.cycles.filter((entry) => entry.testId === testId);
   if (!testCycles.length) throw new Error(`No TDD cycle found for ${testId}.`);
   const activeChange = await maintenanceChangeContext(root);
@@ -830,6 +1493,7 @@ export async function runTddPhase(
       throw new Error('PARALLEL_TDD_UNCONSUMED: invalid parallel TDD recording identity.');
     }
   }
+  await requireNoPendingTddRepair(root);
   const config = await loadConfig(root);
   if (phase === 'red') {
     const domain = await resolveRequirementDomain(root, config.approval, requirementId);
@@ -1045,15 +1709,25 @@ export async function validateTddEvidence(
   root: string,
   purpose = 'readiness',
   evidenceContext?: CandidateEvidenceContext | IntegrationEvidenceContext,
+  evidenceRoot = root,
 ): Promise<{
   present: boolean; valid: boolean; diagnostics: Diagnostic[]; cycles: number;
   voided: Array<{ testId: string; cycleId: string; void: { approver: string; reason: string; recordedAt: string } }>;
 }> {
-  const evidence = await loadTddEvidence(root);
+  const evidence = await loadTddEvidence(evidenceRoot);
   if (!evidence?.cycles.length) return { present: false, valid: false, diagnostics: [], cycles: 0, voided: [] };
   const diagnostics: Diagnostic[] = [];
-  const order = await inspectEvidenceOrder(root);
-  const activeChange = evidenceContext ? null : await activeChangeContext(root);
+  const order = await inspectEvidenceOrder(evidenceRoot);
+  const repairLedger = validateTddRepairLedger(evidence);
+  if (!repairLedger.valid) {
+    diagnostics.push(error(
+      'TDD_REPAIR_CHAIN_INVALID',
+      'TDD repair evidence has invalid order, hash-chain, operation, or disposition linkage.',
+    ));
+  }
+  const repairedCycleIds = new Set(repairLedger.repairs.map((repair) => repair.targetCycleId));
+  const effectiveCycles = repairAwareCycles(evidence);
+  const activeChange = evidenceContext ? null : await activeChangeContext(evidenceRoot);
   const selectedCandidates = evidenceContext
     ? 'integrationId' in evidenceContext ? evidenceContext.candidates : [evidenceContext]
     : [];
@@ -1114,12 +1788,49 @@ export async function validateTddEvidence(
         records.delete(key);
       }
     }
+    for (const repair of repairLedger.repairs) {
+      const target = evidence.cycles.find((cycle) => cycle.cycleId === repair.targetCycleId);
+      const key = `${repair.targetCycleId}:repair`;
+      const record = records.get(key);
+      if (!target || !record
+        || record.requirementId !== repair.requirementId
+        || record.testId !== repair.testId
+        || record.phaseEvidenceSha256 !== digest(JSON.stringify(repair))) {
+        diagnostics.push(error(
+          'TDD_REPAIR_CHAIN_INVALID',
+          'TDD repair evidence has invalid order, hash-chain, operation, or disposition linkage.',
+        ));
+      }
+      records.delete(key);
+    }
     for (const record of records.values()) {
       diagnostics.push(error('TDD_CHAIN_ORPHAN', `TDD chain record ${record.sequence} has no matching cycle phase.`));
     }
   }
   const supersededCycles = new Set<TddCycle>();
   for (const cycle of evidence.cycles.filter((entry) => !activeCycle(entry))) supersededCycles.add(cycle);
+  for (const cycle of evidence.cycles.filter((entry) =>
+    entry.cycleId !== undefined && repairedCycleIds.has(entry.cycleId))) supersededCycles.add(cycle);
+  const authoritativeParallelCycleIds = new Set<string>();
+  for (const cycle of effectiveCycles.filter((entry) =>
+    activeCycle(entry) && entry.parallel && entry.cycleId && entry.red.valid && entry.green?.valid)) {
+    const provenance = await classifyParallelTddEvidence(root, {
+      changeId: cycle.changeId ?? activeChange?.changeId ?? '',
+      generation: cycle.generation ?? activeChange?.generation ?? 1,
+      requirementId: cycle.requirementId,
+      cycleId: cycle.cycleId ?? null,
+      purpose,
+      evidenceRoot,
+    });
+    if (provenance === 'pass') authoritativeParallelCycleIds.add(cycle.cycleId!);
+  }
+  const provenanceSupersededIds = supersededParallelTddCycles(
+    effectiveCycles.filter(activeCycle),
+    authoritativeParallelCycleIds,
+  );
+  for (const cycle of evidence.cycles) {
+    if (cycle.cycleId && provenanceSupersededIds.has(cycle.cycleId)) supersededCycles.add(cycle);
+  }
   {
     const cyclesByTest = new Map<string, TddCycle[]>();
     for (const cycle of evidence.cycles) {
@@ -1152,14 +1863,18 @@ export async function validateTddEvidence(
     }
   }
   const currencyIndex = buildTddCurrencyIndex(
-    evidence,
+    {
+      ...evidence,
+      cycles: effectiveCycles.filter((cycle) =>
+        !cycle.cycleId || !provenanceSupersededIds.has(cycle.cycleId)),
+    },
     order,
     validlyVoidedCycles,
     currencyChainIndex,
   );
   const trace = await buildTrace(root, false);
   const selectedChangeIds = new Set(selectedCandidates.map((candidate) => candidate.changeId));
-  const selectedChangeEvidence = evidenceContext ? await loadChangeEvidence(root) : null;
+  const selectedChangeEvidence = evidenceContext ? await loadChangeEvidence(evidenceRoot) : null;
   const activeRequirementIds = evidenceContext
     ? new Set(selectedChangeEvidence?.changes
       .filter((change) => selectedChangeIds.has(change.changeId)
@@ -1176,7 +1891,8 @@ export async function validateTddEvidence(
       .filter((edge) => edge.relation === 'verifies' && edge.to === requirement.id)
       .map((edge) => edge.from);
     let covered = false;
-    for (const cycle of evidence.cycles) {
+    for (const cycle of effectiveCycles.filter((entry) =>
+      !entry.cycleId || !provenanceSupersededIds.has(entry.cycleId))) {
       if (!activeCycle(cycle)
         || cycle.requirementId !== requirement.id
         || !verifiedTests.includes(cycle.testId)
@@ -1188,6 +1904,7 @@ export async function validateTddEvidence(
         requirementId: requirement.id,
         cycleId: cycle.cycleId ?? null,
         purpose,
+        evidenceRoot,
       });
       if (provenance !== 'PARALLEL_TDD_UNCONSUMED') {
         covered = true;
@@ -1206,8 +1923,10 @@ export async function validateTddEvidence(
   const sourceTextCache = new Map<string, Promise<string>>();
   const fingerprintCache = new Map<string, Promise<string>>();
   const currencyTargets = new Set(
-    evidence.cycles
-      .filter((cycle) => cycle.green?.valid && (!activeChange || activeCycle(cycle)))
+    effectiveCycles
+      .filter((cycle) =>
+        (!cycle.cycleId || !provenanceSupersededIds.has(cycle.cycleId))
+        && cycle.green?.valid && (!activeChange || activeCycle(cycle)))
       .map((cycle) => cycle.testId),
   );
   for (const testId of currencyTargets) {
@@ -1250,7 +1969,7 @@ export async function validateTddEvidence(
       ));
     }
   }
-  for (const cycle of evidence.cycles.filter(activeCycle)) {
+  for (const cycle of effectiveCycles.filter(activeCycle)) {
     for (const phase of ['red', 'green', 'refactor'] as const) {
       const item = cycle[phase];
       if (!item) continue;
@@ -1315,7 +2034,7 @@ export async function validateTddEvidence(
   }
   for (const phase of ['red', 'green', 'refactor'] as const) {
     const hashes = new Map<string, TddCycle>();
-    for (const cycle of evidence.cycles.filter(activeCycle)) {
+    for (const cycle of effectiveCycles.filter(activeCycle)) {
       const item = cycle[phase];
       if (!item) continue;
       // The structured report names the selected test, so it is the authoritative

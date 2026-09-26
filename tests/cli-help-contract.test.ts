@@ -25,6 +25,19 @@ function commandFor(createProgram: () => Command, path: string) {
 
 describe('CLI help compatibility', () => {
   /**
+   * @id TEST-M5-WAVE1-TDD-REPAIR-HELP-A4-001
+   * @verifies REQ-M5-COMPAT-013
+   */
+  it('TEST-M5-WAVE1-TDD-REPAIR-HELP-A4-001 registers additive TDD repair help', async () => {
+    const { createProgram } = await import('../packages/cli/src/main.js');
+    const help = commandFor(createProgram, 'musubix5 tdd').helpInformation();
+    expect(help).toContain('repair [options] [test-id]');
+    const repair = commandFor(createProgram, 'musubix5 tdd repair').helpInformation();
+    expect(repair).toContain('--replacement-cycle <cycle-id>');
+    expect(repair).toContain('--abandon-pending <operation-id>');
+  });
+
+  /**
    * @id TEST-M5-COMPAT-001
    * @verifies REQ-M5-COMPAT-001 REQ-M5-COMPAT-013
    */
@@ -32,6 +45,18 @@ describe('CLI help compatibility', () => {
     const { createProgram } = await import('../packages/cli/src/main.js');
     for (const snapshot of baseline.snapshots) {
       let expected = snapshot.stdout.replaceAll('musubix3', 'musubix5');
+      expected = expected.replace(
+        'recordedAt (an independently captured wall-clock timestamp with no ordering guarantee; gate reports it via CHANGE_RECORDEDAT_OUT_OF_ORDER, a non-blocking warning, when it disagrees with order)',
+        'recordedAt (an independently captured wall-clock timestamp with no ordering guarantee)',
+      );
+      expected = expected.replace(
+        'recordedAt (an\n'
+          + 'independently captured wall-clock timestamp with no ordering guarantee; gate\n'
+          + 'reports it via CHANGE_RECORDEDAT_OUT_OF_ORDER, a non-blocking warning, when it\n'
+          + 'disagrees with order)',
+        'recordedAt (an\n'
+          + 'independently captured wall-clock timestamp with no ordering guarantee)',
+      );
       if (snapshot.command === 'musubix3' || snapshot.command === 'musubix3 help') {
         expected = expected.replace(
           '  formal                                           Honest consistency checking of an explicit abstraction',
@@ -138,6 +163,13 @@ describe('CLI help compatibility', () => {
             + '  --parallel-attempt <number>    Bind evidence to a parallel assignment attempt\n'
             + '  --parallel-start-commit <sha>  Bind evidence to the assignment start commit\n'
             + '  -h, --help                     display help for command',
+        );
+      } else if (snapshot.command === 'musubix3 tdd') {
+        expected = expected.replace(
+          '  migrate [options] <test-id>',
+          '  repair [options] [test-id]    Append an authorized replacement or retirement\n'
+            + '                                for one stale parallel-bound TDD cycle\n'
+            + '  migrate [options] <test-id>',
         );
       }
       expect(commandFor(createProgram, snapshot.command).helpInformation(), snapshot.command).toBe(expected);
