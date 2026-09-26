@@ -106,16 +106,18 @@ describe('release workflow hardening', () => {
       RELEASE_TAG: '${{ inputs.release_tag }}',
     });
     expect(registry.run).toContain('version="${RELEASE_TAG#v}"');
-    expect(registry.run).toContain('for attempt in 1 2 3 4 5 6');
-    expect(registry.run).toContain('deadline=$((SECONDS + 240))');
+    expect(registry.run).not.toContain('for attempt in');
+    expect(registry.run).toContain('./candidate/scripts/verify-npm-registry-integrity.mjs');
     expect(registry.run).toContain(
-      'timeout --signal=TERM --kill-after=2s 15s npm view',
+      'timeout --signal=TERM --kill-after=5s 260s node',
     );
-    expect(registry.run).toContain('^sha512-[A-Za-z0-9+/]+={0,2}$');
+    expect(registry.run).toContain('--query-timeout-seconds 15 --query-kill-after-seconds 2');
+    expect(registry.run).toContain('--inner-deadline-seconds 240');
+    expect(registry.run).toContain('--backoff-seconds 5,10,15,20,25');
     const verifyAssets = publish.steps.find((step) => step.id === 'verify_assets')!;
     expect(verifyAssets.run).toContain('classifyNpmRegistryQuery');
     expect(registry.run).toContain('RELEASE_PUBLISH_INTEGRITY_MISMATCH');
-    expect(registry.run).toContain('npm view "musubix5@$version"');
+    expect(registry.run).not.toContain('npm publish');
 
     expect(releaseText).toContain('# @id CODE-M5-RELEASE-WORKFLOW-YAML-001');
     expect(releaseText).toContain('# @implements REQ-M5-RELEASE-003');

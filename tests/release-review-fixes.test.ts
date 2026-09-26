@@ -100,14 +100,10 @@ describe('release review fixes', () => {
     expect(buildIndex).toBeLessThan(identityIndex);
 
     const registry = steps.find((step) => step.id === 'registry_integrity')!;
-    expect(registry.run).toContain('(( SECONDS + 15 <= deadline )) || break');
+    expect(registry.run).toContain('./candidate/scripts/verify-npm-registry-integrity.mjs');
     expect(registry.run).toContain(
-      'timeout --signal=TERM --kill-after=5s 240s bash',
+      'timeout --signal=TERM --kill-after=5s 260s node',
     );
-    expect(registry.run).toContain(
-      'timeout --signal=TERM --kill-after=2s 15s npm view',
-    );
-    expect(registry.run).toContain('registry_visible=true');
     expect(registry.run).toContain('integrity_matched=false');
     expect(registry.run).toContain('registry_visible=false');
 
@@ -215,9 +211,9 @@ describe('release review fixes', () => {
       .toBeGreaterThan(verify.indexOf('release-operation validate'));
 
     const registry = steps.find((step) => step.id === 'registry_integrity')!.run!;
-    expect(registry).toContain('timeout --signal=TERM --kill-after=5s 240s bash');
+    expect(registry).toContain('timeout --signal=TERM --kill-after=5s 260s node');
     expect(registry).toContain(
-      'timeout --signal=TERM --kill-after=2s 15s npm view',
+      './candidate/scripts/verify-npm-registry-integrity.mjs',
     );
   });
 
@@ -245,20 +241,22 @@ describe('release review fixes', () => {
 
     expect(pin).toContain(`npm@${policy.npmVersion}`);
     expect(registry).toContain(
-      `for attempt in ${Array.from(
-        { length: policy.registryAttempts },
-        (_, index) => index + 1,
-      ).join(' ')}`,
+      './candidate/scripts/verify-npm-registry-integrity.mjs',
     );
     expect(registry).toContain(
-      `timeout --signal=TERM --kill-after=${policy.registryDeadlineKillAfterSeconds}s `
-      + `${policy.registryDeadlineSeconds}s bash`,
+      `timeout --signal=TERM --kill-after=${policy.registryOuterWatchdogKillAfterSeconds}s `
+      + `${policy.registryOuterWatchdogSeconds}s node`,
     );
     expect(registry).toContain(
-      `timeout --signal=TERM --kill-after=${policy.registryQueryKillAfterSeconds}s `
-      + `${policy.registryQueryTimeoutSeconds}s npm view`,
+      `--query-timeout-seconds ${policy.registryQueryTimeoutSeconds} `
+      + `--query-kill-after-seconds ${policy.registryQueryKillAfterSeconds}`,
     );
-    expect(registry).toContain('export REGISTRY_STATUS="$registry_status"');
+    expect(registry).toContain(
+      `--inner-deadline-seconds ${policy.registryInnerDeadlineSeconds}`,
+    );
+    expect(registry).toContain(
+      `--backoff-seconds ${policy.registryBackoffSeconds.join(',')}`,
+    );
     if (policy.reconcileFailedPublication) {
       expect(outcome).toContain('manualReconciliationRequired');
     }
@@ -309,9 +307,13 @@ describe('release review fixes', () => {
     const registry = workflow.jobs.publish.steps.find(
       (step) => step.id === 'registry_integrity',
     )!.run!;
-    expect(registry).toContain('classifyNpmRegistryQuery');
-    expect(registry).toContain('export REGISTRY_STATUS="$registry_status"');
-    expect(registry).not.toContain('response?.error?.code');
+    const verifier = readFileSync(
+      resolve('scripts/verify-npm-registry-integrity.mjs'),
+      'utf8',
+    );
+    expect(registry).toContain('./candidate/scripts/verify-npm-registry-integrity.mjs');
+    expect(verifier).toContain('classifyNpmRegistryQuery');
+    expect(verifier).not.toContain('response?.error?.code');
   });
 
   /**

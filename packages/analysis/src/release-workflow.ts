@@ -190,27 +190,29 @@ export function releaseTransportPolicy(): {
 }
 
 /** @id CODE-M5-NPM-PUBLISH-POLICY-001
- * @implements REQ-M5-RELEASE-004 REQ-M5-REL020-003
- * @design DES-M5-021 DES-M5-REL020-003
+ * @implements REQ-M5-RELEASE-004 REQ-M5-REL020-003 REQ-M5-WAVE1-PUBLISH-001
+ * @design DES-M5-021 DES-M5-REL020-003 DES-M5-WAVE1-PUBLISH-001
  */
 export function npmPublishTransportPolicy(): {
   workflow: '.github/workflows/npm-publish.yml';
   npmVersion: '11.6.0';
-  registryAttempts: 6;
   registryQueryTimeoutSeconds: 15;
   registryQueryKillAfterSeconds: 2;
-  registryDeadlineSeconds: 240;
-  registryDeadlineKillAfterSeconds: 5;
+  registryInnerDeadlineSeconds: 240;
+  registryOuterWatchdogSeconds: 260;
+  registryOuterWatchdogKillAfterSeconds: 5;
+  registryBackoffSeconds: readonly [5, 10, 15, 20, 25];
   reconcileFailedPublication: true;
 } {
   return {
     workflow: '.github/workflows/npm-publish.yml',
     npmVersion: '11.6.0',
-    registryAttempts: 6,
     registryQueryTimeoutSeconds: 15,
     registryQueryKillAfterSeconds: 2,
-    registryDeadlineSeconds: 240,
-    registryDeadlineKillAfterSeconds: 5,
+    registryInnerDeadlineSeconds: 240,
+    registryOuterWatchdogSeconds: 260,
+    registryOuterWatchdogKillAfterSeconds: 5,
+    registryBackoffSeconds: [5, 10, 15, 20, 25],
     reconcileFailedPublication: true,
   };
 }

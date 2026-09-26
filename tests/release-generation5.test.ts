@@ -347,9 +347,12 @@ describe('release generation 5', () => {
     expect(workflowText).toContain('classifyNpmRegistryQuery');
     expect(workflowText).toContain('RELEASE_PUBLISH_INTEGRITY_MISMATCH');
     expect(workflowText).toContain(
-      'timeout --signal=TERM --kill-after=2s 15s npm view',
+      './candidate/scripts/verify-npm-registry-integrity.mjs',
     );
-    expect(workflowText).toContain('deadline=$((SECONDS + 240))');
+    expect(workflowText).toContain(
+      'timeout --signal=TERM --kill-after=5s 260s node',
+    );
+    expect(workflowText).toContain('--inner-deadline-seconds 240');
     expect(workflowText).toContain('manualReconciliationRequired');
   });
 });
