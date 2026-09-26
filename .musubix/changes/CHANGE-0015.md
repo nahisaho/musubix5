@@ -103,3 +103,48 @@ source tree before verification.
   `projectStatus` path.
 - Typecheck, build, complete tests, strict trace, graph gate, changed gate, and
   status all pass after integration.
+
+## Integration and quality evidence
+
+- Parallel integration attempt 14 is verified at commit
+  `13ce77e4af7f49e9701304af16955cb691c47fc0`.
+- The verified attempt passed every configured required command: typecheck,
+  build, full Vitest, codegraph tests, compatibility tests, package checks, and
+  package smoke tests.
+- Strict trace and graph gates pass. The current
+  `.musubix/evidence/quality.json` shows that every required check passes except
+  release approval after recording the generation 3 quality checkpoint.
+- Failed, abandoned, and stale candidate cleanup retain recoverable branch and
+  commit history while removing only the eligible worktree. Active candidates
+  remain fail-closed unless their candidate commit is already integrated.
+- Workflow declarations pass reconciliation in compatible mode without
+  activating or adding a stale workflow waiver. The completed predecessor
+  transcript is sanitized without truncation, but strict terminal verification
+  remains pending because the shared Copilot CLI runtime has not emitted that
+  session's terminal result or routine shutdown event.
+
+## Residual risks before release approval
+
+- Release approval and an immutable CHANGE-0015 candidate snapshot are not yet
+  recorded. Existing Ubuntu/Windows/macOS Node 24 envelopes bind CHANGE-0014
+  candidate `bbef77c4bd4f9e9c1006bb7eeb88bb2c54b1ce33`; no envelopes yet bind
+  CHANGE-0015 candidate `13ce77e4af7f49e9701304af16955cb691c47fc0`.
+- Strict verification of predecessor session
+  `6371e116-6cba-4444-b5c7-90b0fab03829` cannot complete until its owning
+  Copilot CLI runtime emits a terminal lifecycle event; compatible
+  reconciliation is not claimed as strict proof. The current session
+  `7e0225ea-dc31-49c2-a63e-4adf28641cb8` must also be re-sanitized after its
+  terminal lifecycle event because the latest quality declaration post-dates
+  the presently captured compatible transcript.
+- Six historical workflow waiver records remain in
+  `.musubix/evidence/workflow-waivers.json` with stale error diagnostics. They
+  are inert (`workflowWaivers: []`) and are not active release exceptions.
+- The handoff cleanliness parser currently trims the leading status space from
+  the first unstaged porcelain entry. Staging integrator-owned `.musubix/**`
+  evidence avoids the false `dirty-at-base` classification without changing
+  evidence content. The defect is tracked in #41; the workaround is required
+  for future handoffs until that issue is fixed.
+- Parallel cleanup retained three dirty historical assignment worktrees and the
+  dirty verified integration worktree while removing three eligible clean
+  assignment worktrees. The retained CHANGE-0015 branch inventory remains
+  available for audit.

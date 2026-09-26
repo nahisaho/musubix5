@@ -1,11 +1,11 @@
 {
   "schemaVersion": 2,
-  "runId": "68eb7768-2730-488c-a3b0-8ea4e86d3c59",
-  "generatedAt": "2026-09-26T07:12:15.448Z",
+  "runId": "b889e114-45bf-4e6b-b56c-a2da1e859ca0",
+  "generatedAt": "2026-09-26T19:35:46.654Z",
   "executions": [
     {
-      "runId": "68eb7768-2730-488c-a3b0-8ea4e86d3c59",
-      "executionId": "619caa7f3122b22dfd4dd381c69e901a7926bcf181e692d74f500f92c08d95cb",
+      "runId": "b889e114-45bf-4e6b-b56c-a2da1e859ca0",
+      "executionId": "609893e41fa37673026253c16325bb91c060df0e3df99420f8eaa0519c634d74",
       "commandName": "codegraph-tests",
       "commandSha256": "367841ceaa4c4655755dd32b6963719d0cc36c88dc15ca491ac13e1e5d3850a1",
       "reportPath": ".musubix/cache/test-results/codegraph.json",
@@ -60,7 +60,7 @@
           "status": "passed"
         }
       ],
-      "recordSha256": "bfb5a95a5934888573eec2de236324fba98883f173017dfb8d562c7905fc534e"
+      "recordSha256": "07f9b9f05da64b9a824a2c73afa56a0c58e4e9f4cf2d714a2ecdbff33d388144"
     }
   ],
   "observations": [
@@ -72,8 +72,8 @@
       "maximum": 13,
       "status": "pass",
       "provenance": {
-        "runId": "68eb7768-2730-488c-a3b0-8ea4e86d3c59",
-        "executionId": "619caa7f3122b22dfd4dd381c69e901a7926bcf181e692d74f500f92c08d95cb",
+        "runId": "b889e114-45bf-4e6b-b56c-a2da1e859ca0",
+        "executionId": "609893e41fa37673026253c16325bb91c060df0e3df99420f8eaa0519c634d74",
         "commandName": "codegraph-tests",
         "commandSha256": "367841ceaa4c4655755dd32b6963719d0cc36c88dc15ca491ac13e1e5d3850a1",
         "reportPath": ".musubix/cache/test-results/codegraph.json",
@@ -85,17 +85,9 @@
         "value": 13,
         "processStatus": "completed",
         "exitCode": 0,
-        "executionRecordSha256": "bfb5a95a5934888573eec2de236324fba98883f173017dfb8d562c7905fc534e",
-        "recordSha256": "989a88e5a1d5354ca2e4e72cb0cf8f21f1f6f21ac1e7f2a83bd992cc9c9f4c5d"
+        "executionRecordSha256": "07f9b9f05da64b9a824a2c73afa56a0c58e4e9f4cf2d714a2ecdbff33d388144",
+        "recordSha256": "af3f4564db7eaef015959fe0b1a1cbe60fac53781964c7913e8fe288efd9cd55"
       }
-    },
-    {
-      "requirementId": "REQ-M5-WAVE1-TRACE-001",
-      "testId": "TEST-M5-WAVE1-TRACE-STABILITY-001",
-      "counter": "trace.unaffectedFeatureRewrites",
-      "observed": null,
-      "maximum": 0,
-      "status": "missing"
     }
   ]
 }
