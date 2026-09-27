@@ -97,4 +97,72 @@ describe('approval effective projection', () => {
       generation: 5,
     });
   });
+
+  /**
+   * @id TEST-M5-WAVE0-COMPLETION-004
+   * @verifies REQ-M5-WAVE0-COMPLETION-001
+   */
+  it('TEST-M5-WAVE0-COMPLETION-004 keeps explicit evidence context independent of active selection', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'musubix5-explicit-approval-context-'));
+    temporaryDirectories.push(root);
+    execFileSync('git', ['init', '--quiet', root]);
+    write(root, '.musubix/config.json', JSON.stringify({
+      schemaVersion: 1,
+      approval: { mode: 'required', domains: [] },
+    }));
+    write(root, '.musubix/constitution.md', '# Constitution\n');
+    write(root, '.musubix/features/sample/requirements.md', [
+      '## REQ-SAMPLE-001: Sample',
+      'Priority: must',
+      'Type: functional',
+      'Statement: The system shall respond.',
+      'Acceptance: The response is observed.',
+      '',
+    ].join('\n'));
+    write(root, '.musubix/features/sample/design.md', [
+      '## DES-SAMPLE-001: Sample',
+      'Responsibilities: Respond.',
+      'Interfaces: `respond()`.',
+      'Constraints: Deterministic.',
+      'Requirements: REQ-SAMPLE-001',
+      'ADRs: ADR-0001',
+      '',
+    ].join('\n'));
+    write(root, '.musubix/decisions/ADR-0001.md', '# ADR\n');
+    for (const changeId of ['CHANGE-0002', 'CHANGE-0003']) {
+      write(root, `.musubix/changes/${changeId}.md`, [
+        '---',
+        'schemaVersion: 1',
+        `id: ${changeId}`,
+        'status: active',
+        '---',
+        `# ${changeId}`,
+        '',
+      ].join('\n'));
+    }
+    write(root, '.musubix/evidence/changes.json', JSON.stringify({
+      schemaVersion: 1,
+      changes: [
+        { changeId: 'CHANGE-0002', activeGeneration: 1, requirementIds: ['REQ-SAMPLE-001'] },
+        { changeId: 'CHANGE-0003', activeGeneration: 1, requirementIds: ['REQ-SAMPLE-001'] },
+      ],
+    }));
+    execFileSync('git', ['-C', root, 'config', 'user.email', 'test@example.com']);
+    execFileSync('git', ['-C', root, 'config', 'user.name', 'Test User']);
+    execFileSync('git', ['-C', root, 'add', '.']);
+    execFileSync('git', ['-C', root, 'commit', '--quiet', '-m', 'fixture']);
+    const { approvalManifest } = await import('../packages/analysis/src/approval.js');
+
+    await expect(approvalManifest(root, 'design', undefined, undefined, {
+      repositoryId: 'repository:test',
+      candidateId: `candidate:${'a'.repeat(64)}`,
+      changeId: 'CHANGE-0002',
+      generation: 1,
+      baseCommit: 'b'.repeat(40),
+      candidateCommit: 'c'.repeat(40),
+    })).resolves.toMatchObject({
+      changeId: 'CHANGE-0002',
+      generation: 1,
+    });
+  });
 });

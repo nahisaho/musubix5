@@ -179,10 +179,10 @@ export async function approvalManifest(
       ? integrationApprovalContext(evidenceContext)
       : { changeId: evidenceContext.changeId, generation: evidenceContext.generation }
     : null;
-  const resolvedChange = validationContext === undefined
-    ? await activeChangeContext(root)
-    : validationContext;
-  const selectedChange = explicitChange ?? resolvedChange;
+  const selectedChange = explicitChange
+    ?? (validationContext === undefined
+      ? await activeChangeContext(root)
+      : validationContext);
   const activeChange = selectedChange && selectedChange.generation !== null
     ? { changeId: selectedChange.changeId, generation: selectedChange.generation }
     : null;

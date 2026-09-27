@@ -11,6 +11,8 @@ const execFileAsync = promisify(execFile);
 const leaseTtlMs = 30_000;
 const leaseRetryMs = 25;
 const leaseAttempts = 400;
+const leaseFsRetryAttempts = 8;
+const transientLeaseFsErrors = new Set(['EACCES', 'EBUSY', 'EPERM']);
 
 export type JournalStream = 'normal' | 'bootstrap';
 
@@ -56,9 +58,24 @@ async function delay(milliseconds: number): Promise<void> {
   await new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds));
 }
 
+async function retryTransientLeaseFs<T>(operation: () => Promise<T>): Promise<T> {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await operation();
+    } catch (cause) {
+      if (!transientLeaseFsErrors.has(errorCode(cause) ?? '') || attempt + 1 >= leaseFsRetryAttempts) {
+        throw cause;
+      }
+      await delay(leaseRetryMs);
+    }
+  }
+}
+
 async function readLeaseOwner(path: string): Promise<LeaseOwner | null> {
   try {
-    return JSON.parse(await readFile(join(path, 'owner.json'), 'utf8')) as LeaseOwner;
+    return JSON.parse(await retryTransientLeaseFs(
+      () => readFile(join(path, 'owner.json'), 'utf8'),
+    )) as LeaseOwner;
   } catch (cause) {
     if (errorCode(cause) === 'ENOENT' || cause instanceof SyntaxError) return null;
     throw cause;
@@ -67,7 +84,7 @@ async function readLeaseOwner(path: string): Promise<LeaseOwner | null> {
 
 async function leaseModifiedAt(path: string): Promise<number | null> {
   try {
-    return (await stat(path)).mtimeMs;
+    return (await retryTransientLeaseFs(() => stat(path))).mtimeMs;
   } catch (cause) {
     if (errorCode(cause) === 'ENOENT') return null;
     throw cause;
@@ -76,22 +93,24 @@ async function leaseModifiedAt(path: string): Promise<number | null> {
 
 async function writeCanonicalFile(path: string, value: unknown): Promise<void> {
   const temporary = `${path}.${randomUUID()}.tmp`;
-  const handle = await open(temporary, 'wx');
+  const handle = await retryTransientLeaseFs(() => open(temporary, 'wx'));
   try {
     await handle.writeFile(canonicalBytes(value));
     await handle.sync();
   } finally {
     await handle.close();
   }
-  await rename(temporary, path);
+  await retryTransientLeaseFs(() => rename(temporary, path));
 }
 
 async function nextFencingToken(leases: string, name: string): Promise<number> {
   const path = join(leases, 'fencing', `${encodeURIComponent(name)}.json`);
-  await mkdir(dirname(path), { recursive: true });
+  await retryTransientLeaseFs(() => mkdir(dirname(path), { recursive: true }));
   let current = 0;
   try {
-    const value = JSON.parse(await readFile(path, 'utf8')) as { fencingToken?: unknown };
+    const value = JSON.parse(await retryTransientLeaseFs(
+      () => readFile(path, 'utf8'),
+    )) as { fencingToken?: unknown };
     if (!Number.isInteger(value.fencingToken) || Number(value.fencingToken) < 0) {
       throw new Error(`Invalid fencing token state for ${name}.`);
     }
@@ -111,10 +130,12 @@ async function acquireNamedLease(root: string, name: string, wait: boolean): Pro
   const attempts = wait ? leaseAttempts : 3;
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     const token = randomUUID();
+    let created = false;
     try {
-      await mkdir(path);
+      await retryTransientLeaseFs(() => mkdir(path));
+      created = true;
       const fencingToken = await nextFencingToken(leases, name);
-      const handle = await open(join(path, 'owner.json'), 'wx');
+      const handle = await retryTransientLeaseFs(() => open(join(path, 'owner.json'), 'wx'));
       try {
         await handle.writeFile(canonicalBytes({ token, fencingToken, expiresAt: Date.now() + leaseTtlMs }));
         await handle.sync();
@@ -123,6 +144,24 @@ async function acquireNamedLease(root: string, name: string, wait: boolean): Pro
       }
       return { path, token, fencingToken };
     } catch (cause) {
+      if (created) {
+        try {
+          const cleanupOwner = await readLeaseOwner(path);
+          if (cleanupOwner === null || cleanupOwner.token === token) {
+            await retryTransientLeaseFs(() => rm(path, { recursive: true }));
+          }
+        } catch (cleanupCause) {
+          if (errorCode(cleanupCause) !== 'ENOENT') {
+            const aggregate = new AggregateError(
+              [cause, cleanupCause],
+              `Failed to initialize and clean up lease ${name}.`,
+            );
+            Object.assign(aggregate, { code: errorCode(cause) ?? errorCode(cleanupCause) });
+            throw aggregate;
+          }
+        }
+        throw cause;
+      }
       if (errorCode(cause) !== 'EEXIST') throw cause;
       const owner = await readLeaseOwner(path);
       const ownerlessCreatedAt = owner === null ? await leaseModifiedAt(path) : null;
@@ -135,8 +174,8 @@ async function acquireNamedLease(root: string, name: string, wait: boolean): Pro
       }
       const stalePath = `${path}.stale-${token}`;
       try {
-        await rename(path, stalePath);
-        await rm(stalePath, { recursive: true });
+        await retryTransientLeaseFs(() => rename(path, stalePath));
+        await retryTransientLeaseFs(() => rm(stalePath, { recursive: true }));
       } catch (takeoverCause) {
         if (!['ENOENT', 'EEXIST'].includes(errorCode(takeoverCause) ?? '')) throw takeoverCause;
       }
@@ -154,7 +193,9 @@ async function acquireOrderLease(root: string): Promise<ChangeLease> {
 
 async function releaseOrderLease(lease: ChangeLease): Promise<void> {
   const owner = await readLeaseOwner(lease.path);
-  if (owner?.token === lease.token) await rm(lease.path, { recursive: true });
+  if (owner?.token === lease.token) {
+    await retryTransientLeaseFs(() => rm(lease.path, { recursive: true }));
+  }
 }
 
 /** @id CODE-M5-LIFECYCLE-004

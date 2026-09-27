@@ -74,6 +74,15 @@ surfaces.
 - Historical workflow waivers remain inactive (`workflowWaivers: []`). Their
   six stale audit diagnostics remain visible and are not used to downgrade any
   workflow error.
+- Release review corrections keep explicit approval evidence scoped without
+  evaluating unrelated active CHANGE selection and retry only bounded Windows
+  `EPERM`, `EACCES`, or `EBUSY` lease filesystem operations. The focused lease
+  and original parallel-contention regressions passed in five consecutive runs.
+- Candidate snapshot `snapshot-000000000553`, its three-platform gate set, and
+  the preceding quality report are historical evidence for candidate
+  `0e4b3e30ba0ef2e3e6e8203f9d057dcb162858cc`; the release review corrections
+  supersede that candidate, so new quality, snapshot, and signed gates are
+  required before release approval.
 
 ## Residual risks
 
