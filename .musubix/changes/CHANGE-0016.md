@@ -2,7 +2,7 @@
 schemaVersion: 1
 id: CHANGE-0016
 summary: Stabilize Wave 0 release operations
-status: active
+status: completed
 ---
 # CHANGE-0016: stabilize-wave0-release-operations
 
