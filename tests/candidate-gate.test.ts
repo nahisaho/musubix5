@@ -19,6 +19,7 @@ import {
   vi,
 } from 'vitest';
 import {
+  candidateDispatchGuidance,
   candidateMatrixJobs,
   requiredCandidateGateCommands,
   validateCandidateGateSet,
@@ -205,6 +206,86 @@ afterEach(() => {
 });
 
 describe('candidate-bound matrix gates', () => {
+  /**
+   * @id TEST-M5-WAVE0-CANDIDATE-REF-001
+   * @verifies REQ-M5-WAVE0-CANDIDATE-REF-001
+   */
+  it('TEST-M5-WAVE0-CANDIDATE-REF-001 emits inert CAS-safe candidate ref guidance', () => {
+    const context = {
+      repositoryId: 'repository:abc',
+      changeId: 'CHANGE-0016',
+      generation: 3,
+      candidateCommit: 'ABCDEF0123456789ABCDEF0123456789ABCDEF01',
+      gateInputFingerprint: 'f'.repeat(64),
+    };
+
+    expect(candidateDispatchGuidance(context)).toEqual({
+      candidateBranch: 'candidate/change-0016-g3-abcdef012345',
+      candidateFullRef: 'refs/heads/candidate/change-0016-g3-abcdef012345',
+      inspectLocal: {
+        executable: 'git',
+        args: ['show-ref', '--verify', '--hash',
+          'refs/heads/candidate/change-0016-g3-abcdef012345'],
+      },
+      createLocal: {
+        executable: 'git',
+        args: ['update-ref', 'refs/heads/candidate/change-0016-g3-abcdef012345',
+          'ABCDEF0123456789ABCDEF0123456789ABCDEF01', ''],
+      },
+      inspectRemote: {
+        executable: 'git',
+        args: ['ls-remote', '--exit-code', 'origin',
+          'refs/heads/candidate/change-0016-g3-abcdef012345'],
+      },
+      createRemote: {
+        executable: 'git',
+        args: [
+          'push',
+          '--force-with-lease=refs/heads/candidate/change-0016-g3-abcdef012345:',
+          'origin',
+          'ABCDEF0123456789ABCDEF0123456789ABCDEF01'
+            + ':refs/heads/candidate/change-0016-g3-abcdef012345',
+        ],
+      },
+      dispatch: {
+        executable: 'gh',
+        args: [
+          'workflow',
+          'run',
+          '.github/workflows/candidate-gate.yml',
+          '--ref',
+          'candidate/change-0016-g3-abcdef012345',
+          '-f',
+          'changeId=CHANGE-0016',
+          '-f',
+          'generation=3',
+          '-f',
+          'candidateCommit=ABCDEF0123456789ABCDEF0123456789ABCDEF01',
+          '-f',
+          'repositoryId=repository:abc',
+          '-f',
+          `gateInputFingerprint=${'f'.repeat(64)}`,
+        ],
+      },
+      deleteLocal: {
+        executable: 'git',
+        args: ['update-ref', '-d', 'refs/heads/candidate/change-0016-g3-abcdef012345',
+          'ABCDEF0123456789ABCDEF0123456789ABCDEF01'],
+      },
+      deleteRemote: {
+        executable: 'git',
+        args: [
+          'push',
+          '--force-with-lease=refs/heads/candidate/change-0016-g3-abcdef012345'
+            + ':ABCDEF0123456789ABCDEF0123456789ABCDEF01',
+          'origin',
+          ':refs/heads/candidate/change-0016-g3-abcdef012345',
+        ],
+      },
+    });
+    expect(context).not.toHaveProperty('candidateBranch');
+  });
+
   /**
    * @id TEST-M5-CI-NODE24-001
    * @verifies REQ-M5-CI-001 REQ-M5-CI-002 REQ-M5-COMPAT-007

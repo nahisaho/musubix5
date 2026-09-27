@@ -60,6 +60,94 @@ export interface CandidateGateContext {
   gateInputFingerprint: string;
 }
 
+export interface CandidateGateCommand {
+  executable: string;
+  args: string[];
+}
+
+export interface CandidateGateDispatchGuidance {
+  candidateBranch: string;
+  candidateFullRef: string;
+  inspectLocal: CandidateGateCommand;
+  createLocal: CandidateGateCommand;
+  inspectRemote: CandidateGateCommand;
+  createRemote: CandidateGateCommand;
+  dispatch: CandidateGateCommand;
+  deleteLocal: CandidateGateCommand;
+  deleteRemote: CandidateGateCommand;
+}
+
+/**
+ * @id CODE-M5-WAVE0-CANDIDATE-REF-001
+ * @implements REQ-M5-WAVE0-CANDIDATE-REF-001
+ * @design DES-M5-WAVE0-004
+ */
+export function candidateDispatchGuidance(
+  context: CandidateGateContext,
+): CandidateGateDispatchGuidance {
+  const candidateBranch = `candidate/${context.changeId.toLowerCase()}`
+    + `-g${context.generation}-${context.candidateCommit.slice(0, 12).toLowerCase()}`;
+  const candidateFullRef = `refs/heads/${candidateBranch}`;
+  return {
+    candidateBranch,
+    candidateFullRef,
+    inspectLocal: {
+      executable: 'git',
+      args: ['show-ref', '--verify', '--hash', candidateFullRef],
+    },
+    createLocal: {
+      executable: 'git',
+      args: ['update-ref', candidateFullRef, context.candidateCommit, ''],
+    },
+    inspectRemote: {
+      executable: 'git',
+      args: ['ls-remote', '--exit-code', 'origin', candidateFullRef],
+    },
+    createRemote: {
+      executable: 'git',
+      args: [
+        'push',
+        `--force-with-lease=${candidateFullRef}:`,
+        'origin',
+        `${context.candidateCommit}:${candidateFullRef}`,
+      ],
+    },
+    dispatch: {
+      executable: 'gh',
+      args: [
+        'workflow',
+        'run',
+        '.github/workflows/candidate-gate.yml',
+        '--ref',
+        candidateBranch,
+        '-f',
+        `changeId=${context.changeId}`,
+        '-f',
+        `generation=${context.generation}`,
+        '-f',
+        `candidateCommit=${context.candidateCommit}`,
+        '-f',
+        `repositoryId=${context.repositoryId}`,
+        '-f',
+        `gateInputFingerprint=${context.gateInputFingerprint}`,
+      ],
+    },
+    deleteLocal: {
+      executable: 'git',
+      args: ['update-ref', '-d', candidateFullRef, context.candidateCommit],
+    },
+    deleteRemote: {
+      executable: 'git',
+      args: [
+        'push',
+        `--force-with-lease=${candidateFullRef}:${context.candidateCommit}`,
+        'origin',
+        `:${candidateFullRef}`,
+      ],
+    },
+  };
+}
+
 export interface CandidateGateJobResult extends CandidateGateContext {
   schemaVersion: 1;
   job: CandidateGateJob;
