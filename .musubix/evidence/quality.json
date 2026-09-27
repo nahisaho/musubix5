@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-27T02:37:05.426Z",
-  "status": "fail",
+  "generatedAt": "2026-09-27T03:14:27.975Z",
+  "status": "pass",
   "checks": [
     {
       "name": "policy",
@@ -640,7 +640,7 @@
       "name": "workflow",
       "required": true,
       "status": "pass",
-      "summary": "19 workflow declaration(s) across 7 Skill(s) reconciled with Copilot invocation events.",
+      "summary": "20 workflow declaration(s) across 8 Skill(s) reconciled with Copilot invocation events.",
       "diagnostics": [
         {
           "code": "WORKFLOW_DECLARATION_SUPERSEDED",
@@ -698,7 +698,7 @@
       "name": "tdd",
       "required": true,
       "status": "pass",
-      "summary": "823 Red-Green TDD cycle(s) recorded.",
+      "summary": "829 Red-Green TDD cycle(s) recorded.",
       "diagnostics": []
     },
     {
@@ -720,7 +720,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 3790,
+      "durationMs": 3880,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.2.0 typecheck\n> tsc --noEmit\n\n",
       "stderr": ""
@@ -730,7 +730,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 3476,
+      "durationMs": 3408,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.2.0 build\n> tsc -p tsconfig.build.json\n\n",
       "stderr": ""
@@ -740,7 +740,7 @@
       "required": true,
       "status": "pass",
       "summary": "npx: completed, exit 0.",
-      "durationMs": 78394,
+      "durationMs": 81963,
       "exitCode": 0,
       "stdout": "JSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0016/g1/fc055a99a4d811cb/.musubix/evidence/native/test/aggregate.json\n",
       "stderr": "Preparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\n"
@@ -750,7 +750,7 @@
       "required": true,
       "status": "pass",
       "summary": "node: completed, exit 0.",
-      "durationMs": 50110,
+      "durationMs": 52425,
       "exitCode": 0,
       "stdout": "JSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0016/g1/fc055a99a4d811cb/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0016/g1/fc055a99a4d811cb/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-NOCHANGE-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0016/g1/fc055a99a4d811cb/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-FALLBACK-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0016/g1/fc055a99a4d811cb/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-GIT-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0016/g1/fc055a99a4d811cb/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-CACHE-WRITE-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0016/g1/fc055a99a4d811cb/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-TRAVERSAL-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0016/g1/fc055a99a4d811cb/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-CYCLES-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0016/g1/fc055a99a4d811cb/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-GATE-SCAN-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0016/g1/fc055a99a4d811cb/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-GATE-ORDER-001.json\n",
       "stderr": ""
@@ -760,9 +760,9 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 5524,
+      "durationMs": 5731,
       "exitCode": 0,
-      "stdout": "\n> musubix5@0.2.0 test:compat\n> vitest run tests/cli-help-contract.test.ts tests/cli-json-error-contract.test.ts tests/compatibility-oracle.test.ts\n\n\n RUN  v3.2.7 /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0016/g1/fc055a99a4d811cb\n\n ✓ tests/cli-help-contract.test.ts (2 tests) 1172ms\n   ✓ CLI help compatibility > TEST-M5-WAVE1-TDD-REPAIR-HELP-A4-001 registers additive TDD repair help  1099ms\n ✓ tests/compatibility-oracle.test.ts (1 test) 36ms\n ✓ tests/cli-json-error-contract.test.ts (2 tests) 1434ms\n   ✓ CLI JSON failure compatibility > TEST-M5-COMPAT-003 preserves the operational-error envelope  362ms\n   ✓ CLI JSON failure compatibility > TEST-M5-APPROVAL-GUIDANCE-001 names the published approval recovery command  1072ms\n\n Test Files  3 passed (3)\n      Tests  5 passed (5)\n   Start at  11:36:36\n   Duration  5.09s (transform 702ms, setup 0ms, collect 60ms, tests 2.64s, environment 0ms, prepare 127ms)\n\n",
+      "stdout": "\n> musubix5@0.2.0 test:compat\n> vitest run tests/cli-help-contract.test.ts tests/cli-json-error-contract.test.ts tests/compatibility-oracle.test.ts\n\n\n RUN  v3.2.7 /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0016/g1/fc055a99a4d811cb\n\n ✓ tests/cli-help-contract.test.ts (2 tests) 1211ms\n   ✓ CLI help compatibility > TEST-M5-WAVE1-TDD-REPAIR-HELP-A4-001 registers additive TDD repair help  1135ms\n ✓ tests/compatibility-oracle.test.ts (1 test) 44ms\n ✓ tests/cli-json-error-contract.test.ts (2 tests) 1502ms\n   ✓ CLI JSON failure compatibility > TEST-M5-COMPAT-003 preserves the operational-error envelope  371ms\n   ✓ CLI JSON failure compatibility > TEST-M5-APPROVAL-GUIDANCE-001 names the published approval recovery command  1130ms\n\n Test Files  3 passed (3)\n      Tests  5 passed (5)\n   Start at  12:13:55\n   Duration  5.28s (transform 736ms, setup 0ms, collect 68ms, tests 2.76s, environment 0ms, prepare 143ms)\n\n",
       "stderr": ""
     },
     {
@@ -770,7 +770,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 1022,
+      "durationMs": 1094,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.2.0 pack:check\n> node scripts/check-package.mjs\n\nPackage verified: musubix5-0.2.0.tgz, 218 files, 12 skills.\n",
       "stderr": ""
@@ -780,7 +780,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 4505,
+      "durationMs": 4656,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.2.0 pack:smoke\n> node scripts/smoke-package.mjs\n\nInstalled tarball verified: executable bin, ESM exports, init, status, assets, and hidden skills (0.2.0).\n",
       "stderr": ""
@@ -823,16 +823,9 @@
     {
       "name": "approval",
       "required": true,
-      "status": "fail",
-      "summary": "2/3 approval stage(s) are current.",
-      "diagnostics": [
-        {
-          "code": "CHANGE_GENERATION_INCOMPLETE",
-          "severity": "error",
-          "message": "CHANGE_GENERATION_INCOMPLETE: release approval requires the matching active CHANGE generation.",
-          "path": ".musubix/evidence/approvals/release.json"
-        }
-      ]
+      "status": "pass",
+      "summary": "3/3 approval stage(s) are current.",
+      "diagnostics": []
     },
     {
       "name": "commands",
@@ -872,7 +865,7 @@
     "commands.skipped": 0,
     "tests.annotatedIds": 292,
     "tests.executedIds": 292,
-    "tdd.cycles": 823,
+    "tdd.cycles": 829,
     "tdd.errors": 0,
     "changes.count": 15,
     "changes.errors": 0,
@@ -888,21 +881,57 @@
     "modelCorrespondence.coveredRequirements": 2,
     "modelCorrespondence.errors": 0,
     "attestation.errors": 0,
-    "approval.errors": 1,
+    "approval.errors": 0,
     "coverage.design": 1,
     "coverage.implementation": 1,
     "coverage.tests": 1
   },
   "mode": "changed",
   "feature": null,
-  "changed": [],
+  "changed": [
+    ".musubix/evidence/approvals/release.json",
+    ".musubix/evidence/formal.json",
+    ".musubix/evidence/model-correspondence.json",
+    ".musubix/evidence/native/test/TEST-M5-RELEASE-004-001.json",
+    ".musubix/evidence/native/test/TEST-M5-RELEASE-004-POLICY-BINDING-001.json",
+    ".musubix/evidence/native/test/TEST-M5-RELEASE-004-REGISTRY-CLASSIFICATION-001.json",
+    ".musubix/evidence/native/test/TEST-M5-RELEASE-004-REVIEW-001.json",
+    ".musubix/evidence/native/test/TEST-M5-RELEASE-004-WORKFLOW-ORDER-001.json",
+    ".musubix/evidence/native/test/TEST-M5-TDD-NORMAL-ROOT-TRACE-001.json",
+    ".musubix/evidence/native/test/aggregate.json",
+    ".musubix/evidence/order.json",
+    ".musubix/evidence/performance.json",
+    ".musubix/evidence/quality.json",
+    ".musubix/evidence/tdd.json",
+    ".musubix/evidence/workflow-transcripts/7e0225ea-dc31-49c2-a63e-4adf28641cb8.safe.jsonl",
+    ".musubix/evidence/workflow.json",
+    ".musubix/trace/index.json"
+  ],
   "impacted": [],
   "lastChangeAnalysis": {
     "baseline": "HEAD",
-    "head": "89b1baabb07cd543f3c3b4dced438a67f69304eb",
-    "changed": [],
+    "head": "b89b203b36507b6b9e17935df2a506fd8c94027e",
+    "changed": [
+      ".musubix/evidence/approvals/release.json",
+      ".musubix/evidence/formal.json",
+      ".musubix/evidence/model-correspondence.json",
+      ".musubix/evidence/native/test/TEST-M5-RELEASE-004-001.json",
+      ".musubix/evidence/native/test/TEST-M5-RELEASE-004-POLICY-BINDING-001.json",
+      ".musubix/evidence/native/test/TEST-M5-RELEASE-004-REGISTRY-CLASSIFICATION-001.json",
+      ".musubix/evidence/native/test/TEST-M5-RELEASE-004-REVIEW-001.json",
+      ".musubix/evidence/native/test/TEST-M5-RELEASE-004-WORKFLOW-ORDER-001.json",
+      ".musubix/evidence/native/test/TEST-M5-TDD-NORMAL-ROOT-TRACE-001.json",
+      ".musubix/evidence/native/test/aggregate.json",
+      ".musubix/evidence/order.json",
+      ".musubix/evidence/performance.json",
+      ".musubix/evidence/quality.json",
+      ".musubix/evidence/tdd.json",
+      ".musubix/evidence/workflow-transcripts/7e0225ea-dc31-49c2-a63e-4adf28641cb8.safe.jsonl",
+      ".musubix/evidence/workflow.json",
+      ".musubix/trace/index.json"
+    ],
     "impacted": [],
-    "generatedAt": "2026-09-27T02:37:05.426Z"
+    "generatedAt": "2026-09-27T03:14:27.975Z"
   },
   "fingerprints": {
     ".git": "0390e4ff1e41a50b7b6626e0167a0caeb4795471cd14a5b6a15cb62600586a0b",
@@ -1565,6 +1594,11 @@
     ".musubix/journal/normal/000000000559.json": "1ed65051bfc3c8ba203de2cfa6676dcb05c042a899805301d22022d575fb35cf",
     ".musubix/journal/normal/000000000560.json": "6a59ac19363ba3524d832da5cf5e3048eadfb9482bc93f0c585c6b97c41827c4",
     ".musubix/journal/normal/000000000561.json": "1afdaa61d8a1778fd7470c7a2447f558d4ca0400fb12d77e45bcc325833a7ba9",
+    ".musubix/journal/normal/000000000562.json": "4b30beeb7ac6ecc2b9dfdb7adfa62fd2658832d4f844a4e0fb89bf2b419270a8",
+    ".musubix/journal/normal/000000000563.json": "7266f2a025197a9ce5762f6a0134d22ee4bb49cd2f0c69427fdd9c01a13a1ecf",
+    ".musubix/journal/normal/000000000564.json": "a22b959caee10414ff4d8f1c09879f395cfcf26fafdcdaba0911b2e36ff84621",
+    ".musubix/journal/normal/000000000565.json": "e25ffa0e738db54850b7566c66c0ea60c6b828105cd76f64aa2e04e23558b80d",
+    ".musubix/journal/normal/000000000566.json": "010b5fea775b8035d21e66739054e5e35f0f40e61618183718cebd9d15daa7cc",
     ".musubix/parallel/CHANGE-0014-plan.json": "6ca6deeecdb33ac4e07ebfe0e3019d6e86b93ced67d72339aee586d577ef7e64",
     "assets/ADR-0001.md": "07d68c567d75e9ec88f554114f8df4d1259a82cf45fd6567c65c3fc9db7090f0",
     "assets/constitution.md": "f8b47fdc486f395bab05223a94821b145cf8df70ffde2c838a28f8d71fe0fa92",
