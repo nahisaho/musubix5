@@ -37642,6 +37642,281 @@
         "diagnostics": [],
         "order": 3097
       }
+    },
+    {
+      "cycleId": "04df5ea3-2235-4bac-b55b-6e0b122c55d3",
+      "changeId": "CHANGE-0017",
+      "generation": 2,
+      "requirementId": "REQ-M5-APPROVAL-007",
+      "testId": "TEST-M5-APPROVAL-RELEASE-RESULT-CHANGE-001",
+      "testPath": "tests/release-manifest-scope.test.ts",
+      "commandName": "test",
+      "parallel": {
+        "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+        "assignmentId": "release-manifest-filter",
+        "attempt": 1,
+        "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-1edba91e857fa502a3e3/assignments/release-manifest-filter/attempt-1",
+        "startCommit": "8ef9cbfd8f27363dd1cc2bf6e26047a47a968486"
+      },
+      "red": {
+        "phase": "red",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "failed",
+        "reportSha256": "e8a7d12a6e0fc7f500918558fcffd8f5d7674c0a3b7c01d2829efb2a2b414a8f",
+        "commandSha256": "dfe060a37cfa6206bca22d24874c979d96a073bcbab5a4f04e9b80a5cc68c680",
+        "outputSha256": "5e9e426334ad4983183fbb65ae0d204f2efff228b7cb9b87a459f3e5ab097906",
+        "exitCode": 1,
+        "durationMs": 4762,
+        "testFingerprint": "31201fd9d8940227e2c3baa4ff7e4bb87a41d7ea3a59904c4cecaae9a79fbe59",
+        "sourceFingerprint": "55288dee90c8e66e365d0a45a0165da2377ea7b6d22d33d6893b4161266e6679",
+        "executionId": "d24f89d2-16f6-4006-96ca-5843dc07f0c7",
+        "recordedAt": "2026-09-27T04:25:01.293Z",
+        "diagnostics": [],
+        "order": 3104
+      },
+      "green": {
+        "phase": "green",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "passed",
+        "reportSha256": "0f921430ddc625178c0bc6de12869f0c3493d7ce90d6a7ae38b83e72940d1680",
+        "commandSha256": "dfe060a37cfa6206bca22d24874c979d96a073bcbab5a4f04e9b80a5cc68c680",
+        "outputSha256": "5e9e426334ad4983183fbb65ae0d204f2efff228b7cb9b87a459f3e5ab097906",
+        "exitCode": 0,
+        "durationMs": 4381,
+        "testFingerprint": "31201fd9d8940227e2c3baa4ff7e4bb87a41d7ea3a59904c4cecaae9a79fbe59",
+        "sourceFingerprint": "b9f0e534375595238f19f5f1a389277355ee1819cf2d25c8bae7288a0a4ff244",
+        "executionId": "0d781420-28c7-42e0-b218-96fda4f765b1",
+        "recordedAt": "2026-09-27T04:27:24.833Z",
+        "diagnostics": [],
+        "order": 3110
+      }
+    },
+    {
+      "cycleId": "95d26732-bb19-4d4c-bc30-f4767237485e",
+      "changeId": "CHANGE-0017",
+      "generation": 2,
+      "requirementId": "REQ-M5-EVIDENCE-007",
+      "testId": "TEST-M5-WORKFLOW-CURRENT-001",
+      "testPath": "tests/workflow-current-verification.test.ts",
+      "commandName": "test",
+      "parallel": {
+        "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+        "assignmentId": "workflow-verify-current",
+        "attempt": 1,
+        "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-1edba91e857fa502a3e3/assignments/workflow-verify-current/attempt-1",
+        "startCommit": "8ef9cbfd8f27363dd1cc2bf6e26047a47a968486"
+      },
+      "red": {
+        "phase": "red",
+        "valid": false,
+        "scoped": true,
+        "resultObserved": false,
+        "reportSha256": "433df520f13797bb6e202cb2385882e791f6a5f999d268f368b1513308f38f70",
+        "commandSha256": "ac4d7f2c3cb90470f2952db0411cb0ae8202debd506158c4b7c524ea56cdb97b",
+        "outputSha256": "900b76cca581a037f39f8f0fe777108416c4ffee1ff639c96437698a50f24f84",
+        "exitCode": 1,
+        "durationMs": 4712,
+        "testFingerprint": "04fc44bdea85e46b06a237a6d0e8ed6a461797c8768482216a1b0a636ee9283c",
+        "sourceFingerprint": "3d4e1000c203320625b658e944d65375d54556918c4041f716c7dddfd5f09340",
+        "executionId": "a6d3214a-192f-4ce9-b32e-e478668ed2f9",
+        "recordedAt": "2026-09-27T04:25:40.217Z",
+        "diagnostics": [
+          {
+            "code": "TDD_REPORT_INVALID",
+            "severity": "error",
+            "message": "No annotated TEST-* identities were found in the vitest report.\nSuite failure: Cannot find module '../packages/analysis/src/workflow-current.js' imported from '/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-1edba91e857fa502a3e3/assignments/workflow-verify-current/attempt-1/tests/workflow-current-verification.test.ts'",
+            "path": ".musubix/evidence/native/test/TEST-M5-WORKFLOW-CURRENT-001.json"
+          }
+        ],
+        "order": 3105
+      }
+    },
+    {
+      "cycleId": "3100c101-55f1-4e95-a54c-404018f07790",
+      "changeId": "CHANGE-0017",
+      "generation": 2,
+      "requirementId": "REQ-M5-GRAPH-003",
+      "testId": "TEST-M5-GRAPH-BENCHMARK-DETERMINISM-001",
+      "testPath": "tests/codegraph-benchmark.test.ts",
+      "commandName": "codegraph-tests",
+      "parallel": {
+        "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+        "assignmentId": "codegraph-benchmark",
+        "attempt": 1,
+        "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-1edba91e857fa502a3e3/assignments/codegraph-benchmark/attempt-1",
+        "startCommit": "8ef9cbfd8f27363dd1cc2bf6e26047a47a968486"
+      },
+      "red": {
+        "phase": "red",
+        "valid": false,
+        "scoped": true,
+        "resultObserved": false,
+        "commandSha256": "bf5eaccbb74cc5bebfd517e1a0ffeca32125527b27c656d2216b5068bfff6f56",
+        "outputSha256": "c97e327d6f3c9585c99926f85ac0de6d047a5c947f9287c95fe87e54bc3b72bd",
+        "exitCode": 1,
+        "durationMs": 28,
+        "testFingerprint": "a9bd8835fca7f5871ba4aed71ce0708f7fb432d5ae60deef68b8004a4a9cbd77",
+        "sourceFingerprint": "b7bbba3771a82739fabe2f15b74013d05bf5b8deeff426a80baf6fc403eac62a",
+        "executionId": "d2ca08bc-943d-435a-bde9-f5a275f63b47",
+        "recordedAt": "2026-09-27T04:26:14.357Z",
+        "diagnostics": [
+          {
+            "code": "TDD_REPORT_MISSING",
+            "severity": "error",
+            "message": "TEST-M5-GRAPH-BENCHMARK-DETERMINISM-001 did not produce a fresh structured TDD report.",
+            "path": ".musubix/cache/test-results/TEST-M5-GRAPH-BENCHMARK-DETERMINISM-001.json"
+          }
+        ],
+        "order": 3106
+      }
+    },
+    {
+      "cycleId": "1d165b99-16a4-4dd4-a75d-79ad054d6814",
+      "changeId": "CHANGE-0017",
+      "generation": 2,
+      "requirementId": "REQ-M5-WORKTREE-004",
+      "testId": "TEST-M5-WORKTREE-BASELINE-CLI-001",
+      "testPath": "tests/parallel-baseline-cli.test.ts",
+      "commandName": "test",
+      "parallel": {
+        "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+        "assignmentId": "parallel-baseline-cli",
+        "attempt": 1,
+        "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-1edba91e857fa502a3e3/assignments/parallel-baseline-cli/attempt-1",
+        "startCommit": "8ef9cbfd8f27363dd1cc2bf6e26047a47a968486"
+      },
+      "red": {
+        "phase": "red",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "failed",
+        "reportSha256": "09b3bc2f7046d488fb5ebb7a52548d4a38e84b8b1b44ba3cc626760372b46c54",
+        "commandSha256": "3d69b5f816b30e475bbab2fdedb84ebd2ef1606ba0b026cf93e53d3eebad9710",
+        "outputSha256": "4b2560cdd5fb2a87a266e52d7b7d0d2d9b86d894c5a92455b7ad7fdbcd59f2f8",
+        "exitCode": 1,
+        "durationMs": 7498,
+        "testFingerprint": "b8702e09e447c1ebf6869a3824ef4cf8408619dc3e6323c41ea6c66527a55c04",
+        "sourceFingerprint": "257230c70bc001881a391554fe1886c7bc9e1749c59ae94614b2995a935bccb8",
+        "executionId": "096749f8-130f-49d2-b906-56b7a7201bbf",
+        "recordedAt": "2026-09-27T04:26:40.214Z",
+        "diagnostics": [],
+        "order": 3107
+      },
+      "green": {
+        "phase": "green",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "passed",
+        "reportSha256": "91c61bbb92df47334ca00ebd2d5d13565eb5180e0dfb2d6a63f8f9b4d1cae31d",
+        "commandSha256": "3d69b5f816b30e475bbab2fdedb84ebd2ef1606ba0b026cf93e53d3eebad9710",
+        "outputSha256": "4b2560cdd5fb2a87a266e52d7b7d0d2d9b86d894c5a92455b7ad7fdbcd59f2f8",
+        "exitCode": 0,
+        "durationMs": 5707,
+        "testFingerprint": "b8702e09e447c1ebf6869a3824ef4cf8408619dc3e6323c41ea6c66527a55c04",
+        "sourceFingerprint": "9c15f089b47fdc4d42aa845114be5d5ee64bedec0b973fb49b677e3a634949f9",
+        "executionId": "08ddf6b1-18cd-4179-b5da-639315340616",
+        "recordedAt": "2026-09-27T04:30:47.251Z",
+        "diagnostics": [],
+        "order": 3115
+      }
+    },
+    {
+      "cycleId": "eb9fc5d0-e877-4c0e-a9bf-88e343f0eeed",
+      "changeId": "CHANGE-0017",
+      "generation": 2,
+      "requirementId": "REQ-M5-EVIDENCE-007",
+      "testId": "TEST-M5-WORKFLOW-CURRENT-001",
+      "testPath": "tests/workflow-current-verification.test.ts",
+      "commandName": "test",
+      "parallel": {
+        "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+        "assignmentId": "workflow-verify-current",
+        "attempt": 1,
+        "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-1edba91e857fa502a3e3/assignments/workflow-verify-current/attempt-1",
+        "startCommit": "8ef9cbfd8f27363dd1cc2bf6e26047a47a968486"
+      },
+      "red": {
+        "phase": "red",
+        "valid": false,
+        "scoped": true,
+        "resultObserved": false,
+        "reportSha256": "e98fe08040d541631d8d71302b8b6ac31914c6debd1a5eca5b669f4c91cfda24",
+        "commandSha256": "ac4d7f2c3cb90470f2952db0411cb0ae8202debd506158c4b7c524ea56cdb97b",
+        "outputSha256": "e4968a8dbbd819232f0328282ac6e3475976d3846ddb48a4366669d9a7f844ca",
+        "exitCode": 1,
+        "durationMs": 4223,
+        "testFingerprint": "c1cbf483542803811d70b95a2acfe7a107cf5449295646118d989151ceb16020",
+        "sourceFingerprint": "2f4865ff42697ba217ccdb2760263922daac2bf3a3dc6759cd034849db33b846",
+        "executionId": "e186c74b-8efc-44c8-95f3-91fb71cc027a",
+        "recordedAt": "2026-09-27T04:28:13.748Z",
+        "diagnostics": [
+          {
+            "code": "TDD_REPORT_INVALID",
+            "severity": "error",
+            "message": "No annotated TEST-* identities were found in the vitest report.",
+            "path": ".musubix/evidence/native/test/TEST-M5-WORKFLOW-CURRENT-001.json"
+          }
+        ],
+        "order": 3111
+      }
+    },
+    {
+      "cycleId": "415f80ce-1f09-4724-aa28-fdad94975fd4",
+      "changeId": "CHANGE-0017",
+      "generation": 2,
+      "requirementId": "REQ-M5-EVIDENCE-007",
+      "testId": "TEST-M5-WORKFLOW-CURRENT-001",
+      "testPath": "tests/workflow-current-verification.test.ts",
+      "commandName": "test",
+      "parallel": {
+        "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+        "assignmentId": "workflow-verify-current",
+        "attempt": 1,
+        "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-1edba91e857fa502a3e3/assignments/workflow-verify-current/attempt-1",
+        "startCommit": "8ef9cbfd8f27363dd1cc2bf6e26047a47a968486"
+      },
+      "red": {
+        "phase": "red",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "failed",
+        "reportSha256": "c696cc2631d28d1a920983b164c089a728ecb669b1f5ba72105f8627a9d8bf86",
+        "commandSha256": "ac4d7f2c3cb90470f2952db0411cb0ae8202debd506158c4b7c524ea56cdb97b",
+        "outputSha256": "900b76cca581a037f39f8f0fe777108416c4ffee1ff639c96437698a50f24f84",
+        "exitCode": 1,
+        "durationMs": 7308,
+        "testFingerprint": "c1cbf483542803811d70b95a2acfe7a107cf5449295646118d989151ceb16020",
+        "sourceFingerprint": "5e64753b14215b2bb6e5ecf98e7926a2cf1bcf5f49af2dcb198c88f944fa7751",
+        "executionId": "85c4ecf2-0db6-484f-be9d-9f14ab73e271",
+        "recordedAt": "2026-09-27T04:29:29.453Z",
+        "diagnostics": [],
+        "order": 3113
+      },
+      "green": {
+        "phase": "green",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "passed",
+        "reportSha256": "6d0da9c99f932d99200b165db9f8b2729b2df1c822d061274ff0a1dae5abd4fb",
+        "commandSha256": "ac4d7f2c3cb90470f2952db0411cb0ae8202debd506158c4b7c524ea56cdb97b",
+        "outputSha256": "900b76cca581a037f39f8f0fe777108416c4ffee1ff639c96437698a50f24f84",
+        "exitCode": 0,
+        "durationMs": 5854,
+        "testFingerprint": "c1cbf483542803811d70b95a2acfe7a107cf5449295646118d989151ceb16020",
+        "sourceFingerprint": "15fcef0d70009bf984882a637abf1817bb4fcbe6aa5e8e1c7c57e92fffc786a2",
+        "executionId": "0a77ec21-c5ee-4ff7-ae9e-400a224ad638",
+        "recordedAt": "2026-09-27T04:31:02.467Z",
+        "diagnostics": [],
+        "order": 3117
+      }
     }
   ],
   "chain": [
@@ -61726,6 +62001,195 @@
       "phaseEvidenceSha256": "73eb36c1fa0b22ab754363c9fd3d53cd84ff5e8229f3c6c9a128bbc1aacef86f",
       "previousSha256": "0b7e542a5c468da5da3508dee3aa30b213e6b787be6c3a4145cc961d331767cc",
       "recordSha256": "a357f4edd9b2aa79345fedc020984b59dc21837e66e5c79894af345a59ca02b4"
+    },
+    {
+      "sequence": 1608,
+      "cycleId": "04df5ea3-2235-4bac-b55b-6e0b122c55d3",
+      "changeId": "CHANGE-0017",
+      "generation": 2,
+      "requirementId": "REQ-M5-APPROVAL-007",
+      "testId": "TEST-M5-APPROVAL-RELEASE-RESULT-CHANGE-001",
+      "testPath": "tests/release-manifest-scope.test.ts",
+      "commandName": "test",
+      "parallel": {
+        "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+        "assignmentId": "release-manifest-filter",
+        "attempt": 1,
+        "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-1edba91e857fa502a3e3/assignments/release-manifest-filter/attempt-1",
+        "startCommit": "8ef9cbfd8f27363dd1cc2bf6e26047a47a968486"
+      },
+      "phase": "red",
+      "phaseEvidenceSha256": "80e2f18d3ee58271b7731ddcb2bf89998dc96d085649b9685ed345b74a2eb3d0",
+      "previousSha256": "a357f4edd9b2aa79345fedc020984b59dc21837e66e5c79894af345a59ca02b4",
+      "recordSha256": "e3b06b0675dbf00531e9d145e55355adf676624bc1995372d0472b64737d180f"
+    },
+    {
+      "sequence": 1609,
+      "cycleId": "95d26732-bb19-4d4c-bc30-f4767237485e",
+      "changeId": "CHANGE-0017",
+      "generation": 2,
+      "requirementId": "REQ-M5-EVIDENCE-007",
+      "testId": "TEST-M5-WORKFLOW-CURRENT-001",
+      "testPath": "tests/workflow-current-verification.test.ts",
+      "commandName": "test",
+      "parallel": {
+        "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+        "assignmentId": "workflow-verify-current",
+        "attempt": 1,
+        "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-1edba91e857fa502a3e3/assignments/workflow-verify-current/attempt-1",
+        "startCommit": "8ef9cbfd8f27363dd1cc2bf6e26047a47a968486"
+      },
+      "phase": "red",
+      "phaseEvidenceSha256": "486b75b86eb64424c6eeb8a3ffa738b95bdb1e26c0fb497cc9c14e094d29f005",
+      "previousSha256": "e3b06b0675dbf00531e9d145e55355adf676624bc1995372d0472b64737d180f",
+      "recordSha256": "6555b652a94430d3071ec3bc61ce9da1092cb536c673f912afbce9d2e083c669"
+    },
+    {
+      "sequence": 1610,
+      "cycleId": "3100c101-55f1-4e95-a54c-404018f07790",
+      "changeId": "CHANGE-0017",
+      "generation": 2,
+      "requirementId": "REQ-M5-GRAPH-003",
+      "testId": "TEST-M5-GRAPH-BENCHMARK-DETERMINISM-001",
+      "testPath": "tests/codegraph-benchmark.test.ts",
+      "commandName": "codegraph-tests",
+      "parallel": {
+        "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+        "assignmentId": "codegraph-benchmark",
+        "attempt": 1,
+        "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-1edba91e857fa502a3e3/assignments/codegraph-benchmark/attempt-1",
+        "startCommit": "8ef9cbfd8f27363dd1cc2bf6e26047a47a968486"
+      },
+      "phase": "red",
+      "phaseEvidenceSha256": "97464d68c94051d993db26726b1b41ac89b56ee7d16c76172aa88aa070a9fbcf",
+      "previousSha256": "6555b652a94430d3071ec3bc61ce9da1092cb536c673f912afbce9d2e083c669",
+      "recordSha256": "2ba15826e41b3c42e41144565bc9ae01f10bd1b859d356c2a92a258ed1173a90"
+    },
+    {
+      "sequence": 1611,
+      "cycleId": "1d165b99-16a4-4dd4-a75d-79ad054d6814",
+      "changeId": "CHANGE-0017",
+      "generation": 2,
+      "requirementId": "REQ-M5-WORKTREE-004",
+      "testId": "TEST-M5-WORKTREE-BASELINE-CLI-001",
+      "testPath": "tests/parallel-baseline-cli.test.ts",
+      "commandName": "test",
+      "parallel": {
+        "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+        "assignmentId": "parallel-baseline-cli",
+        "attempt": 1,
+        "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-1edba91e857fa502a3e3/assignments/parallel-baseline-cli/attempt-1",
+        "startCommit": "8ef9cbfd8f27363dd1cc2bf6e26047a47a968486"
+      },
+      "phase": "red",
+      "phaseEvidenceSha256": "4ea0b70ddfda49085cd5eecb753574c54962fc9a2f700bff7930fca3918d537d",
+      "previousSha256": "2ba15826e41b3c42e41144565bc9ae01f10bd1b859d356c2a92a258ed1173a90",
+      "recordSha256": "7c821c6b122de2e2104570e56ca9264cc9920dae1ab8cf0017a2773d6d990925"
+    },
+    {
+      "sequence": 1612,
+      "cycleId": "04df5ea3-2235-4bac-b55b-6e0b122c55d3",
+      "changeId": "CHANGE-0017",
+      "generation": 2,
+      "requirementId": "REQ-M5-APPROVAL-007",
+      "testId": "TEST-M5-APPROVAL-RELEASE-RESULT-CHANGE-001",
+      "testPath": "tests/release-manifest-scope.test.ts",
+      "commandName": "test",
+      "parallel": {
+        "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+        "assignmentId": "release-manifest-filter",
+        "attempt": 1,
+        "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-1edba91e857fa502a3e3/assignments/release-manifest-filter/attempt-1",
+        "startCommit": "8ef9cbfd8f27363dd1cc2bf6e26047a47a968486"
+      },
+      "phase": "green",
+      "phaseEvidenceSha256": "63576d79f227297736e908af5d1ea7cec5bfd2d0dcb0e05dbc919092a0c4bb26",
+      "previousSha256": "7c821c6b122de2e2104570e56ca9264cc9920dae1ab8cf0017a2773d6d990925",
+      "recordSha256": "d86d525af14c0f31f3305f44b3bb24900ccf4c5a9a3afdc9d03e22bfafe3c3f6"
+    },
+    {
+      "sequence": 1613,
+      "cycleId": "eb9fc5d0-e877-4c0e-a9bf-88e343f0eeed",
+      "changeId": "CHANGE-0017",
+      "generation": 2,
+      "requirementId": "REQ-M5-EVIDENCE-007",
+      "testId": "TEST-M5-WORKFLOW-CURRENT-001",
+      "testPath": "tests/workflow-current-verification.test.ts",
+      "commandName": "test",
+      "parallel": {
+        "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+        "assignmentId": "workflow-verify-current",
+        "attempt": 1,
+        "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-1edba91e857fa502a3e3/assignments/workflow-verify-current/attempt-1",
+        "startCommit": "8ef9cbfd8f27363dd1cc2bf6e26047a47a968486"
+      },
+      "phase": "red",
+      "phaseEvidenceSha256": "a3047620c2f36b033634a41c6f0383adcdd1be9fbd5c2860d58950f435eb6369",
+      "previousSha256": "d86d525af14c0f31f3305f44b3bb24900ccf4c5a9a3afdc9d03e22bfafe3c3f6",
+      "recordSha256": "31dfa19a9684705734387f66d28b891e0c9a6117e1b91bceb29fdec541315db1"
+    },
+    {
+      "sequence": 1614,
+      "cycleId": "415f80ce-1f09-4724-aa28-fdad94975fd4",
+      "changeId": "CHANGE-0017",
+      "generation": 2,
+      "requirementId": "REQ-M5-EVIDENCE-007",
+      "testId": "TEST-M5-WORKFLOW-CURRENT-001",
+      "testPath": "tests/workflow-current-verification.test.ts",
+      "commandName": "test",
+      "parallel": {
+        "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+        "assignmentId": "workflow-verify-current",
+        "attempt": 1,
+        "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-1edba91e857fa502a3e3/assignments/workflow-verify-current/attempt-1",
+        "startCommit": "8ef9cbfd8f27363dd1cc2bf6e26047a47a968486"
+      },
+      "phase": "red",
+      "phaseEvidenceSha256": "37db85197b65518b63cf02de103bc2f763bd712517a0ea88caf187d307d98442",
+      "previousSha256": "31dfa19a9684705734387f66d28b891e0c9a6117e1b91bceb29fdec541315db1",
+      "recordSha256": "b132f72561e80df00114ce1089a9efbee80087f14526428b54c987d7f11a008a"
+    },
+    {
+      "sequence": 1615,
+      "cycleId": "1d165b99-16a4-4dd4-a75d-79ad054d6814",
+      "changeId": "CHANGE-0017",
+      "generation": 2,
+      "requirementId": "REQ-M5-WORKTREE-004",
+      "testId": "TEST-M5-WORKTREE-BASELINE-CLI-001",
+      "testPath": "tests/parallel-baseline-cli.test.ts",
+      "commandName": "test",
+      "parallel": {
+        "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+        "assignmentId": "parallel-baseline-cli",
+        "attempt": 1,
+        "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-1edba91e857fa502a3e3/assignments/parallel-baseline-cli/attempt-1",
+        "startCommit": "8ef9cbfd8f27363dd1cc2bf6e26047a47a968486"
+      },
+      "phase": "green",
+      "phaseEvidenceSha256": "3fbbbd428a0e711472ce4f15ed1e07bc25daa43bb91300b7878c57988d6d8759",
+      "previousSha256": "b132f72561e80df00114ce1089a9efbee80087f14526428b54c987d7f11a008a",
+      "recordSha256": "2ad6191e1a5a57412d59ef9a21f078d4dd25991cf0f191ff7efaaf75f80eec91"
+    },
+    {
+      "sequence": 1616,
+      "cycleId": "415f80ce-1f09-4724-aa28-fdad94975fd4",
+      "changeId": "CHANGE-0017",
+      "generation": 2,
+      "requirementId": "REQ-M5-EVIDENCE-007",
+      "testId": "TEST-M5-WORKFLOW-CURRENT-001",
+      "testPath": "tests/workflow-current-verification.test.ts",
+      "commandName": "test",
+      "parallel": {
+        "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+        "assignmentId": "workflow-verify-current",
+        "attempt": 1,
+        "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-1edba91e857fa502a3e3/assignments/workflow-verify-current/attempt-1",
+        "startCommit": "8ef9cbfd8f27363dd1cc2bf6e26047a47a968486"
+      },
+      "phase": "green",
+      "phaseEvidenceSha256": "4e8d00c13edbff59c58c949193f1e5bd4c817deea2e22c062f9c3183d34b5c51",
+      "previousSha256": "2ad6191e1a5a57412d59ef9a21f078d4dd25991cf0f191ff7efaaf75f80eec91",
+      "recordSha256": "6b4247f847eae2f5cc3f1fa683eb9dba70dbde64a228180145c8633ffe78bd49"
     }
   ]
 }

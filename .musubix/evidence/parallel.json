@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "nextOrder": 382,
+  "nextOrder": 392,
   "plans": [
     {
       "assignments": [
@@ -1425,6 +1425,428 @@
         "schemaVersion": 1
       },
       "schemaVersion": 1
+    },
+    {
+      "assignments": [
+        {
+          "dependsOn": [],
+          "focusedCommands": [
+            {
+              "args": [
+                "TEST-M5-APPROVAL-RELEASE-RESULT-CHANGE-001"
+              ],
+              "name": "test"
+            }
+          ],
+          "id": "release-manifest-filter",
+          "ownedPaths": [
+            "packages/analysis/src/release-manifest.ts",
+            "tests/release-manifest-scope.test.ts"
+          ],
+          "requirementIds": [
+            "REQ-M5-APPROVAL-007"
+          ],
+          "role": "implementation"
+        },
+        {
+          "dependsOn": [],
+          "focusedCommands": [
+            {
+              "args": [
+                "TEST-M5-WORKTREE-BASELINE-CLI-001"
+              ],
+              "name": "test"
+            }
+          ],
+          "id": "parallel-baseline-cli",
+          "ownedPaths": [
+            "packages/analysis/src/workspace-manager.ts",
+            "packages/analysis/src/parallel-runtime.ts",
+            "tests/workspace-isolation.test.ts",
+            "tests/parallel-baseline-cli.test.ts"
+          ],
+          "requirementIds": [
+            "REQ-M5-WORKTREE-004"
+          ],
+          "role": "implementation"
+        },
+        {
+          "dependsOn": [],
+          "focusedCommands": [
+            {
+              "args": [
+                "TEST-M5-WORKFLOW-CURRENT-001"
+              ],
+              "name": "test"
+            }
+          ],
+          "id": "workflow-verify-current",
+          "ownedPaths": [
+            "packages/analysis/src/workflow.ts",
+            "packages/analysis/src/workflow-current.ts",
+            "tests/workflow-current-verification.test.ts"
+          ],
+          "requirementIds": [
+            "REQ-M5-EVIDENCE-007"
+          ],
+          "role": "implementation"
+        },
+        {
+          "dependsOn": [],
+          "focusedCommands": [
+            {
+              "args": [
+                "TEST-M5-GRAPH-BENCHMARK-DETERMINISM-001"
+              ],
+              "name": "codegraph-tests"
+            }
+          ],
+          "id": "codegraph-benchmark",
+          "ownedPaths": [
+            "packages/analysis/src/graph.ts",
+            "packages/analysis/src/codegraph-benchmark.ts",
+            "scripts/run-codegraph-benchmark.mjs",
+            "benchmarks/codegraph/**",
+            "tests/codegraph-benchmark.test.ts"
+          ],
+          "requirementIds": [
+            "REQ-M5-GRAPH-003"
+          ],
+          "role": "implementation"
+        }
+      ],
+      "authored": {
+        "assignments": [
+          {
+            "dependsOn": [],
+            "focusedCommands": [
+              {
+                "args": [
+                  "TEST-M5-APPROVAL-RELEASE-RESULT-CHANGE-001"
+                ],
+                "name": "test"
+              }
+            ],
+            "id": "release-manifest-filter",
+            "ownedPaths": [
+              "packages/analysis/src/release-manifest.ts",
+              "tests/release-manifest-scope.test.ts"
+            ],
+            "requirementIds": [
+              "REQ-M5-APPROVAL-007"
+            ],
+            "role": "implementation"
+          },
+          {
+            "dependsOn": [],
+            "focusedCommands": [
+              {
+                "args": [
+                  "TEST-M5-WORKTREE-BASELINE-CLI-001"
+                ],
+                "name": "test"
+              }
+            ],
+            "id": "parallel-baseline-cli",
+            "ownedPaths": [
+              "packages/analysis/src/workspace-manager.ts",
+              "packages/analysis/src/parallel-runtime.ts",
+              "tests/workspace-isolation.test.ts",
+              "tests/parallel-baseline-cli.test.ts"
+            ],
+            "requirementIds": [
+              "REQ-M5-WORKTREE-004"
+            ],
+            "role": "implementation"
+          },
+          {
+            "dependsOn": [],
+            "focusedCommands": [
+              {
+                "args": [
+                  "TEST-M5-WORKFLOW-CURRENT-001"
+                ],
+                "name": "test"
+              }
+            ],
+            "id": "workflow-verify-current",
+            "ownedPaths": [
+              "packages/analysis/src/workflow.ts",
+              "packages/analysis/src/workflow-current.ts",
+              "tests/workflow-current-verification.test.ts"
+            ],
+            "requirementIds": [
+              "REQ-M5-EVIDENCE-007"
+            ],
+            "role": "implementation"
+          },
+          {
+            "dependsOn": [],
+            "focusedCommands": [
+              {
+                "args": [
+                  "TEST-M5-GRAPH-BENCHMARK-DETERMINISM-001"
+                ],
+                "name": "codegraph-tests"
+              }
+            ],
+            "id": "codegraph-benchmark",
+            "ownedPaths": [
+              "packages/analysis/src/graph.ts",
+              "packages/analysis/src/codegraph-benchmark.ts",
+              "scripts/run-codegraph-benchmark.mjs",
+              "benchmarks/codegraph/**",
+              "tests/codegraph-benchmark.test.ts"
+            ],
+            "requirementIds": [
+              "REQ-M5-GRAPH-003"
+            ],
+            "role": "implementation"
+          }
+        ],
+        "concurrency": 4,
+        "integratorOwnedPaths": [
+          ".musubix/**",
+          "package.json",
+          "package-lock.json",
+          "README.md",
+          "README-ja.md",
+          "packages/cli/src/main.ts",
+          "packages/analysis/src/index.ts",
+          "tests/cli-help-contract.test.ts",
+          "tests/cli-json-error-contract.test.ts",
+          ".musubix/changes/**",
+          ".musubix/features/**",
+          ".musubix/decisions/**"
+        ],
+        "provisionCommandNames": [],
+        "schemaVersion": 1
+      },
+      "binding": {
+        "baseCommit": "8ef9cbfd8f27363dd1cc2bf6e26047a47a968486",
+        "changeId": "CHANGE-0017",
+        "commandSetSha256": "8c54618fc1bf3047a495e83df6d0a84d34adb250977bc01a405aa7f3055d76c8",
+        "configuredCommandNames": [
+          "typecheck",
+          "build",
+          "test",
+          "codegraph-tests",
+          "compatibility",
+          "pack-check",
+          "pack-smoke",
+          "npm-ci"
+        ],
+        "designApprovalSha256": "a51298195413317b0ff17ae2a047ba707acea9d168fb9440af25cf9ba4bdadb5",
+        "generation": 2,
+        "requirementIds": [
+          "REQ-M5-APPROVAL-007",
+          "REQ-M5-COMPAT-013",
+          "REQ-M5-EVIDENCE-007",
+          "REQ-M5-GRAPH-003",
+          "REQ-M5-WORKTREE-004"
+        ],
+        "requirementsApprovalSha256": "a5c17b70cb87239519833c64b8606f04bd5ec4988477c360d1d965fe2e8eebec"
+      },
+      "concurrency": 4,
+      "createdOrder": 382,
+      "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+      "policy": {
+        "agentCommitIdentity": {
+          "email": "musubix5-agent@localhost",
+          "name": "musubix5-agent"
+        },
+        "defaultConcurrency": 3,
+        "integratorOwnedDefaults": [
+          ".musubix/**"
+        ],
+        "maxConcurrency": 8,
+        "prohibitedAgentOperations": [
+          {
+            "argsPrefix": [
+              "push"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "pull"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "fetch"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "tag"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "branch"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "rebase"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "reset"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "restore"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "worktree"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "submodule"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "notes"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "replace"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "prune"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "gc"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "update-ref"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "reflog"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "config"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "remote"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "filter-branch"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "commit",
+              "--amend"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "checkout"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "switch"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "merge"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "cherry-pick"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "clean"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "stash"
+            ],
+            "command": "git"
+          }
+        ],
+        "provisionCommands": [
+          {
+            "args": [
+              "ci",
+              "--ignore-scripts"
+            ],
+            "command": "npm",
+            "name": "npm-ci",
+            "timeoutMs": 180000
+          }
+        ],
+        "runnerEnvironment": {
+          "fixed": {
+            "CI": "true"
+          },
+          "managedHome": true,
+          "passThrough": [
+            "PATH",
+            "SystemRoot",
+            "ComSpec",
+            "PATHEXT",
+            "TMP",
+            "TEMP"
+          ]
+        },
+        "schemaVersion": 1
+      },
+      "schemaVersion": 1
     }
   ],
   "prepared": [
@@ -1442,6 +1864,11 @@
       "gitCommonDirectory": "/home/nahisaho/GitHub/musubix5/.git",
       "planId": "parallel-plan:8fa7fe0c90237115e96998b02a8ce4f02f6d7c8d790c47c355d37d0f2e950cf1",
       "preparedOrder": 263
+    },
+    {
+      "gitCommonDirectory": "/home/nahisaho/GitHub/musubix5/.git",
+      "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+      "preparedOrder": 383
     }
   ],
   "attempts": [
@@ -4173,6 +4600,90 @@
           "batchTerminalOrder": 3067
         }
       ]
+    },
+    {
+      "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+      "assignmentId": "release-manifest-filter",
+      "attempt": 1,
+      "state": "running",
+      "order": 384,
+      "branch": "musubix5/CHANGE-0017/parallel-plan-1edba91e857fa502a3e3/release-manifest-filter/attempt-1",
+      "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-1edba91e857fa502a3e3/assignments/release-manifest-filter/attempt-1",
+      "startCommit": "8ef9cbfd8f27363dd1cc2bf6e26047a47a968486"
+    },
+    {
+      "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+      "assignmentId": "parallel-baseline-cli",
+      "attempt": 1,
+      "state": "running",
+      "order": 385,
+      "branch": "musubix5/CHANGE-0017/parallel-plan-1edba91e857fa502a3e3/parallel-baseline-cli/attempt-1",
+      "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-1edba91e857fa502a3e3/assignments/parallel-baseline-cli/attempt-1",
+      "startCommit": "8ef9cbfd8f27363dd1cc2bf6e26047a47a968486"
+    },
+    {
+      "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+      "assignmentId": "workflow-verify-current",
+      "attempt": 1,
+      "state": "running",
+      "order": 386,
+      "branch": "musubix5/CHANGE-0017/parallel-plan-1edba91e857fa502a3e3/workflow-verify-current/attempt-1",
+      "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-1edba91e857fa502a3e3/assignments/workflow-verify-current/attempt-1",
+      "startCommit": "8ef9cbfd8f27363dd1cc2bf6e26047a47a968486"
+    },
+    {
+      "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+      "assignmentId": "codegraph-benchmark",
+      "attempt": 1,
+      "state": "running",
+      "order": 387,
+      "branch": "musubix5/CHANGE-0017/parallel-plan-1edba91e857fa502a3e3/codegraph-benchmark/attempt-1",
+      "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-1edba91e857fa502a3e3/assignments/codegraph-benchmark/attempt-1",
+      "startCommit": "8ef9cbfd8f27363dd1cc2bf6e26047a47a968486"
+    },
+    {
+      "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+      "assignmentId": "codegraph-benchmark",
+      "attempt": 1,
+      "state": "failed",
+      "order": 388,
+      "branch": "musubix5/CHANGE-0017/parallel-plan-1edba91e857fa502a3e3/codegraph-benchmark/attempt-1",
+      "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-1edba91e857fa502a3e3/assignments/codegraph-benchmark/attempt-1",
+      "startCommit": "8ef9cbfd8f27363dd1cc2bf6e26047a47a968486",
+      "reason": "Focused codegraph-tests command cannot execute the assigned test: scripts/run-codegraph-tests.mjs rejects TEST-M5-GRAPH-BENCHMARK-DETERMINISM-001 before producing the required structured report, but that runner is outside ownedPaths. Red evidence is therefore invalid and the required implementation phase cannot be recorded."
+    },
+    {
+      "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+      "assignmentId": "release-manifest-filter",
+      "attempt": 1,
+      "state": "failed",
+      "order": 389,
+      "branch": "musubix5/CHANGE-0017/parallel-plan-1edba91e857fa502a3e3/release-manifest-filter/attempt-1",
+      "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-1edba91e857fa502a3e3/assignments/release-manifest-filter/attempt-1",
+      "startCommit": "8ef9cbfd8f27363dd1cc2bf6e26047a47a968486",
+      "reason": "PARALLEL_RESULT_UNVERIFIED: focused test argument is treated as a Vitest file filter, so TEST-M5-APPROVAL-RELEASE-RESULT-CHANGE-001 reports no test files despite the focused TDD Green passing"
+    },
+    {
+      "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+      "assignmentId": "parallel-baseline-cli",
+      "attempt": 1,
+      "state": "failed",
+      "order": 390,
+      "branch": "musubix5/CHANGE-0017/parallel-plan-1edba91e857fa502a3e3/parallel-baseline-cli/attempt-1",
+      "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-1edba91e857fa502a3e3/assignments/parallel-baseline-cli/attempt-1",
+      "startCommit": "8ef9cbfd8f27363dd1cc2bf6e26047a47a968486",
+      "reason": "Assignment manifest omitted the required CHANGE batch Red/Green records; implementation command fails because REQ-M5-WORKTREE-004 has no preceding batch Red, and result rejects the otherwise passing committed work as having no complete Red/Implementation/Green cycle."
+    },
+    {
+      "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+      "assignmentId": "workflow-verify-current",
+      "attempt": 1,
+      "state": "failed",
+      "order": 391,
+      "branch": "musubix5/CHANGE-0017/parallel-plan-1edba91e857fa502a3e3/workflow-verify-current/attempt-1",
+      "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-1edba91e857fa502a3e3/assignments/workflow-verify-current/attempt-1",
+      "startCommit": "8ef9cbfd8f27363dd1cc2bf6e26047a47a968486",
+      "reason": "Focused command is invalid: configured test command expands to npx vitest run TEST-M5-WORKFLOW-CURRENT-001, which treats the test ID as a file filter and reports no test files; the manifest-owned test path is tests/workflow-current-verification.test.ts."
     }
   ],
   "retries": [
@@ -7007,9 +7518,9 @@
       ]
     },
     {
-      "planId": "parallel-plan:8fa7fe0c90237115e96998b02a8ce4f02f6d7c8d790c47c355d37d0f2e950cf1",
-      "order": 381,
       "maintenance": false,
+      "order": 381,
+      "planId": "parallel-plan:8fa7fe0c90237115e96998b02a8ce4f02f6d7c8d790c47c355d37d0f2e950cf1",
       "removed": [
         "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0016/parallel/parallel-plan-8fa7fe0c90237115e969/assignments/issue-42-completed-context/attempt-4",
         "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0016/parallel/parallel-plan-8fa7fe0c90237115e969/assignments/issue-43-candidate-ref/attempt-9"
