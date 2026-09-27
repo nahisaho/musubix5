@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "nextOrder": 394,
+  "nextOrder": 396,
   "plans": [
     {
       "assignments": [
@@ -7558,9 +7558,9 @@
       ]
     },
     {
-      "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
-      "order": 393,
       "maintenance": true,
+      "order": 393,
+      "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
       "removed": [],
       "retained": [
         {
@@ -7572,6 +7572,32 @@
           "reason": "dirty"
         }
       ]
+    },
+    {
+      "maintenance": true,
+      "order": 394,
+      "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+      "removed": [],
+      "retained": [
+        {
+          "path": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-1edba91e857fa502a3e3/assignments/parallel-baseline-cli/attempt-1",
+          "reason": "dirty"
+        },
+        {
+          "path": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-1edba91e857fa502a3e3/assignments/workflow-verify-current/attempt-1",
+          "reason": "dirty"
+        }
+      ]
+    },
+    {
+      "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+      "order": 395,
+      "maintenance": true,
+      "removed": [
+        "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-1edba91e857fa502a3e3/assignments/parallel-baseline-cli/attempt-1",
+        "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-1edba91e857fa502a3e3/assignments/workflow-verify-current/attempt-1"
+      ],
+      "retained": []
     }
   ]
 }
