@@ -29,9 +29,17 @@ Requirements: REQ-M5-GRAPH-002
 ADRs: ADR-0016
 Depends-On: DES-M5-GRAPH-001
 
+## DES-M5-GRAPH-004: Isolated benchmark runner and accuracy oracle
+Responsibilities: Generate bounded deterministic scale fixtures, load redistribution-cleared labeled fixtures, execute CodeGraph scenarios in isolated temporary roots, collect deterministic operation and accuracy counts separately from observational runtime and memory values, compare current results with reviewed thresholds and baselines, and emit one machine-readable report without touching ordinary graph or quality state.
+Interfaces: `npm run benchmark:codegraph`; `runCodeGraphBenchmark(options): CodeGraphBenchmarkReport`; `generateScaleFixture({ files, internalEdges, seed })`; `loadLabeledCorpus(root)`; `scorePredictions(expected, actual): { truePositive, falsePositive, falseNegative, ambiguous, unresolvedByReason, precision, recall, f1 }`; `compareBenchmark(current, baseline, thresholds): BenchmarkComparison`; committed `benchmarks/codegraph/baseline.json`, `benchmarks/codegraph/thresholds.json`, `benchmarks/codegraph/README.md`, and labeled fixture manifests; ignored `.musubix/cache/benchmarks/codegraph/latest.json`; authoritative tests `TEST-M5-GRAPH-BENCHMARK-DETERMINISM-001`, `TEST-M5-GRAPH-BENCHMARK-ACCURACY-001`, and `TEST-M5-GRAPH-BENCHMARK-ISOLATION-001`.
+Constraints: Generated fixtures use fixed seeds and exact 25/40, 250/500, and 1000/2000 file/internal-edge scales; every scenario receives a fresh temporary repository root and an explicit counter sink, and normal `indexGraph` persistence targets only that temporary root. Accuracy scoring follows REQ-M5-GRAPH-003 integer accounting before derived decimal values, uses a canonical zero-denominator result, and sorts every fixture, scenario, metric, and unresolved-reason key before serialization. Baseline and threshold schemas are versioned and validate completely before any scenario runs; malformed inputs and any before/after isolation mismatch return exit 2 `CODEGRAPH_BENCHMARK_INVALID` with structured cause `schema` or `isolation`, threshold failures return exit 1 `CODEGRAPH_BENCHMARK_REGRESSION`, and partial results never overwrite the last complete output. Wall-clock, RSS, and heap fields are excluded from deterministic identity and threshold status. The runner snapshots ordinary graph-cache, quality-evidence, tracked, and non-ignored-untracked identities before execution and verifies them afterward. Default test and ordinary gate command lists do not invoke the benchmark.
+Requirements: REQ-M5-COMPAT-013 REQ-M5-GRAPH-003
+ADRs: ADR-0016 ADR-0034
+Depends-On: DES-M5-GRAPH-001 DES-M5-GRAPH-003
+
 ## Verification and handoff
 
-Implementation proceeds in two requirement batches:
+Implementation proceeds in three requirement batches:
 
 1. `REQ-M5-GRAPH-001`: write the incremental-index test and structured report,
    record Red, implement the planner/analysis-unit/cache path, record Green, and
@@ -40,7 +48,11 @@ Implementation proceeds in two requirement batches:
 2. `REQ-M5-GRAPH-002`: write the traversal operation-count test and report,
    record Red, introduce adjacency indexes and the scan primitive, record Green,
    then run cycle and architecture positive-control regressions.
+3. `REQ-M5-GRAPH-003`: write deterministic report, accuracy scoring, and
+   repository-isolation tests; record Red; add fixtures, runner, reviewed
+   baseline/threshold schemas, and documentation; record Green; then run the
+   dedicated benchmark outside the default gate.
 
-After both batches, run full typecheck, build, tests, strict trace, graph gate,
+After all three batches, run full typecheck, build, tests, strict trace, graph gate,
 changed quality gate, and status. Cache-format and output compatibility are
 reviewed against both plain full indexing and changed refresh.

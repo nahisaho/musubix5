@@ -3986,315 +3986,40 @@
       "phase": "complete",
       "status": "completed",
       "recordedAt": "2026-09-27T03:03:05.735Z"
+    },
+    {
+      "skill": "sdd-requirements",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0017",
+      "generation": 2,
+      "requirementIds": [
+        "REQ-M5-APPROVAL-007",
+        "REQ-M5-COMPAT-013",
+        "REQ-M5-EVIDENCE-007",
+        "REQ-M5-GRAPH-003",
+        "REQ-M5-WORKTREE-004"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-09-27T03:49:34.564Z"
+    },
+    {
+      "skill": "sdd-design",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0017",
+      "generation": 2,
+      "requirementIds": [
+        "REQ-M5-APPROVAL-007",
+        "REQ-M5-COMPAT-013",
+        "REQ-M5-EVIDENCE-007",
+        "REQ-M5-GRAPH-003",
+        "REQ-M5-WORKTREE-004"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-09-27T04:16:05.807Z"
     }
-  ],
-  "verification": {
-    "mode": "compatible",
-    "sourceSha256": "8cdccb494ac51553acf08604ac282d822ece83398b39868b041a1f4b30fccaec",
-    "eventsSha256": "633d11dcd0c9ff7f4670e0167f682afcee509526117efb88133598181a4ce7b0",
-    "verifiedAt": "2026-09-27T03:07:31.482Z",
-    "invocations": [
-      {
-        "skill": "sdd-change",
-        "toolCallId": "call_10icpkZ4hGBPP9HylEgoXcI7",
-        "invokedAt": "2026-09-26T17:26:08.948Z",
-        "completedAt": "2026-09-26T17:26:08.956Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-integration-verification",
-        "toolCallId": "call_BUeOlfufffXtpivJIonC0oPv",
-        "invokedAt": "2026-09-26T17:29:37.010Z",
-        "completedAt": "2026-09-26T17:29:37.017Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-agent-assignment",
-        "toolCallId": "call_F3XqkcBS5xPZuysJRaxGzG5K",
-        "invokedAt": "2026-09-26T17:31:10.441Z",
-        "completedAt": "2026-09-26T17:31:10.451Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-agent-assignment",
-        "toolCallId": "call_DwSzcpAInGW1pQFvxj05uQDu",
-        "invokedAt": "2026-09-26T17:32:00.686Z",
-        "completedAt": "2026-09-26T17:32:00.687Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-agent-assignment",
-        "toolCallId": "call_1hgU4gqsOqoUEeXxzTp0Ames",
-        "invokedAt": "2026-09-26T17:35:03.260Z",
-        "completedAt": "2026-09-26T17:35:03.261Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-agent-assignment",
-        "toolCallId": "call_osEvXwbUb3B2GLdZjU5CCSnW",
-        "invokedAt": "2026-09-26T17:54:16.481Z",
-        "completedAt": "2026-09-26T17:54:16.482Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-agent-assignment",
-        "toolCallId": "call_9G9LgNJ3Gi5FhUvMASBB4ZeY",
-        "invokedAt": "2026-09-26T18:14:06.263Z",
-        "completedAt": "2026-09-26T18:14:06.264Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-agent-assignment",
-        "toolCallId": "call_zNd6SxsUZM6UX60ecWdYpfYN",
-        "invokedAt": "2026-09-26T18:32:16.278Z",
-        "completedAt": "2026-09-26T18:32:16.280Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-agent-assignment",
-        "toolCallId": "call_PiYLedgbAqArcm7xXbGXG17l",
-        "invokedAt": "2026-09-26T18:48:21.482Z",
-        "completedAt": "2026-09-26T18:48:21.483Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-quality",
-        "toolCallId": "call_I3roVGlRwkw5K2wN1hM633JL",
-        "invokedAt": "2026-09-26T19:06:21.915Z",
-        "completedAt": "2026-09-26T19:06:21.924Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-issue-report",
-        "toolCallId": "call_YY37Q9wsiaQmOoVyZuJumoi9",
-        "invokedAt": "2026-09-26T19:24:36.494Z",
-        "completedAt": "2026-09-26T19:24:36.505Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-change",
-        "toolCallId": "call_yDJutcHhQAad9H7FtFq92wqA",
-        "invokedAt": "2026-09-26T19:47:19.784Z",
-        "completedAt": "2026-09-26T19:47:19.807Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-issue-report",
-        "toolCallId": "call_tTwmCtahZ8jcw88auYUoQdS3",
-        "invokedAt": "2026-09-26T21:41:49.388Z",
-        "completedAt": "2026-09-26T21:41:49.415Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-knowledge",
-        "toolCallId": "call_Et2py3HI3ue4yo5uTvnds0a7",
-        "invokedAt": "2026-09-26T21:57:33.243Z",
-        "completedAt": "2026-09-26T21:57:33.260Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-change",
-        "toolCallId": "call_ni0lsxxkUAqhD7jC3C7yE7GW",
-        "invokedAt": "2026-09-26T22:12:42.695Z",
-        "completedAt": "2026-09-26T22:12:42.709Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-requirements",
-        "toolCallId": "call_pnrve5LE9A5ovV8goKQAuqpr",
-        "invokedAt": "2026-09-26T22:13:27.444Z",
-        "completedAt": "2026-09-26T22:13:27.458Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-issue-report",
-        "toolCallId": "call_8aVlJWrj66u9CqOP640PqSWH",
-        "invokedAt": "2026-09-26T22:16:34.094Z",
-        "completedAt": "2026-09-26T22:16:34.103Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-design",
-        "toolCallId": "call_qCZMLZjqFmd1ZaGZ9q9QwtqX",
-        "invokedAt": "2026-09-26T22:25:30.358Z",
-        "completedAt": "2026-09-26T22:25:30.378Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-implementation",
-        "toolCallId": "call_Tw6QhB68uGHX1VwVLfCvHhyA",
-        "invokedAt": "2026-09-26T22:47:34.929Z",
-        "completedAt": "2026-09-26T22:47:34.946Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-parallel-dispatch",
-        "toolCallId": "call_TJuKcP87PJG2ysidpJD1oACz",
-        "invokedAt": "2026-09-26T22:48:39.186Z",
-        "completedAt": "2026-09-26T22:48:39.207Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-parallel-dispatch",
-        "toolCallId": "call_4GP2i9rGldkplJz5dJXp3Z8A",
-        "invokedAt": "2026-09-26T22:52:09.625Z",
-        "completedAt": "2026-09-26T22:52:09.642Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-agent-assignment",
-        "toolCallId": "call_LDTgsTWW6jkeHR5hYxJ3a8nz",
-        "invokedAt": "2026-09-26T22:54:22.258Z",
-        "completedAt": "2026-09-26T22:54:22.260Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-agent-assignment",
-        "toolCallId": "call_4EqrlDm2iJ3K3KaaKix8PFCm",
-        "invokedAt": "2026-09-26T22:54:22.555Z",
-        "completedAt": "2026-09-26T22:54:22.557Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-issue-report",
-        "toolCallId": "call_MP8rjADMPzUfBQ2iP32UhWrH",
-        "invokedAt": "2026-09-26T22:55:04.387Z",
-        "completedAt": "2026-09-26T22:55:04.419Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-agent-assignment",
-        "toolCallId": "call_ZmXLGnhkuHSJaQmKTsNFrEvj",
-        "invokedAt": "2026-09-26T23:05:15.979Z",
-        "completedAt": "2026-09-26T23:05:15.980Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-integration-verification",
-        "toolCallId": "call_rzbpfI47sgjFsi4b3luEKims",
-        "invokedAt": "2026-09-26T23:09:30.397Z",
-        "completedAt": "2026-09-26T23:09:30.417Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-implementation",
-        "toolCallId": "call_e1KGDDb0Ssk4x8Uena22VQ5X",
-        "invokedAt": "2026-09-26T23:09:51.430Z",
-        "completedAt": "2026-09-26T23:09:51.440Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-agent-assignment",
-        "toolCallId": "call_jt3YTNVwgXMYrAszySfYVZFd",
-        "invokedAt": "2026-09-26T23:17:01.531Z",
-        "completedAt": "2026-09-26T23:17:01.532Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-agent-assignment",
-        "toolCallId": "call_7kakaq2ciAWEae7a7a23s7Sy",
-        "invokedAt": "2026-09-26T23:17:11.663Z",
-        "completedAt": "2026-09-26T23:17:11.664Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-agent-assignment",
-        "toolCallId": "call_oJ4c0SQWpN8qmAuhTo3ZWnsi",
-        "invokedAt": "2026-09-26T23:22:07.323Z",
-        "completedAt": "2026-09-26T23:22:07.326Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-agent-assignment",
-        "toolCallId": "call_Hz2iSNlo9sLQY1JoYB7kDX1M",
-        "invokedAt": "2026-09-26T23:29:57.320Z",
-        "completedAt": "2026-09-26T23:29:57.321Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-agent-assignment",
-        "toolCallId": "call_uQYNANTqCIUCTGCMO9WjgbUA",
-        "invokedAt": "2026-09-26T23:33:42.965Z",
-        "completedAt": "2026-09-26T23:33:42.967Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-agent-assignment",
-        "toolCallId": "call_TxQaDm4sUpimzf4zXVD2ivtL",
-        "invokedAt": "2026-09-26T23:39:48.987Z",
-        "completedAt": "2026-09-26T23:39:48.989Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-agent-assignment",
-        "toolCallId": "call_xHe9iJxu2726Xjd0azP3hfOR",
-        "invokedAt": "2026-09-26T23:43:30.122Z",
-        "completedAt": "2026-09-26T23:43:30.123Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-agent-assignment",
-        "toolCallId": "call_84BI5wpx1Rxd1Tobg7AHdHxO",
-        "invokedAt": "2026-09-26T23:50:31.494Z",
-        "completedAt": "2026-09-26T23:50:31.495Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-agent-assignment",
-        "toolCallId": "call_O07b4yWl3LOcKpT7O3RsKun1",
-        "invokedAt": "2026-09-26T23:55:58.135Z",
-        "completedAt": "2026-09-26T23:55:58.156Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-agent-assignment",
-        "toolCallId": "call_BwxaL2fYRdSMdQatqcQw52RZ",
-        "invokedAt": "2026-09-27T00:01:48.781Z",
-        "completedAt": "2026-09-27T00:01:48.782Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-integration-verification",
-        "toolCallId": "call_pm0Ko1corbtZSSnPYGo7Trf7",
-        "invokedAt": "2026-09-27T00:10:53.431Z",
-        "completedAt": "2026-09-27T00:10:53.439Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-agent-assignment",
-        "toolCallId": "call_XNjzteKiVGCvR0Einz388JvO",
-        "invokedAt": "2026-09-27T00:25:03.248Z",
-        "completedAt": "2026-09-27T00:25:03.249Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-agent-assignment",
-        "toolCallId": "call_D3N5OrvqTxRCcnVnGug3mf9U",
-        "invokedAt": "2026-09-27T00:41:28.199Z",
-        "completedAt": "2026-09-27T00:41:28.200Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-quality",
-        "toolCallId": "call_gaYdxMeBnljJ0wOH2xHxmzrW",
-        "invokedAt": "2026-09-27T01:00:12.866Z",
-        "completedAt": "2026-09-27T01:00:12.884Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-change",
-        "toolCallId": "call_wSgoGcekERGH5isPqepmB5ot",
-        "invokedAt": "2026-09-27T01:47:29.380Z",
-        "completedAt": "2026-09-27T01:47:29.395Z",
-        "status": "completed"
-      },
-      {
-        "skill": "sdd-issue-report",
-        "toolCallId": "call_LotRLIsG84A0SyxOohFK2l4q",
-        "invokedAt": "2026-09-27T02:51:18.887Z",
-        "completedAt": "2026-09-27T02:51:18.896Z",
-        "status": "completed"
-      }
-    ]
-  }
+  ]
 }
