@@ -81,8 +81,23 @@ surfaces.
 - Candidate snapshot `snapshot-000000000553`, its three-platform gate set, and
   the preceding quality report are historical evidence for candidate
   `0e4b3e30ba0ef2e3e6e8203f9d057dcb162858cc`; the release review corrections
-  supersede that candidate, so new quality, snapshot, and signed gates are
-  required before release approval.
+  superseded that candidate and therefore required replacement quality,
+  snapshot, and signed gates before release approval.
+- Snapshot `snapshot-000000000553` was tombstoned at journal order 557. Its
+  replacement, `snapshot-000000000558`, binds candidate
+  `12bb96d97cb016e11d65e4a71927964f681fd1d2` to artifact manifest digest
+  `7bcb113fae66033ee2c43c3bfcba326d79ca4c22507ef401376d6ff05db256c2`.
+- GitHub Actions run `36288161654` passed the Ubuntu, Windows, and macOS Node 24
+  jobs for that replacement candidate. All three OIDC-signed envelopes use gate
+  input fingerprint
+  `dbec63e4615c4a5011ed0a816eed7aaa816b9ab62df704b0aa9ffd68cc8573dc`,
+  were ingested from that run only, and validate without diagnostics. Downloaded
+  envelopes are run-local staging; tracked gate records and journal orders
+  559-561 preserve the accepted evidence.
+- Repository status may report the cached quality projection as stale after the
+  snapshot tombstone, replacement snapshot, and gate-ingestion journals. The
+  candidate-bound snapshot projection remains current and candidate-gate
+  validation passes; release approval recomputes the gate against this evidence.
 
 ## Residual risks
 
