@@ -1,16 +1,16 @@
 {
   "schemaVersion": 1,
-  "runId": "700029f9-ef3a-43f0-8567-87b6344be045",
-  "generatedAt": "2026-09-26T21:44:03.956Z",
-  "formalEvidenceSha256": "98d6e622a9b2b3cc825c25f296e410d517f84fbf1d072fc850cceb4603042d12",
-  "traceEvidenceSha256": "9cbc81abf2b1b2f60d275b86c133d14dff079af2ef87e157470e5b859113d5f7",
+  "runId": "eefa32fd-e0ba-4fb6-b3a9-e389aecaa4cc",
+  "generatedAt": "2026-09-27T01:07:42.796Z",
+  "formalEvidenceSha256": "a6a1db5d3734ec6763128bce28667e476a4f3ac07cfeae5c4bba31ffd628495f",
+  "traceEvidenceSha256": "75717e1bd87220083f5b30843ceff380c72eea1a0e0e7a9f3c2f245082c4db0d",
   "entries": [
     {
       "requirementId": "REQ-M5-WAVE1-PUBLISH-001",
       "requirementPath": ".musubix/features/npm-registry-deadline/requirements.md",
       "formalSha256": "8e3314e02556192185065a6c173ff369f3a7de031ba31b7ea192f8a0d43f1038",
       "modelSha256": "01963e4d45fee6d133e42390773ada3a6f6ec14b3e9a48481ea32c04f8dba2de",
-      "traceSha256": "9cbc81abf2b1b2f60d275b86c133d14dff079af2ef87e157470e5b859113d5f7",
+      "traceSha256": "75717e1bd87220083f5b30843ceff380c72eea1a0e0e7a9f3c2f245082c4db0d",
       "tests": [
         {
           "testId": "TEST-M5-WAVE1-PUBLISH-DEADLINE-001",
@@ -19,8 +19,47 @@
           "commandName": "test",
           "commandSha256": "2e95afcd80a2d99ff4b45c74665fb5f7386c853109404ba4811a97704839e08e",
           "reportPath": ".musubix/evidence/native/test/aggregate.json",
-          "reportSha256": "d790edfa6fd9bfd59e3fd9593af1f6d79941739536598019064423a42302e3c7",
-          "provenanceSha256": "54fc13e1cd4492095290db2fc3c2552164b17367de6814c83f57aaffd0b5a827"
+          "reportSha256": "eae0bf481ae29278d1e072b3045a784115b9a704e7da65577464f0c11797e709",
+          "provenanceSha256": "c29fba78172b551da46426f714ae21fe0aa0a9ecbd03798413746eece63886ae"
+        }
+      ]
+    },
+    {
+      "requirementId": "REQ-M5-WAVE0-COMPLETION-001",
+      "requirementPath": ".musubix/features/wave0-release-operations/requirements.md",
+      "formalSha256": "ebce14a00e4859a071eb63e095b722ea32e14989219105944c9af53c6a6716d4",
+      "modelSha256": "6f2ee04f16b80cf0391ab11aa5dce02746423cd0644e2d5ddec099413d13a022",
+      "traceSha256": "75717e1bd87220083f5b30843ceff380c72eea1a0e0e7a9f3c2f245082c4db0d",
+      "tests": [
+        {
+          "testId": "TEST-M5-WAVE0-COMPLETION-001",
+          "testPath": "tests/active-change-context.test.ts",
+          "testSha256": "40f02a949441fe637d2747977996a489db70015e4f527c78eb45de7ee419cda3",
+          "commandName": "test",
+          "commandSha256": "2e95afcd80a2d99ff4b45c74665fb5f7386c853109404ba4811a97704839e08e",
+          "reportPath": ".musubix/evidence/native/test/aggregate.json",
+          "reportSha256": "eae0bf481ae29278d1e072b3045a784115b9a704e7da65577464f0c11797e709",
+          "provenanceSha256": "c7b19157f26e27cbd7bf875b78ce2212f4ecbc30e7310b1c97dc21edca8a2c4d"
+        },
+        {
+          "testId": "TEST-M5-WAVE0-COMPLETION-002",
+          "testPath": "tests/active-change-context.test.ts",
+          "testSha256": "40f02a949441fe637d2747977996a489db70015e4f527c78eb45de7ee419cda3",
+          "commandName": "test",
+          "commandSha256": "2e95afcd80a2d99ff4b45c74665fb5f7386c853109404ba4811a97704839e08e",
+          "reportPath": ".musubix/evidence/native/test/aggregate.json",
+          "reportSha256": "eae0bf481ae29278d1e072b3045a784115b9a704e7da65577464f0c11797e709",
+          "provenanceSha256": "24a75eccdc68237530fcc3c8e2ba96d6bf04ee2fb6c8d6ba5cc48c6a6d67ea31"
+        },
+        {
+          "testId": "TEST-M5-WAVE0-COMPLETION-003",
+          "testPath": "tests/workflow-generation-reconciliation.test.ts",
+          "testSha256": "bfb96a739cbafac14dd6cb32e7c105533b32449e2bc0aa9f3ce8028b3e65d934",
+          "commandName": "test",
+          "commandSha256": "2e95afcd80a2d99ff4b45c74665fb5f7386c853109404ba4811a97704839e08e",
+          "reportPath": ".musubix/evidence/native/test/aggregate.json",
+          "reportSha256": "eae0bf481ae29278d1e072b3045a784115b9a704e7da65577464f0c11797e709",
+          "provenanceSha256": "76c32ec1758b60116f2ca157c4d1932e14e00291a0aa470f22fb84b67ba53c53"
         }
       ]
     }

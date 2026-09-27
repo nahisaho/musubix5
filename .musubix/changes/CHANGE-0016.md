@@ -60,3 +60,29 @@ surfaces.
   candidate commit.
 - Focused tests, typecheck, build, full tests, strict trace, graph gate,
   changed gate, and status pass after integration.
+
+## Integrated result
+
+- Parallel integration attempt 9 was verified and handed off at
+  `0ff0b331aa1f3b6cdd22e45fe58eeb33238c224e`.
+- The integrator-owned CLI projection and documentation were completed on the
+  candidate branch with a Red-Green cycle for
+  `TEST-M5-WAVE0-CANDIDATE-DISPATCH-CLI-001`.
+- The focused Wave 0 regression set passed 42 tests. The subsequent full
+  changed gate passed every non-approval check, including all seven configured
+  commands, strict trace, graph, workflow, TDD, and change-history checks.
+- Historical workflow waivers remain inactive (`workflowWaivers: []`). Their
+  six stale audit diagnostics remain visible and are not used to downgrade any
+  workflow error.
+
+## Residual risks
+
+- Strict verification of the sanitized transcript for Copilot session
+  `6371e116-6cba-4444-b5c7-90b0fab03829` remains blocked because the source
+  transcript has no terminal lifecycle event. No event was fabricated and
+  compatible reconciliation remains in effect.
+- Workspace baseline creation still lacks a public CLI entry point (#46).
+- Parallel integration currently allows plan-binding and provisioning mistakes
+  to force unnecessary leaf retries (#47).
+- Failed or dirty parallel worktrees are retained by cleanup policy for audit
+  and require later explicit maintenance.

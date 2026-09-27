@@ -3956,13 +3956,28 @@
       "phase": "complete",
       "status": "completed",
       "recordedAt": "2026-09-27T00:59:55.039Z"
+    },
+    {
+      "skill": "sdd-quality",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0016",
+      "generation": 1,
+      "requirementIds": [
+        "REQ-M5-WAVE0-CANDIDATE-REF-001",
+        "REQ-M5-WAVE0-COMPLETION-001",
+        "REQ-M5-WAVE0-HANDOFF-001"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-09-27T01:04:27.089Z"
     }
   ],
   "verification": {
     "mode": "compatible",
     "sourceSha256": "7cb33c9f257fa3ad5e937958f84bf46ea86ed8c8e334afdd45e6e637f5cd2b12",
-    "eventsSha256": "f459d750f45e1bdbf0688ddae30b6b4a82d7a75e532f85036ff44b2c973b53e6",
-    "verifiedAt": "2026-09-27T01:00:09.274Z",
+    "eventsSha256": "4e1867c3ac57a760abf4f76958f14940546ca143cf60aaa6b1258f9c22816af6",
+    "verifiedAt": "2026-09-27T01:04:28.367Z",
     "invocations": [
       {
         "skill": "sdd-change",
