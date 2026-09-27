@@ -469,6 +469,59 @@ describe('candidate snapshot lifecycle', () => {
   });
 
   /**
+   * @id TEST-M5-WAVE0-CANDIDATE-DISPATCH-CLI-001
+   * @verifies REQ-M5-WAVE0-CANDIDATE-REF-001
+   */
+  it('TEST-M5-WAVE0-CANDIDATE-DISPATCH-CLI-001 emits inert candidate ref guidance', async () => {
+    const root = initializeRepository();
+    mkdirSync(join(root, '.musubix'), { recursive: true });
+    writeFileSync(join(root, '.musubix', 'config.json'), JSON.stringify({
+      schemaVersion: 1,
+      approval: { mode: 'required', domains: [] },
+    }));
+    writeActiveChange(root);
+    const { persistCandidateSnapshot } =
+      await import('../packages/analysis/src/workspace-manager.js');
+    const created = await persistCandidateSnapshot(root, 'CHANGE-0007', {
+      requireApprovals: async () => undefined,
+      requireQuality: async () => undefined,
+    });
+    const stdout = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    const { createProgram } = await import('../packages/cli/src/main.js');
+
+    await createProgram().parseAsync([
+      'node',
+      'musubix5',
+      'candidate-gate',
+      'context',
+      'CHANGE-0007',
+      '--generation',
+      '4',
+      '--commit',
+      created.commit,
+      '--root',
+      root,
+      '--json',
+    ]);
+
+    expect(JSON.parse(String(stdout.mock.calls[0]?.[0]))).toMatchObject({
+      changeId: 'CHANGE-0007',
+      generation: 4,
+      candidateCommit: created.commit,
+      dispatch: {
+        candidateBranch: `candidate/change-0007-g4-${created.commit.slice(0, 12)}`,
+        candidateFullRef: `refs/heads/candidate/change-0007-g4-${created.commit.slice(0, 12)}`,
+        createRemote: {
+          executable: 'git',
+          args: expect.arrayContaining([
+            `--force-with-lease=refs/heads/candidate/change-0007-g4-${created.commit.slice(0, 12)}:`,
+          ]),
+        },
+      },
+    });
+  });
+
+  /**
    * @id TEST-M5-RELEASE-DELETED-SNAPSHOT-001
    * @verifies REQ-M5-RELEASE-002 REQ-M5-WORKTREE-007
    */

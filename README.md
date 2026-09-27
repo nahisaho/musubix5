@@ -706,6 +706,13 @@ download all three opaque artifacts, ingest them with
 `musubix5 candidate-gate validate`. Ingestion rejects unsigned, stale, wrong-candidate, same-batch duplicate-job,
 or reused-run artifacts; validation rejects any accepted record whose gate
 reported a tracked-tree change.
+The context command also returns inert `{ executable, args }` descriptors for
+inspecting, creating, dispatching, and deleting a deterministic candidate
+branch. Review and execute those commands explicitly: the CLI never pushes,
+dispatches, moves, or deletes the ref automatically. Creation uses an
+absent-ref lease, cleanup uses the candidate commit as its compare-and-swap
+value, and `.github/workflows/candidate-gate.yml` must exist on both the default
+branch and candidate commit.
 Dispatch with a branch or tag ref whose tip is exactly the candidate commit;
 the verified `workflow_sha` claim is required to match that commit. Moving the
 ref after candidate selection requires a new candidate or restoring an

@@ -654,6 +654,12 @@ bindingされた入力を準備し、その候補commitでworkflowを実行し�
 `musubix5 candidate-gate validate`で完全性を確認します。取り込みは署名なし、
 stale、候補不一致、同一batch内job重複、CI run再利用を拒否し、検証はtracked
 tree変更を報告したrecordを拒否します。
+context commandは、決定的なcandidate branchを検査・作成・dispatch・削除するための
+副作用を持たない`{ executable, args }` descriptorも返します。CLIがrefを自動的に
+push、dispatch、移動、削除することはないため、各commandを確認して明示的に実行します。
+作成時はabsent-ref lease、cleanup時はcandidate commitをcompare-and-swap値として使用し、
+`.github/workflows/candidate-gate.yml`はdefault branchとcandidate commitの双方に
+存在する必要があります。
 workflowはtipがcandidate commitそのものであるbranchまたはtag refを指定して
 dispatchします。検証済み`workflow_sha` claimもcandidate commitとの一致が必須です。
 候補選定後にrefを進めた場合は、新しいcandidateを作るか、明示的に認可された不変refを

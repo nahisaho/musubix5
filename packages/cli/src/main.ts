@@ -26,7 +26,8 @@ import {
   recordChangeWaiver, recordWorkflowWaiver, recordAllWorkflowWaivers, recordWorkflowDeclarationCorrection,
   bootstrapRun, bootstrapResume, bootstrapStatus, executeBootstrapFileOperation,
   type BootstrapAuthorityManifest,
-  candidateGateContext, candidateMatrixJobs, ingestCandidateGateEnvelopes, loadCandidateGateResults,
+  candidateDispatchGuidance, candidateGateContext, candidateMatrixJobs,
+  ingestCandidateGateEnvelopes, loadCandidateGateResults,
   validateCandidateGateSet, type CandidateGateEnvelope,
   authorizeReleaseOperation, releaseOperationStatus, validateReleaseOperationAuthorization,
   type ReleaseOperationScope,
@@ -39,7 +40,7 @@ import {
   currentChangeFingerprints, deleteCandidateSnapshot, listCandidateSnapshotRecords, loadChangeEvidence,
   createRegisteredCandidateWorkspace, listRegisteredCandidateWorkspaces,
   persistCandidateSnapshot, showCandidateSnapshotRecord, showRegisteredCandidateWorkspace,
-  resolveChangeContext, appendJournalRecord, canonicalBytes, sha256,
+  resolveValidationChangeContext, appendJournalRecord, canonicalBytes, sha256,
   cleanupCandidate, cleanupCandidateIntegration,
   finalizeCandidateIntegration, loadIntegrationEvidenceContext, markCandidateReady,
   orchestrateCandidateIntegration, readCandidateRegistry, refreshCandidate, resumeCandidate,
@@ -491,12 +492,7 @@ async function publicCandidateSnapshotProjection(
   root: string,
   snapshot: CandidateSnapshotStructuralProjection,
 ) {
-  let context = null;
-  try {
-    context = await resolveChangeContext(root);
-  } catch {
-    context = null;
-  }
+  const context = await resolveValidationChangeContext(root);
   const current = !snapshot.legacy && !snapshot.deleted
     && context?.changeId === snapshot.changeId
     && context.generation === snapshot.generation;
@@ -1197,7 +1193,10 @@ export function createProgram(): Command {
         generation,
         options.commit,
       );
-      output(context, !!options.json);
+      output({
+        ...context,
+        dispatch: candidateDispatchGuidance(context),
+      }, !!options.json);
     });
   common(candidateGate.command('ingest <artifacts...>'))
     .action(async (artifacts: string[], options: { root: string; json?: boolean }) => {
