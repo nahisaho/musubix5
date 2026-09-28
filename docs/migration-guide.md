@@ -282,6 +282,18 @@ may execute in an assignment worktree while evidence is recorded at the
 control repository root through the added `tdd red`, `tdd green`, and
 `tdd refactor` workspace and parallel-provenance options.
 
+Result admission captures the complete NUL-delimited Git tree with a dedicated
+64 MiB byte limit and 30-second timeout. Overflow, Git failure, timeout, or an
+unterminated record fails closed with `PARALLEL_RESULT_UNVERIFIED`; no partial
+tree is admitted. The general runner's 1,000,000-character output cap is unchanged.
+
+Fresh verification and integration worktrees run only the immutable plan's
+`provisionCommandNames`, resolved against its approved policy. For projects
+requiring local npm dependencies, select `npm-ci` when creating the plan.
+Provisioning an assignment does not provision its detached verifier. An empty
+selection never implicitly runs an available policy command or copies dependencies;
+assignment retries preserve that selection.
+
 Integration records consumed assignment ranges as provisional provenance,
 runs the complete configured verification set in the integration worktree,
 and promotes provenance to verified only after every required check passes.

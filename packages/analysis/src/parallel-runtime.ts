@@ -1,6 +1,8 @@
+import { execFile } from 'node:child_process';
 import { mkdir, lstat, rm } from 'node:fs/promises';
 import { basename, dirname, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 import {
   buildAssignmentTddCommands,
   buildIntegrationProvenance,
@@ -51,6 +53,8 @@ const storePath = '.musubix/evidence/parallel.json';
 const requirementsApprovalPath = '.musubix/evidence/approvals/requirements.json';
 const designApprovalPath = '.musubix/evidence/approvals/design.json';
 const shaPattern = /^[a-f0-9]{40,64}$/i;
+const execFileAsync = promisify(execFile);
+const resultTreeMaxBytes = 64 * 1024 * 1024;
 
 interface ParallelPolicy {
   schemaVersion: 1;
@@ -1135,12 +1139,37 @@ async function runFocused(
   return outcomes;
 }
 
+/** @id CODE-M5-PARALLEL-RESULT-COMPLETE-TREE-001
+ * @implements REQ-M5-LIFECYCLE-006 REQ-M5-COMPAT-013
+ * @design DES-M5-004 DES-M5-PARALLEL-004 DES-M5-PARALLEL-005
+ */
 async function resultTreeEntries(
   root: string,
   head: string,
 ): Promise<Array<{ path: string; mode: string; type: string }>> {
-  const output = await gitRaw(root, ['ls-tree', '-r', '-z', head]);
-  return output.split('\0').filter(Boolean).map((entry) => {
+  // Unlike diagnostic tail capture, tree admission requires all bytes or failure.
+  let output: string;
+  try {
+    const result = await execFileAsync('git', ['ls-tree', '-r', '-z', head], {
+      cwd: root,
+      shell: false,
+      encoding: 'buffer',
+      maxBuffer: resultTreeMaxBytes,
+      timeout: 30_000,
+      killSignal: 'SIGKILL',
+    });
+    output = result.stdout.toString('utf8');
+  } catch (cause) {
+    domain('PARALLEL_RESULT_UNVERIFIED',
+      `cannot read complete result tree (limit ${resultTreeMaxBytes} bytes): ${
+        (cause instanceof Error ? cause.message : String(cause)).slice(-2_000)
+      }`);
+  }
+  if (output === '') return [];
+  if (!output.endsWith('\0')) {
+    domain('PARALLEL_RESULT_UNVERIFIED', 'result tree has an unterminated entry.');
+  }
+  return output.slice(0, -1).split('\0').map((entry) => {
     const match = /^(\d{6}) ([^ ]+) [a-f0-9]+\t([\s\S]+)$/.exec(entry);
     if (!match) domain('PARALLEL_RESULT_UNVERIFIED', `cannot parse result tree entry ${entry}.`);
     return { mode: match[1]!, type: match[2]!, path: portable(match[3]!) };

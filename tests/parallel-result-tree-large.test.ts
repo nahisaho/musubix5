@@ -1,0 +1,48 @@
+import { execFileSync } from 'node:child_process';
+import { expect, it, vi } from 'vitest';
+import * as parallel from '../packages/analysis/src/parallel.js';
+import * as runtime from '../packages/analysis/src/parallel-runtime.js';
+import { runProcess } from '../packages/analysis/src/process.js';
+import { commitAll, createParallelFixture, writeFixtureFile } from './fixtures/parallel-runtime-fixture.js';
+
+/** @id TEST-M5-PARALLEL-RESULT-LARGE-TREE-001
+ * @verifies REQ-M5-LIFECYCLE-006 REQ-M5-COMPAT-013
+ * @design DES-M5-004 DES-M5-PARALLEL-004 DES-M5-PARALLEL-005
+ */
+it('TEST-M5-PARALLEL-RESULT-LARGE-TREE-001 validates every entry in a real tree exceeding the process output cap', async () => {
+  const fixture = await createParallelFixture();
+  const validation = vi.spyOn(parallel, 'validateParallelResultEntries');
+  try {
+    for (let index = 0; index < 7_000; index += 1) {
+      writeFixtureFile(fixture.root, `archive/${String(index).padStart(5, '0')}-${'a'.repeat(120)}`, 'raw\n');
+    }
+    writeFixtureFile(fixture.root, 'archive/space tab\t雪\nfile', 'utf8\n');
+    commitAll(fixture.root, 'large immutable tree fixture');
+    const plan = await runtime.createParallelPlan(fixture.root, fixture.planFile);
+    await runtime.prepareParallelPlanRuntime(fixture.root, plan.planId);
+    const instruction = await runtime.issueParallelAssignmentInstruction(fixture.root, plan.planId, 'core');
+    if (typeof instruction.worktree !== 'string') throw new Error('Missing fixture worktree');
+    writeFixtureFile(instruction.worktree, 'packages/core/value.txt', 'updated\n');
+    const head = commitAll(instruction.worktree, 'owned fixture change');
+    const raw = execFileSync('git', ['-C', fixture.root, 'ls-tree', '-r', '-z', head],
+      { maxBuffer: 16 * 1024 * 1024 });
+    expect(raw.byteLength).toBeGreaterThan(1_000_000);
+    const expected = raw.toString('utf8').split('\0').filter(Boolean).map((record) => {
+      const match = /^(\d{6}) ([^ ]+) [a-f0-9]+\t([\s\S]+)$/.exec(record);
+      if (!match) throw new Error('Invalid expected fixture tree');
+      return { mode: match[1], type: match[2], path: match[3] };
+    });
+    // This fixture deliberately has no TDD cycle: tree validation must finish
+    // completely before the independent cycle-completeness guard rejects it.
+    await expect(runtime.recordParallelAssignmentResult(fixture.root, plan.planId, 'core', 1, head))
+      .rejects.toThrow(/PARALLEL_RESULT_UNVERIFIED/);
+    expect(validation).toHaveBeenCalledExactlyOnceWith(expected);
+    const capped = await runProcess(process.execPath, ['-e', 'process.stdout.write("x".repeat(1100000))'],
+      { cwd: fixture.root, timeoutMs: 10_000 });
+    expect(capped.status).toBe('completed');
+    expect(capped.stdout).toHaveLength(1_000_000);
+  } finally {
+    validation.mockRestore();
+    fixture.dispose();
+  }
+}, 120_000);

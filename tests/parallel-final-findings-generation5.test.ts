@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -11,6 +12,7 @@ import { buildTrace } from '../packages/analysis/src/trace.js';
 import {
   commitAll,
   createParallelFixture,
+  fixtureParallelPolicy,
   git,
   readParallelStore,
   repositoryRoot,
@@ -57,16 +59,31 @@ function tddRunner(statuses: Array<'failed' | 'passed'>): Runner {
   };
 }
 
-async function createSplitRootLifecycleFixture(options: { stubCli?: boolean } = {}): Promise<{
+async function createSplitRootLifecycleFixture(options: {
+  stubCli?: boolean;
+  provisioning?: 'selected' | 'unselected';
+} = {}): Promise<{
   fixture: ParallelFixture;
   commandLog: string;
 }> {
   const fixture = await createParallelFixture({
     consumerDesignPath: '.musubix/features/consumer/design.md',
+    ...(options.provisioning ? {
+      policySource: `# Consumer parallel design\n\nParallel-Policy: ${JSON.stringify({
+        ...fixtureParallelPolicy,
+        provisionCommands: [{
+          name: 'npm-ci', command: 'npm', args: ['ci', '--ignore-scripts'], timeoutMs: 30_000,
+        }],
+        runnerEnvironment: {
+          ...fixtureParallelPolicy.runnerEnvironment,
+          fixed: { CI: 'true', npm_config_audit: 'false', npm_config_fund: 'false' },
+        },
+      })}\n`,
+    } : {}),
     plan: {
       schemaVersion: 1,
       concurrency: 1,
-      provisionCommandNames: [],
+      provisionCommandNames: options.provisioning === 'selected' ? ['npm-ci'] : [],
       integratorOwnedPaths: ['.musubix/**'],
       assignments: [{
         id: 'core',
@@ -125,6 +142,7 @@ async function createSplitRootLifecycleFixture(options: { stubCli?: boolean } = 
     '.musubix/evidence/tdd.json',
     '.musubix/cache/',
     '.test-results/',
+    'node_modules/',
     'split-root-command-log.jsonl',
     '',
   ].join('\n'));
@@ -167,12 +185,38 @@ async function createSplitRootLifecycleFixture(options: { stubCli?: boolean } = 
   ].join('\n'));
   writeFixtureFile(fixture.root, 'scripts/check-workspace.mjs', [
     "import { appendFileSync, readFileSync } from 'node:fs';",
+    "import { createRequire } from 'node:module';",
     "const [log] = process.argv.slice(2);",
     "const source = readFileSync('packages/core/value.ts', 'utf8');",
     "appendFileSync(log, `${JSON.stringify({ kind: 'required', cwd: process.cwd() })}\\n`);",
+    ...(options.provisioning ? [
+      "if (createRequire(import.meta.url)('fixture-local-dependency') !== 'installed') process.exit(2);",
+    ] : []),
     "process.exit(source.includes('green') ? 0 : 1);",
     '',
   ].join('\n'));
+  if (options.provisioning) {
+    writeFixtureFile(fixture.root, 'package.json', {
+      name: 'detached-provisioning-fixture', version: '1.0.0',
+      dependencies: { 'fixture-local-dependency': 'file:./dependency' },
+    });
+    writeFixtureFile(fixture.root, 'package-lock.json', {
+      name: 'detached-provisioning-fixture', version: '1.0.0', lockfileVersion: 3,
+      requires: true,
+      packages: {
+        '': {
+          name: 'detached-provisioning-fixture', version: '1.0.0',
+          dependencies: { 'fixture-local-dependency': 'file:./dependency' },
+        },
+        dependency: { name: 'fixture-local-dependency', version: '1.0.0' },
+        'node_modules/fixture-local-dependency': { resolved: 'dependency', link: true },
+      },
+    });
+    writeFixtureFile(fixture.root, 'dependency/package.json', {
+      name: 'fixture-local-dependency', version: '1.0.0', main: 'index.cjs',
+    });
+    writeFixtureFile(fixture.root, 'dependency/index.cjs', "module.exports = 'installed';\n");
+  }
   if (options.stubCli !== false) {
     writeFixtureFile(fixture.root, 'dist/packages/cli/src/main.js', [
       "import { appendFileSync, existsSync, readFileSync, realpathSync } from 'node:fs';",
@@ -344,6 +388,47 @@ async function completeAssignmentTdd(
 }
 
 describe('CHANGE-0003 generation 5 final parallel findings', () => {
+  /** @id TEST-M5-PARALLEL-DETACHED-PROVISION-SELECTION-001
+   * @verifies REQ-M5-LIFECYCLE-006 REQ-M5-COMPAT-013 REQ-M5-PARALLEL-007
+   * @design DES-M5-PARALLEL-002 DES-M5-PARALLEL-005
+   */
+  it('TEST-M5-PARALLEL-DETACHED-PROVISION-SELECTION-001 installs only plan-selected approved commands in a fresh verifier', async () => {
+    const runtime = await import('../packages/analysis/src/parallel-runtime.js');
+    for (const provisioning of ['unselected', 'selected'] as const) {
+      const { fixture, commandLog } = await createSplitRootLifecycleFixture({ provisioning });
+      const plan = await runtime.createParallelPlan(fixture.root, fixture.planFile);
+      await runtime.prepareParallelPlanRuntime(fixture.root, plan.planId);
+      const instruction = await runtime.issueParallelAssignmentInstruction(fixture.root, plan.planId, 'core');
+      if (typeof instruction.worktree !== 'string') throw new Error('Missing fixture worktree');
+      const head = await completeAssignmentTdd(fixture, plan.planId, instruction);
+      execFileSync('npm', ['ci', '--ignore-scripts'], {
+        cwd: instruction.worktree, timeout: 30_000,
+        env: { ...process.env, npm_config_audit: 'false', npm_config_fund: 'false' },
+      });
+      execFileSync(process.execPath, ['scripts/check-workspace.mjs', commandLog], {
+        cwd: instruction.worktree, timeout: 10_000,
+      });
+      const before = readParallelStore(fixture.root);
+      const result = runtime.recordParallelAssignmentResult(fixture.root, plan.planId, 'core', 1, head);
+      if (provisioning === 'unselected') {
+        await expect(result).rejects.toThrow(/PARALLEL_RESULT_UNVERIFIED:[\s\S]*Cannot find module 'fixture-local-dependency'/);
+        expect(readParallelStore(fixture.root)).toEqual(before);
+      } else {
+        await expect(result).resolves.toMatchObject({
+          attempt: { state: 'completed' },
+          provisioning: [{ command: 'npm', args: ['ci', '--ignore-scripts'], exitCode: 0 }],
+          focused: [{ exitCode: 0 }],
+        });
+      }
+      const log = readFileSync(commandLog, 'utf8').trim().split('\n').map((line: string) => JSON.parse(line));
+      expect(log).toHaveLength(2);
+      expect(log[0]).toMatchObject({ cwd: instruction.worktree });
+      expect(log[1]).toMatchObject({ kind: 'required', cwd: expect.not.stringMatching(/\/assignments\//) });
+      expect(log[1].cwd).not.toBe(fixture.root);
+      expect(git(instruction.worktree, ['rev-parse', 'HEAD'])).toBe(head);
+    }
+  }, 120_000);
+
   /** @id TEST-M5-PARALLEL-REAL-GATE-SUCCESS-001
    * @verifies REQ-M5-TDD-003 REQ-M5-PARALLEL-007 REQ-M5-PARALLEL-010 REQ-M5-TDD-CURRENCY-001
    */
