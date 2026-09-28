@@ -4625,6 +4625,25 @@
       "status": "failed",
       "reason": "Dispatch blocked before launching assignments: current concurrency prerequisite is 59/60. Unchanged SESSION renewal assertion fails during the required backward wall-clock jump; approved restoration and renewal/stress constraints require resolution before further implementation.",
       "recordedAt": "2026-09-28T02:27:11.890Z"
+    },
+    {
+      "skill": "sdd-parallel-dispatch",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0017",
+      "generation": 5,
+      "requirementIds": [
+        "REQ-M5-APPROVAL-007",
+        "REQ-M5-COMPAT-013",
+        "REQ-M5-EVIDENCE-007",
+        "REQ-M5-GRAPH-003",
+        "REQ-M5-LIFECYCLE-006",
+        "REQ-M5-WORKTREE-004"
+      ],
+      "phase": "complete",
+      "status": "failed",
+      "reason": "No assignments launched. Renewal and worker bootstrap verified at 60/60 with current SESSION. Raw source CAS preservation requires a -text Git attribute; genuine source-blob Git Red recorded, but journal-first implementation checkpoint rejects this configuration-only fix with CHANGE_IMPLEMENTATION_UNCHANGED_AT_RECORD. No unrelated code edit or evidence backfill used to bypass the guard.",
+      "recordedAt": "2026-09-28T02:56:29.746Z"
     }
   ]
 }

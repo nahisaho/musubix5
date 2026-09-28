@@ -46122,6 +46122,60 @@
         "diagnostics": [],
         "order": 3708
       }
+    },
+    {
+      "cycleId": "960ad9b4-2d2e-4abf-a371-a3915c48fb0f",
+      "changeId": "CHANGE-0017",
+      "generation": 5,
+      "requirementId": "REQ-M5-LIFECYCLE-006",
+      "testId": "TEST-M5-SOURCE-BLOB-GIT-001",
+      "testPath": "tests/source-blob-git.test.ts",
+      "commandName": "test",
+      "red": {
+        "phase": "red",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "failed",
+        "reportSha256": "43f0a940aed742658ac1349bc5d552055ba148e85b26e476e1e8d4f66127c9db",
+        "commandSha256": "08e7285f449863da8a0d339f57e9747a54eb4e4dcb9157755fd2fe554db26763",
+        "outputSha256": "f41cc9365a8a6a68c43e588499cbe83b62555e706dd8c4508b7ee8dd5df78ea5",
+        "exitCode": 1,
+        "durationMs": 4621,
+        "testFingerprint": "173560b7dbe04dea28d74b6244d9a4b1742ff5b1607fffe96e7a588dba83211b",
+        "sourceFingerprint": "bf2629f566f5697612f4d5bf12ede0d4fc1cb257c3113179f2f3068c6f772b76",
+        "executionId": "c5593d7b-c6ff-4a19-b5a5-87ab214eaaef",
+        "recordedAt": "2026-09-28T02:53:21.917Z",
+        "diagnostics": [],
+        "order": 3710
+      }
+    },
+    {
+      "cycleId": "80051947-9245-4464-94a5-c04718cac12b",
+      "changeId": "CHANGE-0017",
+      "generation": 5,
+      "requirementId": "REQ-M5-COMPAT-013",
+      "testId": "TEST-M5-SOURCE-BLOB-GIT-001",
+      "testPath": "tests/source-blob-git.test.ts",
+      "commandName": "test",
+      "red": {
+        "phase": "red",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "failed",
+        "reportSha256": "e36660dfbd95b3974255dfcba6b923ce9a81ffe8001ee201fb9d6cad3f2cdcef",
+        "commandSha256": "08e7285f449863da8a0d339f57e9747a54eb4e4dcb9157755fd2fe554db26763",
+        "outputSha256": "f41cc9365a8a6a68c43e588499cbe83b62555e706dd8c4508b7ee8dd5df78ea5",
+        "exitCode": 1,
+        "durationMs": 4758,
+        "testFingerprint": "173560b7dbe04dea28d74b6244d9a4b1742ff5b1607fffe96e7a588dba83211b",
+        "sourceFingerprint": "bf2629f566f5697612f4d5bf12ede0d4fc1cb257c3113179f2f3068c6f772b76",
+        "executionId": "22a73806-6a11-4c6d-8441-3b61ac46da0b",
+        "recordedAt": "2026-09-28T02:53:52.761Z",
+        "diagnostics": [],
+        "order": 3711
+      }
     }
   ],
   "chain": [
@@ -75702,6 +75756,34 @@
       "phaseEvidenceSha256": "4fa36c78ef7b50fe01e36b003d1b7c792e5a2438553861f6b759bddfec41aba6",
       "previousSha256": "0e08d9d1f5cc826448b79fc96515c19d8e49f87046085c0256d0cb80e265b4fc",
       "recordSha256": "2e862b1f51485fc19e8c68400ee865759a2b98f844354ccf849dcea0dd93d21c"
+    },
+    {
+      "sequence": 1962,
+      "cycleId": "960ad9b4-2d2e-4abf-a371-a3915c48fb0f",
+      "changeId": "CHANGE-0017",
+      "generation": 5,
+      "requirementId": "REQ-M5-LIFECYCLE-006",
+      "testId": "TEST-M5-SOURCE-BLOB-GIT-001",
+      "testPath": "tests/source-blob-git.test.ts",
+      "commandName": "test",
+      "phase": "red",
+      "phaseEvidenceSha256": "f2af93e98a768d83e0beb76d6aeb9d2203c0d7240fbb3edd2afaf147c5cf52a9",
+      "previousSha256": "2e862b1f51485fc19e8c68400ee865759a2b98f844354ccf849dcea0dd93d21c",
+      "recordSha256": "2d286f8d35a18288f8a9c3c5921d6648226630171aae2821bb8d01e7d48aedde"
+    },
+    {
+      "sequence": 1963,
+      "cycleId": "80051947-9245-4464-94a5-c04718cac12b",
+      "changeId": "CHANGE-0017",
+      "generation": 5,
+      "requirementId": "REQ-M5-COMPAT-013",
+      "testId": "TEST-M5-SOURCE-BLOB-GIT-001",
+      "testPath": "tests/source-blob-git.test.ts",
+      "commandName": "test",
+      "phase": "red",
+      "phaseEvidenceSha256": "f1f4a15aedf9a512319886fbce84bced4b55398c0ac35b4074359bf515da50e7",
+      "previousSha256": "2d286f8d35a18288f8a9c3c5921d6648226630171aae2821bb8d01e7d48aedde",
+      "recordSha256": "a888e62c3643e961ce3e2ed403465b6c6c3013338878957d847a9e062cdb65bd"
     }
   ],
   "sourceSupersessions": [
