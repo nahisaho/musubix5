@@ -1,0 +1,57 @@
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { expect, it } from 'vitest';
+import { sha256 } from '../packages/analysis/src/canonical.js';
+import * as storage from '../packages/analysis/src/tdd-source-storage.js';
+
+/** @id TEST-M5-SOURCE-BLOB-ATTRIBUTE-ADMISSION-001
+ * @verifies REQ-M5-LIFECYCLE-006 REQ-M5-COMPAT-013
+ * @design DES-M5-004 DES-M5-023
+ */
+it('TEST-M5-SOURCE-BLOB-ATTRIBUTE-ADMISSION-001 rejects normalizing repository attributes before blob publication and admission', async () => {
+  const publish: typeof storage.storeSourceBlob = Reflect.get(storage, 'publishSourceBlob');
+  const verify: (root: string, digests: readonly string[]) => Promise<void> =
+    Reflect.get(storage, 'verifySourceBlobGitAttributes');
+  expect(typeof publish).toBe('function');
+  expect(typeof verify).toBe('function');
+  const root = mkdtempSync(join(tmpdir(), 'musubix5-blob-attributes-'));
+  const bytes = Buffer.from('reviewed\r\nsource $Id$\r\n');
+  const hash = sha256(bytes);
+  const path = `${storage.sourceEvidencePrefix}/blobs/${hash}`;
+  const rejection = { code: 'TDD_SOURCE_ADMISSION_INVALID', exitCode: 1,
+    diagnostic: { details: { reason: 'snapshot-unverifiable' } } };
+  try {
+    await expect(publish(root, bytes)).rejects.toMatchObject({
+      code: 'TDD_SOURCE_IO_FAILED', exitCode: 2, diagnostic: { details: { reason: 'execute' } },
+    });
+    expect(existsSync(join(root, path))).toBe(false);
+    execFileSync('git', ['init', '--quiet', root]);
+    for (const rule of ['* text=auto eol=lf\n', '* text\n', '* !text\n']) {
+      writeFileSync(join(root, '.gitattributes'), rule);
+      await expect(publish(root, bytes)).rejects.toMatchObject(rejection);
+      expect(existsSync(join(root, path))).toBe(false);
+    }
+    const safe = `${storage.sourceEvidencePrefix}/blobs/* -text\n`;
+    writeFileSync(join(root, '.gitattributes'), safe);
+    expect(await publish(root, bytes)).toBe(hash);
+    expect(readFileSync(join(root, path))).toEqual(bytes);
+    await expect(verify(root, [hash])).resolves.toBeUndefined();
+    execFileSync('git', ['-C', root, 'add', '.gitattributes', path]);
+    expect(execFileSync('git', ['-C', root, 'show', `:${path}`])).toEqual(bytes);
+    for (const modifier of ['text=auto', 'filter=normalize', 'working-tree-encoding=UTF-16', 'ident']) {
+      writeFileSync(join(root, '.gitattributes'), `${safe}${path} ${modifier}\n`);
+      await expect(verify(root, [hash])).rejects.toMatchObject(rejection);
+      await expect(publish(root, bytes)).rejects.toMatchObject(rejection);
+      expect(readFileSync(join(root, path))).toEqual(bytes);
+    }
+    writeFileSync(join(root, '.gitattributes'), safe);
+    await expect(verify(root, ['--help'])).rejects.toThrow(/blob-hash/);
+    await expect(verify(join(root, 'missing'), [hash])).rejects.toMatchObject({
+      code: 'TDD_SOURCE_IO_FAILED', exitCode: 2,
+    });
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});

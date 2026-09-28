@@ -13,6 +13,7 @@ import { join } from 'node:path';
 async function mkdtemp(prefix: string): Promise<string> {
   const root = await createTemporaryDirectory(prefix);
   execFileSync('git', ['init', '--quiet', root]);
+  await writeFile(join(root, '.gitattributes'), '.musubix/evidence/tdd-source/v1/blobs/* -text\n');
   await mkdir(join(root, '.musubix/features/fixture'), { recursive: true });
   await writeFile(join(root, '.musubix/constitution.md'), '# Constitution\n');
   await writeFile(join(root, '.musubix/features/fixture/requirements.md'), '# Requirements\n');

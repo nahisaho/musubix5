@@ -52,6 +52,15 @@ Use `tdd validate --json` or `status --json` for `sourceTerminalSelectors`.
 Parent and child `--help` list the closed option sets; no force or waiver
 mode exists.
 
+Repository blob publication and admission verify effective Git attributes
+with argv-based `git check-attr`: blob paths must have `text: unset` (`-text`)
+and no active filter, working-tree encoding, or ident conversion. Rejected
+attributes fail closed with `TDD_SOURCE_ADMISSION_INVALID` /
+`snapshot-unverifiable`; Git execution failures, including non-Git roots,
+use `TDD_SOURCE_IO_FAILED` / `execute`. Keep the `-text` rule in committed
+`.gitattributes`. Low-level isolated archive storage still verifies raw
+content hashes; it does not itself constitute repository admission.
+
 `prepare --mode test-only --old-block FILE --hunk-review FILE --reason TEXT`
 validates the historical canonical block and exact reviewed hunks, then runs
 both block variants independently on one current declared input snapshot.

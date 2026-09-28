@@ -112,6 +112,7 @@ async function executeSourceVariants(
   sourceRoot: string, blobRoot: string, snapshot: CapturedSourceSnapshot, command: CommandConfig,
   node: { id: string; path: string; line: number },
   variants: Array<{ name: 'old' | 'new'; file: string; fingerprint: string }>,
+  store: (bytes: Uint8Array) => Promise<string>,
 ): Promise<{ runs: SourceRun[]; built: InventoryEntry[][] }> {
   const common = (await execute('git', ['-C', sourceRoot, 'rev-parse', '--path-format=absolute', '--git-common-dir'])).stdout.trim();
   const invocationId = randomUUID();
@@ -125,7 +126,7 @@ async function executeSourceVariants(
       const beforeSnapshot = await captureSourceSnapshot(sourceRoot, command, node.path);
       if (beforeSnapshot.binding.stateSha256 !== initialBinding) sourceAdmissionFailure('input-drift');
       const root = join(scratch, variant.name);
-      const sourceSha256 = await storeSourceBlob(blobRoot, Buffer.from(variant.file));
+      const sourceSha256 = await store(Buffer.from(variant.file));
       const entries = snapshot.manifest.entries.map((entry) => entry.path === node.path
         ? { ...entry, sha256: sourceSha256 } : entry);
       await materialize(root, blobRoot, entries);
@@ -154,12 +155,12 @@ async function executeSourceVariants(
         sourceAdmissionFailure('pair-mismatch');
       }
       built.push(build);
-      const reportSha256 = await storeSourceBlob(blobRoot, canonicalBytes(report));
+      const reportSha256 = await store(canonicalBytes(report));
       const fingerprint = variant.fingerprint;
       const outputs = {
-        beforeSha256: await storeSourceBlob(blobRoot, canonicalBytes(before.outputs)),
-        afterBuildSha256: await storeSourceBlob(blobRoot, canonicalBytes(build)),
-        afterSha256: await storeSourceBlob(blobRoot, canonicalBytes(after.outputs)),
+        beforeSha256: await store(canonicalBytes(before.outputs)),
+        afterBuildSha256: await store(canonicalBytes(build)),
+        afterSha256: await store(canonicalBytes(after.outputs)),
       };
       runs.push({
         invocationId: randomUUID(), testId: node.id, command: command.name, startedAt, completedAt,
@@ -181,23 +182,24 @@ async function executeSourceVariants(
 export async function verifySyntheticPair(
   sourceRoot: string, blobRoot: string, snapshot: CapturedSourceSnapshot, command: CommandConfig,
   node: { id: string; path: string; line: number }, splice: ReturnType<typeof spliceCanonicalTestBlock>,
+  store: (bytes: Uint8Array) => Promise<string> = (bytes) => storeSourceBlob(blobRoot, bytes),
 ): Promise<SourcePair> {
   const { runs, built } = await executeSourceVariants(sourceRoot, blobRoot, snapshot, command, node, [
     { name: 'old', file: splice.oldFile, fingerprint: splice.oldFingerprint },
     { name: 'new', file: splice.prefix + splice.newBlock + splice.suffix, fingerprint: splice.newFingerprint },
-  ]);
+  ], store);
   if (hash(built[0]) !== hash(built[1])) sourceAdmissionFailure('pair-mismatch');
   const manifest = {
     schemaVersion: 1, kind: 'tdd-source-pair', nodeId: node.id, path: node.path,
     annotationStart: splice.annotationStart, oldStatementEnd: splice.oldStatementEnd, newStatementEnd: splice.statementEnd,
-    oldBlockSha256: await storeSourceBlob(blobRoot, Buffer.from(splice.oldBlock)),
-    newBlockSha256: await storeSourceBlob(blobRoot, Buffer.from(splice.newBlock)),
+    oldBlockSha256: await store(Buffer.from(splice.oldBlock)),
+    newBlockSha256: await store(Buffer.from(splice.newBlock)),
     oldFingerprint: splice.oldFingerprint, newFingerprint: splice.newFingerprint,
-    prefix: { sha256: await storeSourceBlob(blobRoot, Buffer.from(splice.prefix)), length: Buffer.byteLength(splice.prefix) },
-    suffix: { sha256: await storeSourceBlob(blobRoot, Buffer.from(splice.suffix)), length: Buffer.byteLength(splice.suffix) },
+    prefix: { sha256: await store(Buffer.from(splice.prefix)), length: Buffer.byteLength(splice.prefix) },
+    suffix: { sha256: await store(Buffer.from(splice.suffix)), length: Buffer.byteLength(splice.suffix) },
   };
   return {
-    manifestSha256: await storeSourceBlob(blobRoot, canonicalBytes(manifest)),
+    manifestSha256: await store(canonicalBytes(manifest)),
     oldReportSha256: runs[0]!.reportSha256, newReportSha256: runs[1]!.reportSha256,
     oldRun: runs[0]!, newRun: runs[1]!,
   };
@@ -206,7 +208,8 @@ export async function verifySyntheticPair(
 export async function verifySourceExecution(
   sourceRoot: string, blobRoot: string, snapshot: CapturedSourceSnapshot, command: CommandConfig,
   node: { id: string; path: string; line: number }, file: string, fingerprint: string,
+  store: (bytes: Uint8Array) => Promise<string> = (bytes) => storeSourceBlob(blobRoot, bytes),
 ): Promise<SourceRun> {
   return (await executeSourceVariants(sourceRoot, blobRoot, snapshot, command, node,
-    [{ name: 'new', file, fingerprint }])).runs[0]!;
+    [{ name: 'new', file, fingerprint }], store)).runs[0]!;
 }

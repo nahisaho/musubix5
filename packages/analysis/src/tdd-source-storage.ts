@@ -1,4 +1,6 @@
 import { randomUUID } from 'node:crypto';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { link, lstat, mkdir, open, readFile, rm } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { sha256 } from './canonical.js';
@@ -7,6 +9,51 @@ import { SourceOperationError, sourceIoFailure } from './tdd-source-diagnostics.
 import { mapWithConcurrency } from './files.js';
 
 export const sourceEvidencePrefix = '.musubix/evidence/tdd-source/v1';
+const executeGit = promisify(execFile);
+
+/** @id CODE-M5-SOURCE-BLOB-ATTRIBUTE-ADMISSION-001
+ * @implements REQ-M5-LIFECYCLE-006 REQ-M5-COMPAT-013
+ * @design DES-M5-004 DES-M5-023
+ */
+export async function verifySourceBlobGitAttributes(root: string, digests: readonly string[]): Promise<void> {
+  if (digests.some((digest) => !sourceHash(digest))) {
+    throw new SourceOperationError('TDD_SOURCE_APPROVAL_INVALID', 'blob-hash');
+  }
+  const attributes = ['text', 'filter', 'working-tree-encoding', 'ident'];
+  const paths = [...new Set(digests)].map((digest) => `${sourceEvidencePrefix}/blobs/${digest}`);
+  for (let start = 0; start < paths.length; start += 128) {
+    const batch = paths.slice(start, start + 128);
+    let stdout: string;
+    try {
+      ({ stdout } = await executeGit('git', ['-C', resolve(root), 'check-attr', '-z', ...attributes, '--', ...batch],
+        { encoding: 'utf8', timeout: 10_000, maxBuffer: 1024 * 1024 }));
+    } catch {
+      throw new SourceOperationError('TDD_SOURCE_IO_FAILED', 'execute', undefined, { path: root });
+    }
+    const fields = stdout.split('\0');
+    if (fields.pop() !== '' || fields.length !== batch.length * attributes.length * 3) {
+      throw new SourceOperationError('TDD_SOURCE_ADMISSION_INVALID', 'snapshot-unverifiable', undefined, { path: root });
+    }
+    for (const [index, path] of batch.entries()) {
+      for (const [offset, attribute] of attributes.entries()) {
+        const cursor = (index * attributes.length + offset) * 3;
+        const value = fields[cursor + 2];
+        if (fields[cursor] !== path || fields[cursor + 1] !== attribute
+          || (attribute === 'text' ? value !== 'unset' : value !== 'unset' && value !== 'unspecified')) {
+          throw new SourceOperationError('TDD_SOURCE_ADMISSION_INVALID', 'snapshot-unverifiable', undefined, { path });
+        }
+      }
+    }
+  }
+}
+
+export async function publishSourceBlob(root: string, bytes: Uint8Array): Promise<string> {
+  const digest = sha256(bytes);
+  await verifySourceBlobGitAttributes(root, [digest]);
+  await publishSourceFile(root, `${sourceEvidencePrefix}/blobs/${digest}`, bytes,
+    () => verifySourceBlobGitAttributes(root, [digest]));
+  return digest;
+}
 
 function errno(cause: unknown): string | undefined {
   return cause && typeof cause === 'object' && 'code' in cause ? String(cause.code) : undefined;
@@ -117,8 +164,15 @@ export type SourceBlobReader = (digest: string) => Promise<Buffer>;
  * @implements REQ-M5-LIFECYCLE-006 REQ-M5-COMPAT-013
  * @design DES-M5-007 DES-M5-023
  */
-export function sourceBlobVerification(root: string): { read: SourceBlobReader; recheck: () => Promise<void> } {
+export function sourceBlobVerification(root: string): {
+  read: SourceBlobReader; recheck: () => Promise<void>; verifyGitAttributes: () => Promise<void>;
+} {
   const stamps = new Map<string, string>();
+  let attributesAdmitted = false;
+  const verifyGitAttributes = async (): Promise<void> => {
+    await verifySourceBlobGitAttributes(root, [...stamps.keys()]);
+    attributesAdmitted = true;
+  };
   const stamp = async (digest: string): Promise<string> => {
     let value;
     try { value = await lstat(resolve(root, sourceEvidencePrefix, 'blobs', digest), { bigint: true }); }
@@ -138,8 +192,9 @@ export function sourceBlobVerification(root: string): { read: SourceBlobReader; 
     stamps.set(digest, after);
     return bytes;
   };
-  return { read, recheck: async () => {
+  return { read, verifyGitAttributes, recheck: async () => {
     if (!stamps.size) return;
+    if (attributesAdmitted) await verifyGitAttributes();
     await sourceSafePath(root, `${sourceEvidencePrefix}/blobs`);
     await mapWithConcurrency([...stamps], 32, async ([digest, previous]) => {
       if (await stamp(digest) !== previous) await read(digest);

@@ -24,7 +24,7 @@ import type {
   SourcePreparationRequest, SourcePreparationResult, SourceApprovalResult, SourceJournalPayload, SourceHunk,
 } from './tdd-source-types.js';
 import type { TddEvidence } from './tdd-types.js';
-import { sourceBlobVerification, sourceEvidencePrefix, sourceSafePath, publishSourceFile, storeSourceBlob } from './tdd-source-storage.js';
+import { sourceBlobVerification, sourceEvidencePrefix, sourceSafePath, publishSourceFile, publishSourceBlob } from './tdd-source-storage.js';
 import { verifySourceReviewBlobs, verifySourceRunBlobs } from './tdd-source-artifacts.js';
 import { captureSourceSnapshot, recheckSourceSnapshot } from './tdd-source-snapshot.js';
 import { spliceCanonicalTestBlock, sourceReviewHunks } from './tdd-source-review.js';
@@ -169,12 +169,13 @@ export async function prepareSourceReview(
     }
     frozenInputs.push({ path: input.oldBlockPath, sha256: sha256(old) }, { path: input.hunkReviewPath, sha256: sha256(hunkBytes) });
   }
-  const captured = await captureSourceSnapshot(root, admission.command, admission.node.path, (bytes) => storeSourceBlob(root, bytes));
+  const store = (bytes: Uint8Array) => publishSourceBlob(root, bytes);
+  const captured = await captureSourceSnapshot(root, admission.command, admission.node.path, store);
   if (captured.manifest.entries.find((entry) => entry.path === admission.node.path)?.sha256 !== admission.source.currentFileSha256) {
     throw new SourceOperationError('TDD_SOURCE_ADMISSION_INVALID', 'input-drift', context);
   }
-  const source = { ...admission.source, oldBlockSha256: splice ? await storeSourceBlob(root, Buffer.from(splice.oldBlock)) : null };
-  await storeSourceBlob(root, Buffer.from(admission.currentFile).subarray(source.annotationStart, source.statementEnd));
+  const source = { ...admission.source, oldBlockSha256: splice ? await store(Buffer.from(splice.oldBlock)) : null };
+  await store(Buffer.from(admission.currentFile).subarray(source.annotationStart, source.statementEnd));
   if (existing && (!canonicalBytes(requestFromReview(existing)).equals(canonicalBytes({
     changeId: input.changeId, generation: input.generation, operationId: input.operationId,
     testId: input.testId, requirementId: input.requirementId, command: input.command, target: input.target,
@@ -195,10 +196,11 @@ export async function prepareSourceReview(
   };
   const review: SourceReview = existing ?? (input.mode === 'test-only'
     ? { ...base, mode: 'test-only', replacement: null,
-      pair: await verifySyntheticPair(root, root, captured, admission.command, admission.node, splice!) }
+      pair: await verifySyntheticPair(root, root, captured, admission.command, admission.node, splice!, store) }
     : { ...base, mode: 'behavior-change', pair: null, replacement: admission.replacement! });
   const references = sourceBlobVerification(root);
   await verifySourceReviewBlobs(root, review, references.read);
+  await references.verifyGitAttributes();
   await recheckSourceSnapshot(root, admission.command, admission.node.path, captured).then((current) => {
     if (current.binding.stateSha256 !== captured.binding.stateSha256) {
       throw new SourceOperationError('TDD_SOURCE_ADMISSION_INVALID', 'input-drift', context);
@@ -259,6 +261,7 @@ export async function approveSourceReview(
   const context = { operationId: input.operationId, scope: review.scope, target: review.target };
   const references = sourceBlobVerification(root);
   await verifySourceReviewBlobs(root, review, references.read);
+  await references.verifyGitAttributes();
   const captured = await captureSourceSnapshot(root, admission.command, admission.node.path);
   if (captured.binding.stateSha256 !== review.snapshot.stateSha256) {
     throw new SourceOperationError('TDD_SOURCE_ADMISSION_INVALID', 'input-drift', context);
@@ -334,13 +337,14 @@ export async function recordSourceReview(
   const context = { operationId: input.operationId, scope: review.scope, target: review.target };
   const references = sourceBlobVerification(root);
   await verifySourceReviewBlobs(root, review, references.read);
+  await references.verifyGitAttributes();
   const captured = await captureSourceSnapshot(root, admission.command, admission.node.path);
   if (captured.binding.stateSha256 !== review.snapshot.stateSha256) {
     throw new SourceOperationError('TDD_SOURCE_ADMISSION_INVALID', 'input-drift', context);
   }
   const execution = review.mode === 'behavior-change'
     ? await verifySourceExecution(root, root, captured, admission.command, admission.node,
-      admission.currentFile, admission.source.newFingerprint) : null;
+      admission.currentFile, admission.source.newFingerprint, (bytes) => publishSourceBlob(root, bytes)) : null;
   if (execution) {
     await verifySourceRunBlobs(root, execution, references.read);
     if (execution.preInputManifestSha256 !== sha256(canonicalBytes(captured.manifest.entries))) {
@@ -522,6 +526,7 @@ export async function inspectSourceEvidence(
         }
         await verifySourceRunBlobs(root, p.execution, blobs.read);
       }
+      await blobs.verifyGitAttributes();
       rechecks.push(async () => {
         await readSourceReview(root, scope, p.reviewSha256);
         await readSourceApproval(root, scope, review, p.reviewSha256, p.approvalSha256);

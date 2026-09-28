@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "kind": "repository-trace-index",
-  "generatedAt": "2026-09-28T02:44:58.632Z",
+  "generatedAt": "2026-09-28T03:06:42.702Z",
   "nodes": [
     {
       "id": "ADR-0002",
@@ -1063,7 +1063,7 @@
       "id": "CODE-M5-SOURCE-ACTIVE-001",
       "kind": "code",
       "path": "packages/analysis/src/tdd-source-supersession.ts",
-      "line": 633
+      "line": 638
     },
     {
       "id": "CODE-M5-SOURCE-ADMISSION-001",
@@ -1075,13 +1075,19 @@
       "id": "CODE-M5-SOURCE-APPROVE-001",
       "kind": "code",
       "path": "packages/analysis/src/tdd-source-supersession.ts",
-      "line": 243
+      "line": 245
     },
     {
       "id": "CODE-M5-SOURCE-ARTIFACT-001",
       "kind": "code",
       "path": "packages/analysis/src/tdd-source-artifacts.ts",
       "line": 169
+    },
+    {
+      "id": "CODE-M5-SOURCE-BLOB-ATTRIBUTE-ADMISSION-001",
+      "kind": "code",
+      "path": "packages/analysis/src/tdd-source-storage.ts",
+      "line": 14
     },
     {
       "id": "CODE-M5-SOURCE-BLOCK-001",
@@ -1147,7 +1153,7 @@
       "id": "CODE-M5-SOURCE-INTEGRITY-001",
       "kind": "code",
       "path": "packages/analysis/src/tdd-source-supersession.ts",
-      "line": 491
+      "line": 495
     },
     {
       "id": "CODE-M5-SOURCE-IO-001",
@@ -1165,7 +1171,7 @@
       "id": "CODE-M5-SOURCE-MATERIALIZE-001",
       "kind": "code",
       "path": "packages/analysis/src/tdd-source-supersession.ts",
-      "line": 446
+      "line": 450
     },
     {
       "id": "CODE-M5-SOURCE-MECHANICAL-001",
@@ -1189,13 +1195,13 @@
       "id": "CODE-M5-SOURCE-PREREQUISITES-001",
       "kind": "code",
       "path": "packages/analysis/src/tdd-source-supersession.ts",
-      "line": 417
+      "line": 421
     },
     {
       "id": "CODE-M5-SOURCE-PUBLICATION-001",
       "kind": "code",
       "path": "packages/analysis/src/tdd-source-storage.ts",
-      "line": 47
+      "line": 94
     },
     {
       "id": "CODE-M5-SOURCE-QUALITY-001",
@@ -1213,7 +1219,7 @@
       "id": "CODE-M5-SOURCE-READ-FENCE-001",
       "kind": "code",
       "path": "packages/analysis/src/tdd-source-storage.ts",
-      "line": 116
+      "line": 163
     },
     {
       "id": "CODE-M5-SOURCE-READ-MODELS-001",
@@ -1231,7 +1237,7 @@
       "id": "CODE-M5-SOURCE-RECORD-001",
       "kind": "code",
       "path": "packages/analysis/src/tdd-source-supersession.ts",
-      "line": 313
+      "line": 316
     },
     {
       "id": "CODE-M5-SOURCE-REFERENCES-001",
@@ -1249,13 +1255,13 @@
       "id": "CODE-M5-SOURCE-REPOSITORY-001",
       "kind": "code",
       "path": "packages/analysis/src/tdd-source-supersession.ts",
-      "line": 678
+      "line": 683
     },
     {
       "id": "CODE-M5-SOURCE-RESUME-001",
       "kind": "code",
       "path": "packages/analysis/src/tdd-source-supersession.ts",
-      "line": 703
+      "line": 708
     },
     {
       "id": "CODE-M5-SOURCE-RUNNER-001",
@@ -1291,13 +1297,13 @@
       "id": "CODE-M5-SOURCE-SUFFIX-001",
       "kind": "code",
       "path": "packages/analysis/src/tdd-source-supersession.ts",
-      "line": 582
+      "line": 587
     },
     {
       "id": "CODE-M5-SOURCE-TAIL-001",
       "kind": "code",
       "path": "packages/analysis/src/tdd-source-supersession.ts",
-      "line": 463
+      "line": 467
     },
     {
       "id": "CODE-M5-SOURCE-TARGET-001",
@@ -1321,7 +1327,7 @@
       "id": "CODE-M5-SOURCE-WRITER-SCOPE-001",
       "kind": "code",
       "path": "packages/analysis/src/tdd-source-supersession.ts",
-      "line": 570
+      "line": 575
     },
     {
       "id": "CODE-M5-STATUS-GUIDANCE-001",
@@ -4478,19 +4484,31 @@
       "id": "TEST-M5-SOURCE-ACTIVE-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 743
+      "line": 744
     },
     {
       "id": "TEST-M5-SOURCE-ARTIFACT-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 354
+      "line": 355
     },
     {
       "id": "TEST-M5-SOURCE-BINDING-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 254
+      "line": 255
+    },
+    {
+      "id": "TEST-M5-SOURCE-BLOB-ATTRIBUTE-ADMISSION-001",
+      "kind": "test",
+      "path": "tests/source-blob-admission.test.ts",
+      "line": 9
+    },
+    {
+      "id": "TEST-M5-SOURCE-BLOB-GIT-001",
+      "kind": "test",
+      "path": "tests/source-blob-git.test.ts",
+      "line": 8
     },
     {
       "id": "TEST-M5-SOURCE-BLOCK-001",
@@ -4502,19 +4520,19 @@
       "id": "TEST-M5-SOURCE-BOUNDARY-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 807
+      "line": 808
     },
     {
       "id": "TEST-M5-SOURCE-CHAIN-ORDER-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 713
+      "line": 714
     },
     {
       "id": "TEST-M5-SOURCE-CLI-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 997
+      "line": 998
     },
     {
       "id": "TEST-M5-SOURCE-CLOCK-GUARD-001",
@@ -4526,13 +4544,13 @@
       "id": "TEST-M5-SOURCE-CONFLICT-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 458
+      "line": 459
     },
     {
       "id": "TEST-M5-SOURCE-CURRENCY-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 550
+      "line": 551
     },
     {
       "id": "TEST-M5-SOURCE-DIAGNOSTIC-001",
@@ -4544,7 +4562,7 @@
       "id": "TEST-M5-SOURCE-ENVIRONMENT-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 973
+      "line": 974
     },
     {
       "id": "TEST-M5-SOURCE-HELP-001",
@@ -4556,7 +4574,7 @@
       "id": "TEST-M5-SOURCE-INTEGRITY-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 522
+      "line": 523
     },
     {
       "id": "TEST-M5-SOURCE-IO-001",
@@ -4574,13 +4592,13 @@
       "id": "TEST-M5-SOURCE-LEDGER-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 283
+      "line": 284
     },
     {
       "id": "TEST-M5-SOURCE-MATERIALIZE-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 1131
+      "line": 1132
     },
     {
       "id": "TEST-M5-SOURCE-MECHANICAL-001",
@@ -4598,19 +4616,19 @@
       "id": "TEST-M5-SOURCE-PENDING-WRITER-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 869
+      "line": 870
     },
     {
       "id": "TEST-M5-SOURCE-PREFLIGHT-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 920
+      "line": 921
     },
     {
       "id": "TEST-M5-SOURCE-PREREQUISITES-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 489
+      "line": 490
     },
     {
       "id": "TEST-M5-SOURCE-PUBLICATION-001",
@@ -4622,7 +4640,7 @@
       "id": "TEST-M5-SOURCE-QUALITY-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 1057
+      "line": 1058
     },
     {
       "id": "TEST-M5-SOURCE-READ-FENCE-001",
@@ -4634,7 +4652,7 @@
       "id": "TEST-M5-SOURCE-READ-MODELS-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 582
+      "line": 583
     },
     {
       "id": "TEST-M5-SOURCE-RECHECK-001",
@@ -4658,13 +4676,13 @@
       "id": "TEST-M5-SOURCE-REPOSITORY-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 951
+      "line": 952
     },
     {
       "id": "TEST-M5-SOURCE-RESUME-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 776
+      "line": 777
     },
     {
       "id": "TEST-M5-SOURCE-RUNNER-001",
@@ -4676,19 +4694,19 @@
       "id": "TEST-M5-SOURCE-SCHEMA-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 236
+      "line": 237
     },
     {
       "id": "TEST-M5-SOURCE-SCOPED-DIGEST-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 676
+      "line": 677
     },
     {
       "id": "TEST-M5-SOURCE-SEAL-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 323
+      "line": 324
     },
     {
       "id": "TEST-M5-SOURCE-SNAPSHOT-001",
@@ -4700,43 +4718,43 @@
       "id": "TEST-M5-SOURCE-STATUS-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 1168
+      "line": 1169
     },
     {
       "id": "TEST-M5-SOURCE-SUFFIX-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 417
+      "line": 418
     },
     {
       "id": "TEST-M5-SOURCE-TAIL-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 1205
+      "line": 1206
     },
     {
       "id": "TEST-M5-SOURCE-TARGET-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 832
+      "line": 833
     },
     {
       "id": "TEST-M5-SOURCE-VOID-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 1094
+      "line": 1095
     },
     {
       "id": "TEST-M5-SOURCE-WRITER-GUARD-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 619
+      "line": 620
     },
     {
       "id": "TEST-M5-SOURCE-WRITER-SCOPE-001",
       "kind": "test",
       "path": "tests/tdd-source-supersession-recovery.test.ts",
-      "line": 652
+      "line": 653
     },
     {
       "id": "TEST-M5-TDD-001",
@@ -9063,6 +9081,26 @@
     },
     {
       "from": "CODE-M5-SOURCE-ARTIFACT-001",
+      "to": "REQ-M5-LIFECYCLE-006",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-SOURCE-BLOB-ATTRIBUTE-ADMISSION-001",
+      "to": "DES-M5-004",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-SOURCE-BLOB-ATTRIBUTE-ADMISSION-001",
+      "to": "DES-M5-023",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-SOURCE-BLOB-ATTRIBUTE-ADMISSION-001",
+      "to": "REQ-M5-COMPAT-013",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-SOURCE-BLOB-ATTRIBUTE-ADMISSION-001",
       "to": "REQ-M5-LIFECYCLE-006",
       "relation": "implements"
     },
@@ -16632,6 +16670,41 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-SOURCE-BLOB-ATTRIBUTE-ADMISSION-001",
+      "to": "DES-M5-004",
+      "relation": "implements"
+    },
+    {
+      "from": "TEST-M5-SOURCE-BLOB-ATTRIBUTE-ADMISSION-001",
+      "to": "DES-M5-023",
+      "relation": "implements"
+    },
+    {
+      "from": "TEST-M5-SOURCE-BLOB-ATTRIBUTE-ADMISSION-001",
+      "to": "REQ-M5-COMPAT-013",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-SOURCE-BLOB-ATTRIBUTE-ADMISSION-001",
+      "to": "REQ-M5-LIFECYCLE-006",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-SOURCE-BLOB-GIT-001",
+      "to": "DES-M5-004",
+      "relation": "implements"
+    },
+    {
+      "from": "TEST-M5-SOURCE-BLOB-GIT-001",
+      "to": "REQ-M5-COMPAT-013",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-SOURCE-BLOB-GIT-001",
+      "to": "REQ-M5-LIFECYCLE-006",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-SOURCE-BLOCK-001",
       "to": "DES-M5-007",
       "relation": "implements"
@@ -18233,11 +18306,11 @@
     "packages/analysis/src/tdd-source-artifacts.ts": "eda8836cf04f22281d70d2e168fe57d4211f03f0ef591c68d18c6fb5a1c0c5c3",
     "packages/analysis/src/tdd-source-diagnostics.ts": "38c38c9b8fde3204e548004fc5eb5c6a6b6be7b8d8348670fb1d46b9d2ec97aa",
     "packages/analysis/src/tdd-source-ledger.ts": "291210042e98b21d89372208ad18e92e19d1d6844882aec77843754756b57d7d",
-    "packages/analysis/src/tdd-source-pair.ts": "d8fb1b22939492dd4572fde0c54df1d65ed49709a8d755279a80371703a25acd",
+    "packages/analysis/src/tdd-source-pair.ts": "153673350a609e4247a8e4f641dfea30dc06a9e4be225b13397a31718c281126",
     "packages/analysis/src/tdd-source-review.ts": "3df913b398badb2ada63bdca33fbfcfc2c6cf9813d8746fd0fa2ea38cfc62b58",
     "packages/analysis/src/tdd-source-snapshot.ts": "b56c54827b769f9f1255b7887b458137d9921a6aa1246864f2eaa9f6bd50911b",
-    "packages/analysis/src/tdd-source-storage.ts": "9b6bf0b82122425b03809446723a9dfd9a349d5c58c167a4e1666fd5091afc9d",
-    "packages/analysis/src/tdd-source-supersession.ts": "0c852e426d21f877d4ee513ad550bcf4c64bc80370072e203580eef3d30d4e5d",
+    "packages/analysis/src/tdd-source-storage.ts": "3f60bb9daf81aaba515b815f4ec9ec5ab974aa0b5f5dd80955687662014ac5fb",
+    "packages/analysis/src/tdd-source-supersession.ts": "b77614884d20f9fd72be9e25b525d67af056309f506c2e337be6f676637677cc",
     "packages/analysis/src/tdd-source-types.ts": "6425d988461149ce62b8907e94c2b2268c9b4194f0a25de5b0ea82f5b21e7d66",
     "packages/analysis/src/tdd-test-source.ts": "1250ba6c960b9ec73ade2de53f752e3e6f7e6091bd010f428620895d19d0c073",
     "packages/analysis/src/tdd-types.ts": "8b0cfcd47bd68b94439c55cebfa839d7fce1fd1b85bfce7d5f50c76891ce58f3",
@@ -18393,13 +18466,15 @@
     "tests/resilient-removal.test.ts": "04abd69134a65e17114930b836e5df7136c03b523bc1ca341f80cfc919b94d16",
     "tests/run-local-workspace.test.ts": "b0071c5905412c1f846d854155fbd37b0f72c08db40a20405be71cbfc2f10561",
     "tests/short-unix-socket.test.ts": "87a2c5a24abc90c9fb440214b65254dc849664163b1c589312229da96a5b10c8",
+    "tests/source-blob-admission.test.ts": "351fc5e7438020fcf289d508a7fc7257238fd2ac128c8f0dfbdf574bf6ac1bbc",
+    "tests/source-blob-git.test.ts": "10e3f975f2a191bfdbe4e254cc28e698bc123197722ae6434deb14429bd5f1b0",
     "tests/tdd-batch-recording.test.ts": "95b215ccbeaeebf7efbdfd9f2722bc0a5a57d7724d7948098de306fcd7babf98",
     "tests/tdd-cycle-repair.test.ts": "023ba419fe712af60a1906b99bb43c6fdf67a4e6c0bbba9a709760c04a8e4973",
     "tests/tdd-cycle-resolver.test.ts": "e97858964eb27b9b5aa5108ae0b40cafe8ba5053cbc38aceec3a2069458ac885",
     "tests/tdd-generation-scope.test.ts": "ca6be09781cc00ea47cb255ac469c7e618fd237652435778f3cbd29ea0ee9442",
     "tests/tdd-repair-safety.test.ts": "d2d06d9656e09a13b7f304b4d5219a29f3e29648554ca4f35651a28610f54254",
     "tests/tdd-source-supersession-cli.test.ts": "7a4ea531ef22b85cd83c6c4ba515381940e54906153842e7811a7a6fb8803025",
-    "tests/tdd-source-supersession-recovery.test.ts": "8c22ef8f6ec5df385d7faf445afb8445daacc2987346461283896c7e3858ea7b",
+    "tests/tdd-source-supersession-recovery.test.ts": "d8cdc77818af57f64c9b2b6cef28b4774bc05cddb26f68e84348d0abcef40798",
     "tests/tdd-source-supersession.test.ts": "4de438e3294ae911caa5977c03ff033fc5b76ce49a9edd9a7f82af5dfaa2156b",
     "tests/tdd-writer-concurrency.test.ts": "2fbae585b7ebc54459426cf7ae7d91ff22f2134f5631f00d6f8261f05b782aec",
     "tests/test-harness-portability.test.ts": "644252711db925d5a45ceed8b5f0bb9b0108ec726aebb80d1a833493df585ee3",
