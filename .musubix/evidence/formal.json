@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-27T03:16:40.074Z",
-  "totalRequirements": 119,
+  "generatedAt": "2026-09-27T18:00:24.524Z",
+  "totalRequirements": 121,
   "modeledRequirements": 4,
-  "modeledFraction": 0.03361344537815126,
+  "modeledFraction": 0.03305785123966942,
   "result": {
     "valid": true,
     "abstraction": "Consistency of explicit branch-scoped conditional, exact unit-normalized integer numeric, bounded temporal interval, deterministic state-transition, and controlled unconditional Boolean constraints; not implementation correctness.",
@@ -52,6 +52,7 @@
       "REQ-M5-WAVE1-CLEANUP-002",
       "REQ-M5-GRAPH-001",
       "REQ-M5-GRAPH-002",
+      "REQ-M5-GRAPH-003",
       "REQ-M5-WAVE1-EVIDENCE-002",
       "REQ-M5-MULTI-CHANGE-001",
       "REQ-M5-MULTI-CHANGE-002",
@@ -78,6 +79,7 @@
       "REQ-M5-LIFECYCLE-003",
       "REQ-M5-LIFECYCLE-004",
       "REQ-M5-LIFECYCLE-005",
+      "REQ-M5-LIFECYCLE-006",
       "REQ-M5-APPROVAL-001",
       "REQ-M5-APPROVAL-002",
       "REQ-M5-APPROVAL-003",
@@ -184,6 +186,11 @@
         "code": "FORMAL_UNSUPPORTED",
         "severity": "warning",
         "message": "REQ-M5-GRAPH-002 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-GRAPH-003 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
       },
       {
         "code": "FORMAL_UNSUPPORTED",
@@ -314,6 +321,11 @@
         "code": "FORMAL_UNSUPPORTED",
         "severity": "warning",
         "message": "REQ-M5-LIFECYCLE-005 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-LIFECYCLE-006 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
       },
       {
         "code": "FORMAL_UNSUPPORTED",
@@ -754,10 +766,10 @@
   },
   "fingerprints": {
     ".musubix/features/candidate-cleanup-policy/requirements.md": "253a36dbca0b76a81f452c845f2988e2b33163823095ee5ac1add81519dd5462",
-    ".musubix/features/codegraph-performance/requirements.md": "a5eb96722cea36c4fab7f81a09d992b1cbce62b154c7b85eab35199817d551e1",
+    ".musubix/features/codegraph-performance/requirements.md": "c6e62a96471c7a89c179e368d574f91f604624f2d70ff9639c94a9379ffdb7ea",
     ".musubix/features/evidence-selector-guards/requirements.md": "fdb70191e472f41e16eab793b2b2d86583587cd86a88db5627be59bf045ef601",
-    ".musubix/features/multi-change-workspaces/requirements.md": "81124ffb506d65df8a744d19dfb8c6e0579836a2d49bd2e4fc1e9b028d321b92",
-    ".musubix/features/musubix5-clean-foundation/requirements.md": "d9e5ea79ea6197329a35b87d1773ed54b901988f8b7a3e5ab45683a29db4a6ae",
+    ".musubix/features/multi-change-workspaces/requirements.md": "9071c2c1f8a7ca49b9137cf074fe30b33343264536f41efcdddad0ab2a6cff4d",
+    ".musubix/features/musubix5-clean-foundation/requirements.md": "ba98aed1dc002fa1bc7739de0f03d9827f95fa840fee688f1a6f6d97dbaa6d60",
     ".musubix/features/node24-github-actions/requirements.md": "32e775df8d7bbe3336b657a2516b93e3ec5bf3ca202506b96e159569dfe95c5b",
     ".musubix/features/npm-registry-deadline/requirements.md": "89ba3f12e9dd5a66c4e1e21ba3a5ed087fdfc03353d7fd72c605439d8a0b9aab",
     ".musubix/features/parallel-agent-development/requirements.md": "8d0cb15a2928c593d70d03acc21f93f404a084cf8ce49f20197a2338949c24f7",

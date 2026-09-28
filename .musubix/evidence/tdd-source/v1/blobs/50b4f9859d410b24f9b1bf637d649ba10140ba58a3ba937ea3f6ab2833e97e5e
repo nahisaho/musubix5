@@ -1,0 +1,44 @@
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { expect, it, vi } from 'vitest';
+import * as journal from '../packages/analysis/src/journal.js';
+
+/** @id TEST-M5-CHECKPOINT-MONOTONIC-WAIT-001
+ * @verifies REQ-M5-LIFECYCLE-006
+ * @design DES-M5-004 DES-M5-012 DES-M5-022
+ */
+it('TEST-M5-CHECKPOINT-MONOTONIC-WAIT-001 tolerates a wall-clock jump while sixteen callers wait within the unchanged acquisition budget', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'musubix5-checkpoint-clock-'));
+  execFileSync('git', ['init', '--quiet', root]);
+  const owner = await journal.acquireChangeLease(root, 'CHANGE-0017');
+  const clock = Date.now.bind(Date);
+  let offset = 0;
+  const acquired: number[] = [];
+  const wall = vi.spyOn(Date, 'now').mockImplementation(() => clock() + offset);
+  const started = performance.now();
+  const waiters = Array.from({ length: 16 }, () => journal.withChangeLease(root, 'CHANGE-0017', async (lease) => {
+    await journal.assertChangeLeaseCurrent(lease);
+    acquired.push(lease.fencingToken);
+    await new Promise((done) => setTimeout(done, 25));
+  }));
+  const settled = Promise.allSettled(waiters);
+  try {
+    await new Promise((done) => setTimeout(done, 150));
+    offset = 20_000;
+    await new Promise((done) => setTimeout(done, 50));
+    await journal.releaseChangeLease(owner);
+    const results = await settled;
+    expect(results.filter((result) => result.status === 'rejected')).toEqual([]);
+    expect(acquired).toHaveLength(16);
+    expect(new Set(acquired).size).toBe(16);
+    expect(acquired.every((token, index) => token > (acquired[index - 1] ?? owner.fencingToken))).toBe(true);
+    expect(performance.now() - started).toBeLessThan(10_000);
+  } finally {
+    await journal.releaseChangeLease(owner);
+    await settled;
+    wall.mockRestore();
+    rmSync(root, { recursive: true, force: true });
+  }
+}, 15_000);

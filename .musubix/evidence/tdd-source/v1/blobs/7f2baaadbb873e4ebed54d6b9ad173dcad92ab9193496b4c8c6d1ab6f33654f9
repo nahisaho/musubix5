@@ -1,0 +1,69 @@
+---
+status: proposed
+---
+# ADR-0033: Keep recovery entrypoints explicit and fail-closed
+
+## Context
+
+The immutable workspace baseline and workflow transcript verifier already have
+internal services, but operators cannot complete either recovery path through a
+single public command. Implicit baseline creation can capture the wrong mutable
+state. Unbounded transcript discovery can select another session, and writing a
+safe transcript before verification can destroy the artifact referenced by a
+previous successful record.
+
+## Decision
+
+Add thin public commands over the existing services.
+
+`parallel baseline create <change-id>` is valid only in the registered clean
+control worktree for the selected active generation. Validation has a closed
+diagnostic order, is repeated under the CHANGE lease, and exact replay uses the
+existing commit-bound idempotency key. Plan creation remains separate and emits
+the executable baseline command when its ancestry precondition fails.
+
+`workflow verify-current` searches only realpath-contained immediate UUID
+session directories with a contained regular `events.jsonl` under an explicit
+root or the `os.homedir()`-resolved `.copilot/session-state` directory. Session
+IDs are lowercase-normalized for cross-platform identity. Candidate-file
+validation precedes global case-folded duplicate detection, duplicate ambiguity
+precedes malformed-ID and strict-mode caller/configured mismatch validation,
+and those validations precede selection. After validation, an explicit session
+ID wins over strict-mode configuration; otherwise discovery succeeds only for
+one candidate satisfying the single-sample millisecond mtime freshness rule.
+The command sanitizes to a unique ignored temporary file and verifies that
+file. A backup-assisted promotion transaction then replaces the mode-qualified
+safe artifact and the single current verification record. Entry reconciliation
+restores the artifact matching the persisted safe hash after any interrupted
+promotion. Compatible success intentionally supersedes strict proof; any
+ordinary failure preserves prior promoted artifacts and evidence.
+
+Release evidence CHANGE identity uses a shallow, ordered selector:
+`changeId`, `metadata.changeId`, then `result.changeId`. It never recursively
+searches arbitrary JSON.
+
+## Rejected alternatives
+
+- Automatically create a baseline during plan creation: rejected because it
+  hides the commit and dirty-state boundary that assignments trust.
+- Accept baseline creation from any worktree: rejected because role ownership
+  and generation identity would be ambiguous.
+- Select the newest transcript regardless of ambiguity: rejected because it can
+  bind another concurrent session.
+- Write directly to the final safe path before verification: rejected because a
+  failed retry could invalidate the artifact referenced by prior evidence.
+- Recursively search evidence JSON for a CHANGE ID: rejected because unrelated
+  nested fields could silently change release scope.
+
+## Consequences
+
+Operators gain executable recovery commands with deterministic diagnostics.
+They must commit and clean the control worktree before baseline capture and
+must identify a session when more than one transcript is fresh. Compatible
+verification can deliberately replace strict proof, requiring strict
+verification again before release.
+
+## Links
+
+Requirements: REQ-M5-APPROVAL-007 REQ-M5-COMPAT-013 REQ-M5-EVIDENCE-007 REQ-M5-WORKTREE-004
+Design: DES-M5-002 DES-M5-006 DES-M5-012 DES-M5-018

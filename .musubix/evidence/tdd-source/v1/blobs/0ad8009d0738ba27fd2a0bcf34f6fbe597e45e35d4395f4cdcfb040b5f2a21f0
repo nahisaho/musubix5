@@ -1,0 +1,144 @@
+---
+status: proposed
+---
+# ADR-0035: Journal and serialize workspace batch checkpoints
+
+## Context
+
+Parallel assignment worktrees calculate independent Red, Implementation, and
+Green fingerprints but update one shared `.musubix/evidence/changes.json`.
+`recordChangePhaseFromWorkspace` previously performed an unlocked
+read-modify-write. During CHANGE-0017 generation 4, the Green order record for
+`REQ-M5-EVIDENCE-007` was persisted at sequence 3274 while another writer
+replaced the projection without that Green checkpoint. The monotonic order log
+cannot reconstruct its fingerprints or timestamp because those values were not
+journaled.
+
+## Decision
+
+All writers of the shared CHANGE projection acquire a repository-wide
+`change-projection` lease after their target CHANGE lease. Workspace-backed
+batch checkpoints additionally use a journal-first protocol:
+
+1. Before lease acquisition, calculate fingerprints, a canonical digest of
+   the source workspace state, a reusable per-path hash table, and a canonical
+   hash of only fingerprint-relevant TDD entries while allowing the dirty
+   Red/Implementation tree.
+2. Acquire the CHANGE lease followed by the projection lease and reload the
+   shared projection.
+3. Repeat current CHANGE selection, then look up replay before new-checkpoint
+   duplicate, predecessor, and currency checks. For a new checkpoint, recheck
+   HEAD, changed relevant source paths, and the selected TDD-entry hash before
+   its first persistence; drift writes no requested-checkpoint journal, order,
+   or projection, although unrelated pending phase recovery may already have
+   persisted. Replay instead validates and uses only the already-journaled
+   payload.
+4. Append or replay one `change-batch-checkpoint-v1` journal record. Persisted
+   fencing values are audit provenance; current fences authorize writes.
+5. Reuse its exact evidence-order identity when present, otherwise append it
+   once.
+6. Atomically replace `changes.json` only after both lease fences remain
+   current.
+
+Both leases retain a 30-second TTL and use compare-and-set renewal every 10
+seconds.
+Renewal writes a temporary owner inside the held lease directory, atomically
+replaces that directory's owner file, and re-verifies the token and fence.
+Before and after that replacement it also verifies that the durable named-lease
+fencing counter still equals the handle's acquisition token. Because takeover
+increments that counter, recreating the same directory path cannot let an
+expired holder overwrite the successor and re-authorize itself. Renewal failure
+marks the operation fenced before another persistence step.
+An expired projection lease is reclaimed with an incremented fencing token by
+moving the stale directory before creating its successor. Lease acquisition is
+owned by the outermost command coordinator; recovery and projection helpers
+receive existing handles and never reacquire the same lease. The journal/lease
+layer owns only generic primitives and requirements/design recovery; the
+workspace coordinator owns batch recovery and is injected into integration
+materialization, avoiding a lower-layer import of workspace logic. DES-M5-022
+also owns `appendBatchCheckpoint()` and composes DES-M5-004's generic append
+and idempotency lookup with DES-M5-007 validation; the journal layer never
+imports that validation registry or the batch coordinator.
+Acquisition-time fencing values stored in `change-batch-checkpoint-v1` records are audit
+provenance and are not replay credentials.
+
+Integration finalization follows the reciprocal [ADR-0026](ADR-0026.md)
+contract: DES-M5-MULTI-CHANGE-003 acquires and retains byte-sorted CHANGE,
+projection, and append handles; DES-M5-MULTI-CHANGE-002 only validates them
+and asynchronously materializes the post-recovery snapshot. The durable
+finalization lease-context record precedes selected checkpoint recovery and
+baseline capture. DES-M5-MULTI-CHANGE-008/009 preserve exit 1 `LEASE_FENCED`
+and `CHANGE_PROJECTION_LEASE_BUSY`, including marker retention on post-marker
+lease loss and unchanged propagation of pre-marker recovery errors.
+
+The journal payload, rather than retry-time workspace values, is authoritative
+after the first append. Gate and status report phase-specific projection gaps by scanning only exact
+canonical Red, Implementation, and Green order identities plus legacy
+unqualified generation-1 identities across active and historical generations;
+superseded phase kinds are excluded. Duplicate comparison identities are
+detected before projection subtraction and fail closed. Proper subsets compare
+the exact generation's persisted scope IDs or existing requirement-key fallback
+and subtract an identity only when that batch phase exists; full sets compare
+singular phase records and permit one order per generation/phase. Valid journal
+presence classifies a gap as interrupted, absence classifies it as legacy, and
+parseable invalid evidence or duplicate orders classify it as invalid.
+Interrupted and legacy entries are informational; invalid entries make gate
+non-pass and status not ready. None receives lifecycle or TDD credit.
+
+CHANGE-0017 generation 4 is abandoned because its approved requirement set
+does not contain the new recovery requirement. Its order 3274 remains an
+immutable regression fixture. Generation 5 installs this coordinator before
+parallel assignment evidence is written.
+
+## Generation-5 source-maintenance amendment
+
+The generation-5 source-maintenance extension in ADR-0036 migrates every
+tdd.json writer to short CHANGE -> projection -> append reload/recheck/merge
+sections. No CHANGE, maintenance, projection or append handle is held during
+a test runner or synthetic pair. This preserves ordinary same-CHANGE batch
+checkpoints and parallel transitions during long runs; a relevant source/TDD
+change between preparation and commit rejects drift rather than losing writes.
+Finalization still retains its complete handle set after verification has
+finished; supplied handles are never reacquired.
+
+DES-M5-023 specifies the additive relevant source-projection/chain input to
+tddEvidenceSha256. Previously journaled checkpoint digests are immutable
+admission snapshots; new checkpoints use the extended digest. Pending source
+operations are not automatically completed by workspace checkpoint recovery
+or integration materialization. Historical source resume is prohibited by
+REQ-M5-LIFECYCLE-005, while pending prefixes remain non-credit history.
+The explicit order-3274 fixture hashes the saved legacy record and verifies
+that generation-5 recovery never synthesizes its missing Green. The separate
+inactive-waiver fixture retains stale waiver records byte-for-byte and
+requires workflowWaivers:[] across every recovery/completion path.
+
+## Rejected alternatives
+
+- Edit `changes.json` directly: rejected because it creates unaudited evidence.
+- Delete or rewrite order 3274: rejected because the monotonic log is
+  append-only.
+- Recover order 3274 from current workspace fingerprints: rejected because the
+  order record does not bind those values and generation 4 is no longer current.
+- Use only per-CHANGE leases: rejected because `changes.json` contains multiple
+  CHANGEs and cross-CHANGE writers can still overwrite one another.
+- Hold the projection lease during trace and graph construction: rejected
+  because long critical sections would cause avoidable assignment timeouts.
+- Add a legacy-only public repair command: rejected because order 3274 is the
+  sole known pre-journal gap and is intentionally retained as non-credit
+  history.
+
+## Consequences
+
+Shared CHANGE evidence writes become serialized across CHANGEs, while expensive
+fingerprint preparation remains outside both write locks.
+Interrupted workspace checkpoints can be resumed through the existing
+`change-record --workspace` command. The new journal record and status fields
+are additive compatibility surfaces, and generation 5 must repeat the four
+feature batches after the serialization prerequisite is integrated. Tests cover
+both same-CHANGE serialization and different-CHANGE contention on the shared
+projection.
+
+## Links
+
+Requirements: REQ-M5-COMPAT-013 REQ-M5-LIFECYCLE-004 REQ-M5-LIFECYCLE-006 REQ-M5-MULTI-CHANGE-004
+Design: DES-M5-002 DES-M5-004 DES-M5-005 DES-M5-007 DES-M5-012 DES-M5-015 DES-M5-022 DES-M5-MULTI-CHANGE-002 DES-M5-MULTI-CHANGE-003 DES-M5-MULTI-CHANGE-008 DES-M5-MULTI-CHANGE-009

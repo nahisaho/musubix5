@@ -3,12 +3,14 @@ import { execFile } from 'node:child_process';
 import {
   mkdir, open, readFile, readdir, rename, rm, stat,
 } from 'node:fs/promises';
-import { dirname, join, resolve } from 'node:path';
+import { basename, dirname, join, relative, resolve } from 'node:path';
+import { performance } from 'node:perf_hooks';
 import { promisify } from 'node:util';
 import { canonicalBytes, legacyCanonicalBytes, sha256 } from './canonical.js';
 
 const execFileAsync = promisify(execFile);
 const leaseTtlMs = 30_000;
+const leaseRenewalMs = 10_000;
 const leaseRetryMs = 25;
 const leaseAttempts = 400;
 const leaseFsRetryAttempts = 8;
@@ -42,6 +44,45 @@ export interface ChangeLease {
   token: string;
   fencingToken: number;
 }
+
+export type LeaseKind = 'change' | 'change-projection' | 'repository-append';
+export type ChangeLeaseHandle = ChangeLease & { changeId: string };
+export type ChangeProjectionLeaseHandle = ChangeLease;
+export type AppendLeaseSession = ChangeLease & {
+  root: string;
+  authorize?: () => Promise<void>;
+};
+export type ChangeProjectionAppendLeaseSet = Readonly<{
+  changeLeases: readonly ChangeLeaseHandle[];
+  projectionLease: ChangeProjectionLeaseHandle;
+  appendSession?: AppendLeaseSession;
+}>;
+export type TddWriteLeaseSet = ChangeProjectionAppendLeaseSet & Readonly<{
+  maintenanceLease?: ChangeLease;
+  appendSession: AppendLeaseSession;
+}>;
+
+/** @id CODE-M5-CHECKPOINT-LEASE-ERROR-001
+ * @implements REQ-M5-LIFECYCLE-006
+ * @design DES-M5-004
+ */
+export class LeaseAcquisitionTimeout extends Error {
+  readonly code = 'LEASE_ACQUISITION_TIMEOUT';
+  constructor(readonly leaseKind: LeaseKind, readonly leaseName: string) {
+    super(`Timed out acquiring ${leaseKind} lease ${leaseName}.`);
+  }
+}
+
+export class LeaseFencedError extends Error {
+  readonly code = 'LEASE_FENCED';
+  constructor() {
+    super('LEASE_FENCED: the lease is expired, lost, or owned by a newer writer.');
+  }
+}
+
+const lostLeases = new WeakSet<ChangeLease>();
+const appendSessions = new WeakSet<AppendLeaseSession>();
+const leaseRenewals = new Map<string, Promise<void>>();
 
 function errorCode(cause: unknown): string | undefined {
   return cause && typeof cause === 'object' && 'code' in cause
@@ -123,12 +164,28 @@ async function nextFencingToken(leases: string, name: string): Promise<number> {
   return fencingToken;
 }
 
+/** @id CODE-M5-CHECKPOINT-MONOTONIC-WAIT-001
+ * @implements REQ-M5-LIFECYCLE-006
+ * @design DES-M5-004 DES-M5-012
+ */
 async function acquireNamedLease(root: string, name: string, wait: boolean): Promise<ChangeLease | null> {
-  const leases = join(await gitCommonDirectory(root), 'musubix5', 'leases');
+  let common: string;
+  try {
+    common = await gitCommonDirectory(root);
+  } catch (cause) {
+    if (!['order', 'tdd-maintenance', 'change-projection'].includes(name) || !cause || typeof cause !== 'object'
+      || !('stderr' in cause) || typeof cause.stderr !== 'string'
+      || !cause.stderr.includes('not a git repository')) throw cause;
+    // Existing no-active TDD maintenance also works before Git initialization.
+    common = join(resolve(root), '.musubix', 'cache', 'non-git');
+  }
+  const leases = join(common, 'musubix5', 'leases');
   const path = join(leases, encodeURIComponent(name));
   await mkdir(leases, { recursive: true });
   const attempts = wait ? leaseAttempts : 3;
+  const deadline = performance.now() + leaseAttempts * leaseRetryMs;
   for (let attempt = 0; attempt < attempts; attempt += 1) {
+    if (performance.now() >= deadline) break;
     const token = randomUUID();
     let created = false;
     try {
@@ -182,7 +239,10 @@ async function acquireNamedLease(root: string, name: string, wait: boolean): Pro
     }
   }
   if (!wait) return null;
-  throw new Error('Timed out acquiring the repository-wide order lease.');
+  throw new LeaseAcquisitionTimeout(
+    name === 'order' ? 'repository-append' : name === 'change-projection' ? 'change-projection' : 'change',
+    name,
+  );
 }
 
 async function acquireOrderLease(root: string): Promise<ChangeLease> {
@@ -202,10 +262,10 @@ async function releaseOrderLease(lease: ChangeLease): Promise<void> {
  * @implements REQ-M5-LIFECYCLE-004
  * @design DES-M5-004
  */
-export async function acquireChangeLease(root: string, changeId: string): Promise<ChangeLease> {
+export async function acquireChangeLease(root: string, changeId: string): Promise<ChangeLeaseHandle> {
   const lease = await acquireNamedLease(root, `change-${changeId}`, true);
   if (!lease) throw new Error(`Failed to acquire CHANGE lease for ${changeId}.`);
-  return lease;
+  return { ...lease, changeId };
 }
 
 export async function tryAcquireChangeLease(root: string, changeId: string): Promise<ChangeLease | null> {
@@ -225,19 +285,273 @@ export async function hasLiveChangeLease(root: string, changeId: string): Promis
   return createdAt !== null && createdAt + leaseTtlMs > Date.now();
 }
 
+/** @id CODE-M5-CHECKPOINT-FENCING-001
+ * @implements REQ-M5-LIFECYCLE-006
+ * @design DES-M5-004
+ */
 export async function assertChangeLeaseCurrent(lease: ChangeLease): Promise<void> {
+  await readCurrentLeaseOwner(lease);
+}
+
+async function readCurrentLeaseOwner(lease: ChangeLease): Promise<LeaseOwner> {
+  if (lostLeases.has(lease)) throw new LeaseFencedError();
   const owner = await readLeaseOwner(lease.path);
-  if (owner?.token !== lease.token || owner.fencingToken !== lease.fencingToken || owner.expiresAt <= Date.now()) {
-    throw new Error('LEASE_FENCED: the CHANGE lease is expired or owned by a newer writer.');
+  let counter: { fencingToken?: number } | null = null;
+  try {
+    counter = JSON.parse(await readFile(
+      join(dirname(lease.path), 'fencing', `${basename(lease.path)}.json`), 'utf8',
+    )) as { fencingToken?: number };
+  } catch (cause) {
+    if (errorCode(cause) !== 'ENOENT' && !(cause instanceof SyntaxError)) throw cause;
   }
+  if (counter?.fencingToken !== lease.fencingToken
+    || owner?.token !== lease.token || owner.fencingToken !== lease.fencingToken || owner.expiresAt <= Date.now()) {
+    lostLeases.add(lease);
+    throw new LeaseFencedError();
+  }
+  return owner;
+}
+
+/** @id CODE-M5-LEASE-RENEWAL-BACKWARD-001
+ * @implements REQ-M5-LIFECYCLE-006
+ * @design DES-M5-004
+ */
+export async function renewLease(lease: ChangeLease): Promise<void> {
+  const key = JSON.stringify([resolve(lease.path), lease.token, lease.fencingToken]);
+  const previous = leaseRenewals.get(key);
+  const renew = () => renewCurrentLease(lease);
+  // Each caller receives its own failure; a queued renewal rechecks ownership.
+  const renewal = previous ? previous.then(renew, renew) : renew();
+  leaseRenewals.set(key, renewal);
+  try {
+    await renewal;
+  } finally {
+    if (leaseRenewals.get(key) === renewal) leaseRenewals.delete(key);
+  }
+}
+
+/** @id CODE-M5-CHECKPOINT-RENEWAL-001
+ * @implements REQ-M5-LIFECYCLE-006
+ * @design DES-M5-004
+ */
+async function renewCurrentLease(lease: ChangeLease): Promise<void> {
+  const temporary = join(lease.path, `owner-${randomUUID()}.tmp`);
+  try {
+    const owner = await readCurrentLeaseOwner(lease);
+    const handle = await open(temporary, 'wx');
+    try {
+      await handle.writeFile(canonicalBytes({
+        token: lease.token, fencingToken: lease.fencingToken,
+        expiresAt: Math.max(owner.expiresAt, Date.now() + leaseTtlMs),
+      }));
+      await handle.sync();
+    } finally {
+      await handle.close();
+    }
+    await assertChangeLeaseCurrent(lease);
+    await retryTransientLeaseFs(() => rename(temporary, join(lease.path, 'owner.json')));
+    await assertChangeLeaseCurrent(lease);
+  } catch {
+    lostLeases.add(lease);
+    throw new LeaseFencedError();
+  } finally {
+    await rm(temporary, { force: true });
+  }
+}
+
+export async function withRenewingLease<T>(
+  lease: ChangeLease, operation: (lease: ChangeLease) => Promise<T>,
+): Promise<T> {
+  let renewal = Promise.resolve();
+  const timer = setInterval(() => {
+    renewal = renewal.then(() => renewLease(lease)).catch(() => { lostLeases.add(lease); });
+  }, leaseRenewalMs);
+  timer.unref();
+  try {
+    await assertChangeLeaseCurrent(lease);
+    const value = await operation(lease);
+    await renewal;
+    return value;
+  } finally {
+    clearInterval(timer);
+    await renewal;
+    await releaseOrderLease(lease);
+  }
+}
+
+/** @id CODE-M5-CHECKPOINT-LEASE-SET-001
+ * @implements REQ-M5-LIFECYCLE-006
+ * @design DES-M5-004
+ */
+export async function withChangeLease<T>(
+  root: string, changeId: string, operation: (lease: ChangeLeaseHandle) => Promise<T>,
+): Promise<T> {
+  const lease = await acquireChangeLease(root, changeId);
+  return withRenewingLease(lease, () => operation(lease));
+}
+
+export async function withChangeProjectionLease<T>(
+  root: string, operation: (lease: ChangeProjectionLeaseHandle) => Promise<T>,
+): Promise<T> {
+  const lease = (await acquireNamedLease(root, 'change-projection', true))!;
+  return withRenewingLease(lease, operation);
+}
+
+export async function withOrderLease<T>(
+  root: string, operation: (session: AppendLeaseSession) => Promise<T>,
+  expectedLeases?: ChangeProjectionAppendLeaseSet,
+): Promise<T> {
+  if (expectedLeases) await assertLeaseSetCurrent(expectedLeases);
+  const session: AppendLeaseSession = {
+    ...await acquireOrderLease(root), root: resolve(root),
+    ...(expectedLeases ? { authorize: () => assertLeaseSetCurrent(expectedLeases) } : {}),
+  };
+  appendSessions.add(session);
+  try {
+    return await withRenewingLease(session, () => operation(session));
+  } finally {
+    appendSessions.delete(session);
+  }
+}
+
+export async function withChangeProjectionLeases<T>(
+  root: string, changeIds: readonly string[],
+  operation: (leases: ChangeProjectionAppendLeaseSet) => Promise<T>,
+): Promise<T> {
+  const ids = [...new Set(changeIds)].sort((a, b) => Buffer.compare(Buffer.from(a), Buffer.from(b)));
+  if (!ids.length) throw new Error('At least one CHANGE lease is required.');
+  const handles: ChangeLeaseHandle[] = [];
+  const acquire = async (index: number): Promise<T> => {
+    const id = ids[index];
+    if (id === undefined) {
+      return withChangeProjectionLease(root, (projectionLease) =>
+        operation({ changeLeases: handles, projectionLease }));
+    }
+    return withChangeLease(root, id, async (lease) => {
+      handles.push(lease);
+      return acquire(index + 1);
+    });
+  };
+  return acquire(0);
+}
+
+/** @id CODE-M5-TDD-WRITE-LEASE-SET-001
+ * @implements REQ-M5-LIFECYCLE-006
+ * @design DES-M5-004
+ */
+export async function withTddWriteLeaseSet<T>(
+  root: string, changeIds: readonly string[],
+  operation: (leases: TddWriteLeaseSet) => Promise<T>,
+  supplied?: TddWriteLeaseSet,
+): Promise<T> {
+  if (supplied) {
+    const ids = [...new Set(changeIds)].sort((a, b) => Buffer.compare(Buffer.from(a), Buffer.from(b)));
+    if (JSON.stringify(ids) !== JSON.stringify(supplied.changeLeases.map((lease) => lease.changeId))) {
+      throw new LeaseFencedError();
+    }
+    await assertTddWriteLeaseSetCurrent(root, supplied);
+    return operation(supplied);
+  }
+  if (changeIds.length) {
+    return withChangeProjectionLeases(root, changeIds, (leases) =>
+      withOrderLease(root, (appendSession) => operation({ ...leases, appendSession }), leases));
+  }
+  const maintenanceLease = (await acquireNamedLease(root, 'tdd-maintenance', true))!;
+  return withRenewingLease(maintenanceLease, () =>
+    withChangeProjectionLease(root, (projectionLease) =>
+      withOrderLease(root, async (appendSession) => {
+        const leases: TddWriteLeaseSet = {
+          changeLeases: [], maintenanceLease, projectionLease, appendSession,
+        };
+        appendSession.authorize = async () => {
+          await assertChangeLeaseCurrent(maintenanceLease);
+          await assertChangeLeaseCurrent(projectionLease);
+        };
+        await assertTddWriteLeaseSetCurrent(root, leases);
+        return operation(leases);
+      })));
+}
+
+export async function assertTddWriteLeaseSetCurrent(root: string, leases: TddWriteLeaseSet): Promise<void> {
+  if (leases.maintenanceLease) {
+    if (leases.changeLeases.length) throw new LeaseFencedError();
+    await assertChangeLeaseCurrent(leases.maintenanceLease);
+    await assertChangeLeaseCurrent(leases.projectionLease);
+  } else {
+    await assertLeaseSetCurrent(leases);
+  }
+  await assertAppendSessionCurrent(root, leases.appendSession);
+}
+
+export async function assertLeaseSetCurrent(
+  leases: ChangeProjectionAppendLeaseSet, changeId?: string,
+): Promise<void> {
+  const ids = leases.changeLeases.map((lease) => lease.changeId);
+  if (!ids.length || new Set(ids).size !== ids.length
+    || ids.some((id, index) => index > 0 && Buffer.compare(Buffer.from(ids[index - 1]!), Buffer.from(id)) >= 0)
+    || (changeId !== undefined && !ids.includes(changeId))) throw new LeaseFencedError();
+  for (const lease of leases.changeLeases) await assertChangeLeaseCurrent(lease);
+  await assertChangeLeaseCurrent(leases.projectionLease);
+  if (leases.appendSession) await assertChangeLeaseCurrent(leases.appendSession);
+}
+
+export async function assertAppendSessionCurrent(root: string, session: AppendLeaseSession): Promise<void> {
+  if (!appendSessions.has(session) || session.root !== resolve(root)) throw new LeaseFencedError();
+  await assertChangeLeaseCurrent(session);
+  await session.authorize?.();
+}
+
+/** @id CODE-M5-CHECKPOINT-PROJECTION-001
+ * @implements REQ-M5-LIFECYCLE-006
+ * @design DES-M5-004
+ */
+export async function writeAuthorizedJson(
+  root: string, path: string, value: unknown, authorize: () => Promise<void>,
+  canonical = true,
+): Promise<void> {
+  return writeAuthorizedFile(root, path,
+    canonical ? canonicalBytes(value) : Buffer.from(`${JSON.stringify(value, null, 2)}\n`), authorize);
+}
+
+export async function writeAuthorizedFile(
+  root: string, path: string, bytes: Uint8Array, authorize: () => Promise<void>,
+): Promise<void> {
+  await authorize();
+  const destination = join(root, path);
+  await mkdir(dirname(destination), { recursive: true });
+  const temporary = `${destination}.${process.pid}-${randomUUID()}.tmp`;
+  try {
+    const handle = await open(temporary, 'wx');
+    try {
+      await handle.writeFile(bytes);
+      await handle.sync();
+    } finally {
+      await handle.close();
+    }
+    await authorize();
+    await retryTransientLeaseFs(async () => {
+      await authorize();
+      await rename(temporary, destination);
+    });
+  } finally {
+    await rm(temporary, { force: true });
+  }
+}
+
+export async function writeChangeProjection(
+  root: string, leases: ChangeProjectionAppendLeaseSet, evidence: unknown,
+): Promise<void> {
+  await writeAuthorizedJson(root, '.musubix/evidence/changes.json', evidence,
+    () => assertLeaseSetCurrent(leases), false);
 }
 
 export async function releaseChangeLease(lease: ChangeLease): Promise<void> {
   await releaseOrderLease(lease);
 }
 
-export async function loadJournalRecords(root: string): Promise<JournalRecord[]> {
+export async function inspectJournalFiles(root: string): Promise<{ records: JournalRecord[]; errors: string[] }> {
   const records: JournalRecord[] = [];
+  const errors: string[] = [];
   for (const stream of ['normal', 'bootstrap'] as const) {
     const directory = join(root, '.musubix', 'journal', stream);
     let names: string[];
@@ -248,10 +562,28 @@ export async function loadJournalRecords(root: string): Promise<JournalRecord[]>
       throw cause;
     }
     for (const name of names.filter((entry) => /^\d{12}\.json$/.test(entry))) {
-      records.push(JSON.parse(await readFile(join(directory, name), 'utf8')) as JournalRecord);
+      try {
+        const value: unknown = JSON.parse(await readFile(join(directory, name), 'utf8'));
+        if (!value || typeof value !== 'object' || Array.isArray(value)) {
+          errors.push(`Malformed journal record ${stream}/${name}.`);
+        } else records.push(value as JournalRecord);
+      } catch {
+        errors.push(`Unreadable journal record ${stream}/${name}.`);
+      }
     }
   }
   records.sort((left, right) => left.order - right.order);
+  return { records, errors };
+}
+
+export async function loadJournalRecords(root: string): Promise<JournalRecord[]> {
+  const { records, errors } = await inspectJournalFiles(root);
+  if (errors.length) throw new Error(errors.join(' '));
+  validateJournalRecords(records);
+  return records;
+}
+
+export function validateJournalRecords(records: JournalRecord[]): void {
   for (const [index, record] of records.entries()) {
     const { recordSha256, ...payload } = record;
     const previous = index === 0 ? null : records[index - 1]!.recordSha256;
@@ -263,59 +595,66 @@ export async function loadJournalRecords(root: string): Promise<JournalRecord[]>
       throw new Error(`Invalid journal chain at order ${record.order}.`);
     }
   }
-  return records;
+}
+
+/** @id CODE-M5-FINALIZATION-DURABILITY-001
+ * @implements REQ-M5-MULTI-CHANGE-006
+ * @design DES-M5-MULTI-CHANGE-003 DES-M5-MULTI-CHANGE-008
+ */
+export async function syncJournalDirectory(path: string): Promise<void> {
+  if (process.platform === 'win32') return;
+  let handle;
+  try {
+    handle = await open(path, 'r');
+    await handle.sync();
+  } catch (cause) {
+    if (!['EINVAL', 'ENOTSUP', 'EOPNOTSUPP', 'EBADF'].includes(errorCode(cause) ?? '')) throw cause;
+  } finally {
+    await handle?.close();
+  }
 }
 
 /** @id CODE-M5-LIFECYCLE-002
  * @implements REQ-M5-LIFECYCLE-002 REQ-M5-PARALLEL-011
  * @design DES-M5-004
  */
-export async function appendJournalRecord(root: string, input: JournalRecordInput): Promise<JournalRecord> {
-  const lease = await acquireOrderLease(root);
-  try {
-    const records = await loadJournalRecords(root);
-    const existing = records.find((record) => record.idempotencyKey === input.idempotencyKey);
-    if (existing) {
-      if (existing.stream !== input.stream
-        || existing.changeId !== input.changeId
-        || existing.kind !== input.kind
-        || !canonicalBytes(existing.payload).equals(canonicalBytes(input.payload))) {
-        throw new Error(`JOURNAL_IDEMPOTENCY_CONFLICT: ${input.idempotencyKey} is bound to different input.`);
-      }
-      return existing;
+export async function appendJournalRecord(
+  root: string, input: JournalRecordInput, session?: AppendLeaseSession,
+): Promise<JournalRecord> {
+  if (!session) return withOrderLease(root, (held) => appendJournalRecord(root, input, held));
+  await assertAppendSessionCurrent(root, session);
+  const records = await loadJournalRecords(root);
+  const existing = records.find((record) => record.idempotencyKey === input.idempotencyKey);
+  if (existing) {
+    if (existing.stream !== input.stream
+      || existing.changeId !== input.changeId
+      || existing.kind !== input.kind
+      || !canonicalBytes(existing.payload).equals(canonicalBytes(input.payload))) {
+      throw new Error(`JOURNAL_IDEMPOTENCY_CONFLICT: ${input.idempotencyKey} is bound to different input.`);
     }
-    const previous = records.at(-1);
-    const payload = {
-      schemaVersion: 1 as const,
-      order: records.length + 1,
-      ...input,
-      previousSha256: previous?.recordSha256 ?? null,
-    };
-    const record: JournalRecord = {
-      ...payload,
-      recordSha256: sha256(canonicalBytes(payload)),
-    };
-    const destination = join(
-      root,
-      '.musubix',
-      'journal',
-      input.stream,
-      `${String(record.order).padStart(12, '0')}.json`,
-    );
-    await mkdir(dirname(destination), { recursive: true });
-    const temporary = `${destination}.${randomUUID()}.tmp`;
-    const handle = await open(temporary, 'wx');
-    try {
-      await handle.writeFile(canonicalBytes(record));
-      await handle.sync();
-    } finally {
-      await handle.close();
-    }
-    await rename(temporary, destination);
-    return record;
-  } finally {
-    await releaseOrderLease(lease);
+    return existing;
   }
+  const previous = records.at(-1);
+  const payload = {
+    schemaVersion: 1 as const,
+    order: records.length + 1,
+    ...input,
+    previousSha256: previous?.recordSha256 ?? null,
+  };
+  const record: JournalRecord = {
+    ...payload,
+    recordSha256: sha256(canonicalBytes(payload)),
+  };
+  const destination = join(
+    root,
+    '.musubix',
+    'journal',
+    input.stream,
+    `${String(record.order).padStart(12, '0')}.json`,
+  );
+  await writeAuthorizedJson(root, relative(root, destination), record,
+    () => assertAppendSessionCurrent(root, session));
+  return record;
 }
 
 export async function verifyJournal(root: string): Promise<JournalRecord[]> {

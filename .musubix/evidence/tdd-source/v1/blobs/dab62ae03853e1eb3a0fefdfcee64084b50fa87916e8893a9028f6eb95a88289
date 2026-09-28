@@ -1,0 +1,70 @@
+# ADR-0024: Rebuild stale test currency with controlled implementation faults
+
+Status: accepted
+
+## Context
+
+GitHub Issue #34 の11件は、現在の authoritative test source と最後に検証された
+Green fingerprint が異なる。各 test は現在 pass するため、そのまま Green を再記録
+しても genuine Red/Green cycle にならない。また、保存済み fingerprint は旧
+algorithm が現在の source から計算する値とも一致せず、`tdd migrate` の
+behavior-preserving migration 条件を満たさない。
+
+この変更の目的は runtime behavior や test behavior を変えることではなく、
+現在の正しい実装に対する真正な failure/pass 観測を新しい requirement と
+CHANGE generation に結合することである。したがって Red を作る方法は、
+最終候補に残らず、対象 test の既存 assertion が意図した契約違反を直接検出し、
+各観測間で完全に復元できなければならない。
+
+## Decision
+
+各 test に対して、test body ではなくその assertion が依存する単一の
+implementation symbol に deterministic な一時 fault を導入する。
+`npx musubix5 tdd red|green <TEST-ID> --requirement REQ-M5-TDD-CURRENCY-001 --command test`
+の focused Vitest adapter で対象 test の失敗を確認・記録した直後に fault を
+復元し、差分確認が成功するまで次の Red に進まない。
+
+11件すべての Red を復元済み tree 上で完了してから CHANGE Red phase を記録する。
+その後、TDD source-currency selector の `effectiveLatestCycle` に
+`CODE-M5-TDD-CURRENCY-REPAIR-001` trace annotation だけを追加し、CHANGE
+implementation phase を記録する。この annotation は requirement の
+implementation coverage と CHANGE implementation checkpoint に必要な実装差分を
+提供する。全11件の Green は同一の fault-free annotated tree で記録し、その後に
+CHANGE Green phase を記録する。Red/Green の non-test source fingerprint 差は
+記録済み evidence を含む current source snapshot から検証し、annotation だけを
+差分の原因とはみなさない。
+
+## Alternatives considered
+
+- `tdd migrate` を使用する。現在 source の legacy fingerprint と保存済み値が
+  一致せず、migration が保証する behavior-preserving 条件を証明できないため却下。
+- test assertion または fixture を一時変更して Red を作る。test fingerprint
+  自体を故意に変え、authoritative test source currency の修復対象を移動させるため
+  却下。
+- validator または stale 判定を緩和する。実際の outdated evidence を
+  success-shaped に隠し、Issue #34 の受け入れ条件に反するため却下。
+- 11件を同時に壊して一括 Red を記録する。failure の原因と test の対応が曖昧になり、
+  fault の残存範囲が広がるため却下。
+- comment-only change だけで Red と Green を再記録する。現在 pass する test に
+  genuine failure observation が存在せず、要求された Red/Green cycle にならないため
+  却下。
+
+## Consequences
+
+- 各 Red は既存 assertion が実装契約違反を検出した実観測となり、migration に依存
+  しない。
+- 一時 fault は control worktree に短時間存在するため、各 cycle の直後に復元確認を
+  fail-closed で行う必要がある。
+- 最終 product behavior と test body は変わらないが、requirements/design/ADR、
+  trace annotation、および TDD/order/change evidence は更新される。
+- 単一の implementation annotation は source-currency selection の実装責任を
+  requirement と design に追跡し、CHANGE implementation checkpoint に必要な
+  relevant implementation change を提供する。
+- completion 判定は未追跡ファイルと変更済み evidence を含む disposable copy と、
+  release approval 後の control worktree の両方で repository-wide stale 件数0を
+  証明する。
+
+## Links
+
+Requirements: REQ-M5-TDD-CURRENCY-001
+Design: DES-M5-TDD-CURRENCY-001

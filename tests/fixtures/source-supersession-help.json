@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "snapshots": [
+    {
+      "command": "tdd source-supersession",
+      "stdout": "Usage: musubix5 tdd source-supersession [options] [command]\n\nReview, approve and record exact test-source supersession evidence\n\nOptions:\n  -h, --help         display help for command\n\nCommands:\n  prepare [options]  Prepare a sealed review using unchanged current inputs\n  approve [options]  Record dedicated exact-hash human approval\n  record [options]   Admit and append a journal-first source terminal\n  resume [options]   Complete only a sealed journal suffix\n  replay [options]   Read an exact completed result without writes\n  help [command]     display help for command\n"
+    },
+    {
+      "command": "tdd source-supersession prepare",
+      "stdout": "Usage: musubix5 tdd source-supersession prepare [options]\n\nPrepare a sealed review using unchanged current inputs\n\nOptions:\n  --root <directory>                   Project root / プロジェクトルート (default: \".\")\n  --json                               Machine-readable JSON\n  --change <changeId>                  Explicit active CHANGE\n  --generation <positive-integer>      Explicit active generation\n  --operation-id <id>                  Immutable lowercase operation identity\n  --test <testId>                      Exact annotated test\n  --cycle <cycleId>                    Exact target cycle\n  --terminal-kind <kind>               Exact target terminal kind (choices:\n                                       \"green\", \"refactor\", \"migration\",\n                                       \"source-supersession\")\n  --terminal-order <positive-integer>  Exact target order\n  --terminal-sha256 <sha256>           Exact target payload digest\n  --old-fingerprint <sha256>           Exact target source fingerprint\n  --requirement <requirementId>        Requirement within the active CHANGE\n  --command <name>                     Unchanged configured selected runner\n  --mode <mode>                        Review mode (choices: \"test-only\",\n                                       \"behavior-change\")\n  --old-block <regular-file>           Historical canonical block for test-only\n                                       mode\n  --hunk-review <regular-json-file>    Exact hunk review array for test-only\n                                       mode\n  --replacement-cycle <cycleId>        Independent genuine replacement for\n                                       behavior-change mode\n  --reason <text>                      Auditable review reason\n  -h, --help                           display help for command\n"
+    },
+    {
+      "command": "tdd source-supersession approve",
+      "stdout": "Usage: musubix5 tdd source-supersession approve [options]\n\nRecord dedicated exact-hash human approval\n\nOptions:\n  --root <directory>               Project root / プロジェクトルート (default: \".\")\n  --json                           Machine-readable JSON\n  --change <changeId>              Explicit active CHANGE\n  --generation <positive-integer>  Explicit active generation\n  --operation-id <id>              Immutable lowercase operation identity\n  --artifact-sha256 <sha256>       Exact prepared review digest\n  --approver <name>                Human reviewer\n  --confirm                        Confirm review of this exact artifact\n                                   (default: false)\n  -h, --help                       display help for command\n"
+    },
+    {
+      "command": "tdd source-supersession record",
+      "stdout": "Usage: musubix5 tdd source-supersession record [options]\n\nAdmit and append a journal-first source terminal\n\nOptions:\n  --root <directory>               Project root / プロジェクトルート (default: \".\")\n  --json                           Machine-readable JSON\n  --change <changeId>              Explicit active CHANGE\n  --generation <positive-integer>  Explicit active generation\n  --operation-id <id>              Immutable lowercase operation identity\n  --artifact-sha256 <sha256>       Exact prepared review digest\n  --approval-sha256 <sha256>       Exact dedicated approval digest\n  -h, --help                       display help for command\n"
+    },
+    {
+      "command": "tdd source-supersession resume",
+      "stdout": "Usage: musubix5 tdd source-supersession resume [options]\n\nComplete only a sealed journal suffix\n\nOptions:\n  --root <directory>               Project root / プロジェクトルート (default: \".\")\n  --json                           Machine-readable JSON\n  --change <changeId>              Explicit active CHANGE\n  --generation <positive-integer>  Explicit active generation\n  --operation-id <id>              Immutable lowercase operation identity\n  --request-sha256 <sha256>        Exact sealed request digest\n  -h, --help                       display help for command\n"
+    },
+    {
+      "command": "tdd source-supersession replay",
+      "stdout": "Usage: musubix5 tdd source-supersession replay [options]\n\nRead an exact completed result without writes\n\nOptions:\n  --root <directory>               Project root / プロジェクトルート (default: \".\")\n  --json                           Machine-readable JSON\n  --change <changeId>              Explicit active CHANGE\n  --generation <positive-integer>  Explicit active generation\n  --operation-id <id>              Immutable lowercase operation identity\n  --request-sha256 <sha256>        Exact sealed request digest\n  -h, --help                       display help for command\n"
+    }
+  ],
+  "aggregateSha256": "02206c07e525a301d8ad72ff25ef19138c5d7bc8de8f84d1c5777474f97e0fea"
+}

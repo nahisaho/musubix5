@@ -26,6 +26,69 @@ covered by musubix3 v0.1.18 contract tests. Other intentional incompatibilities
 must be added to this guide together with an ADR and regression test before
 implementation.
 
+## Concurrent TDD ledger writes
+
+CHANGE-0017 adds `TDD_EVIDENCE_LEASE_BUSY` (exit 1) for ordinary and no-active
+TDD append-lease timeouts. CHANGE/projection timeouts retain
+`CHANGE_PROJECTION_LEASE_BUSY`; expired or replaced handles retain
+`LEASE_FENCED`. Candidate TDD retains its candidate lease/journal/ownership
+diagnostics. All ledger writers reload and merge within short ordered
+critical sections; configured runners do not hold shared leases. No evidence
+format migration, historical rehash, or new TDD credit is implied.
+
+Lease renewal keeps the 30-second TTL but never reduces the currently
+authorized owner's expiry when the wall clock moves backward. Concurrent
+renewals for the same owner are serialized; expired, replaced, or fenced
+owners cannot supply an expiry floor or authorize a write.
+
+## Explicit test-source supersession
+
+The additive `tdd source-supersession prepare|approve|record|resume|replay`
+family implements ADR-0036 under REQ-M5-LIFECYCLE-006 and REQ-M5-COMPAT-013.
+Every invocation names `--change`, positive `--generation`, and
+`--operation-id`; preparation additionally confirms the exact test, cycle,
+terminal kind/order/payload hash, old fingerprint, requirement, and runner.
+Use `tdd validate --json` or `status --json` for `sourceTerminalSelectors`.
+Parent and child `--help` list the closed option sets; no force or waiver
+mode exists.
+
+`prepare --mode test-only --old-block FILE --hunk-review FILE --reason TEXT`
+validates the historical canonical block and exact reviewed hunks, then runs
+both block variants independently on one current declared input snapshot.
+It is not historical execution replay. Behavior changes instead use
+`--mode behavior-change --replacement-cycle ID` with an independent genuine
+Red/Green cycle. Never manufacture a Red for an already-passing clock change.
+
+Preparation returns `artifactPath` and `artifactSha256`. Dedicated
+exact-hash human approval is mandatory:
+`approve --artifact-sha256 HASH --approver NAME --confirm`.
+Requirements/design approval does not substitute for this approval.
+Approval returns `approvalPath` and `approvalSha256`; only
+`record --artifact-sha256 HASH --approval-sha256 HASH` admits the operation.
+The versioned immutable files live below
+`.musubix/evidence/tdd-source/v1/CHANGE-ID/gGENERATION/OPERATION-ID/`.
+Review, approval, reports and content-addressed blobs are source-input neutral.
+
+Recording is journal-first: journal, evidence order, then one atomic
+`tdd.json` update containing both the source chain entry and
+`sourceSupersessions`. A pending operation requires explicit
+`resume --request-sha256 HASH`; `replay --request-sha256 HASH` only reads a
+completed exact match. All three completed results are identical, with no
+invocation-local replay flag. Resume uses sealed admission without rerunning
+tests or rebinding mutable source/general approvals. It still requires the
+current explicit generation and valid archived review/approval references.
+
+Source completion changes source currency and the relevant completed TDD
+digest, not coverage, batch Green, or quality credit. Refresh ordinary quality
+evidence after current batch validation. Migrate remains legacy-only;
+Refactor still requires the original Red fingerprint. Generation-4 order
+3274 remains immutable, historical and non-credit. Pending operations block
+only their exact test scope or explicit endpoints; corruption fails closed
+globally. Gate/status expose `sourceSupersessions` and quoted recovery
+arguments; status remains read-only and reports `ready: false` when blocked.
+Usage errors exit 2 as `CLI_ERROR`; source domain errors exit 1; operational
+errors exit 2 as `TDD_SOURCE_IO_FAILED`. Never edit projections to clear them.
+
 ## Node.js 24 candidate matrix
 
 GitHub Actions now installs Node.js 24 for candidate verification, release, and

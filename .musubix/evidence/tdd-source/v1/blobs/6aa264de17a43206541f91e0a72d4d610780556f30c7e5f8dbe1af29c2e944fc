@@ -1,0 +1,59 @@
+import { execFileSync } from 'node:child_process';
+import { mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname,join,resolve } from 'node:path';
+import { afterEach,describe,expect,it } from 'vitest';
+
+const temporaryDirectories: string[]=[];
+
+afterEach(() => {
+  for(const directory of temporaryDirectories.splice(0)) {
+    rmSync(directory,{ recursive: true,force: true });
+  }
+});
+
+describe('CHANGE writer lease',() => {
+  /** @id TEST-M5-CHECKPOINT-NONGIT-ORDER-001
+   * @verifies REQ-M5-LIFECYCLE-006
+   * @design DES-M5-004
+   */
+  it('TEST-M5-CHECKPOINT-NONGIT-ORDER-001 preserves serialized evidence recording in initialized non-Git consumer projects', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'musubix5-nongit-order-'));
+    temporaryDirectories.push(root);
+    const { appendEvidenceOrder, inspectEvidenceOrder } = await import('../packages/analysis/src/order.js');
+    const records = await Promise.all([1, 2].map((index) => appendEvidenceOrder(root, {
+      kind: 'tdd', entityId: `cycle-${index}`, phase: 'red',
+    })));
+    expect(records.map((record) => record.sequence).sort()).toEqual([1, 2]);
+    expect((await inspectEvidenceOrder(root)).valid).toBe(true);
+  });
+
+  /** @id TEST-M5-CHECKPOINT-ORDER-001
+   * @verifies REQ-M5-LIFECYCLE-006
+   * @design DES-M5-004
+   */
+  it('TEST-M5-CHECKPOINT-ORDER-001 serializes evidence orders and reuses a supplied append session',async () => {
+    mkdirSync(resolve('.musubix/cache'),{ recursive: true });
+    const root=mkdtempSync(resolve('.musubix/cache/checkpoint-order-'));
+    temporaryDirectories.push(root);
+    execFileSync('git',['init','--quiet',root]);
+    const journal=await import('../packages/analysis/src/journal.js');
+    const order=await import('../packages/analysis/src/order.js');
+    const records=await Promise.all(Array.from({ length: 6 },(_,index) =>
+      order.appendEvidenceOrder(root,{ kind: 'change',entityId: `CHANGE-${index}`,phase: 'g5:impact' })));
+    expect(records.map((record) => record.sequence).sort()).toEqual([1,2,3,4,5,6]);
+    const append=order.appendEvidenceOrder as unknown as (
+      root: string,input: { kind: 'change'; entityId: string; phase: string },
+      session: import('../packages/analysis/src/journal.js').ChangeLease,
+    ) => Promise<{ sequence: number }>;
+    await journal.withOrderLease(root,async (session) => {
+      expect((await append(root,{ kind: 'change',entityId: 'CHANGE-0017',phase: 'g5:red' },session)).sequence).toBe(7);
+      const owner=JSON.parse(readFileSync(join(session.path,'owner.json'),'utf8'));
+      writeFileSync(join(session.path,'owner.json'),JSON.stringify({ ...owner,expiresAt: 0 }));
+      await expect(append(root,{ kind: 'change',entityId: 'CHANGE-0017',phase: 'g5:green' },session))
+        .rejects.toThrow('LEASE_FENCED');
+    });
+    expect((await order.inspectEvidenceOrder(root)).valid).toBe(true);
+    expect((await order.loadEvidenceOrder(root))!.records).toHaveLength(7);
+  });
+

@@ -1,0 +1,61 @@
+---
+status: accepted
+---
+# ADR-0019: Formalize repository Skill workflow contracts
+
+## Context
+
+The repository-owned `sdd-change` and `sdd-requirements` Skills already contain
+trace annotations for two session-scoped requirements and two design
+components. Those targets were never added to normative artifacts because the
+Skill files were accidentally excluded from this repository's trace inputs.
+Correcting input selection exposes the missing targets as strict-trace
+failures.
+
+The underlying workflow behavior is already intentional: each new development
+request begins with fresh requirements and change scope unless continuation is
+explicit, and implementation requires current validated and approved
+requirements and design.
+
+## Decision
+
+Formalize the existing workflow contracts as
+`REQ-SESSION-SCOPED-DEVELOPMENT-001`,
+`REQ-SESSION-SCOPED-DEVELOPMENT-002`,
+`DES-SESSION-SCOPED-DEVELOPMENT-001`, and
+`DES-SESSION-SCOPED-DEVELOPMENT-002`.
+
+Keep the existing Skill code node identities and bind them directly to the new
+normative targets. Verify both requirements with one trace-annotated contract
+test that reads the authoritative Skill files and asserts each obligation
+against the file that owns it. Do not create proxy code or test nodes merely to
+satisfy trace coverage.
+
+## Rejected alternatives
+
+- Remove the existing Skill annotations: rejected because the workflow files
+  are repository-owned implementation and should participate in traceability.
+- Bind the Skill nodes to broad existing lifecycle requirements: rejected
+  because those requirements govern runtime evidence, not Copilot development
+  session behavior.
+- Leave the targets undefined and tolerate dangling edges: rejected because
+  strict trace requires zero dangling endpoints and the constitution forbids
+  claiming complete evidence with trace errors.
+- Duplicate the Skill text into a TypeScript proxy: rejected because it would
+  make a non-authoritative copy appear to implement the workflow.
+
+## Consequences
+
+Strict trace can include the real Skill code nodes without dangling requirement
+or design targets. Future changes to the session-scoped workflow obligations
+must update the normative requirements, design, Skill text, and contract test
+together.
+
+The contract test verifies textual workflow invariants rather than executing a
+Copilot session, so it proves the repository-owned instruction contract, not
+external agent compliance.
+
+## Links
+
+Requirements: REQ-SESSION-SCOPED-DEVELOPMENT-001 REQ-SESSION-SCOPED-DEVELOPMENT-002
+Design: DES-SESSION-SCOPED-DEVELOPMENT-001 DES-SESSION-SCOPED-DEVELOPMENT-002

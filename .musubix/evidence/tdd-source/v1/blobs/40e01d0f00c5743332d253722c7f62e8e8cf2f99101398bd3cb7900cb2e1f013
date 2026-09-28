@@ -1,0 +1,88 @@
+---
+status: accepted
+---
+# ADR-0014: Supersede accidental duplicate workflow declarations with audited corrections
+
+## Context
+
+Workflow declarations and their invocation reconciliation evidence are
+append-only. A later accidental duplicate completed declaration can therefore
+report declaration-scoped `WORKFLOW_INVOCATION_REUSED` even when the
+lowest-positioned identical declaration was correctly bound to the sole
+completed Skill invocation. Deleting or rewriting the duplicate would destroy
+audit history, fabricating another invocation would falsify evidence, and a
+workflow waiver cannot restore readiness because mandatory waivers remain
+non-pass.
+
+## Decision
+
+Add a narrow `workflow declaration supersede WORKFLOW_INVOCATION_REUSED`
+operation. It accepts only an explicitly owned later duplicate whose
+lowest-positioned duplicate-identity declaration is bound to an unused
+completed invocation by the sole current workflow verification object. Target
+selection uses Skill, phase, byte-exact recorded timestamp, and optional
+absolute event index. Duplicate identity includes version, provenance, CHANGE,
+generation, sorted requirements, phase, status, reason, and command digest, but
+not the recorded timestamp.
+
+Persist corrections as authoritative normal-journal records and rebuild the
+separate `.musubix/evidence/workflow-declaration-corrections.json` projection
+in ascending journal order. Its envelope is schema version 1 plus a
+`corrections` array; the published correction head hashes that array, not the
+envelope. A correction binds the immutable target and canonical
+positions/digests, duplicate digest, explicit ownership, expected diagnostic,
+canonical invocation, recording verification provenance, approver, reason,
+monotonic journal order, idempotency key, and predecessor hash.
+The journal record separately binds fencing provenance, which is validated for
+write authority but excluded from the projection entry and correction replay
+identity. Acquire the CHANGE lease
+before the journal service's internal global order lease, verify fencing before
+and after the append, and replace the projection only afterward. The first
+persisted predecessor hash is 64 zeroes; every later persisted predecessor hash
+is the canonical SHA-256 of the complete prior projection correction entry,
+including its predecessor hash and excluding the envelope and journal metadata.
+No separate payload-digest field is persisted. Whole-array
+canonical SHA-256 values define both the workflow-events head and correction
+evidence head. Journal idempotency lookup makes exact replay idempotent; a
+differing record for the same target fails without writing.
+
+Apply valid corrections before invocation cursor matching. The target consumes
+no invocation and suppresses only its declaration-scoped
+`WORKFLOW_INVOCATION_REUSED` and companion `WORKFLOW_BINDING_MISSING`; it emits
+informational `WORKFLOW_DECLARATION_SUPERSEDED`. The correction grants no
+evidence credit, does not suppress canonical or unrelated failures, and does
+not satisfy release strict-source proof. A current waiver and correction for
+the same target are mutually exclusive.
+
+## Rejected alternatives
+
+- Delete or edit the duplicate declaration: rejected because workflow evidence
+  is append-only and historical bytes are audit inputs.
+- Re-run or fabricate the missing Skill invocation: rejected because the
+  accidental declaration did not correspond to another real invocation.
+- Treat an active workflow waiver as pass: rejected because waivers must remain
+  visible non-pass evidence.
+- Rebind the duplicate to the canonical invocation: rejected because one
+  invocation cannot satisfy two declarations and would advance cursor semantics
+  incorrectly.
+- Store corrections in `workflow.events`: rejected because each correction
+  would change declaration positions and invalidate the verification head it
+  must authenticate.
+- Correct inference-owned, cross-version, cross-provenance, cross-CHANGE, or
+  cross-generation declarations: rejected because their stable ownership or
+  duplicate identity is not the same audited event.
+
+## Consequences
+
+Accidental later duplicates have a deterministic repair path without deleting
+evidence or weakening workflow policy. The CLI, public JSON, evidence registry,
+gate/status projection, compatibility inventory, migration guide, and tests
+gain additive correction surfaces. Three or more identical declarations need
+one correction per later target, all referencing the shared lowest-positioned
+canonical declaration. Corrupt or divergent correction chains remain non-pass
+with `WORKFLOW_DECLARATION_CORRECTION_INVALID`.
+
+## Links
+
+Requirements: REQ-M5-COMPAT-013 REQ-M5-EVIDENCE-003 REQ-M5-EVIDENCE-005 REQ-M5-EVIDENCE-006 REQ-M5-LIFECYCLE-004 REQ-M5-LIFECYCLE-005 REQ-M5-WAIVER-001
+Design: DES-M5-002 DES-M5-003 DES-M5-004 DES-M5-005 DES-M5-007 DES-M5-015 DES-M5-018

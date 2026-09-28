@@ -1,0 +1,64 @@
+---
+status: accepted
+---
+# ADR-0012: Isolate native subagents with requirement-batch worktrees
+
+## Context
+
+Parallel Copilot subagents sharing one worktree can overwrite incomplete edits,
+dirty generated state, or run mutually interfering tests. A second orchestration
+runtime would duplicate Copilot's native Agent lifecycle and violate the
+existing Skill boundary. CHANGE-0003 requires physical isolation, bounded
+parallelism, auditable assignment ownership, normal TDD evidence, deterministic
+integration, and preservation of all existing Skills.
+
+## Decision
+
+Use Copilot native subagents for execution and musubix5 only for deterministic
+state, worktree, evidence, and validation services. Divide one approved CHANGE
+generation into a schema-v1 DAG of requirement-batch assignments. Give each
+assignment attempt a retained branch and dedicated worktree under the Git common
+directory. Dependent assignments materialize validated dependency ranges onto
+the immutable plan base before their own commits.
+
+Persist authoritative transitions in the existing ordered journal under the
+CHANGE lease. Derive waiting, queued, blocked, and slot counts rather than
+persisting them. Agents call musubix5 with the control state root while tests run
+inside assignment worktrees; assignment `.musubix` paths remain untouched.
+
+Integrate only validated assignment-owned commit ranges through numbered
+integration attempts. Stable topological order plus assignment ID is the
+tie-breaker. Persist provisional consumed-range provenance before the quality
+gate so assignment TDD can be selected, then mark it verified only after all
+required integration checks pass. Fast-forward the existing CHANGE candidate;
+never rewrite it. Retain all assignment and integration branches. Remove only
+known clean worktrees under the managed root.
+
+## Rejected alternatives
+
+- Share one worktree: rejected because concurrent edits and generated state are
+  not safely attributable.
+- Create one worktree per CHANGE only: rejected because it does not isolate
+  simultaneous assignment attempts.
+- Let every Agent merge its own branch: rejected because integration order,
+  provenance, and conflict handling would become non-deterministic.
+- Use patch files instead of commits: rejected because ancestry, retry, and
+  exact consumed-range proof would be weaker.
+- Let musubix5 launch Copilot subprocesses: rejected because it creates a second
+  Agent orchestration system and couples the CLI to one host implementation.
+- Auto-resolve cherry-pick conflicts: rejected because generated conflict
+  choices cannot be attributed to an approved requirement batch.
+
+## Consequences
+
+Parallel execution consumes more disk and dependency-install time. Branch
+retention increases repository metadata until an operator deletes branches
+separately. The design gains deterministic retry, inspection, provenance, and
+failure isolation. Integration can stop on semantic conflicts and require a new
+assignment attempt, but independent Agent work continues after unrelated
+failures.
+
+## Links
+
+Requirements: REQ-M5-TDD-003 REQ-M5-WORKTREE-001 REQ-M5-PARALLEL-001 REQ-M5-PARALLEL-002 REQ-M5-PARALLEL-003 REQ-M5-PARALLEL-004 REQ-M5-PARALLEL-005 REQ-M5-PARALLEL-006 REQ-M5-PARALLEL-007 REQ-M5-PARALLEL-008 REQ-M5-PARALLEL-009 REQ-M5-PARALLEL-010 REQ-M5-PARALLEL-011 REQ-M5-PARALLEL-012 REQ-M5-PARALLEL-013 REQ-M5-PARALLEL-014 REQ-M5-PARALLEL-015 REQ-M5-PARALLEL-016 REQ-M5-PARALLEL-017
+Design: DES-M5-011 DES-M5-012 DES-M5-PARALLEL-002 DES-M5-PARALLEL-003 DES-M5-PARALLEL-004 DES-M5-PARALLEL-005 DES-M5-PARALLEL-006 DES-M5-PARALLEL-007 DES-M5-PARALLEL-008 DES-M5-PARALLEL-010

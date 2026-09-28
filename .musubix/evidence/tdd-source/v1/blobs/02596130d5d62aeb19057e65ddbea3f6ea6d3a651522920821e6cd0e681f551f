@@ -1,0 +1,124 @@
+---
+status: accepted
+---
+# ADR-0018: Recognize source repositories by exact manifest identity
+
+## Context
+
+Trace input selection currently treats a root package named `musubix3` as the
+musubix source repository. The current repository is named `musubix5`, so its
+owned Skill declarations are omitted. Replacing the literal with `musubix5`
+alone would fix this repository but would classify any consumer that reused the
+package name as a source repository. Removing legacy recognition would also
+change the pinned musubix3 compatibility-source behavior.
+
+Once Skill Markdown is selected, annotation-shaped examples can be mistaken for
+real declarations. The Skill documents contain executable trace declarations
+and instructional code examples, so excluding the whole Markdown file or
+ignoring all Markdown comments would lose authoritative nodes.
+
+## Decision
+
+Recognize a musubix source repository only by one of two exact root-manifest
+pairs:
+
+- package name `musubix5` and object-form repository URL
+  `https://github.com/nahisaho/musubix5.git`; or
+- package name `musubix3` and object-form repository URL
+  `https://github.com/nahisaho/musubix3.git`.
+
+Do not normalize repository shorthands, protocols, suffixes, or casing for this
+selector. Missing or malformed manifests and all partial matches are consumer
+states and do not throw. This predicate controls only Skill Markdown inclusion;
+normative artifacts and supported programming-language sources retain their
+existing selectors.
+
+Before the generic annotation matcher processes a path satisfying
+`isSkillSource`, apply a deterministic line-preserving Markdown mask. This mask
+replaces, rather than precedes, the generic quote/string mask for Skill
+Markdown, because prose apostrophes or quotation marks must not hide later
+authoritative declarations. Never apply Markdown rules to programming-language
+or YAML inputs.
+
+Mask in this order:
+
+1. Fenced blocks whose opener has zero to three leading spaces and at least
+   three backticks or tildes. A closer has zero to three leading spaces, uses
+   the same character, and has a run at least as long as the opener. Ignore the
+   info string. Mask both delimiter lines. An unterminated fence masks through
+   EOF.
+2. Top-level indented blocks that begin at document start or after a line that
+   was blank in the original text, with at least four spaces or one tab. When a
+   preceding nonblank line exists, require it to begin at column zero and not
+   be a list marker matching `[-+*]` or `\d+[.)]` followed by whitespace. Mask
+   consecutive indented lines and internal originally blank lines, stop before
+   the first originally nonblank line without the required indentation, and
+   exclude trailing blank lines from the block. A masked fence line never
+   becomes a synthetic blank-line trigger, and indentation that continues a
+   paragraph or list item is not a new code block.
+3. Inline spans in remaining unmasked text. Delimiters are equal-length
+   backtick runs, the first equal-length run before the next line that was blank
+   in the original text closes the span, and an opener without such a closer
+   masks nothing.
+
+Replace every masked character except `\r` and `\n` with a space, preserving
+the total JavaScript string length, CRLF shape, a leading BOM, source offsets,
+and reported line numbers. Ignore a leading BOM only while recognizing the
+first line's fence or indentation structure. Discover candidate comment ranges
+and test for `@id`, `@implements`, `@verifies`, or `@design` using the searchable
+masked slice. Parse every Skill node ID and annotation target from that masked
+slice as well; use original text only to calculate the preserved line location.
+This prevents an opener or real annotation outside a code example from
+capturing a masked closer, ID, or target inside it. Keep the existing annotation
+grammar and diagnostics outside masked regions. Implement the limited
+code-example scanner locally instead of adding a Markdown parser dependency or
+attempting full CommonMark rendering.
+
+## Rejected alternatives
+
+- Match only `package.json.name === "musubix5"`: rejected because a consumer
+  can reuse that package name and would then trace bundled implementation
+  Skills.
+- Match the Git working-tree origin: rejected because trace input collection is
+  also used in copied fixtures and source archives, and origin lookup would add
+  process and environment dependence.
+- Add a consumer-controlled `trace.skillSources` configuration flag: rejected
+  because it would let consumers silently promote bundled implementation Skills
+  into strict trace inputs and would change evidence scope through configuration
+  rather than an approved source-repository identity.
+- Remove musubix3 recognition: rejected because the pinned compatibility source
+  remains an approved analysis target.
+- Parse every Markdown construct with a new CommonMark dependency: rejected
+  because only code-example exclusion is required and a dependency would
+  enlarge the runtime and packaging surface.
+- Ignore all annotations in Markdown: rejected because repository Skill
+  declarations are authoritative trace nodes.
+
+## Consequences
+
+The current repository and pinned legacy source include their owned Skill
+declarations, while ordinary consumers fail closed to the prior exclusion
+behavior. Repository trace nodes, edges, fingerprints, and dependent evidence
+change when Skill files change.
+
+The local Markdown scanner must preserve length and newlines and is deliberately
+limited to fenced, indented, and inline code examples. Tests must cover both
+recognized identities; missing, unreadable, malformed, non-object, and
+non-string manifest fields; declaration discovery outside code examples;
+prose apostrophes and quotation marks before real declarations;
+stray prose comment openers before fenced annotation examples;
+mixed comments containing a real annotation plus a fenced example whose IDs and
+targets must remain excluded;
+three-space-indented and unterminated fences; longer valid closers;
+original-text blank-line classification; top-level indented blocks and list
+continuations plus exact block termination; single- and double-backtick spans;
+unmatched backticks; unchanged indented annotations in non-Markdown inputs;
+first-line BOM recognition, CRLF, and stable line locations; absence of
+`CODE-FEATURE-001` and
+`TEST-FEATURE-001`; and strict resolution of the real repository's Skill
+declarations.
+
+## Links
+
+Requirements: REQ-M5-EVIDENCE-008
+Design: DES-M5-TRACE-SKILL-001

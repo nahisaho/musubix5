@@ -1,0 +1,54 @@
+---
+status: proposed
+---
+# ADR-0034: Separate deterministic CodeGraph gates from environment observations
+
+## Context
+
+Elapsed time and process memory vary across hosts and cannot alone prove a
+CodeGraph optimization or detect an accuracy regression. Existing operation
+counters are deterministic but cover only focused traversal scenarios, and the
+repository has no reviewed corpus, baseline schema, or non-polluting benchmark
+runner.
+
+## Decision
+
+Provide `npm run benchmark:codegraph` as a dedicated command outside default
+tests and ordinary quality gates. It runs fixed-seed scale fixtures and a
+redistribution-cleared labeled corpus in fresh temporary repositories.
+
+Operation counts and integer accuracy classifications are deterministic release
+signals. Precision, recall, and F1 are derived from the requirement-defined
+integer accounting. Reviewed baseline and threshold JSON files are tracked;
+current reports are written only below ignored `.musubix/cache`. Wall-clock,
+RSS, heap, and cache-size observations are retained for trend analysis but are
+excluded from deterministic identity and are never classifiable; naming one in
+a threshold is invalid benchmark schema rather than a silently ignored gate.
+
+The runner verifies before-and-after identities for the ordinary CodeGraph
+cache, quality evidence, tracked files, and non-ignored untracked files.
+
+## Rejected alternatives
+
+- Gate releases on elapsed time alone: rejected because host variance creates
+  false regressions and false improvements.
+- Store current results beside the tracked baseline: rejected because ordinary
+  runs would dirty the repository.
+- Reuse the repository's normal graph cache: rejected because benchmark
+  scenarios would pollute developer and release evidence.
+- Use only generated fixtures: rejected because deterministic scale does not
+  provide labeled language-resolution accuracy.
+- Use private repositories as fixtures: rejected because redistribution and
+  confidentiality cannot be guaranteed.
+
+## Consequences
+
+CI can enforce stable operation and accuracy thresholds while collecting timing
+and memory trends without treating them as release gates. Baseline updates are
+explicit reviewed changes. The benchmark is intentionally heavier and must be
+invoked separately.
+
+## Links
+
+Requirements: REQ-M5-COMPAT-013 REQ-M5-GRAPH-003
+Design: DES-M5-GRAPH-004

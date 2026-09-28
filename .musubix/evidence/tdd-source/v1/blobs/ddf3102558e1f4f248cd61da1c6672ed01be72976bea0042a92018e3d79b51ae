@@ -1,0 +1,162 @@
+# ADR-0028: Commit one canonical repository trace index
+
+Status: proposed
+
+## Context
+
+The current trace build writes one complete repository graph to
+`.musubix/cache/trace.json` and copies that same graph into every
+`.musubix/features/*/trace.json`. Every semantic repository change therefore
+rewrites all feature copies, while partitioning the graph into projections
+would add ownership, completeness, publication, and migration complexity.
+
+The trace must remain available after cloning without a cache, and existing
+repositories already contain schema-v1 feature copies. `loadTrace`,
+`checkTrace`, `traceImpact`, mutation, correspondence, TDD, change evidence,
+gate, and install all require complete repository-wide semantics.
+
+## Decision
+
+Persist one canonical committed repository index at
+`.musubix/trace/index.json` and retain `.musubix/cache/trace.json` as a
+gitignored performance mirror. Stop producing or committing feature-local
+trace files. Both current outputs contain one complete repository graph and
+use the same canonical semantic representation.
+
+The committed envelope is:
+
+```json
+{
+  "schemaVersion": 2,
+  "kind": "repository-trace-index",
+  "generatedAt": "display-only ISO-8601 value",
+  "nodes": [],
+  "edges": [],
+  "diagnostics": [],
+  "fingerprints": {}
+}
+```
+
+Top-level properties occur exactly in the shown order. Node fields are `id`,
+`kind`, `path`, `line`, then optional `mandatory`; their types and allowed
+unions are those enumerated in REQ-M5-WAVE1-TRACE-002. Edge fields are `from`,
+`to`, `relation`. Diagnostic fields are `code`, `severity`, `message`, then
+optional `path`, `line`, `changeId`, `requirementId`, `detail`, `skill`,
+`phase`, `declarationRecordedAt`, `index`, and `waiver`; waiver fields are
+`approver`, `reason`, `recordedAt`, then optional `waiverRecordedAt`. Absent
+optional fields are omitted rather than written as `null`, and unknown fields
+are rejected at the envelope, node, edge, diagnostic, and waiver levels.
+Duplicate node IDs and conflicting canonical records are invalid. Stored paths
+are NFC portable repository-relative paths with `/` separators.
+
+Canonical JSON is UTF-8, two-space indented, and ends with one LF.
+`generatedAt` uses `YYYY-MM-DDTHH:mm:ss.sssZ`. Paths are NFC normalized and
+compared by Unicode scalar value sequence without locale. Fingerprints use that
+path order. Nodes sort by `(id, kind, path, line, mandatory-rank)`, where
+absent, false, and true rank `0`, `1`, and `2`. Edges sort by
+`(from, to, relation, occurrence)` and diagnostics by
+`(code, severity, path-or-empty, line-or-zero, message, occurrence)`, where the
+zero-based occurrence is an internal ordering identity for exact duplicates
+and is not added to public records. `generatedAt` is display metadata excluded
+from semantic comparison. The writer selects one publication byte sequence:
+when both valid targets are candidate-semantic-equal and byte-identical it
+retains those bytes; otherwise it prefers candidate-semantic-equal valid shared
+bytes, then valid cache bytes, otherwise it serializes the candidate with one
+new timestamp. Only byte-different targets are replaced. This reconciles a
+missing or previously divergent target while preserving both mtimes after a
+prior successful no-op. Same-directory atomic replacement failure preserves an
+existing target or leaves an absent target absent, removes the staging file,
+and is explicit.
+
+`loadTrace` tries cache, then the committed shared index, then legacy feature
+traces in sorted path order. A present invalid cache fails immediately; only a
+missing cache permits shared-index lookup. A present invalid shared index also
+fails immediately; legacy fallback is permitted only when both current-format
+paths are missing. Current-format validation checks schema and stored graph
+integrity, not currency against current inputs. Thus an old but valid cache or
+index is returned. Persisted schema version 2 is a storage envelope only:
+`loadTrace` removes `kind`, normalizes `schemaVersion` to `1`, and returns
+exactly the unchanged public/in-memory `TraceGraph` fields
+`schemaVersion`, `generatedAt`, `nodes`, `edges`, `diagnostics`, and
+`fingerprints`. Legacy schema-v1 input returns through the same public shape,
+and no public consumer sees the persistence-only `kind`. After
+stored/structural diagnostics, `checkTrace` emits one
+`TRACE_STALE_PATH` per missing stored node in `(path,line,id)` order, then one
+`TRACE_STALE` per differing fingerprint path in portable path order.
+
+Legacy `.musubix/features/*/trace.json` files are read-only migration inputs.
+Fallback requires every discovered copy to be a structurally self-contained
+schema-v1 graph: required field types are valid, node IDs are unique, every
+edge endpoint exists, and paths/fingerprints are syntactically valid. All
+copies must have equal canonical semantic bytes after excluding `generatedAt`;
+a divergent or malformed set fails closed. Loading never writes, converts, or
+deletes legacy files. A successful `trace build` first publishes valid
+byte-identical shared index and cache, then removes every legacy feature trace
+in sorted path order. A failure before removal may temporarily leave current
+and legacy formats together, but is explicit, creates no feature-local v2
+file, and is not a successful mixed-format repository state. Deletion failure
+does not invalidate the already published shared index and is retryable. A
+fresh clone without cache reads the committed shared index directly.
+
+`install()` is also a trace writer. It writes requirements and design assets
+before invoking the mandatory shared persistence helper; it has no independent
+trace serializer. It never creates or replaces a feature-local trace of any
+version. Dry-run reports shared-index, cache, and sorted legacy-removal actions
+without mutation. `--force` may replace normative assets, but semantic equality
+still skips trace replacement. Legacy files are removed only after both
+current-format outputs exist and validate. Successful completion leaves no
+mixed current/legacy format; an explicit publication or removal failure may
+retain legacy v1 files beside a valid current-format target for deterministic
+retry and returns nonzero.
+
+Generated trace ownership belongs to integration, not issue assignments. After
+each candidate refresh, the integrator discards candidate cache bytes,
+regenerates the committed shared index and cache once from the refreshed tree,
+removes legacy feature traces, and then verifies the candidate. Release and
+snapshot generated-trace classification adds `.musubix/trace/index.json` while
+retaining the migration-era `.musubix/features/*/trace.json` predicate; the
+cache stays ignored.
+
+When no cache, shared index, or legacy trace exists, the integrated contract is
+`Trace graph missing; run musubix5 trace build.` exactly. GitHub issue #25 and
+`DES-M5-WAVE1-TRACE-002` own the `packages/analysis/src/trace.ts` token
+replacement and the complete final message. `DES-M5-WAVE1-NAMING-001` depends
+on that component and verifies the output without implementing or editing the
+trace surface.
+
+## Alternatives considered
+
+- Keep full global feature copies and ignore only `generatedAt`: rejected
+  because every semantic change still rewrites every copy.
+- Store feature-local projections: rejected because partition ownership,
+  completeness proofs, multi-file atomicity, stale-set validation, and
+  migration are unnecessary when all consumers need the complete graph.
+- Keep only the gitignored cache: rejected because fresh clones and committed
+  evidence inspection would require rebuilding before read-only operations.
+- Treat legacy copies as writable current-format outputs: rejected because it
+  prolongs unrelated rewrites and permits mixed-format repositories.
+- Validate loaded graphs by fresh extraction: rejected because valid stale
+  evidence must load so `checkTrace` can report established stale diagnostics.
+- Force trace rewrites during install or on every timestamp change: rejected
+  because wall-clock churn violates deterministic Git and mtime stability.
+
+## Consequences
+
+- A semantic repository change modifies at most one committed generated trace
+  artifact, independent of feature count.
+- Fresh clones retain complete strict-check and impact semantics without cache.
+- Persistence, installation, migration, and loader precedence share one format
+  contract and one canonical writer.
+- Existing feature trace files disappear in the first successful migration
+  build/install and remain readable only before that migration.
+- Cache and committed index can fail independently; atomic per-target writes
+  preserve the last valid copy, while diagnostics expose invalid precedence
+  sources rather than silently hiding corruption.
+- Release exclusion and migration documentation must add the new shared
+  generated path while retaining the old feature glob for migration-era
+  repositories and explicit retry states.
+
+## Links
+
+Requirements: REQ-M5-WAVE1-TRACE-001 REQ-M5-WAVE1-TRACE-002
+Design: DES-M5-WAVE1-TRACE-001 DES-M5-WAVE1-TRACE-002 DES-M5-WAVE1-TRACE-003 DES-M5-WAVE1-NAMING-001

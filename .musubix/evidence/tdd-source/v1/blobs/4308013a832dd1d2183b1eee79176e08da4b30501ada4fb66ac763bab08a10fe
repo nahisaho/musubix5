@@ -1,0 +1,154 @@
+# ADR-0023: Select TDD source currency by verified terminal evidence order
+
+Status: accepted
+
+## Context
+
+TDD requirement coverage is intentionally restricted to the active CHANGE and
+generation. Source-currency validation has a different purpose: it determines
+whether the current test source still matches the newest trustworthy passing
+fingerprint. The existing validator reused the active-cycle predicate and then
+overwrote a map in evidence-array order. In repositories containing legacy
+unscoped cycles, that can select an older fingerprint while excluding a newer
+scoped Green cycle owned by a completed CHANGE, producing false
+`TDD_TEST_STALE` diagnostics that cannot be repaired with `tdd migrate` or
+`tdd void`.
+
+## Decision
+
+Separate source-currency selection from requirement-coverage selection. For
+each test, derive eligible terminal fingerprint evidence from phases whose
+payload, hash-chain predecessor, and monotonic order linkage are verified.
+Red and Green are required, their verified orders must satisfy
+`red.order < green.order`, and source-currency eligibility does not require an
+Implementation checkpoint. A linked valid Refactor or a linked human-approved
+migration may provide the terminal fingerprint when it has the greatest order.
+
+While a CHANGE is active, define the active scope as cycles whose missing
+generation is interpreted as generation 1, whose effective generation equals
+the active generation, and whose `changeId` is absent or equals the active
+CHANGE ID. Stale-check membership adds valid Green evidence, while work-event
+and void operation scoping use the active scope without requiring Green.
+When a CHANGE is selected but has no active generation, validation retains its
+existing `CHANGE_GENERATION_PHASE` exit-2 failure, while migration and void
+preserve maintenance behavior by treating the state as no active operation
+scope.
+Membership uses persisted ownership at evaluation time, including ownership
+adopted by later normal phase recording. Without an active CHANGE, target every
+test ID with valid Green evidence. For each target, resolve a readonly
+`{ cycle, order, fingerprint }` selection across all CHANGE scopes and
+generations by verified order, never by array position. The validator compares
+that returned fingerprint outside its active-cycle coverage loop and never
+re-sorts raw phase fields. A valid void participates as an event: when it is the
+greatest verified event for the test, select only the greatest eligible
+terminal fingerprint strictly before that void. Otherwise select the greatest
+eligible terminal fingerprint. Keep active CHANGE and generation filtering
+unchanged for coverage and release credit.
+
+Build the cycle grouping and chain-record indexes once per validation. Each
+chain-index entry retains the record and its chain position; derive predecessor
+identity from the preceding chain record and duplicate multiplicity from the
+matching-entry count. Memoize source text by trace path and fingerprints by test
+identity. Migration always reuses
+the same greatest verified event and selector as validation and, while a CHANGE
+is active, restricts target, void, and work candidates to the active scope.
+Cycle-ID-less or chain-unverified records cannot become eligible migration
+terminals and therefore use the retained no-valid-Green error rather than the
+legacy missing-cycle-ID guard. After verified selection, any persisted
+migration record, valid or malformed, uses the retained already-migrated
+exit-2 error and is never overwritten; malformed migration evidence requires a
+new Red/Green cycle to establish later current evidence. Void recording uses
+the same index and active-scope rule for both target events and eligible
+fallback candidates, requiring the fallback strictly before the greatest
+verified work-event order, whether that event is a valid Red without Green or a
+linked non-passing Green. Without an active CHANGE, both target and fallback
+may consider all cycles for the test. A missing linked target in the operation
+scope or a target cycle bearing an unverified void returns
+`{ voided: false, reason: "<testId> has no verifiable dangling TDD cycle in the current operation scope." }`
+with exit code 1 and never overwrites the existing void evidence.
+Void targeting compares terminal fingerprint evidence, valid voids, and work
+events through the shared greatest-event index. A terminal event supplied by
+Green, Refactor, or approved migration is classified by its cycle's valid Green
+and uses the retained valid-Green rejection; a valid void uses the retained
+already-voided rejection. A greatest valid-Red or linked non-passing-Green work
+event remains a voidable dangling target when its cycle has no valid Green and
+no persisted void record. Before this verified-event selection, apply the
+array-last missing-cycle-ID and missing-chain structural guards only within the
+operation scope, including the missing-chain “another cycle exists” predicate,
+so their historical exit-2 messages retain precedence over valid-Green and
+already-voided messages without granting array position chronology.
+
+## Alternatives considered
+
+- Keep using the active-cycle map for staleness. Rejected because it excludes
+  newer completed-CHANGE fingerprints while admitting legacy unscoped cycles.
+- Treat evidence-array position as chronology. Rejected because authoritative
+  chronology is the verified monotonic order log, and projections or merges can
+  expose records in a misleading array order.
+- Exclude every cycle whose `changeId` is absent from currency checks. Rejected
+  because modern unscoped evidence can still have verifiable cycle identity,
+  hash-chain linkage, and monotonic order; absence of a CHANGE owner alone does
+  not prove that its fingerprint is stale. Pre-order-log legacy evidence remains
+  ineligible because it cannot establish that linkage.
+- Require operators to migrate or void the selected legacy cycle. Rejected
+  because migration correctly refuses real fingerprint differences, void
+  targets the actual latest cycle, and neither command repairs a selector bug.
+- Re-record every historical test through a fresh Red/Green cycle. Rejected
+  because it fabricates unrelated CHANGE work and is unnecessary when newer
+  verified evidence already exists.
+
+## Consequences
+
+- Source-currency checks can consult foreign and prior-generation cycles, but
+  those cycles remain unable to satisfy active coverage or release evidence.
+- Modern unscoped cycles in the active generation retain their existing ability
+  to establish source-currency target membership and coverage candidacy; this
+  change does not widen or remove that legacy compatibility behavior.
+- Red-only and dangling void-only active cycles do not establish new stale-check
+  membership from foreign evidence; an earlier valid Green can still establish
+  membership for a void fallback.
+- Malformed Green, Refactor, migration, or void evidence cannot gain selector
+  priority merely through a large unverified order value.
+- Valid migration ordering becomes part of source-currency selection and
+  therefore requires both linkage verification and a recorded human approver.
+- A valid latest void creates a strict historical boundary; a later verified
+  Green or terminal fingerprint becomes current normally.
+- The selection helper is shared by ordinary staleness and void fallback,
+  eliminating two competing notions of the effective latest cycle.
+- Fingerprint migration uses the same effective chronology instead of
+  evidence-array position.
+- Migration retains `No TDD cycle found for <testId>.` when no cycle exists in
+  any scope and uses the retained `<testId> has no valid Green phase to
+  migrate.` exit-2 error when cycles exist only outside the active operation
+  scope or qualifying work is greatest.
+- Active-scope migration does not mutate or use a foreign void candidate, so a
+  successful active migration can remain globally non-current when
+  repository-wide validation is bounded by a later valid foreign or
+  prior-generation void; completing or abandoning the active CHANGE enables
+  repository-wide repair.
+- An open verified Red is an explicit event that suppresses stale diagnostics
+  during the Red-to-Green interval.
+- Void admission uses verified event order and linkage instead of array slices.
+- With an active CHANGE, open or non-passing work suppresses staleness only in
+  the target's active membership scope. Without an active CHANGE, unscoped work
+  may suppress any terminal while scoped work must match the unbounded greatest
+  terminal selection's CHANGE/generation scope; that scope is fixed before a
+  void bound is applied so a void cannot retroactively change which work was in
+  progress relative to the current terminal history. When the unbounded terminal
+  is unscoped, only unscoped work qualifies.
+- Existing array-position supersession classification is out of scope and does
+  not participate in source-currency selection.
+- Void's array-last structural guards apply only within the operation's active
+  candidate scope and preserve malformed-evidence messages without granting
+  chronology or fallback priority.
+- Public CLI shape, established exit classes for retained conditions, help
+  text, and the no-fallback reason string remain unchanged. Order-based
+  applicability of retained messages, foreign-only active-scope exit-1
+  rejection, trimmed migration-approver rejection and diagnostic reuse, and
+  active-scope restrictions for migration and void are registered intentional
+  behavioral differences under REQ-M5-COMPAT-013.
+
+## Links
+
+Requirements: REQ-M5-TDD-003
+Design: DES-M5-011 DES-M5-TDD-005

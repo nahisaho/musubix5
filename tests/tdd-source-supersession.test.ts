@@ -1,0 +1,266 @@
+import { createHash } from 'node:crypto';
+import { expect, it } from 'vitest';
+import { resolve } from 'node:path';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { loadConfig } from '../packages/analysis/src/config.js';
+
+const fixture = [
+  '/** @id TEST-SOURCE-FIXTURE-001',
+  ' * @verifies REQ-M5-LIFECYCLE-006',
+  ' */',
+  "it('TEST-SOURCE-FIXTURE-001 measures elapsed time', () => {",
+  '  const started = Date.now();',
+  '  expect(Date.now() - started).toBeLessThan(10_000);',
+  '  expect(true).toBe(true);',
+  '});',
+].join('\n');
+
+/** @id TEST-M5-SOURCE-CLOCK-GUARD-001
+ * @verifies REQ-M5-LIFECYCLE-006 REQ-M5-COMPAT-013
+ * @design DES-M5-007 DES-M5-023
+ */
+it('TEST-M5-SOURCE-CLOCK-GUARD-001 rejects shadowed globals, indirect clock mocks and fake timer setup outside the paired block', async () => {
+  const { spliceCanonicalTestBlock } = await import('../packages/analysis/src/tdd-source-review.js');
+  const current = fixture.replaceAll('Date.now()', 'performance.now()');
+  const fingerprint = createHash('sha256').update(fixture).digest('hex');
+  for (const prefix of [
+    'const { Date } = clocks;\n',
+    'const { performance } = clocks;\n',
+    'import Date from "custom-clock";\n',
+    'import * as performance from "custom-clock";\n',
+    'globalThis.Date = CustomDate;\n',
+    'globalThis["performance"] = customPerformance;\n',
+    'Date.now = () => 0;\n',
+    'Object.defineProperty(globalThis, "Date", { value: CustomDate });\n',
+    'Object.assign(globalThis, { performance: customPerformance });\n',
+    'const clock = Date; const spy = vi.spyOn; spy(clock, "now");\n',
+    'vi.useFakeTimers();\n',
+    'const install = vi.useFakeTimers; install();\n',
+    'jest.setSystemTime(0);\n',
+  ]) {
+    const node = { id: 'TEST-SOURCE-FIXTURE-001', path: 'tests/example.test.ts', line: 2 };
+    expect(() => spliceCanonicalTestBlock(node, prefix + current, fixture, fingerprint), prefix)
+      .toThrow(/behavior-change-required/);
+  }
+  expect(spliceCanonicalTestBlock({ id: 'TEST-SOURCE-FIXTURE-001', path: 'tests/example.test.ts', line: 1 },
+    current, fixture, fingerprint).newBlock).toBe(current);
+});
+
+/** @id TEST-M5-SOURCE-MECHANICAL-001
+ * @verifies REQ-M5-LIFECYCLE-006 REQ-M5-COMPAT-013
+ * @design DES-M5-007 DES-M5-023
+ */
+it('TEST-M5-SOURCE-MECHANICAL-001 separates reviewable data flow from changed assertion, control, registration and mock semantics', async () => {
+  const { spliceCanonicalTestBlock } = await import('../packages/analysis/src/tdd-source-review.js');
+  const old = fixture.replace('  const started', '  const observed = readValue();\n  const started')
+    .replace('expect(true)', 'expect(observed)');
+  const current = old.replace('readValue()', 'readEquivalentValue()');
+  const node = { id: 'TEST-SOURCE-FIXTURE-001', path: 'tests/example.test.ts', line: 1 };
+  const fingerprint = createHash('sha256').update(old).digest('hex');
+  expect(spliceCanonicalTestBlock(node, current, old, fingerprint).newBlock).toBe(current);
+  for (const changed of [
+    current.replace('REQ-M5-LIFECYCLE-006', 'REQ-M5-COMPAT-013'),
+    current.replace('expect(observed)', 'expect(true)'),
+    current.replace('  expect(observed)', '  if (observed) expect(observed)'),
+    current.replace("it('", "it.only('"),
+    current.replace('  const observed', '  const m = vi;\n  m.spyOn(api, "readValue");\n  const observed'),
+    current.replace('  const observed', '  const check = expect;\n  check(true).toBe(true);\n  const observed'),
+  ]) expect(() => spliceCanonicalTestBlock(node, changed, old, fingerprint))
+    .toThrow(/behavior-change-required/);
+  const guarded = old.replace('  expect(observed)', '  if (enabled) expect(observed)');
+  expect(() => spliceCanonicalTestBlock(node, guarded.replace('if (enabled)', 'if (true)'),
+    guarded, createHash('sha256').update(guarded).digest('hex'))).toThrow(/behavior-change-required/);
+  const mocked = old.replace('readValue()', 'vi.fn(() => 1)()');
+  expect(() => spliceCanonicalTestBlock(node, mocked.replace('() => 1', '() => 2'),
+    mocked, createHash('sha256').update(mocked).digest('hex'))).toThrow(/behavior-change-required/);
+});
+
+/** @id TEST-M5-SOURCE-BLOCK-001
+ * @verifies REQ-M5-LIFECYCLE-006 REQ-M5-COMPAT-013
+ * @design DES-M5-007 DES-M5-023
+ */
+it('TEST-M5-SOURCE-BLOCK-001 verifies the canonical old block and permits only the bounded paired elapsed-clock exception', async () => {
+  const { spliceCanonicalTestBlock, sourceReviewHunks } =
+    await import('../packages/analysis/src/tdd-source-review.js');
+  const current = fixture.replaceAll('Date.now()', 'performance.now()');
+  const node = { id: 'TEST-SOURCE-FIXTURE-001', path: 'tests/example.test.ts', line: 2 };
+  const oldFingerprint = createHash('sha256').update(fixture).digest('hex');
+  const file = `// unchanged prefix\n${current}\n// unchanged suffix\n`;
+  const result = spliceCanonicalTestBlock(node, file, fixture, oldFingerprint);
+  expect(result.oldFile).toBe(`// unchanged prefix\n${fixture}\n// unchanged suffix\n`);
+  expect(result.oldFingerprint).toBe(oldFingerprint);
+  expect(result.newFingerprint).not.toBe(oldFingerprint);
+  expect(result.annotationStart).toBe(Buffer.byteLength('// unchanged prefix\n'));
+  expect(sourceReviewHunks(fixture, current)).toEqual([
+    { oldStart: 4, oldLength: 2, newStart: 4, newLength: 2 },
+  ]);
+  for (const changed of [
+    current.replace('10_000', '20_000'),
+    current.replace(' - started', ' + started'),
+    current.replace('  expect(true).toBe(true);\n', ''),
+    current.replace("it('", "it.skip('"),
+    current.replace('  expect(true)', '  if (false) expect(true)'),
+    current.replace('  const started', '  const performance = { now: () => 0 };\n  const started'),
+    current.replace('  const started', "  vi.spyOn(Date, 'now');\n  const started"),
+  ]) {
+    expect(() => spliceCanonicalTestBlock(node,
+      `// unchanged prefix\n${changed}\n// unchanged suffix\n`, fixture, oldFingerprint))
+      .toThrow(/TDD_SOURCE_ADMISSION_INVALID/);
+  }
+  expect(() => spliceCanonicalTestBlock(node, file, fixture.replace('10_000', '1'), oldFingerprint))
+    .toThrow(/old-fingerprint-mismatch/);
+  expect(() => spliceCanonicalTestBlock(node, `// unchanged prefix\n${fixture}\n`, fixture, oldFingerprint))
+    .toThrow(/unchanged-fingerprint/);
+});
+
+/** @id TEST-M5-SOURCE-SNAPSHOT-001
+ * @verifies REQ-M5-LIFECYCLE-006 REQ-M5-COMPAT-013
+ * @design DES-M5-007 DES-M5-023
+ */
+it('TEST-M5-SOURCE-SNAPSHOT-001 binds installed dependencies and deterministic declared outputs without reading historical evidence', async () => {
+  const { captureSourceSnapshot } = await import('../packages/analysis/src/tdd-source-snapshot.js');
+  const root = resolve('.');
+  const command = (await loadConfig(root)).commands.find((entry) => entry.name === 'codegraph-tests')!;
+  const first = await captureSourceSnapshot(root, command, 'tests/change-lease.test.ts');
+  const second = await captureSourceSnapshot(root, command, 'tests/change-lease.test.ts');
+  expect(first.binding).toEqual(second.binding);
+  expect(first.manifest.entries.some((entry) => entry.path === 'node_modules/typescript/lib/typescript.js')).toBe(true);
+  expect(first.manifest.entries.some((entry) => entry.path === 'tests/global-setup.ts')).toBe(true);
+  expect(first.manifest.entries.some((entry) => entry.path.startsWith('.musubix/evidence/'))).toBe(false);
+  expect(first.manifest.entries.some((entry) => entry.path.startsWith('dist/'))).toBe(false);
+  expect(first.manifest.outputs).toContainEqual({
+    path: 'dist/**', kind: 'build',
+    producer: 'tests/global-setup.ts -> npm run build -> tsc -p tsconfig.build.json',
+    comparison: 'pair-byte-equal',
+  });
+  expect(first.manifest.environment).not.toHaveProperty('NODE_OPTIONS');
+  expect(first.manifest.environment).not.toHaveProperty('NODE_PATH');
+  expect(first.binding.stateSha256).toMatch(/^[a-f0-9]{64}$/);
+}, 120_000);
+
+/** @id TEST-M5-SOURCE-PAIR-001
+ * @verifies REQ-M5-LIFECYCLE-006 REQ-M5-COMPAT-013
+ * @design DES-M5-007 DES-M5-023
+ */
+it('TEST-M5-SOURCE-PAIR-001 independently rebuilds and executes the restored SESSION pair with identical production and build inventories', async () => {
+  const { captureSourceSnapshot } = await import('../packages/analysis/src/tdd-source-snapshot.js');
+  const { spliceCanonicalTestBlock } = await import('../packages/analysis/src/tdd-source-review.js');
+  const { verifySyntheticPair } = await import('../packages/analysis/src/tdd-source-pair.js');
+  const { storeSourceBlob } = await import('../packages/analysis/src/tdd-source-storage.js');
+  const root = resolve('.');
+  mkdirSync(resolve('.musubix/cache'), { recursive: true });
+  const blobs = mkdtempSync(resolve('.musubix/cache/source-pair-blobs-'));
+  try {
+    const command = (await loadConfig(root)).commands.find((entry) => entry.name === 'codegraph-tests')!;
+    const path = 'tests/change-lease.test.ts';
+    const current = readFileSync(resolve(path), 'utf8');
+    const start = current.lastIndexOf('\n', current.indexOf('@id TEST-M5-CHECKPOINT-SESSION-001')) + 1;
+    const end = current.indexOf('},20_000);', start) + '},20_000);'.length;
+    const oldBlock = current.slice(start, end).replaceAll('performance.now()', 'Date.now()');
+    const node = { id: 'TEST-M5-CHECKPOINT-SESSION-001', path, line: current.slice(0, start).split('\n').length };
+    const splice = spliceCanonicalTestBlock(node, current, oldBlock,
+      '413617c4503b2cc3b3b8668b2689edff18a231c0ea6860972827f2d4ad2bd9be');
+    const snapshot = await captureSourceSnapshot(root, command, path, (bytes) => storeSourceBlob(blobs, bytes));
+    const pair = await verifySyntheticPair(root, blobs, snapshot, command, node, splice);
+    expect(pair.oldRun.exitCode).toBe(0);
+    expect(pair.newRun.exitCode).toBe(0);
+    expect(pair.oldRun.invocationId).not.toBe(pair.newRun.invocationId);
+    expect(pair.oldRun.outputs.afterBuildSha256).toBe(pair.newRun.outputs.afterBuildSha256);
+    expect(pair.oldRun.preInputManifestSha256).toBe(pair.oldRun.postInputManifestSha256);
+    expect(pair.newRun.preInputManifestSha256).toBe(pair.newRun.postInputManifestSha256);
+    expect(pair.oldRun.preProductionSha256).toBe(pair.newRun.preProductionSha256);
+  } finally {
+    rmSync(blobs, { recursive: true, force: true });
+  }
+}, 180_000);
+
+/** @id TEST-M5-SOURCE-REFERENCES-001
+ * @verifies REQ-M5-LIFECYCLE-006 REQ-M5-COMPAT-013
+ * @design DES-M5-007 DES-M5-023
+ */
+it('TEST-M5-SOURCE-REFERENCES-001 verifies durable snapshot references independently of mutable workspace inputs and rejects tampering', async () => {
+  const { captureSourceSnapshot } = await import('../packages/analysis/src/tdd-source-snapshot.js');
+  const { verifySourceSnapshotBlobs } = await import('../packages/analysis/src/tdd-source-artifacts.js');
+  const { storeSourceBlob, sourceEvidencePrefix } = await import('../packages/analysis/src/tdd-source-storage.js');
+  const { writeFile } = await import('node:fs/promises');
+  mkdirSync(resolve('.musubix/cache'), { recursive: true });
+  const root = mkdtempSync(resolve('.musubix/cache/source-references-'));
+  try {
+    const command = (await loadConfig(resolve('.'))).commands.find((entry) => entry.name === 'codegraph-tests')!;
+    const captured = await captureSourceSnapshot(resolve('.'), command, 'tests/change-lease.test.ts',
+      (bytes) => storeSourceBlob(root, bytes));
+    expect(await verifySourceSnapshotBlobs(root, captured.binding)).toEqual(captured.manifest);
+    await expect(verifySourceSnapshotBlobs(root, { ...captured.binding, runnerSha256: '0'.repeat(64) }))
+      .rejects.toThrow(/TDD_SOURCE_APPROVAL_INVALID/);
+    const entry = captured.manifest.entries.find((entry) => entry.path === 'node_modules/typescript/package.json')!;
+    await writeFile(resolve(root, sourceEvidencePrefix, 'blobs', entry.sha256!), 'tampered');
+    await expect(verifySourceSnapshotBlobs(root, captured.binding)).rejects.toThrow(/blob-hash/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}, 180_000);
+
+/** @id TEST-M5-SOURCE-RUNNER-001
+ * @verifies REQ-M5-LIFECYCLE-006 REQ-M5-COMPAT-013
+ * @design DES-M5-007 DES-M5-023
+ */
+it('TEST-M5-SOURCE-RUNNER-001 rejects escaping report paths and preserves the configured selected-run invocation', async () => {
+  const { sourceRunInvocation } = await import('../packages/analysis/src/tdd-source-pair.js');
+  const command = (await loadConfig(resolve('.'))).commands.find((entry) => entry.name === 'codegraph-tests')!;
+  const node = { id: 'TEST-M5-CHECKPOINT-SESSION-001', path: 'tests/change-lease.test.ts' };
+  const invocation = sourceRunInvocation(command, node);
+  expect(invocation.args).toEqual([
+    'scripts/run-codegraph-tests.mjs', '--report', invocation.reportPath, '--test-id', node.id,
+  ]);
+  expect(invocation.reportPath.startsWith('.musubix/cache/')).toBe(true);
+  for (const path of ['.musubix/cache/../../outside.json', '.musubix/cache/./report.json',
+    '/tmp/report.json', '.musubix/cache/report\\outside.json']) {
+    expect(() => sourceRunInvocation({ ...command, tddReport: { format: 'musubix-json', path } }, node))
+      .toThrow(/snapshot-unverifiable/);
+  }
+  expect(() => sourceRunInvocation({ ...command, command: 'undeclared-runner' }, node))
+    .toThrow(/snapshot-unverifiable/);
+});
+
+/** @id TEST-M5-SOURCE-RECHECK-001
+ * @verifies REQ-M5-LIFECYCLE-006 REQ-M5-COMPAT-013
+ * @design DES-M5-007 DES-M5-023
+ */
+it('TEST-M5-SOURCE-RECHECK-001 rechecks cached per-path identities and detects new, deleted, mode and dependency inputs', async () => {
+  const { captureSourceSnapshot, recheckSourceSnapshot } = await import('../packages/analysis/src/tdd-source-snapshot.js');
+  const { chmodSync, unlinkSync } = await import('node:fs');
+  mkdirSync(resolve('.musubix/cache'), { recursive: true });
+  const root = mkdtempSync(resolve('.musubix/cache/source-recheck-'));
+  try {
+    execFileSync('git', ['init', '--quiet', root]);
+    writeFileSync(resolve(root, '.gitignore'), 'node_modules/\n.musubix/cache/\n');
+    writeFileSync(resolve(root, 'test.ts'), 'export const value = 1;\n');
+    for (const name of ['typescript', 'vitest']) {
+      mkdirSync(resolve(root, 'node_modules', name), { recursive: true });
+      writeFileSync(resolve(root, 'node_modules', name, 'package.json'), JSON.stringify({ name, version: '1.0.0' }));
+    }
+    execFileSync('git', ['-C', root, 'add', '.']);
+    execFileSync('git', ['-C', root, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid',
+      'commit', '--quiet', '-m', 'snapshot fixture']);
+    const command = (await loadConfig(resolve('.'))).commands.find((entry) => entry.name === 'codegraph-tests')!;
+    const original = await captureSourceSnapshot(root, command, 'test.ts');
+    expect((await recheckSourceSnapshot(root, command, 'test.ts', original)).binding).toEqual(original.binding);
+    mkdirSync(resolve(root, '.musubix/cache'), { recursive: true });
+    writeFileSync(resolve(root, '.musubix/cache', 'unrelated'), 'neutral');
+    expect((await recheckSourceSnapshot(root, command, 'test.ts', original)).binding).toEqual(original.binding);
+    writeFileSync(resolve(root, 'new.ts'), 'export const added = true;\n');
+    expect((await recheckSourceSnapshot(root, command, 'test.ts', original)).binding.stateSha256).not.toBe(original.binding.stateSha256);
+    unlinkSync(resolve(root, 'new.ts'));
+    chmodSync(resolve(root, 'test.ts'), 0o755);
+    expect((await recheckSourceSnapshot(root, command, 'test.ts', original)).binding.stateSha256).not.toBe(original.binding.stateSha256);
+    chmodSync(resolve(root, 'test.ts'), 0o644);
+    writeFileSync(resolve(root, 'node_modules/typescript/package.json'), '{"name":"typescript","version":"2.0.0"}');
+    expect((await recheckSourceSnapshot(root, command, 'test.ts', original)).binding.stateSha256).not.toBe(original.binding.stateSha256);
+    unlinkSync(resolve(root, 'test.ts'));
+    expect((await recheckSourceSnapshot(root, command, 'test.ts', original)).manifest.entries)
+      .toContainEqual({ path: 'test.ts', mode: 'missing', sha256: null, role: 'test' });
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}, 120_000);

@@ -1,0 +1,114 @@
+---
+status: accepted
+---
+# ADR-0015: Append superseding phase checkpoints after same-generation reapproval
+
+## Context
+
+Requirements and design approvals may become stale while a CHANGE generation
+remains active. The approved lifecycle permits review and reapproval without
+opening a new generation and retains the prior phase record as history.
+One-shot projection slots and the public semantic phase key
+`change:<changeId>:g<N>:<phase>` cannot by themselves distinguish the new
+approved checkpoint from the superseded checkpoint.
+
+## Decision
+
+Keep the public semantic phase key unchanged, but require a caller-supplied
+operation ID for invalidated same-generation requirements/design
+supersession. Its syntax is `^[a-z0-9][a-z0-9-]{0,63}$` and its replay scope is
+`(changeId, generation, phase, operationId)`. Initial phase recording rejects
+the option, while supersession requires it. A same ID in another phase or
+generation is independent.
+
+Acquire the CHANGE lease, recover pending checkpoints from journaled inputs
+only, and then perform scoped operation lookup before current-checkpoint
+validation. The normal-journal idempotency key is exactly
+`change-phase-checkpoint:<changeId>:g<generation>:<phase>:<operationId>`.
+The schema-v1 payload persists the approval manifest head, sorted requirement
+IDs, fingerprints, phase-scoped ordinal, semantic and evidence-order keys,
+timestamp, and fencing token. Exact caller-bound replay returns the persisted
+success at every crash boundary, including after full projection. Divergent
+reuse returns `CHANGE_GENERATION_DUPLICATE`; a distinct operation ID against a
+still-current checkpoint returns the same diagnostic. Derived ordinal, keys,
+time, fence, and journal chain fields are reused from the persisted record and
+are never recomputed from retry inputs.
+
+Malformed supplied IDs and unsupported phases fail before lease acquisition.
+Initial-record use and a missing ID for required supersession are decided only
+after recovery under the CHANGE lease; the command may retain those recovery
+completions but journals no requested operation before returning `CLI_ERROR`.
+Only requirements/design recording, impact reopen, and generation abandon
+project pending phase checkpoints. Gate, status, TDD, approval, workflow, and
+parallel operations validate and report them without reconciliation.
+
+When no scoped operation exists and the prior checkpoint is invalidated,
+validate the current approval, derive the next phase-scoped ordinal, append the
+journal record first, append or reuse the evidence-order entry, and atomically
+replace `changes.json`. The supersession is exempt from unchanged-fingerprint
+rejection because approval head plus operation ID is the audited identity;
+`--allow-unchanged` is neither required nor replay-bound. Invalid checkpoint
+journal envelope, chain, fence, duplicate key, scoped persisted payload, or
+phase ordinal is non-waivable `CHANGE_CHECKPOINT_JOURNAL_INVALID`.
+
+Follow the existing quality supersession representation for the evidence-order
+ledger and `changes.json` projection. Ordinal 1 uses `requirements` or `design`;
+later checkpoints use evidence-order phases `requirements:<n>` or `design:<n>`.
+The current checkpoint remains in `phases.requirements` or `phases.design`;
+prior checkpoints move to `requirementsHistory[]` or `designHistory[]`.
+Every current and historical checkpoint carries `requirementsOrdinal` or
+`designOrdinal`; superseding checkpoints also carry their operation ID.
+Ordinal-1 checkpoints omit the `operationId` key entirely rather than storing
+`null`, an empty string, or a generated placeholder.
+Validation resolves each checkpoint through its persisted ordinal order key
+and retains its own monotonic order and `recordedAt`, so order mismatch and
+recordedAt diagnostics never reuse an earlier checkpoint's sequence.
+Cross-phase validation selects the contemporaneous predecessor: the greatest
+checkpoint of the predecessor phase whose order is strictly less than the
+dependent record's order. A design checkpoint therefore binds the requirements
+checkpoint that preceded it, and each Red batch binds the design checkpoint
+that preceded that Red; a later approval checkpoint does not retroactively
+invalidate historical order.
+
+The named history arrays and their ordinals are generation-scoped. Reopen
+and abandon validate eligibility before taking the lease, revalidate under the
+lease, reconcile the departing active generation, and only then snapshot or
+abandon it. Reopen copies the histories into the completed generation
+snapshot, clears them from the new active generation, and restarts both
+ordinals at 1.
+Gate and status always expose `unprojectedPhaseCheckpoints` for active,
+superseded, and abandoned summaries, including an empty array. Pending active
+entries are informational while current readiness remains projection-based;
+historical pending entries are non-current.
+
+## Rejected alternatives
+
+- Change the public phase key grammar with a supersession ordinal: rejected
+  because REQ-M5-LIFECYCLE-005 fixes the generation-qualified semantic keys.
+- Treat every repeated phase command as idempotent success: rejected because a
+  still-current duplicate must remain `CHANGE_GENERATION_DUPLICATE`.
+- Derive retry identity from approval hash and ordinal: rejected because a
+  crash retry after projection and a distinct duplicate invocation are
+  indistinguishable without explicit invocation identity.
+- Open a new generation for every approval refresh: rejected because
+  REQ-M5-APPROVAL-008 permits an in-generation approval cascade.
+- Replace or delete the prior checkpoint: rejected because completed lifecycle
+  history is append-only.
+
+## Consequences
+
+Requirements/design approval refreshes can be recorded in the same generation
+without weakening duplicate detection. `changes.json` becomes a projection of
+the greatest current checkpoint while retaining superseded checkpoints in the
+named history arrays. Compatibility tests must cover the additive JSON fields,
+ordinal evidence-order keys, operation-ID CLI validation, replay before and
+after projection, divergent reuse, current duplicate rejection,
+invalidated-checkpoint supersession, malformed journal evidence, and crash-safe
+recovery. Tests also cover A-to-B-to-A approval heads, contemporaneous
+predecessor selection, unprojected reporting, generation snapshot/reset
+behavior, and concurrent recorders without duplicate ordinals.
+
+## Links
+
+Requirements: REQ-M5-APPROVAL-008 REQ-M5-COMPAT-013 REQ-M5-LIFECYCLE-005
+Design: DES-M5-002 DES-M5-004 DES-M5-005 DES-M5-007 DES-M5-015

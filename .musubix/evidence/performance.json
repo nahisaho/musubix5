@@ -1,19 +1,179 @@
 {
   "schemaVersion": 2,
-  "runId": "eaba0299-7b08-4111-b1e4-e6f29c5ee75c",
-  "generatedAt": "2026-09-27T03:18:55.106Z",
+  "runId": "4f69e3e6-4912-4c3b-a2dd-e479eeffe15f",
+  "generatedAt": "2026-09-27T18:04:36.630Z",
   "executions": [
     {
-      "runId": "eaba0299-7b08-4111-b1e4-e6f29c5ee75c",
-      "executionId": "a094b0bc6d9719f223d6097aefb040e65b04114eb33d6126395a3d2a675ea6eb",
+      "runId": "4f69e3e6-4912-4c3b-a2dd-e479eeffe15f",
+      "executionId": "ba473b21ac25430e5848116b1cae4121835c9ec26f4966dc707595d590cfef87",
       "commandName": "codegraph-tests",
       "commandSha256": "367841ceaa4c4655755dd32b6963719d0cc36c88dc15ca491ac13e1e5d3850a1",
       "reportPath": ".musubix/cache/test-results/codegraph.json",
       "sourceKind": "file",
-      "reportSha256": "b4a4aa0c47a025efd4ced01322ffd3b42af295c32f322c67511192e4729af926",
+      "reportSha256": "34cbbbc72adbb0fe086ff9889c4a928b6ff42dc50b379e7d4d2cf8aa7d902c07",
       "processStatus": "completed",
       "exitCode": 0,
       "tests": [
+        {
+          "id": "TEST-M5-CONCURRENCY-LEASE-CONTRACT-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-FINALIZATION-CONCURRENCY-SAME-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-FINALIZATION-CONCURRENCY-DISJOINT-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-FINALIZATION-TAIL-PREFIX-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-FINALIZATION-PLATFORM-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-FINALIZATION-TAIL-PUBLIC-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-FINALIZATION-TAIL-RECOVERY-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-FINALIZATION-DURABILITY-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-FINALIZATION-PRECAS-DRIFT-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-FINALIZATION-AUTHORITY-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-FINALIZATION-DRIFT-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-FINALIZATION-GENERATION-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-FINALIZATION-TAIL-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-FINALIZATION-FENCED-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-FINALIZATION-JOURNAL-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-FINALIZATION-RESUME-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-FINALIZATION-SCOPE-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-FINALIZATION-MATERIALIZE-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-FINALIZATION-MARKER-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CHECKPOINT-MONOTONIC-WAIT-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CHECKPOINT-RECOVERY-ORDER-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CHECKPOINT-RELEVANT-PATHS-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CHECKPOINT-PREFLIGHT-READONLY-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CHECKPOINT-PHASE-BEFORE-DRIFT-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CHECKPOINT-WORKSPACE-CONCURRENCY-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CHECKPOINT-NONGIT-ORDER-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CHECKPOINT-REPLAY-PREPARATION-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CHECKPOINT-CLI-DIAGNOSTICS-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CHECKPOINT-PHASE-INVALID-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CHECKPOINT-WORKSPACE-REPLAY-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CHECKPOINT-WORKSPACE-SCOPE-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CHECKPOINT-WORKSPACE-DRIFT-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CHECKPOINT-STATUS-BATCH-002",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CHECKPOINT-LEASE-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CHECKPOINT-SESSION-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CHECKPOINT-REGISTRY-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CHECKPOINT-ORDER-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CHECKPOINT-RECOVERY-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CHECKPOINT-LIFECYCLE-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CHECKPOINT-STATUS-001",
+          "status": "passed"
+        },
         {
           "id": "TEST-M5-GRAPH-INCREMENTAL-001",
           "status": "passed",
@@ -60,7 +220,7 @@
           "status": "passed"
         }
       ],
-      "recordSha256": "db75a431b1179f898b04aa028b74ef3fb1a2732c1085fd5fb0e68d2387cd9ffb"
+      "recordSha256": "eae0e3b8c8ebd10aa3a27b29e6fb65308f4fbcc7bfd14f9007a22e6d4e554542"
     }
   ],
   "observations": [
@@ -72,21 +232,21 @@
       "maximum": 13,
       "status": "pass",
       "provenance": {
-        "runId": "eaba0299-7b08-4111-b1e4-e6f29c5ee75c",
-        "executionId": "a094b0bc6d9719f223d6097aefb040e65b04114eb33d6126395a3d2a675ea6eb",
+        "runId": "4f69e3e6-4912-4c3b-a2dd-e479eeffe15f",
+        "executionId": "ba473b21ac25430e5848116b1cae4121835c9ec26f4966dc707595d590cfef87",
         "commandName": "codegraph-tests",
         "commandSha256": "367841ceaa4c4655755dd32b6963719d0cc36c88dc15ca491ac13e1e5d3850a1",
         "reportPath": ".musubix/cache/test-results/codegraph.json",
         "sourceKind": "file",
-        "reportSha256": "b4a4aa0c47a025efd4ced01322ffd3b42af295c32f322c67511192e4729af926",
+        "reportSha256": "34cbbbc72adbb0fe086ff9889c4a928b6ff42dc50b379e7d4d2cf8aa7d902c07",
         "testId": "TEST-M5-GRAPH-TRAVERSAL-001",
         "testStatus": "passed",
         "counter": "forwardAdjacencyVisits",
         "value": 13,
         "processStatus": "completed",
         "exitCode": 0,
-        "executionRecordSha256": "db75a431b1179f898b04aa028b74ef3fb1a2732c1085fd5fb0e68d2387cd9ffb",
-        "recordSha256": "2f36d74802d37a543cc637844d0d830acf3f7e3cc2525b541a1e9e00b16a5060"
+        "executionRecordSha256": "eae0e3b8c8ebd10aa3a27b29e6fb65308f4fbcc7bfd14f9007a22e6d4e554542",
+        "recordSha256": "2559591cd84e9ad015297bdfad9cc0d70e770194925b0a5876e3d0e97c6aa934"
       }
     }
   ]

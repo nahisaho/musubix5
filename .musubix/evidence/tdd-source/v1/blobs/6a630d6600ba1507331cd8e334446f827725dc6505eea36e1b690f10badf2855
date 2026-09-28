@@ -1,0 +1,97 @@
+---
+status: accepted
+---
+# ADR-0021: Centralize root-aware evidence input selection
+
+## Context
+
+Strict trace already includes repository-owned `.github/skills/*/SKILL.md` files
+when the root manifest identifies the current `musubix5` repository or the
+pinned legacy `musubix3` repository. Non-trace evidence still calls the
+synchronous path-only `evidenceInputPaths(paths)` filter, which excludes every
+`.github/skills/` path. As a result, Skill-only implementation changes do not
+invalidate TDD source fingerprints, quality evidence, or workspace
+attestations.
+
+This decision extends ADR-0018 by reusing its exact repository-identity
+predicate outside strict trace; it does not change the identities or the
+strict-trace selection rules established there.
+
+Repository recognition requires reading `package.json`, while
+`evidenceInputPaths` is a public synchronous function whose callers may rely on
+its path-only behavior. Duplicating manifest recognition in TDD, quality, and
+attestation would allow their evidence scopes to drift from each other and from
+strict trace. Appending restored Skill paths after filtering would also change
+the deterministic file order used by order-sensitive persisted-quality
+comparison.
+
+## Decision
+
+Keep `evidenceInputPaths(paths)` synchronous, exported, and behaviorally
+unchanged. Add `evidenceInputs(root)` as the sole root-aware non-trace evidence
+selector. It owns one `files(root)` enumeration and one root-manifest
+read/parse attempt per collection, applies the existing exclusions, and returns
+recognized repository Skill paths in their original `files(root)` positions.
+
+Move the exact current and pinned-legacy manifest predicate into the shared
+files module as exported pure `isRecognizedMusubixSource(manifest)`. Both
+`evidenceInputs(root)` and `traceInputs(root)` use this predicate. Missing,
+unreadable, or malformed manifests fail closed as unrecognized repositories
+without throwing.
+
+Replace direct `evidenceInputPaths(await files(root))` composition in TDD,
+quality, and workspace attestation with `await evidenceInputs(root)`. Keep
+TDD-specific test-path and configured excluded-path filtering downstream.
+Quality invokes the selector independently for its pre-run snapshot, post-run
+snapshot, and persisted-evidence staleness recomputation; no cross-collection
+identity cache is introduced.
+
+Extract the persisted-quality fingerprint comparison as exported pure
+`qualityInputsCurrent(recorded, current)` in the gate module. It accepts
+untrusted parsed input, returns false without throwing for missing or malformed
+fingerprints, preserves ordered JSON equality for valid fingerprint maps, and
+does not absorb any other project-status staleness condition.
+
+## Rejected alternatives
+
+- Change `evidenceInputPaths` to accept a root or become asynchronous: rejected
+  because it would break the existing public synchronous API and conflate pure
+  path filtering with repository I/O.
+- Add a boolean such as `includeSkills` to each consumer call: rejected because
+  callers could choose inconsistent evidence scopes and bypass exact repository
+  recognition.
+- Duplicate manifest recognition in TDD, quality, attestation, and trace:
+  rejected because identity rules could drift and produce incompatible
+  fingerprints.
+- Append recognized Skill paths after applying `evidenceInputPaths`: rejected
+  because it would create a second ordering convention instead of preserving
+  the single deterministic `files(root)` order used by other path consumers.
+- Cache repository identity across collections: rejected because a manifest
+  change during a quality run must be visible to the post-run stability
+  snapshot.
+
+## Consequences
+
+TDD source fingerprints, quality snapshots and staleness checks, and workspace
+attestations share one repository-aware input scope. A recognized repository
+Skill change invalidates all corresponding evidence, while consumer repository
+Skill files and non-`SKILL.md` paths remain excluded.
+
+The shared predicate extraction must preserve every strict-trace identity
+fixture. Existing quality and attestation evidence generated under the narrower
+scope becomes stale and must be regenerated. Each evidence collection performs
+one additional root-manifest read and parse attempt; this is bounded,
+deterministic, and avoids stale cross-run cache state.
+
+Because `files.ts` is re-exported from the analysis package barrel,
+`isRecognizedMusubixSource` and `evidenceInputs` become public exports. Their
+identity and selection contracts are therefore covered by tests rather than
+treated as private implementation details.
+
+The gate module is also barrel-exported, so `qualityInputsCurrent` is a public
+test-covered compatibility seam for persisted-quality input currency.
+
+Independent pre-run and post-run recognition means a root-manifest identity
+change during a quality run can report unchanged Skill paths as added or
+deleted. This is intentional input-stability behavior: the effective evidence
+scope changed during the run even if the Skill file contents did not.

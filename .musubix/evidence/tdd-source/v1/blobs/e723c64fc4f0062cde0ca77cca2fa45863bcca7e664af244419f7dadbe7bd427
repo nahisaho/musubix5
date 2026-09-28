@@ -1,0 +1,109 @@
+---
+status: accepted
+---
+# ADR-0017: Verify integrations with a closed pre-release diagnostic policy
+
+## Context
+
+Parallel integration verification runs before terminal full-set quality,
+candidate snapshot creation, candidate gates, and release approval. Requiring
+the changed gate and status to be fully release-ready creates a lifecycle cycle:
+verified integration is needed before terminal quality, while release approval
+cannot exist before terminal quality and an immutable candidate snapshot.
+
+The general release diagnostic classifier is intentionally broad. It includes
+missing, unavailable, stale, mismatched, foreign, and conflicting candidate
+states so user-facing recovery can explain them. Reusing that classifier as an
+integration success predicate would accept states that do not prove a valid
+pre-release boundary.
+
+Repositories also retain prior release approval evidence. During a new CHANGE,
+the approval check can report either `APPROVAL_CANDIDATE_MISSING` or
+`CHANGE_GENERATION_INCOMPLETE` depending on whether the historical candidate
+still exists. The diagnostic code alone therefore cannot bind the state to the
+current plan.
+
+## Decision
+
+Use a dedicated, closed integration-stage policy rather than the general
+release diagnostic classifier.
+
+For a completed JSON changed gate with exit zero, require every required check
+to pass. Preserve optional check outcomes but exclude them from acceptance.
+
+Before evaluating exit-1 changed-gate output, resolve authoritative context from
+the control root:
+
+- the plan-bound CHANGE is the sole active CHANGE;
+- its active generation equals the plan generation;
+- terminal `quality` is absent;
+- no live repository-matching candidate exists for that CHANGE and generation;
+- persisted release approval is classified by exact `changeId` as absent,
+  same-CHANGE, or belonging to a different completed CHANGE.
+
+Accept an exit-1 changed gate only when at least one required check fails, every
+failing required check is `change-history` or `approval`, and each present
+failure satisfies its rule:
+
+- a failing `change-history` contains one error
+  `CHANGE_GENERATION_INCOMPLETE`, one error or authoritative-waiver warning
+  `CHANGE_PHASE_MISSING` with `detail = phase:quality`, and no other error; and
+- a failing `approval` contains exactly one error code:
+  `APPROVAL_CANDIDATE_MISSING` or `CHANGE_GENERATION_INCOMPLETE`, with the code
+  permitted by the resolved release-evidence context.
+
+Either check may instead pass or be non-required without causing rejection.
+Required diagnostics use recognized `error|warning|info` severities. A warning
+`CHANGE_PHASE_MISSING` member is accepted only with authoritative waiver
+attribution; malformed required diagnostic shapes fail closed.
+
+Warnings and other non-error diagnostics on required checks do not decide
+acceptance but remain in the recorded command outcome. Preserve every
+non-required check status and diagnostic, including `fail`, `skipped`, and
+unrecognized statuses, without using it to decide acceptance or grant credit.
+
+Run status as a separate integration-worktree-overlay check. The preceding gate
+report is intentionally removed with its overlay and is not copied into the
+control root, so status does not prove the changed-gate result. It independently
+proves only non-readiness: require exit zero, initialized state, a recognized
+gate status from `pass|fail|stale|skipped`, and `gate.ready = false`. Persist
+both raw outcomes unchanged when provenance is marked verified.
+
+Same-CHANGE release approval evidence, ambiguous active CHANGEs, foreign active
+CHANGEs, stale/mismatched/unavailable candidate state, malformed JSON, empty or
+mixed tolerated diagnostic sets, ready status, or any other required failure
+remain hard failures.
+
+## Rejected alternatives
+
+- Require full release readiness during integration verification: rejected
+  because it preserves the integration-quality-candidate-approval cycle.
+- Accept every code recognized by `classifyReleaseApprovalDiagnostic`: rejected
+  because unavailable, stale, mismatched, and conflicting states are not valid
+  pre-release boundaries.
+- Ignore the `approval` and `change-history` checks entirely: rejected because
+  it would lose evidence that the verifier observed the expected lifecycle
+  boundary and would admit unrelated failures.
+- Rewrite tolerated failures to pass before persistence: rejected because it
+  creates success-shaped evidence and hides the actual non-ready state.
+- Delete or supersede historical release approval automatically: rejected
+  because approval evidence is append-only audit history and is not owned by
+  integration verification.
+
+## Consequences
+
+Integration provenance can become verified before terminal quality without
+claiming release readiness. Handoff and branch-retaining cleanup continue under
+REQ-M5-PARALLEL-012, while terminal quality, candidate creation, candidate
+gates, and release approval remain mandatory downstream.
+
+The verifier gains an authoritative context-resolution step and a stricter JSON
+gate/status parser. Tests must cover repositories with no prior release
+approval, a prior completed CHANGE's approval with and without its historical
+candidate, same-CHANGE approval evidence, mixed diagnostics, warnings,
+candidate-invalid states, malformed output, and ready or stale status.
+
+## Links
+
+Requirements: REQ-M5-PARALLEL-010
+Design: DES-M5-PARALLEL-007

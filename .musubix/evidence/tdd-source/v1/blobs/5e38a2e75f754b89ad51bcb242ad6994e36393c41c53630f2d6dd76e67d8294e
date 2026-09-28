@@ -1,0 +1,38 @@
+---
+status: accepted
+---
+# ADR-0009: Add explicit compatibility extensions
+
+## Context
+
+musubix5 must fail closed when required commands are absent and must configure
+bounded verified-auto review. musubix3 v0.1.18 reports an empty required command
+set as `skipped` without a diagnostic and has no `approvalAutomation` key.
+
+## Decision
+
+Preserve the baseline `skipped` command-check status and exit behavior, while
+adding a structured `missing-command` diagnostic. Add a versioned
+`approvalAutomation` configuration extension whose effective canonical digest
+must match the design-approved value before execution. An absent extension
+materializes the approved manual-mode defaults. Because the digest covers modes
+and limits, enabling verified-auto requires a revised design approval.
+
+## Rejected alternatives
+
+- Treat zero commands as pass: rejected because no verification was executed.
+- Change `status` to exit 1: rejected because it breaks the baseline exit
+  contract.
+- Permit unapproved automation limits: rejected because budget and repair
+  authority are safety-relevant.
+
+## Consequences
+
+The JSON diagnostic is additive. Existing consumers may ignore it, while gate
+and readiness remain fail-closed. Configuration validation must distinguish
+unknown legacy keys from the versioned musubix5 extension.
+
+## Links
+
+Requirements: REQ-M5-COMPAT-003 REQ-M5-COMPAT-007 REQ-M5-APPROVAL-003 REQ-M5-BUDGET-005 REQ-M5-QUALITY-004 REQ-M5-QUALITY-005
+Design: DES-M5-008 DES-M5-015

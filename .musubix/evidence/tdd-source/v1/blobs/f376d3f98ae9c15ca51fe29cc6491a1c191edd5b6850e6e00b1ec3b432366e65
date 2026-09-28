@@ -1,0 +1,49 @@
+
+
+  /** @id TEST-M5-CHECKPOINT-LEASE-001
+   * @verifies REQ-M5-LIFECYCLE-006
+   * @design DES-M5-004
+   */
+  it('TEST-M5-CHECKPOINT-LEASE-001 fences durable-counter loss before journal or projection persistence',async () => {
+    mkdirSync(resolve('.musubix/cache'),{ recursive: true });
+    const root=mkdtempSync(resolve('.musubix/cache/checkpoint-lease-'));
+    temporaryDirectories.push(root);
+    execFileSync('git',['init','--quiet',root]);
+    const journal=await import('../packages/analysis/src/journal.js');
+    const lease=await journal.acquireChangeLease(root,'CHANGE-0002');
+    const counter=join(dirname(lease.path),'fencing','change-CHANGE-0002.json');
+    writeFileSync(counter,JSON.stringify({ fencingToken: lease.fencingToken+1 }));
+    await expect(journal.assertChangeLeaseCurrent(lease)).rejects.toThrow('LEASE_FENCED');
+    await journal.releaseChangeLease(lease);
+  });
+
+  /**
+   * @id TEST-M5-LIFECYCLE-004
+   * @verifies REQ-M5-LIFECYCLE-004
+   */
+  it('TEST-M5-LIFECYCLE-004 excludes concurrent writers and fences expired holders',async () => {
+    const root=mkdtempSync(join(tmpdir(),'musubix5-change-lease-'));
+    temporaryDirectories.push(root);
+    execFileSync('git',['init','--quiet',root]);
+    const {
+      acquireChangeLease,
+      assertChangeLeaseCurrent,
+      releaseChangeLease,
+      tryAcquireChangeLease,
+    }=await import('../packages/analysis/src/journal.js');
+
+    const first=await acquireChangeLease(root,'CHANGE-0002');
+    expect(await tryAcquireChangeLease(root,'CHANGE-0002')).toBeNull();
+
+    const owner=JSON.parse(readFileSync(join(first.path,'owner.json'),'utf8')) as {
+      expiresAt: number;
+    };
+    writeFileSync(join(first.path,'owner.json'),JSON.stringify({ ...owner,expiresAt: 0 }));
+
+    const second=await acquireChangeLease(root,'CHANGE-0002');
+    expect(second.fencingToken).toBe(first.fencingToken+1);
+    await expect(assertChangeLeaseCurrent(first)).rejects.toThrow('LEASE_FENCED');
+    await expect(assertChangeLeaseCurrent(second)).resolves.toBeUndefined();
+    await releaseChangeLease(second);
+  });
+});

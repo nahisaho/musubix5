@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-27T03:19:17.614Z",
-  "status": "pass",
+  "generatedAt": "2026-09-27T18:05:00.258Z",
+  "status": "fail",
   "checks": [
     {
       "name": "policy",
@@ -34,9 +34,34 @@
     {
       "name": "trace",
       "required": true,
-      "status": "pass",
-      "summary": "0 error(s).",
-      "diagnostics": []
+      "status": "fail",
+      "summary": "2 error(s).",
+      "diagnostics": [
+        {
+          "code": "TRACE_UNCOVERED",
+          "severity": "warning",
+          "message": "REQ-M5-GRAPH-003 lacks implementation.",
+          "path": ".musubix/features/codegraph-performance/requirements.md",
+          "line": 28
+        },
+        {
+          "code": "TRACE_UNCOVERED",
+          "severity": "warning",
+          "message": "REQ-M5-GRAPH-003 lacks tests.",
+          "path": ".musubix/features/codegraph-performance/requirements.md",
+          "line": 28
+        },
+        {
+          "code": "TRACE_COVERAGE",
+          "severity": "error",
+          "message": "implementation link coverage 0.9917355371900827 is below 1."
+        },
+        {
+          "code": "TRACE_COVERAGE",
+          "severity": "error",
+          "message": "tests link coverage 0.9917355371900827 is below 1."
+        }
+      ]
     },
     {
       "name": "graph",
@@ -56,7 +81,7 @@
       "name": "formal",
       "required": false,
       "status": "pass",
-      "summary": "4/119 requirements modeled; consistency consistent; solver not-requested.",
+      "summary": "4/121 requirements modeled; consistency consistent; solver not-requested.",
       "diagnostics": [
         {
           "code": "FORMAL_UNSUPPORTED",
@@ -77,6 +102,11 @@
           "code": "FORMAL_UNSUPPORTED",
           "severity": "warning",
           "message": "REQ-M5-GRAPH-002 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+        },
+        {
+          "code": "FORMAL_UNSUPPORTED",
+          "severity": "warning",
+          "message": "REQ-M5-GRAPH-003 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
         },
         {
           "code": "FORMAL_UNSUPPORTED",
@@ -207,6 +237,11 @@
           "code": "FORMAL_UNSUPPORTED",
           "severity": "warning",
           "message": "REQ-M5-LIFECYCLE-005 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+        },
+        {
+          "code": "FORMAL_UNSUPPORTED",
+          "severity": "warning",
+          "message": "REQ-M5-LIFECYCLE-006 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
         },
         {
           "code": "FORMAL_UNSUPPORTED",
@@ -639,8 +674,8 @@
     {
       "name": "workflow",
       "required": true,
-      "status": "pass",
-      "summary": "20 workflow declaration(s) across 8 Skill(s) reconciled with Copilot invocation events.",
+      "status": "fail",
+      "summary": "5 workflow declaration(s) are not fully reconciled with Copilot invocation events.",
       "diagnostics": [
         {
           "code": "WORKFLOW_DECLARATION_SUPERSEDED",
@@ -691,36 +726,163 @@
           "declarationRecordedAt": "2026-09-24T18:43:19.109Z",
           "index": 92,
           "detail": "WDC-945878446308BBC1EBB8B2DE"
+        },
+        {
+          "code": "WORKFLOW_INVOCATION_UNVERIFIED",
+          "severity": "error",
+          "message": "Workflow declarations have not been reconciled with a Copilot session log."
         }
       ]
     },
     {
       "name": "tdd",
       "required": true,
-      "status": "pass",
-      "summary": "829 Red-Green TDD cycle(s) recorded.",
-      "diagnostics": []
+      "status": "fail",
+      "summary": "915 Red-Green TDD cycle(s) recorded.",
+      "diagnostics": [
+        {
+          "code": "TDD_REQUIREMENT_UNCOVERED",
+          "severity": "error",
+          "message": "REQ-M5-GRAPH-003 has no valid Red-Green cycle from an authoritative verifying test.",
+          "path": ".musubix/features/codegraph-performance/requirements.md",
+          "line": 28
+        },
+        {
+          "code": "TDD_REQUIREMENT_UNCOVERED",
+          "severity": "error",
+          "message": "REQ-M5-COMPAT-013 has no valid Red-Green cycle from an authoritative verifying test.",
+          "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
+          "line": 92
+        },
+        {
+          "code": "TDD_REQUIREMENT_UNCOVERED",
+          "severity": "error",
+          "message": "REQ-M5-APPROVAL-007 has no valid Red-Green cycle from an authoritative verifying test.",
+          "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
+          "line": 197
+        },
+        {
+          "code": "TDD_REQUIREMENT_UNCOVERED",
+          "severity": "error",
+          "message": "REQ-M5-EVIDENCE-007 has no valid Red-Green cycle from an authoritative verifying test.",
+          "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
+          "line": 302
+        },
+        {
+          "code": "TDD_REQUIREMENT_UNCOVERED",
+          "severity": "error",
+          "message": "REQ-M5-WORKTREE-004 has no valid Red-Green cycle from an authoritative verifying test.",
+          "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
+          "line": 365
+        },
+        {
+          "code": "TDD_TEST_STALE",
+          "severity": "error",
+          "message": "TEST-M5-CHECKPOINT-SESSION-001 changed after its latest passing TDD phase.",
+          "path": "tests/change-lease.test.ts"
+        }
+      ]
     },
     {
       "name": "change-history",
       "required": true,
-      "status": "pass",
-      "summary": "15 staged change(s) checked for ordered artifact and TDD evidence.",
-      "diagnostics": []
+      "status": "fail",
+      "summary": "16 staged change(s) checked for ordered artifact and TDD evidence.",
+      "diagnostics": [
+        {
+          "code": "CHANGE_GENERATION_INCOMPLETE",
+          "severity": "error",
+          "message": "CHANGE-0017:generation 5 has not reached quality."
+        },
+        {
+          "code": "CHANGE_PHASE_MISSING",
+          "severity": "error",
+          "message": "CHANGE-0017 is missing quality.",
+          "changeId": "CHANGE-0017",
+          "detail": "phase:quality"
+        },
+        {
+          "code": "CHANGE_PHASE_MISSING",
+          "severity": "error",
+          "message": "CHANGE-0017 is missing red for REQ-M5-APPROVAL-007, REQ-M5-COMPAT-013, REQ-M5-EVIDENCE-007, REQ-M5-GRAPH-003, REQ-M5-WORKTREE-004.",
+          "changeId": "CHANGE-0017",
+          "detail": "phase:red"
+        },
+        {
+          "code": "CHANGE_PHASE_MISSING",
+          "severity": "error",
+          "message": "CHANGE-0017 is missing implementation for REQ-M5-APPROVAL-007, REQ-M5-COMPAT-013, REQ-M5-EVIDENCE-007, REQ-M5-GRAPH-003, REQ-M5-WORKTREE-004.",
+          "changeId": "CHANGE-0017",
+          "detail": "phase:implementation"
+        },
+        {
+          "code": "CHANGE_PHASE_MISSING",
+          "severity": "error",
+          "message": "CHANGE-0017 is missing green for REQ-M5-APPROVAL-007, REQ-M5-COMPAT-013, REQ-M5-EVIDENCE-007, REQ-M5-GRAPH-003, REQ-M5-WORKTREE-004.",
+          "changeId": "CHANGE-0017",
+          "detail": "phase:green"
+        }
+      ]
     },
     {
       "name": "change-completeness",
       "required": true,
-      "status": "pass",
-      "summary": "15/15 staged change(s) have semantically complete evidence.",
-      "diagnostics": []
+      "status": "fail",
+      "summary": "15/16 staged change(s) have semantically complete evidence.",
+      "diagnostics": [
+        {
+          "code": "CHANGE_COMPLETENESS_TDD",
+          "severity": "error",
+          "message": "CHANGE-0017:REQ-M5-APPROVAL-007 lacks bounded Red-Green TDD evidence.",
+          "changeId": "CHANGE-0017",
+          "requirementId": "REQ-M5-APPROVAL-007"
+        },
+        {
+          "code": "CHANGE_COMPLETENESS_TDD",
+          "severity": "error",
+          "message": "CHANGE-0017:REQ-M5-COMPAT-013 lacks bounded Red-Green TDD evidence.",
+          "changeId": "CHANGE-0017",
+          "requirementId": "REQ-M5-COMPAT-013"
+        },
+        {
+          "code": "CHANGE_COMPLETENESS_TDD",
+          "severity": "error",
+          "message": "CHANGE-0017:REQ-M5-EVIDENCE-007 lacks bounded Red-Green TDD evidence.",
+          "changeId": "CHANGE-0017",
+          "requirementId": "REQ-M5-EVIDENCE-007"
+        },
+        {
+          "code": "CHANGE_COMPLETENESS_TDD",
+          "severity": "error",
+          "message": "CHANGE-0017:REQ-M5-GRAPH-003 lacks bounded Red-Green TDD evidence.",
+          "changeId": "CHANGE-0017",
+          "requirementId": "REQ-M5-GRAPH-003"
+        },
+        {
+          "code": "CHANGE_COMPLETENESS_CODE",
+          "severity": "error",
+          "message": "CHANGE-0017:REQ-M5-GRAPH-003 lacks implementation evidence."
+        },
+        {
+          "code": "CHANGE_COMPLETENESS_TEST",
+          "severity": "error",
+          "message": "CHANGE-0017:REQ-M5-GRAPH-003 lacks authoritative annotated test declaration evidence."
+        },
+        {
+          "code": "CHANGE_COMPLETENESS_TDD",
+          "severity": "error",
+          "message": "CHANGE-0017:REQ-M5-WORKTREE-004 lacks bounded Red-Green TDD evidence.",
+          "changeId": "CHANGE-0017",
+          "requirementId": "REQ-M5-WORKTREE-004"
+        }
+      ]
     },
     {
       "name": "command:typecheck",
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 3653,
+      "durationMs": 4078,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.2.0 typecheck\n> tsc --noEmit\n\n",
       "stderr": ""
@@ -730,7 +892,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 3575,
+      "durationMs": 3529,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.2.0 build\n> tsc -p tsconfig.build.json\n\n",
       "stderr": ""
@@ -738,31 +900,31 @@
     {
       "name": "command:test",
       "required": true,
-      "status": "pass",
-      "summary": "npx: completed, exit 0.",
-      "durationMs": 78852,
-      "exitCode": 0,
-      "stdout": "JSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0016/g1/fc055a99a4d811cb/.musubix/evidence/native/test/aggregate.json\n",
-      "stderr": "Preparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\n"
+      "status": "fail",
+      "summary": "npx: completed, exit 1.",
+      "durationMs": 124206,
+      "exitCode": 1,
+      "stdout": "JSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/g1/control/.musubix/evidence/native/test/aggregate.json\n",
+      "stderr": "Preparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\n"
     },
     {
       "name": "command:codegraph-tests",
       "required": true,
       "status": "pass",
       "summary": "node: completed, exit 0.",
-      "durationMs": 51249,
+      "durationMs": 134169,
       "exitCode": 0,
-      "stdout": "JSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0016/g1/fc055a99a4d811cb/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0016/g1/fc055a99a4d811cb/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-NOCHANGE-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0016/g1/fc055a99a4d811cb/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-FALLBACK-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0016/g1/fc055a99a4d811cb/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-GIT-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0016/g1/fc055a99a4d811cb/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-CACHE-WRITE-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0016/g1/fc055a99a4d811cb/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-TRAVERSAL-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0016/g1/fc055a99a4d811cb/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-CYCLES-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0016/g1/fc055a99a4d811cb/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-GATE-SCAN-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0016/g1/fc055a99a4d811cb/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-GATE-ORDER-001.json\n",
-      "stderr": ""
+      "stdout": "JSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/g1/control/.musubix/cache/test-results/.vitest-TEST-M5-CONCURRENCY-LEASE-CONTRACT-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/g1/control/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/g1/control/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-NOCHANGE-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/g1/control/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-FALLBACK-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/g1/control/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-GIT-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/g1/control/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-CACHE-WRITE-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/g1/control/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-TRAVERSAL-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/g1/control/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-CYCLES-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/g1/control/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-GATE-SCAN-001.json\nJSON report written to /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/g1/control/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-GATE-ORDER-001.json\n",
+      "stderr": "Preparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\n"
     },
     {
       "name": "command:compatibility",
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 5746,
+      "durationMs": 5653,
       "exitCode": 0,
-      "stdout": "\n> musubix5@0.2.0 test:compat\n> vitest run tests/cli-help-contract.test.ts tests/cli-json-error-contract.test.ts tests/compatibility-oracle.test.ts\n\n\n RUN  v3.2.7 /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0016/g1/fc055a99a4d811cb\n\n ✓ tests/cli-help-contract.test.ts (2 tests) 1207ms\n   ✓ CLI help compatibility > TEST-M5-WAVE1-TDD-REPAIR-HELP-A4-001 registers additive TDD repair help  1132ms\n ✓ tests/compatibility-oracle.test.ts (1 test) 37ms\n ✓ tests/cli-json-error-contract.test.ts (2 tests) 1465ms\n   ✓ CLI JSON failure compatibility > TEST-M5-COMPAT-003 preserves the operational-error envelope  376ms\n   ✓ CLI JSON failure compatibility > TEST-M5-APPROVAL-GUIDANCE-001 names the published approval recovery command  1089ms\n\n Test Files  3 passed (3)\n      Tests  5 passed (5)\n   Start at  12:18:45\n   Duration  5.32s (transform 724ms, setup 0ms, collect 63ms, tests 2.71s, environment 1ms, prepare 132ms)\n\n",
+      "stdout": "\n> musubix5@0.2.0 test:compat\n> vitest run tests/cli-help-contract.test.ts tests/cli-json-error-contract.test.ts tests/compatibility-oracle.test.ts\n\n\n RUN  v3.2.7 /home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/g1/control\n\n ✓ tests/cli-help-contract.test.ts (2 tests) 1161ms\n   ✓ CLI help compatibility > TEST-M5-WAVE1-TDD-REPAIR-HELP-A4-001 registers additive TDD repair help  1083ms\n ✓ tests/compatibility-oracle.test.ts (1 test) 40ms\n ✓ tests/cli-json-error-contract.test.ts (2 tests) 1421ms\n   ✓ CLI JSON failure compatibility > TEST-M5-COMPAT-003 preserves the operational-error envelope  348ms\n   ✓ CLI JSON failure compatibility > TEST-M5-APPROVAL-GUIDANCE-001 names the published approval recovery command  1072ms\n\n Test Files  3 passed (3)\n      Tests  5 passed (5)\n   Start at  03:04:26\n   Duration  5.22s (transform 736ms, setup 0ms, collect 62ms, tests 2.62s, environment 0ms, prepare 128ms)\n\n",
       "stderr": ""
     },
     {
@@ -770,9 +932,9 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 1028,
+      "durationMs": 1037,
       "exitCode": 0,
-      "stdout": "\n> musubix5@0.2.0 pack:check\n> node scripts/check-package.mjs\n\nPackage verified: musubix5-0.2.0.tgz, 218 files, 12 skills.\n",
+      "stdout": "\n> musubix5@0.2.0 pack:check\n> node scripts/check-package.mjs\n\nPackage verified: musubix5-0.2.0.tgz, 221 files, 12 skills.\n",
       "stderr": ""
     },
     {
@@ -780,7 +942,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 4388,
+      "durationMs": 4418,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.2.0 pack:smoke\n> node scripts/smoke-package.mjs\n\nInstalled tarball verified: executable bin, ESM exports, init, status, assets, and hidden skills (0.2.0).\n",
       "stderr": ""
@@ -788,9 +950,1425 @@
     {
       "name": "test-identities",
       "required": false,
-      "status": "pass",
-      "summary": "292/292 annotated test IDs passed in structured command reports.",
-      "diagnostics": []
+      "status": "fail",
+      "summary": "49/332 annotated test IDs passed in structured command reports.",
+      "diagnostics": [
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-APPROVAL-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-APPROVAL-002 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-APPROVAL-003 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-APPROVAL-004 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-APPROVAL-007 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-APPROVAL-008 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-APPROVAL-009 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-APPROVAL-CANDIDATE-TREE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-APPROVAL-GUIDANCE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-APPROVAL-NATIVE-CANDIDATE-TREE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-APPROVAL-NFC-REVERIFY-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-APPROVAL-NORMATIVE-PATH-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-APPROVAL-PATTERN-SELECTION-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-APPROVAL-RECORD-CANDIDATE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-APPROVAL-RELEASE-DOMAIN-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-APPROVAL-STATUS-CANDIDATE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-BOOTSTRAP-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-BOOTSTRAP-002 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-BUDGET-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-BUDGET-003 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-BUDGET-005 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-CANDIDATE-CLEANUP-ACTIVE-INTEGRATED-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-CANDIDATE-CLI-SAFETY-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-CANDIDATE-CONTEXT-E2E-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-CANDIDATE-EVIDENCE-BINDING-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-CANDIDATE-EVIDENCE-ISOLATION-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-CANDIDATE-GATE-PRE-APPROVAL-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-CANDIDATE-OWNERSHIP-ROUTING-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-CANDIDATE-PATH-PORTABILITY-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-CANDIDATE-READY-RESUME-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-CANDIDATE-REFRESH-CLEANUP-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-CANDIDATE-SINGLE-COMPAT-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-CANDIDATE-SNAPSHOT-REPOSITORY-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-CANDIDATE-STATE-CURRENT-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-CANDIDATE-STATE-LEASES-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-CANDIDATE-STATE-LIFECYCLE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-CANDIDATE-STATE-REGISTRY-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-CANDIDATE-STATE-REGISTRY-INVALID-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-CANDIDATE-WORKSPACE-CHECKPOINT-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-CANDIDATE-WORKSPACE-RED-CHECKPOINT-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-CI-DEFAULT-TMPDIR-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-CI-HISTORICAL-GATES-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-CI-NODE24-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-CI-SHORT-SOCKET-PATH-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-COMPAT-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-COMPAT-003 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-COMPAT-005 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-COMPAT-006 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-COMPAT-007 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-COMPAT-ADR-SCOPE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-COMPAT-BIN-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-COMPAT-EFFECTIVE-DESIGN-PROJECTION-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-COMPAT-EFFECTIVE-PROJECTION-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-COMPAT-NORMATIVE-SYMLINK-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-COMPAT-OBJECT-ID-WIDTH-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-COMPAT-ORACLE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-EVIDENCE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-EVIDENCE-002 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-EVIDENCE-003 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-EVIDENCE-004 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-EVIDENCE-006 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-EVIDENCE-007 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-EVIDENCE-007-MULTI-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-EVIDENCE-CURRENT-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-EVIDENCE-SKILL-FINGERPRINT-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-EVIDENCE-SKILL-INPUT-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-EVIDENCE-TRACE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-INTEGRATION-CONTEXT-GATE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-INTEGRATION-CONTEXT-STATUS-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-INTEGRATION-DIAGNOSTIC-PROJECTION-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-INTEGRATION-DIAGNOSTICS-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-INTEGRATION-EVIDENCE-BINDING-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-LIFECYCLE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-LIFECYCLE-002 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-LIFECYCLE-003 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-LIFECYCLE-004 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-LIFECYCLE-005 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-LIFECYCLE-ACTIVE-STATUS-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-LIFECYCLE-CONTEXT-002 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-LIFECYCLE-GENERATION-BINDING-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-LIFECYCLE-LEASE-SHARING-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-LIFECYCLE-LEASE-SHARING-002 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-LIFECYCLE-LEASE-SHARING-003 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-LIFECYCLE-LEGACY-DOCUMENT-STATUS-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-LIFECYCLE-MIXED-ERROR-MAPPING-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-LIFECYCLE-PHASE-CHECKPOINT-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-LIFECYCLE-PHASE-CHECKPOINT-ABANDON-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-LIFECYCLE-PHASE-CHECKPOINT-ORDER-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-LIFECYCLE-PHASE-CHECKPOINT-PENDING-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-LIFECYCLE-REOPEN-RESUME-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-LIFECYCLE-SNAPSHOT-MAINTENANCE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-LIFECYCLE-STATUS-ABANDONED-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-LIFECYCLE-STATUS-EXIT-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-LIFECYCLE-STATUS-RECOVERY-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-LIFECYCLE-STATUS-SELECTION-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-MULTI-CHANGE-CANDIDATE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-MULTI-CHANGE-CANDIDATE-EPOCH-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-MULTI-CHANGE-CLI-LIFECYCLE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-MULTI-CHANGE-CLI-VERIFICATION-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-MULTI-CHANGE-CONTEXT-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-MULTI-CHANGE-INTEGRATION-DEPENDENCIES-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-MULTI-CHANGE-INTEGRATION-DETERMINISM-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-MULTI-CHANGE-INTEGRATION-EVIDENCE-CONTEXT-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-MULTI-CHANGE-INTEGRATION-FENCING-RECOVERY-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-MULTI-CHANGE-INTEGRATION-ORCHESTRATION-005 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-MULTI-CHANGE-INTEGRATION-ORCHESTRATION-006 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-MULTI-CHANGE-INTEGRATION-ORCHESTRATION-007 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-MULTI-CHANGE-INTEGRATION-RECOVERY-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-MULTI-CHANGE-INTEGRATION-REVIEW-005 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-MULTI-CHANGE-INTEGRATION-REVIEW-006 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-MULTI-CHANGE-INTEGRATION-REVIEW-007 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-MULTI-CHANGE-INTEGRATION-VERIFICATION-EXIT-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-MULTI-CHANGE-STATE-OWNERSHIP-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-ASSIGNMENT-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-CANDIDATE-DIVERGED-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-CLI-CONCURRENCY-002 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-CONSUMER-CLI-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-CONSUMER-POLICY-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-CONSUMER-POLICY-DIAGNOSTIC-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-CROSS-PLATFORM-WORKTREE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-DETACHED-CLEANUP-ERROR-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-DETACHED-VERIFY-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-DUPLICATE-COMMIT-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-FENCING-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-FULL-SUCCESS-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-GRAPH-ACYCLIC-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-HANDOFF-EVIDENCE-DIRTY-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-INTEGRATION-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-INTEGRATION-CONTROL-EVIDENCE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-INTEGRATION-GATE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-INTEGRATION-PRE-RELEASE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-INTEGRATION-PRE-RELEASE-CONTEXT-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-INTEGRATION-PRE-RELEASE-POLICY-002 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-INTEGRATION-REOPEN-003 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-INTEGRATION-SEMANTICS-002 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-JOURNAL-CRASH-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-LATEST-BATCH-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-LIFECYCLE-MAPPING-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-OWNERSHIP-DISJOINT-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-OWNERSHIP-GLOB-OVERLAP-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-OWNERSHIP-HISTORY-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-OWNERSHIP-SUFFIX-DISJOINT-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-PLAN-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-POLICY-OWNERSHIP-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-PROVENANCE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-REAL-GATE-SUCCESS-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-RELEASE-NONPASS-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-RETRY-002 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-RUNTIME-CONCURRENCY-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-RUNTIME-DIAGNOSTICS-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-RUNTIME-EIGHT-WRITERS-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-RUNTIME-HANDOFF-CLEANUP-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-RUNTIME-LIFECYCLE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-SCAFFOLD-PROVISION-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-SKILL-CONCURRENCY-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-SKILL-OUTCOME-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-SKILL-PRESERVATION-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-SKILLS-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-SPLIT-ROOT-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-STALE-CLEANUP-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-TDD-PROVENANCE-BINDING-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-VERIFY-WORKSPACE-IDENTITY-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-WORKSPACE-OVERLAY-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-WORKSPACE-PARTIAL-COPY-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PARALLEL-WORKTREE-SAFETY-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PLANNER-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-PLANNER-002 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-QUALITY-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-QUALITY-005-WINDOWS-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-QUALITY-005-WINDOWS-002 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-QUALITY-COMPLETENESS-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-QUALITY-SUPERSESSION-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-REL020-PUBLISH-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-REL020-RELEASE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-REL020-VERSION-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-002 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-002-APPROVAL-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-002-EOL-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-002-GATE-DIAGNOSTIC-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-002-TRUST-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-003 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-003-CONTEXT-BINDING-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-003-CONTEXT-EQUALITY-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-003-CREATION-TARGET-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-003-DETACHED-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-003-DOCS-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-003-FETCHED-REF-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-003-GEN5-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-003-REMOTE-PREFERENCE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-003-REPOSITORY-IDENTITY-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-003-REPOSITORY-IDENTITY-002 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-003-REPOSITORY-IDENTITY-003 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-003-SHELL-FAILURE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-003-TARGET-HTTP-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-004 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-004-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-004-CANCELLATION-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-004-CHECKSUM-PATH-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-004-DOCS-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-004-POLICY-BINDING-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-004-REGISTRY-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-004-REGISTRY-CLASSIFICATION-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-004-REPOSITORY-IDENTITY-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-004-REPOSITORY-IDENTITY-002 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-004-REPOSITORY-IDENTITY-003 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-004-REVIEW-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-004-SHELL-FAILURE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-004-TARGET-HTTP-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-004-WORKFLOW-ORDER-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-BUILD-ISOLATION-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-DELETED-SNAPSHOT-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-MANIFEST-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-REPOSITORY-TARGET-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-STALE-SNAPSHOT-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-RELEASE-WINDOWS-CLEANUP-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-TDD-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-TDD-002 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-TDD-APPROVAL-SUPERSESSION-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-TDD-DESIGN-PREDECESSOR-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-TDD-EFFECTIVE-LATEST-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-TDD-MAINTENANCE-SCOPE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-TDD-NORMAL-ROOT-TRACE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-TDD-SPLIT-ROOT-FINGERPRINT-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WAVE0-CANDIDATE-DISPATCH-CLI-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WAVE0-CANDIDATE-REF-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WAVE0-COMPLETION-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WAVE0-COMPLETION-002 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WAVE0-COMPLETION-003 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WAVE0-COMPLETION-004 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WAVE0-HANDOFF-PORCELAIN-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WAVE0-HANDOFF-PORCELAIN-OUTSIDE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WAVE0-HANDOFF-PORCELAIN-OWNED-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WAVE1-EVIDENCE-GUARDS-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WAVE1-PRODUCT-NAMING-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WAVE1-PUBLISH-DEADLINE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WAVE1-TDD-LINEAGE-DESIGN-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WAVE1-TDD-LINEAGE-DIVERGENT-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WAVE1-TDD-LINEAGE-DIVERGENT-A6-002 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WAVE1-TDD-LINEAGE-DIVERGENT-A6-003 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WAVE1-TDD-LINEAGE-INHERITED-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WAVE1-TDD-LINEAGE-LATEST-FAILURE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WAVE1-TDD-PROVENANCE-ATTEMPT-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WAVE1-TDD-PROVENANCE-LATEST-FAILURE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WAVE1-TDD-PROVENANCE-SUPERSESSION-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WAVE1-TDD-REPAIR-A4-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WAVE1-TDD-REPAIR-HELP-A4-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WAVE1-TDD-REPAIR-SAFETY-A4-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WAVE1-TRACE-COMPAT-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WAVE1-TRACE-STABILITY-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKFLOW-CHANGE-OWNER-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKFLOW-CHANGE-OWNER-CONFLICT-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKFLOW-DECLARATION-CORRECTION-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKFLOW-DECLARATION-CORRECTION-CLI-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKFLOW-DECLARATION-CORRECTION-CLI-ERROR-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKFLOW-DECLARATION-CORRECTION-POLICY-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKFLOW-DECLARATION-CORRECTION-RECOVERY-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKFLOW-DECLARATION-CORRECTION-SCHEMA-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKFLOW-DECLARATION-CORRECTION-SCOPE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKFLOW-DECLARATION-CORRECTION-VALIDATION-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKFLOW-DECLARATION-CORRECTION-WAIVER-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKFLOW-DECLARATION-CORRECTION-WAIVER-002 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKTREE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKTREE-002 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKTREE-ACTIVE-CHANGE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKTREE-CANDIDATE-BRANCH-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKTREE-CROSS-CHANGE-BRANCH-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKTREE-REPOSITORY-IDENTITY-002 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKTREE-REPOSITORY-IDENTITY-003 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKTREE-REPOSITORY-IDENTITY-004 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKTREE-REPOSITORY-IDENTITY-005 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKTREE-SNAPSHOT-CLI-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKTREE-SNAPSHOT-CREATE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKTREE-SNAPSHOT-DELETE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKTREE-SNAPSHOT-FINGERPRINT-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKTREE-SNAPSHOT-GUIDANCE-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKTREE-SNAPSHOT-JOURNAL-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKTREE-SNAPSHOT-LIST-CLI-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKTREE-SNAPSHOT-MANIFEST-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKTREE-SNAPSHOT-PROJECTION-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKTREE-SNAPSHOT-PROTECTION-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-M5-WORKTREE-SNAPSHOT-READ-001 was linked in source but not reported as passed by a successful structured test command."
+        },
+        {
+          "code": "TEST_ID_NOT_PASSED",
+          "severity": "error",
+          "message": "TEST-SESSION-SCOPED-DEVELOPMENT-001 was linked in source but not reported as passed by a successful structured test command."
+        }
+      ]
     },
     {
       "name": "performance",
@@ -809,9 +2387,28 @@
     {
       "name": "model-correspondence",
       "required": true,
-      "status": "pass",
-      "summary": "2/2 explicitly modeled requirement(s) correspond to current authoritative passing tests.",
-      "diagnostics": []
+      "status": "fail",
+      "summary": "0/2 explicitly modeled requirement(s) correspond to current authoritative passing tests.",
+      "diagnostics": [
+        {
+          "code": "MODEL_CORRESPONDENCE_TRACE_STALE",
+          "severity": "error",
+          "message": "Generated trace evidence is missing, stale, or invalid.",
+          "path": ".musubix/evidence/model-correspondence.json"
+        },
+        {
+          "code": "MODEL_CORRESPONDENCE_UNPROVED",
+          "severity": "error",
+          "message": "REQ-M5-WAVE1-PUBLISH-001 has no current authoritative passing test evidence.",
+          "path": ".musubix/evidence/model-correspondence.json"
+        },
+        {
+          "code": "MODEL_CORRESPONDENCE_UNPROVED",
+          "severity": "error",
+          "message": "REQ-M5-WAVE0-COMPLETION-001 has no current authoritative passing test evidence.",
+          "path": ".musubix/evidence/model-correspondence.json"
+        }
+      ]
     },
     {
       "name": "attestation",
@@ -823,28 +2420,35 @@
     {
       "name": "approval",
       "required": true,
-      "status": "pass",
-      "summary": "3/3 approval stage(s) are current.",
-      "diagnostics": []
+      "status": "fail",
+      "summary": "2/3 approval stage(s) are current.",
+      "diagnostics": [
+        {
+          "code": "CHANGE_GENERATION_INCOMPLETE",
+          "severity": "error",
+          "message": "CHANGE_GENERATION_INCOMPLETE: release approval requires the matching active CHANGE generation.",
+          "path": ".musubix/evidence/approvals/release.json"
+        }
+      ]
     },
     {
       "name": "commands",
       "required": true,
-      "status": "pass",
+      "status": "fail",
       "summary": "7 configured command(s) executed; optional failures are nonblocking.",
       "diagnostics": []
     },
     {
       "name": "constitution:RULE-001",
       "required": true,
-      "status": "pass",
-      "summary": "trace.errors = 0; maximum 0."
+      "status": "fail",
+      "summary": "trace.errors = 2; maximum 0."
     },
     {
       "name": "constitution:RULE-002",
       "required": true,
-      "status": "pass",
-      "summary": "commands.failures = 0; maximum 0."
+      "status": "fail",
+      "summary": "commands.failures = 1; maximum 0."
     },
     {
       "name": "constitution:RULE-003",
@@ -853,56 +2457,551 @@
       "summary": "commands.skipped = 0; maximum 0."
     }
   ],
+  "change": {
+    "changeId": "CHANGE-0017",
+    "activeGeneration": 5,
+    "generations": [
+      {
+        "generation": 1,
+        "status": "abandoned",
+        "unprojectedPhaseCheckpoints": [],
+        "unprojectedBatchCheckpoints": []
+      },
+      {
+        "generation": 2,
+        "status": "abandoned",
+        "unprojectedPhaseCheckpoints": [],
+        "unprojectedBatchCheckpoints": []
+      },
+      {
+        "generation": 3,
+        "status": "abandoned",
+        "unprojectedPhaseCheckpoints": [],
+        "unprojectedBatchCheckpoints": []
+      },
+      {
+        "generation": 4,
+        "status": "abandoned",
+        "unprojectedPhaseCheckpoints": [],
+        "unprojectedBatchCheckpoints": [
+          {
+            "changeId": "CHANGE-0017",
+            "generation": 4,
+            "phase": "green",
+            "scopeId": "REQ-M5-EVIDENCE-007",
+            "order": 3274,
+            "recovery": "legacy"
+          }
+        ]
+      },
+      {
+        "generation": 5,
+        "status": "active",
+        "unprojectedPhaseCheckpoints": [],
+        "unprojectedBatchCheckpoints": []
+      }
+    ]
+  },
   "metrics": {
     "requirements.errors": 0,
     "policy.errors": 0,
     "design.errors": 0,
-    "trace.errors": 0,
+    "trace.errors": 2,
     "graph.violations": 0,
     "formal.errors": 0,
-    "formal.modeledFraction": 0.03361344537815126,
-    "commands.failures": 0,
+    "formal.modeledFraction": 0.03305785123966942,
+    "commands.failures": 1,
     "commands.skipped": 0,
-    "tests.annotatedIds": 292,
-    "tests.executedIds": 292,
-    "tdd.cycles": 829,
-    "tdd.errors": 0,
-    "changes.count": 15,
-    "changes.errors": 0,
+    "tests.annotatedIds": 332,
+    "tests.executedIds": 49,
+    "tdd.cycles": 915,
+    "tdd.errors": 6,
+    "changes.count": 16,
+    "changes.errors": 5,
     "changes.complete": 15,
-    "changes.completenessErrors": 0,
+    "changes.completenessErrors": 7,
     "performance.budgets": 1,
     "performance.errors": 0,
-    "mutation.requirements": 112,
+    "mutation.requirements": 113,
     "mutation.coveredRequirements": 0,
     "mutation.mutants": 0,
     "mutation.errors": 0,
     "modelCorrespondence.requirements": 2,
-    "modelCorrespondence.coveredRequirements": 2,
-    "modelCorrespondence.errors": 0,
+    "modelCorrespondence.coveredRequirements": 0,
+    "modelCorrespondence.errors": 3,
     "attestation.errors": 0,
-    "approval.errors": 0,
+    "approval.errors": 1,
     "coverage.design": 1,
-    "coverage.implementation": 1,
-    "coverage.tests": 1
+    "coverage.implementation": 0.9917355371900827,
+    "coverage.tests": 0.9917355371900827
   },
   "mode": "changed",
   "feature": null,
   "changed": [
-    ".musubix/changes/CHANGE-0016.md"
+    ".musubix/changes/CHANGE-0017.md",
+    ".musubix/decisions/ADR-0026.md",
+    ".musubix/decisions/ADR-0035.md",
+    ".musubix/evidence/approvals/design.json",
+    ".musubix/evidence/approvals/requirements.json",
+    ".musubix/evidence/changes.json",
+    ".musubix/evidence/formal.json",
+    ".musubix/evidence/model-correspondence.json",
+    ".musubix/evidence/native/test/aggregate.json",
+    ".musubix/evidence/order.json",
+    ".musubix/evidence/parallel.json",
+    ".musubix/evidence/performance.json",
+    ".musubix/evidence/quality.json",
+    ".musubix/evidence/tdd.json",
+    ".musubix/evidence/workflow.json",
+    ".musubix/features/multi-change-workspaces/design.md",
+    ".musubix/features/multi-change-workspaces/requirements.md",
+    ".musubix/features/musubix5-clean-foundation/design.md",
+    ".musubix/features/musubix5-clean-foundation/requirements.md",
+    ".musubix/journal/normal/000000000692.json",
+    ".musubix/journal/normal/000000000693.json",
+    ".musubix/journal/normal/000000000694.json",
+    ".musubix/journal/normal/000000000695.json",
+    ".musubix/journal/normal/000000000696.json",
+    ".musubix/journal/normal/000000000697.json",
+    ".musubix/journal/normal/000000000698.json",
+    ".musubix/journal/normal/000000000699.json",
+    ".musubix/journal/normal/000000000700.json",
+    ".musubix/journal/normal/000000000701.json",
+    ".musubix/journal/normal/000000000702.json",
+    ".musubix/journal/normal/000000000703.json",
+    ".musubix/journal/normal/000000000704.json",
+    ".musubix/journal/normal/000000000705.json",
+    ".musubix/journal/normal/000000000706.json",
+    ".musubix/journal/normal/000000000707.json",
+    ".musubix/journal/normal/000000000708.json",
+    ".musubix/journal/normal/000000000709.json",
+    ".musubix/journal/normal/000000000710.json",
+    ".musubix/journal/normal/000000000711.json",
+    ".musubix/journal/normal/000000000712.json",
+    ".musubix/journal/normal/000000000713.json",
+    ".musubix/trace/index.json",
+    "README-ja.md",
+    "README.md",
+    "packages/analysis/src/candidate-integration.ts",
+    "packages/analysis/src/candidate-state.ts",
+    "packages/analysis/src/change-evidence.ts",
+    "packages/analysis/src/change-phase-checkpoint.ts",
+    "packages/analysis/src/change.ts",
+    "packages/analysis/src/gate.ts",
+    "packages/analysis/src/journal.ts",
+    "packages/analysis/src/order.ts",
+    "packages/analysis/src/tdd.ts",
+    "packages/analysis/src/trace.ts",
+    "packages/cli/src/main.ts",
+    "scripts/run-codegraph-tests.mjs",
+    "scripts/run-concurrency-load.mjs",
+    "tests/candidate-evidence-checkpoint.test.ts",
+    "tests/candidate-evidence-red-checkpoint.test.ts",
+    "tests/candidate-finalization-contract.test.ts",
+    "tests/candidate-finalization-durability.test.ts",
+    "tests/candidate-finalization-state.test.ts",
+    "tests/candidate-integration-orchestration.test.ts",
+    "tests/change-lease.test.ts",
+    "tests/change-phase-checkpoint-operation.test.ts",
+    "tests/checkpoint-clock.test.ts",
+    "tests/concurrency-lease-contract.test.ts",
+    "tests/concurrency-load.config.ts",
+    "tests/helpers/concurrency-runner-clock.mjs",
+    "tests/helpers/concurrency-wall-setup.ts",
+    "tests/helpers/workspace-checkpoint.ts",
+    "tests/parallel-final-findings-generation5.test.ts",
+    "tests/tdd-batch-recording.test.ts",
+    "tests/workspace-batch-checkpoint.test.ts"
   ],
-  "impacted": [],
+  "impacted": [
+    "packages/analysis/src/approval-boundary.ts",
+    "packages/analysis/src/approval-record.ts",
+    "packages/analysis/src/approval.ts",
+    "packages/analysis/src/attestation.ts",
+    "packages/analysis/src/budget-ledger.ts",
+    "packages/analysis/src/candidate-gate.ts",
+    "packages/analysis/src/candidate-integration.ts",
+    "packages/analysis/src/candidate-state.ts",
+    "packages/analysis/src/change-evidence.ts",
+    "packages/analysis/src/change-phase-checkpoint.ts",
+    "packages/analysis/src/change-waiver.ts",
+    "packages/analysis/src/change.ts",
+    "packages/analysis/src/evidence-registry.ts",
+    "packages/analysis/src/gate.ts",
+    "packages/analysis/src/index.ts",
+    "packages/analysis/src/journal.ts",
+    "packages/analysis/src/lifecycle.ts",
+    "packages/analysis/src/model-correspondence.ts",
+    "packages/analysis/src/mutation.ts",
+    "packages/analysis/src/native-approval.ts",
+    "packages/analysis/src/order.ts",
+    "packages/analysis/src/parallel-runtime.ts",
+    "packages/analysis/src/parallel-tdd-evidence.ts",
+    "packages/analysis/src/release-manifest.ts",
+    "packages/analysis/src/release-operation-guard.ts",
+    "packages/analysis/src/run-local-workspace.ts",
+    "packages/analysis/src/tdd-cycle-resolver.ts",
+    "packages/analysis/src/tdd-types.ts",
+    "packages/analysis/src/tdd.ts",
+    "packages/analysis/src/trace.ts",
+    "packages/analysis/src/workflow-correction.ts",
+    "packages/analysis/src/workflow-waiver.ts",
+    "packages/analysis/src/workflow.ts",
+    "packages/analysis/src/workspace-manager.ts",
+    "packages/cli/src/install.ts",
+    "packages/cli/src/main.ts",
+    "scripts/run-codegraph-tests.mjs",
+    "scripts/run-concurrency-load.mjs",
+    "tests/active-change-context.test.ts",
+    "tests/approval-boundary-resume.test.ts",
+    "tests/approval-boundary.test.ts",
+    "tests/approval-contract-diagnostics.test.ts",
+    "tests/approval-effective-projection.test.ts",
+    "tests/approval-normative-contract.test.ts",
+    "tests/approval-normative-selection.test.ts",
+    "tests/approval-scope.test.ts",
+    "tests/bootstrap-approval-transition.test.ts",
+    "tests/bootstrap-cli.test.ts",
+    "tests/budget-limits.test.ts",
+    "tests/budget-reservation.test.ts",
+    "tests/budget-usage.test.ts",
+    "tests/candidate-cleanup-policy.test.ts",
+    "tests/candidate-evidence-binding.test.ts",
+    "tests/candidate-evidence-checkpoint.test.ts",
+    "tests/candidate-evidence-integration-context.test.ts",
+    "tests/candidate-evidence-integration-status.test.ts",
+    "tests/candidate-evidence-red-checkpoint.test.ts",
+    "tests/candidate-finalization-contract.test.ts",
+    "tests/candidate-finalization-durability.test.ts",
+    "tests/candidate-finalization-state.test.ts",
+    "tests/candidate-gate-trust.test.ts",
+    "tests/candidate-gate.test.ts",
+    "tests/candidate-integration-dependencies.test.ts",
+    "tests/candidate-integration-determinism.test.ts",
+    "tests/candidate-integration-evidence-context.test.ts",
+    "tests/candidate-integration-fencing-recovery.test.ts",
+    "tests/candidate-integration-orchestration.test.ts",
+    "tests/candidate-integration-recovery.test.ts",
+    "tests/candidate-integration-review-regressions.test.ts",
+    "tests/candidate-integration-verification-exit.test.ts",
+    "tests/candidate-path-portability.test.ts",
+    "tests/candidate-snapshot-lifecycle.test.ts",
+    "tests/candidate-snapshot-repository-binding.test.ts",
+    "tests/candidate-state-context.test.ts",
+    "tests/candidate-state-current.test.ts",
+    "tests/candidate-state-lifecycle.test.ts",
+    "tests/candidate-state-ownership-routing.test.ts",
+    "tests/candidate-state-ownership.test.ts",
+    "tests/candidate-state-readiness.test.ts",
+    "tests/candidate-state-refresh-cleanup.test.ts",
+    "tests/candidate-state-registry.test.ts",
+    "tests/candidate-workspace-cli-lifecycle.test.ts",
+    "tests/candidate-workspace-cli-safety.test.ts",
+    "tests/candidate-workspace-context.test.ts",
+    "tests/candidate-workspace-lifecycle.test.ts",
+    "tests/change-completeness-current.test.ts",
+    "tests/change-current-evidence.test.ts",
+    "tests/change-generation-binding.test.ts",
+    "tests/change-generation-resume.test.ts",
+    "tests/change-generation.test.ts",
+    "tests/change-lease-sharing-violation.test.ts",
+    "tests/change-lease.test.ts",
+    "tests/change-phase-checkpoint-operation.test.ts",
+    "tests/checkpoint-clock.test.ts",
+    "tests/cli-help-contract.test.ts",
+    "tests/cli-json-error-contract.test.ts",
+    "tests/concurrency-lease-contract.test.ts",
+    "tests/concurrency-load.config.ts",
+    "tests/cross-change-candidate-branch.test.ts",
+    "tests/evidence-binding.test.ts",
+    "tests/evidence-identity.test.ts",
+    "tests/evidence-kinds.test.ts",
+    "tests/evidence-selector-guards.test.ts",
+    "tests/evidence-skill-inputs.test.ts",
+    "tests/evidence-supersession.test.ts",
+    "tests/fixtures/parallel-runtime-fixture.ts",
+    "tests/helpers/concurrency-runner-clock.mjs",
+    "tests/helpers/concurrency-wall-setup.ts",
+    "tests/helpers/journal-order-sentinel.ts",
+    "tests/helpers/workspace-checkpoint.ts",
+    "tests/journal-order.test.ts",
+    "tests/lifecycle-resume.test.ts",
+    "tests/lifecycle-state-machine.test.ts",
+    "tests/native-approval.test.ts",
+    "tests/native-release-candidate-tree.test.ts",
+    "tests/parallel-consumer-policy-generation5.test.ts",
+    "tests/parallel-final-findings-generation5.test.ts",
+    "tests/parallel-handoff-porcelain.test.ts",
+    "tests/parallel-ownership-history-generation5.test.ts",
+    "tests/parallel-quality-regressions.test.ts",
+    "tests/parallel-release-blockers-generation5.test.ts",
+    "tests/parallel-review-regressions.test.ts",
+    "tests/parallel-runtime-lifecycle-generation5.test.ts",
+    "tests/parallel-scaffold-policy-generation5.test.ts",
+    "tests/parallel-skill-contract-generation5.test.ts",
+    "tests/product-name-guidance.test.ts",
+    "tests/published-bin-contract.test.ts",
+    "tests/quality-supersession.test.ts",
+    "tests/release-0-2-0.test.ts",
+    "tests/release-candidate-tree.test.ts",
+    "tests/release-evidence-policy.test.ts",
+    "tests/release-generation5.test.ts",
+    "tests/release-manifest-scope.test.ts",
+    "tests/release-operation-cli-error.test.ts",
+    "tests/release-operation-guard.test.ts",
+    "tests/release-review-fixes.test.ts",
+    "tests/run-local-workspace.test.ts",
+    "tests/tdd-batch-recording.test.ts",
+    "tests/tdd-cycle-repair.test.ts",
+    "tests/tdd-cycle-resolver.test.ts",
+    "tests/tdd-generation-scope.test.ts",
+    "tests/tdd-repair-safety.test.ts",
+    "tests/trace-namespace.test.ts",
+    "tests/trace-projection-stability.test.ts",
+    "tests/workflow-change-owner.test.ts",
+    "tests/workflow-declaration-correction-regressions.test.ts",
+    "tests/workflow-declaration-correction.test.ts",
+    "tests/workflow-generation-reconciliation.test.ts",
+    "tests/workspace-batch-checkpoint.test.ts",
+    "tests/workspace-isolation.test.ts",
+    "tests/workspace-ownership.test.ts"
+  ],
   "lastChangeAnalysis": {
     "baseline": "HEAD",
-    "head": "dffd491731e8d15e42beeff9d46a2f633ca1f71c",
+    "head": "8b947760a130778c8d8b714c8fc079164f759bda",
     "changed": [
-      ".musubix/changes/CHANGE-0016.md"
+      ".musubix/changes/CHANGE-0017.md",
+      ".musubix/decisions/ADR-0026.md",
+      ".musubix/decisions/ADR-0035.md",
+      ".musubix/evidence/approvals/design.json",
+      ".musubix/evidence/approvals/requirements.json",
+      ".musubix/evidence/changes.json",
+      ".musubix/evidence/formal.json",
+      ".musubix/evidence/model-correspondence.json",
+      ".musubix/evidence/native/test/aggregate.json",
+      ".musubix/evidence/order.json",
+      ".musubix/evidence/parallel.json",
+      ".musubix/evidence/performance.json",
+      ".musubix/evidence/quality.json",
+      ".musubix/evidence/tdd.json",
+      ".musubix/evidence/workflow.json",
+      ".musubix/features/multi-change-workspaces/design.md",
+      ".musubix/features/multi-change-workspaces/requirements.md",
+      ".musubix/features/musubix5-clean-foundation/design.md",
+      ".musubix/features/musubix5-clean-foundation/requirements.md",
+      ".musubix/journal/normal/000000000692.json",
+      ".musubix/journal/normal/000000000693.json",
+      ".musubix/journal/normal/000000000694.json",
+      ".musubix/journal/normal/000000000695.json",
+      ".musubix/journal/normal/000000000696.json",
+      ".musubix/journal/normal/000000000697.json",
+      ".musubix/journal/normal/000000000698.json",
+      ".musubix/journal/normal/000000000699.json",
+      ".musubix/journal/normal/000000000700.json",
+      ".musubix/journal/normal/000000000701.json",
+      ".musubix/journal/normal/000000000702.json",
+      ".musubix/journal/normal/000000000703.json",
+      ".musubix/journal/normal/000000000704.json",
+      ".musubix/journal/normal/000000000705.json",
+      ".musubix/journal/normal/000000000706.json",
+      ".musubix/journal/normal/000000000707.json",
+      ".musubix/journal/normal/000000000708.json",
+      ".musubix/journal/normal/000000000709.json",
+      ".musubix/journal/normal/000000000710.json",
+      ".musubix/journal/normal/000000000711.json",
+      ".musubix/journal/normal/000000000712.json",
+      ".musubix/journal/normal/000000000713.json",
+      ".musubix/trace/index.json",
+      "README-ja.md",
+      "README.md",
+      "packages/analysis/src/candidate-integration.ts",
+      "packages/analysis/src/candidate-state.ts",
+      "packages/analysis/src/change-evidence.ts",
+      "packages/analysis/src/change-phase-checkpoint.ts",
+      "packages/analysis/src/change.ts",
+      "packages/analysis/src/gate.ts",
+      "packages/analysis/src/journal.ts",
+      "packages/analysis/src/order.ts",
+      "packages/analysis/src/tdd.ts",
+      "packages/analysis/src/trace.ts",
+      "packages/cli/src/main.ts",
+      "scripts/run-codegraph-tests.mjs",
+      "scripts/run-concurrency-load.mjs",
+      "tests/candidate-evidence-checkpoint.test.ts",
+      "tests/candidate-evidence-red-checkpoint.test.ts",
+      "tests/candidate-finalization-contract.test.ts",
+      "tests/candidate-finalization-durability.test.ts",
+      "tests/candidate-finalization-state.test.ts",
+      "tests/candidate-integration-orchestration.test.ts",
+      "tests/change-lease.test.ts",
+      "tests/change-phase-checkpoint-operation.test.ts",
+      "tests/checkpoint-clock.test.ts",
+      "tests/concurrency-lease-contract.test.ts",
+      "tests/concurrency-load.config.ts",
+      "tests/helpers/concurrency-runner-clock.mjs",
+      "tests/helpers/concurrency-wall-setup.ts",
+      "tests/helpers/workspace-checkpoint.ts",
+      "tests/parallel-final-findings-generation5.test.ts",
+      "tests/tdd-batch-recording.test.ts",
+      "tests/workspace-batch-checkpoint.test.ts"
     ],
-    "impacted": [],
-    "generatedAt": "2026-09-27T03:19:17.614Z"
+    "impacted": [
+      "packages/analysis/src/approval-boundary.ts",
+      "packages/analysis/src/approval-record.ts",
+      "packages/analysis/src/approval.ts",
+      "packages/analysis/src/attestation.ts",
+      "packages/analysis/src/budget-ledger.ts",
+      "packages/analysis/src/candidate-gate.ts",
+      "packages/analysis/src/candidate-integration.ts",
+      "packages/analysis/src/candidate-state.ts",
+      "packages/analysis/src/change-evidence.ts",
+      "packages/analysis/src/change-phase-checkpoint.ts",
+      "packages/analysis/src/change-waiver.ts",
+      "packages/analysis/src/change.ts",
+      "packages/analysis/src/evidence-registry.ts",
+      "packages/analysis/src/gate.ts",
+      "packages/analysis/src/index.ts",
+      "packages/analysis/src/journal.ts",
+      "packages/analysis/src/lifecycle.ts",
+      "packages/analysis/src/model-correspondence.ts",
+      "packages/analysis/src/mutation.ts",
+      "packages/analysis/src/native-approval.ts",
+      "packages/analysis/src/order.ts",
+      "packages/analysis/src/parallel-runtime.ts",
+      "packages/analysis/src/parallel-tdd-evidence.ts",
+      "packages/analysis/src/release-manifest.ts",
+      "packages/analysis/src/release-operation-guard.ts",
+      "packages/analysis/src/run-local-workspace.ts",
+      "packages/analysis/src/tdd-cycle-resolver.ts",
+      "packages/analysis/src/tdd-types.ts",
+      "packages/analysis/src/tdd.ts",
+      "packages/analysis/src/trace.ts",
+      "packages/analysis/src/workflow-correction.ts",
+      "packages/analysis/src/workflow-waiver.ts",
+      "packages/analysis/src/workflow.ts",
+      "packages/analysis/src/workspace-manager.ts",
+      "packages/cli/src/install.ts",
+      "packages/cli/src/main.ts",
+      "scripts/run-codegraph-tests.mjs",
+      "scripts/run-concurrency-load.mjs",
+      "tests/active-change-context.test.ts",
+      "tests/approval-boundary-resume.test.ts",
+      "tests/approval-boundary.test.ts",
+      "tests/approval-contract-diagnostics.test.ts",
+      "tests/approval-effective-projection.test.ts",
+      "tests/approval-normative-contract.test.ts",
+      "tests/approval-normative-selection.test.ts",
+      "tests/approval-scope.test.ts",
+      "tests/bootstrap-approval-transition.test.ts",
+      "tests/bootstrap-cli.test.ts",
+      "tests/budget-limits.test.ts",
+      "tests/budget-reservation.test.ts",
+      "tests/budget-usage.test.ts",
+      "tests/candidate-cleanup-policy.test.ts",
+      "tests/candidate-evidence-binding.test.ts",
+      "tests/candidate-evidence-checkpoint.test.ts",
+      "tests/candidate-evidence-integration-context.test.ts",
+      "tests/candidate-evidence-integration-status.test.ts",
+      "tests/candidate-evidence-red-checkpoint.test.ts",
+      "tests/candidate-finalization-contract.test.ts",
+      "tests/candidate-finalization-durability.test.ts",
+      "tests/candidate-finalization-state.test.ts",
+      "tests/candidate-gate-trust.test.ts",
+      "tests/candidate-gate.test.ts",
+      "tests/candidate-integration-dependencies.test.ts",
+      "tests/candidate-integration-determinism.test.ts",
+      "tests/candidate-integration-evidence-context.test.ts",
+      "tests/candidate-integration-fencing-recovery.test.ts",
+      "tests/candidate-integration-orchestration.test.ts",
+      "tests/candidate-integration-recovery.test.ts",
+      "tests/candidate-integration-review-regressions.test.ts",
+      "tests/candidate-integration-verification-exit.test.ts",
+      "tests/candidate-path-portability.test.ts",
+      "tests/candidate-snapshot-lifecycle.test.ts",
+      "tests/candidate-snapshot-repository-binding.test.ts",
+      "tests/candidate-state-context.test.ts",
+      "tests/candidate-state-current.test.ts",
+      "tests/candidate-state-lifecycle.test.ts",
+      "tests/candidate-state-ownership-routing.test.ts",
+      "tests/candidate-state-ownership.test.ts",
+      "tests/candidate-state-readiness.test.ts",
+      "tests/candidate-state-refresh-cleanup.test.ts",
+      "tests/candidate-state-registry.test.ts",
+      "tests/candidate-workspace-cli-lifecycle.test.ts",
+      "tests/candidate-workspace-cli-safety.test.ts",
+      "tests/candidate-workspace-context.test.ts",
+      "tests/candidate-workspace-lifecycle.test.ts",
+      "tests/change-completeness-current.test.ts",
+      "tests/change-current-evidence.test.ts",
+      "tests/change-generation-binding.test.ts",
+      "tests/change-generation-resume.test.ts",
+      "tests/change-generation.test.ts",
+      "tests/change-lease-sharing-violation.test.ts",
+      "tests/change-lease.test.ts",
+      "tests/change-phase-checkpoint-operation.test.ts",
+      "tests/checkpoint-clock.test.ts",
+      "tests/cli-help-contract.test.ts",
+      "tests/cli-json-error-contract.test.ts",
+      "tests/concurrency-lease-contract.test.ts",
+      "tests/concurrency-load.config.ts",
+      "tests/cross-change-candidate-branch.test.ts",
+      "tests/evidence-binding.test.ts",
+      "tests/evidence-identity.test.ts",
+      "tests/evidence-kinds.test.ts",
+      "tests/evidence-selector-guards.test.ts",
+      "tests/evidence-skill-inputs.test.ts",
+      "tests/evidence-supersession.test.ts",
+      "tests/fixtures/parallel-runtime-fixture.ts",
+      "tests/helpers/concurrency-runner-clock.mjs",
+      "tests/helpers/concurrency-wall-setup.ts",
+      "tests/helpers/journal-order-sentinel.ts",
+      "tests/helpers/workspace-checkpoint.ts",
+      "tests/journal-order.test.ts",
+      "tests/lifecycle-resume.test.ts",
+      "tests/lifecycle-state-machine.test.ts",
+      "tests/native-approval.test.ts",
+      "tests/native-release-candidate-tree.test.ts",
+      "tests/parallel-consumer-policy-generation5.test.ts",
+      "tests/parallel-final-findings-generation5.test.ts",
+      "tests/parallel-handoff-porcelain.test.ts",
+      "tests/parallel-ownership-history-generation5.test.ts",
+      "tests/parallel-quality-regressions.test.ts",
+      "tests/parallel-release-blockers-generation5.test.ts",
+      "tests/parallel-review-regressions.test.ts",
+      "tests/parallel-runtime-lifecycle-generation5.test.ts",
+      "tests/parallel-scaffold-policy-generation5.test.ts",
+      "tests/parallel-skill-contract-generation5.test.ts",
+      "tests/product-name-guidance.test.ts",
+      "tests/published-bin-contract.test.ts",
+      "tests/quality-supersession.test.ts",
+      "tests/release-0-2-0.test.ts",
+      "tests/release-candidate-tree.test.ts",
+      "tests/release-evidence-policy.test.ts",
+      "tests/release-generation5.test.ts",
+      "tests/release-manifest-scope.test.ts",
+      "tests/release-operation-cli-error.test.ts",
+      "tests/release-operation-guard.test.ts",
+      "tests/release-review-fixes.test.ts",
+      "tests/run-local-workspace.test.ts",
+      "tests/tdd-batch-recording.test.ts",
+      "tests/tdd-cycle-repair.test.ts",
+      "tests/tdd-cycle-resolver.test.ts",
+      "tests/tdd-generation-scope.test.ts",
+      "tests/tdd-repair-safety.test.ts",
+      "tests/trace-namespace.test.ts",
+      "tests/trace-projection-stability.test.ts",
+      "tests/workflow-change-owner.test.ts",
+      "tests/workflow-declaration-correction-regressions.test.ts",
+      "tests/workflow-declaration-correction.test.ts",
+      "tests/workflow-generation-reconciliation.test.ts",
+      "tests/workspace-batch-checkpoint.test.ts",
+      "tests/workspace-isolation.test.ts",
+      "tests/workspace-ownership.test.ts"
+    ],
+    "generatedAt": "2026-09-27T18:05:00.258Z"
   },
   "fingerprints": {
-    ".git": "0390e4ff1e41a50b7b6626e0167a0caeb4795471cd14a5b6a15cb62600586a0b",
+    ".git": "d720dca832a9303b0aa2164b604a5676503c0fb53c60cecc03279eecf2d732b4",
     ".gitattributes": "d60f352d0db1404c70afb4bb8b2ca3fd1c610572aa40720e8a0b7baa7885418c",
     ".github/plugin/marketplace.json": "7904e466f476b1ec77e25ad4dc0e7434ac14707dc69edf2437fb73d3809d5e39",
     ".github/skills/sdd-agent-assignment/SKILL.md": "a92acc1af27365d13272c1b0a65f84d29fa5f582f1eb2a450da05ff8920c31a1",
@@ -936,7 +3035,8 @@
     ".musubix/changes/CHANGE-0014.md": "d9e1c268bcff1ac05554d378b5a6ccfefbe6bfb63d767cbd370cd3de7baf491e",
     ".musubix/changes/CHANGE-0015.md": "057fab8581604d64e9f030c6306ad854a7cd3c6b0d27a99c7374a90cf08dd93c",
     ".musubix/changes/CHANGE-0016.md": "751deed2260f14addcd6cd4ff3beab55c9a33385b21811c9db681040c0fbf6e6",
-    ".musubix/config.json": "d46f1bf725a75dbd21587f27e31b14d32fdeb6c5d867d6c197bbcf3cc8724854",
+    ".musubix/changes/CHANGE-0017.md": "2f40a3798ddd32c7d5c03080a161bb3301f29355863a6c0bb76e1bf2d660ee4f",
+    ".musubix/config.json": "abcfccd0120d517eb38b160624530f771a17cd60e3216ab5d02d3c2e1ae8c91d",
     ".musubix/constitution.md": "f8b47fdc486f395bab05223a94821b145cf8df70ffde2c838a28f8d71fe0fa92",
     ".musubix/decisions/ADR-0002.md": "9f41d752530613cf6cc3ab6798709567e85650e5b97426dfca4147840eb35684",
     ".musubix/decisions/ADR-0003.md": "342a6a8e30c367684b02ee907f0f6bc3aef3b8ff6a08005148f43411f3885b7d",
@@ -962,23 +3062,26 @@
     ".musubix/decisions/ADR-0023.md": "4308013a832dd1d2183b1eee79176e08da4b30501ada4fb66ac763bab08a10fe",
     ".musubix/decisions/ADR-0024.md": "dab62ae03853e1eb3a0fefdfcee64084b50fa87916e8893a9028f6eb95a88289",
     ".musubix/decisions/ADR-0025.md": "2ef9c844e52f7c10a7b2dc4270a69d4080a06e9861dc6d4c563598d759f20775",
-    ".musubix/decisions/ADR-0026.md": "041673119567ee9bd9d144434c27902e2e861b6baf389cc9bee19d6d13ebff91",
+    ".musubix/decisions/ADR-0026.md": "4a771160a61afb0e96faa7d71153b4a92bcc92b77d065a862b7e4636e64c502f",
     ".musubix/decisions/ADR-0027.md": "9dafbeb840753f40e2531e4c897d5f152c3347c6d12863e89518903e2039478a",
     ".musubix/decisions/ADR-0028.md": "ddf3102558e1f4f248cd61da1c6672ed01be72976bea0042a92018e3d79b51ae",
     ".musubix/decisions/ADR-0029.md": "4740cf175a51608d15e4bacfd7558e28ef65b00fb83e8f2fc6fd2dcd51663c39",
     ".musubix/decisions/ADR-0030.md": "cc1a17eee7708368dd02d4b3ae78924edb74456c32ecda8543c67e6799192190",
     ".musubix/decisions/ADR-0031.md": "ed75274e4cdcb845bf47d033f70cf1004accb112df52e3ea5232441ea26c1659",
     ".musubix/decisions/ADR-0032.md": "6785464003a5bd017dec7d81ab836672b035f75aa1a338e06af76a3d6eebedfd",
+    ".musubix/decisions/ADR-0033.md": "7f2baaadbb873e4ebed54d6b9ad173dcad92ab9193496b4c8c6d1ab6f33654f9",
+    ".musubix/decisions/ADR-0034.md": "674cd7d3d33b8906bdaae214b970d81aabb50b3041b356d102ed73113a5bbe41",
+    ".musubix/decisions/ADR-0035.md": "0fa999f0c780f6cb9baaf1be0fa26c216a2e08f0c6489eaa760d5524dea44f68",
     ".musubix/features/candidate-cleanup-policy/design.md": "54d32a6d446bbaed299860b164fe74d24362e0c5739862bc79df2e0acab20c1b",
     ".musubix/features/candidate-cleanup-policy/requirements.md": "253a36dbca0b76a81f452c845f2988e2b33163823095ee5ac1add81519dd5462",
-    ".musubix/features/codegraph-performance/design.md": "3ddf90dbb97a753644deb0e4dd38adaa27420273390a27b241612ef84f4c9c97",
-    ".musubix/features/codegraph-performance/requirements.md": "a5eb96722cea36c4fab7f81a09d992b1cbce62b154c7b85eab35199817d551e1",
+    ".musubix/features/codegraph-performance/design.md": "a8461463b6c0a7e8ae11b9496ab5e724e5d98e2700dd32623e5fd6331187b175",
+    ".musubix/features/codegraph-performance/requirements.md": "c6e62a96471c7a89c179e368d574f91f604624f2d70ff9639c94a9379ffdb7ea",
     ".musubix/features/evidence-selector-guards/design.md": "f6477ad027e055d5b7760e876164f316fb529d665af54eefaa965d2b69656b29",
     ".musubix/features/evidence-selector-guards/requirements.md": "fdb70191e472f41e16eab793b2b2d86583587cd86a88db5627be59bf045ef601",
-    ".musubix/features/multi-change-workspaces/design.md": "983b94ff3fa374938c5d4e7592bcd947d3457899121269722bb2085231c28031",
-    ".musubix/features/multi-change-workspaces/requirements.md": "81124ffb506d65df8a744d19dfb8c6e0579836a2d49bd2e4fc1e9b028d321b92",
-    ".musubix/features/musubix5-clean-foundation/design.md": "585cb65f786358e27809cffdbd6778bc2f4ee885b75d0c9773d46dce75347c0d",
-    ".musubix/features/musubix5-clean-foundation/requirements.md": "d9e5ea79ea6197329a35b87d1773ed54b901988f8b7a3e5ab45683a29db4a6ae",
+    ".musubix/features/multi-change-workspaces/design.md": "13fcb190c628e150225a167a523401b05341c97080bbf1a2df73d6e0a4881c0a",
+    ".musubix/features/multi-change-workspaces/requirements.md": "9071c2c1f8a7ca49b9137cf074fe30b33343264536f41efcdddad0ab2a6cff4d",
+    ".musubix/features/musubix5-clean-foundation/design.md": "0b72a0634f502aedf8b03eab2112263b2bd9e921980318b2199915f067a683bb",
+    ".musubix/features/musubix5-clean-foundation/requirements.md": "ba98aed1dc002fa1bc7739de0f03d9827f95fa840fee688f1a6f6d97dbaa6d60",
     ".musubix/features/node24-github-actions/design.md": "a51859b2653b1b1885c9280b8fbba0efdbbc2692e2b4cddb60b6dd75a7217cb5",
     ".musubix/features/node24-github-actions/requirements.md": "32e775df8d7bbe3336b657a2516b93e3ec5bf3ca202506b96e159569dfe95c5b",
     ".musubix/features/npm-registry-deadline/design.md": "a46582fe0fd7e2c64ea36fcf7a50d24f1b45e7789cd2e75634da0ebf4cc29195",
@@ -1567,6 +3670,153 @@
     ".musubix/journal/normal/000000000564.json": "a22b959caee10414ff4d8f1c09879f395cfcf26fafdcdaba0911b2e36ff84621",
     ".musubix/journal/normal/000000000565.json": "e25ffa0e738db54850b7566c66c0ea60c6b828105cd76f64aa2e04e23558b80d",
     ".musubix/journal/normal/000000000566.json": "010b5fea775b8035d21e66739054e5e35f0f40e61618183718cebd9d15daa7cc",
+    ".musubix/journal/normal/000000000567.json": "bbe8335362c25e9ccd35e0e2b2e1d4ea74ca0599b910d711d692f32b373c2e6a",
+    ".musubix/journal/normal/000000000568.json": "f603a11f6cf88ff20667de6fab2ec3305fda46c41bc05e9304027e1885d57da6",
+    ".musubix/journal/normal/000000000569.json": "43df2118d1096324fe973c774a6e3d66917a68a9563e694e49f876b64e44d1c4",
+    ".musubix/journal/normal/000000000570.json": "2f29854aad1f152ad2b45d80a55c52f2b112a6e535b4762319dc5822b55a8672",
+    ".musubix/journal/normal/000000000571.json": "39d4f90904e1d05b890a9c846d0b6d4e495fecb797c650891efe9344577ac3dd",
+    ".musubix/journal/normal/000000000572.json": "89b49eb3ffe4e1db37d4f7e69dcf6ad6dad533ee6bb0d58498b4dfacb572fe01",
+    ".musubix/journal/normal/000000000573.json": "3b98762840c18a6bb96b4e861a17d79bb1c199d5989228fb75ed33b8712b5438",
+    ".musubix/journal/normal/000000000574.json": "c5b85eaf872733039b58c318989a7d481664ccebb3d2c86b26f0fe4ce5c61e83",
+    ".musubix/journal/normal/000000000575.json": "387a7315d7b5e07f76039601cc6faef2269e255972216e506413e7facd5abfee",
+    ".musubix/journal/normal/000000000576.json": "a5ff4d60c5008d9bf5c0212f46b5fac3d13cf4337fce827f8595eb8bb3f7f1c4",
+    ".musubix/journal/normal/000000000577.json": "1822aadc9790aae172f9aa2329d81f6731a6c198b1a8cf0484d0d8959cc9e61f",
+    ".musubix/journal/normal/000000000578.json": "1fe9a469861afaba4a0469f175d8cd9da609a0369819ca2d1975d71a5745a421",
+    ".musubix/journal/normal/000000000579.json": "6e36586e341f5439d49e31147fcc4e515f74b86285b753c00f79d3d291be9a0d",
+    ".musubix/journal/normal/000000000580.json": "729cb1f6f34b5095f87089ef60e104084da320d6a669f05d0755270fbe9a8414",
+    ".musubix/journal/normal/000000000581.json": "b44d80cda1ce2ab9efc807a57a9241b09166f6e8f4b790abe32437004a6c1b05",
+    ".musubix/journal/normal/000000000582.json": "fd3718873861cb529e067c24e65e839bfe4bd1f4794827a5ac3c9248fbf442e9",
+    ".musubix/journal/normal/000000000583.json": "94b6c25d09fe9845437d0426ec90e096a585a5370b9d414987d3816e04601dd0",
+    ".musubix/journal/normal/000000000584.json": "bfcfc969351d7ba2349673e0386a2b411a113445ff9728796a11e6d1530e9559",
+    ".musubix/journal/normal/000000000585.json": "2f99e37e2110d813573e462d009f1132dd4a581a261c3e9df7e4561fb21f2a40",
+    ".musubix/journal/normal/000000000586.json": "729ea8d9dba89c6ca8ac42129b1fe3ed3465638bb0a9b568ac66866568e9ee98",
+    ".musubix/journal/normal/000000000587.json": "b6c0e7c031d523d6759feb4b1ad5531b0207b78980fd2dfbf21b8d2444816796",
+    ".musubix/journal/normal/000000000588.json": "ce3da9afac681b08fe3d6c013dffd836682280275621b5ec2975eee6e00a8a2d",
+    ".musubix/journal/normal/000000000589.json": "2183f72c82e87fe6b82fcd6293e3a03b22d68d9126f157ad803bfb9b3023fb68",
+    ".musubix/journal/normal/000000000590.json": "74415fe2d402b000b1227e12d049012775743497cdba6e113e0f3cbc40600ff0",
+    ".musubix/journal/normal/000000000591.json": "842637a866087df005d13a33abf18c6d4f8351a7b90b8cc8fe00782367508e6a",
+    ".musubix/journal/normal/000000000592.json": "696dc710726dd196564d9a06df53684a05224618cef43dc9210d24bacd0e6f85",
+    ".musubix/journal/normal/000000000593.json": "ccfb52dc236bffdd8509444a19a33ba9ae4d79d19bd4e35b1dd394059d3fb853",
+    ".musubix/journal/normal/000000000594.json": "fa799ef50378bc5ae259470520bf344c06995f4a7708c4cb0438c1ca78b3360c",
+    ".musubix/journal/normal/000000000595.json": "59b089deb96186de002b40fcfae92374cf4ebb3e7551ccfec976aef08fdddddb",
+    ".musubix/journal/normal/000000000596.json": "9238c8d9bdeb0a756e3267b0dba569e8e77105091a03998982fc71bb6061ea24",
+    ".musubix/journal/normal/000000000597.json": "93d74c424cc3f3cff98dd23accb5957ed1edd0749012980f89b8e7ade4c8ab23",
+    ".musubix/journal/normal/000000000598.json": "fd2b79b921c4df9d02c8a4c7db17920df05bf434c4cec4a8071197d541ac4a04",
+    ".musubix/journal/normal/000000000599.json": "410cec6fca522b2dbbec37040b9652a1f622736bfe61e507e1d89a3d17ead645",
+    ".musubix/journal/normal/000000000600.json": "2d167f9b91d7c5bf889d6ccee8cdf5274789c337cf33367581889e0712034ead",
+    ".musubix/journal/normal/000000000601.json": "827082bf1008ac77ea3226b13cdec76224011ed0441d42f26699abadc68839dc",
+    ".musubix/journal/normal/000000000602.json": "1171109ac441d7c02d0a8a33052bf2d7047b3049bc635e984a33da0ed618e18f",
+    ".musubix/journal/normal/000000000603.json": "55197dcf17979b9576a9318400931aad892b074d064471a7d351a25f5e60ba6f",
+    ".musubix/journal/normal/000000000604.json": "e6afb2b14e26fce42c661358efc2257b48a94e60460a9f3d240d4c29783a8b82",
+    ".musubix/journal/normal/000000000605.json": "278b8ff60e80a2ca423033a08fab1d88033e56c53d5ce5d202fc25637feb5666",
+    ".musubix/journal/normal/000000000606.json": "8cfbde9845e5d8482903944cf3239c853aa7aee9b0ea5feba12ee2f055d3fa4f",
+    ".musubix/journal/normal/000000000607.json": "937045f72f1512597655d2241295b692f2eba9de9e4dd8245e5e0e5da9bde02f",
+    ".musubix/journal/normal/000000000608.json": "e6e93abd06df1b22c3861706993f1d006247f14f51aec6f432c5e81d9e1c0d89",
+    ".musubix/journal/normal/000000000609.json": "b935e9bd7ee6a08dc3e8615f0d64e401cab111734eb1bdcf3da10d4f06a3ac14",
+    ".musubix/journal/normal/000000000610.json": "0185fdef14815e78c449338b02eacd327d34e752d21a983ce7c0f51612acd1d4",
+    ".musubix/journal/normal/000000000611.json": "3bb394b939f68f9338e6fbd0844797e831e66f113c3ede4a7649b31b34958b81",
+    ".musubix/journal/normal/000000000612.json": "fc2e6f482628443fe71bda18fca91919c8b14cbd6ec551f14520d77cbe80966d",
+    ".musubix/journal/normal/000000000613.json": "e0bd895dd50b294fe1705a3c094e57fd90c9199151ffe82d8627d82742d6f35b",
+    ".musubix/journal/normal/000000000614.json": "8ff81e107d9e447661857cc0e780eb5457367ee3a35187b62332a1b1dd524e6e",
+    ".musubix/journal/normal/000000000615.json": "bd11836b86921e90fd5bb6114699225c3597863bcd19a887b5e0e4c2cadb63ba",
+    ".musubix/journal/normal/000000000616.json": "64d4256dbd716a451e11e16565bd62cf8a282bab489d20a2873b46e34d4cffaa",
+    ".musubix/journal/normal/000000000617.json": "b42cddb942a5b1a95c1e1794989d5b653c19e4a3f25470add65a5e60a80e4bdc",
+    ".musubix/journal/normal/000000000618.json": "84553edb7bb15b77ecdfd961b7a5992e3348de245a5b1e20663a74bebefd16f5",
+    ".musubix/journal/normal/000000000619.json": "a6e031c279cd43d14454768f35e64d31e6525a2efa0b74935ccab136d7d0e8b4",
+    ".musubix/journal/normal/000000000620.json": "1ab79108350339a82a2e7279ab7950588b1137524a69b7d1a1f7fe5100cabe90",
+    ".musubix/journal/normal/000000000621.json": "4154b65dbc88f8a2a9277c4a86a2854dcefc61b1c43717ecca939c7fef69e668",
+    ".musubix/journal/normal/000000000622.json": "f4e2c1856c1fefc6bcc84e258381de513f376f3dbe2ee19ec7b1890e122b5f49",
+    ".musubix/journal/normal/000000000623.json": "f5815bf0002c44cc3f39726f3840e85c1338b7630459376bc4b54643c99f1bc5",
+    ".musubix/journal/normal/000000000624.json": "3b649f31848def94e0e2344b0d853c0437c17d42a497e625d6dbbf57dfb7538b",
+    ".musubix/journal/normal/000000000625.json": "551c775f8ebb14eef286be7355a4a9459c41828dd704f643f6bf0975502c6ad6",
+    ".musubix/journal/normal/000000000626.json": "03a1210473d88de2bb6260e18b59e5206e6b3b4bb77e772f0d784b2624cb99a1",
+    ".musubix/journal/normal/000000000627.json": "653356b617308d84a836552251243191912e8512a6e278c08aa8e85f41eca1bb",
+    ".musubix/journal/normal/000000000628.json": "129c8200d417cd02a8eee0ea0c1e753ff989783fb065109c9f044c435facd2cc",
+    ".musubix/journal/normal/000000000629.json": "33fc673e192442d36776b25b978cb57527289f91e936ee85379247dfd6ede22d",
+    ".musubix/journal/normal/000000000630.json": "b89356a4fbc9cef8aa1eec6c962ba833cd621c2542fec3e926954747b7c3f2c5",
+    ".musubix/journal/normal/000000000631.json": "da8a98e324d4b581c00e608cfad1d14d7b81e3d3b5bb56b617df281f7a5a2575",
+    ".musubix/journal/normal/000000000632.json": "2a4b2ba2fe1423a0554b9b41b6bb286287eedcc248eb1335b3f134d03633c926",
+    ".musubix/journal/normal/000000000633.json": "601c4fb16c31bf6f8220e7e3cd00dc7b7cb460edd3aac2f29a8ee76a2bfa519c",
+    ".musubix/journal/normal/000000000634.json": "5d4491fc74fc3ceed81872aac6a48dcc964f5bccd1266611501c10ae72c43e37",
+    ".musubix/journal/normal/000000000635.json": "abd8588d3ed192933b680d6b0cd04b8225d357f5d5d47e14f3aa84aacfe7f512",
+    ".musubix/journal/normal/000000000636.json": "7bcc98b23ffada8e879872b68591efd324ae3ad711044dc44b8da596985169f4",
+    ".musubix/journal/normal/000000000637.json": "8a581f24aa78948935b2a4ae1dad59029486684002fedfa668ffa5d8ab3ba00b",
+    ".musubix/journal/normal/000000000638.json": "fc8aad2baed70d7356ba45e06b092163b77249a22fcf6ff9ad0b1e6164d8b9dc",
+    ".musubix/journal/normal/000000000639.json": "841137297aaaa1f179e2b29685558ce2ca3f86491ec01847a892900abdd77afa",
+    ".musubix/journal/normal/000000000640.json": "b507eb8ee4548b8a1b69172d085d1673bf709d8f571762766bcebbbecf2047f5",
+    ".musubix/journal/normal/000000000641.json": "07e7c50912f7bfe54868a3398db3ba65a6edfb29634cd64b5fc4df594116c128",
+    ".musubix/journal/normal/000000000642.json": "4dff9544a01249d9ce3266930df0bb5318bbfa8ffd5ab8bf6aa982977dd7092f",
+    ".musubix/journal/normal/000000000643.json": "8a9b10f04dac751091962c22d7576b9c570bcb330844e6be323efc1db3617693",
+    ".musubix/journal/normal/000000000644.json": "30853f65ecb122131282b60bb0531938f7c63fbd3b5579dc06f230e7aaadb69a",
+    ".musubix/journal/normal/000000000645.json": "645359c9328a2268c4506f2de450d6db5b582ec86ff9a08c2c564390529f4c03",
+    ".musubix/journal/normal/000000000646.json": "ff6eaf2165a78000cea2a1413a3e3a0a1141be664b03322caa792cd45ddc0b3f",
+    ".musubix/journal/normal/000000000647.json": "ecc0c35906b2510c6314b3196a3c98286aaa76bb6c65de2f082270e36c37bd9b",
+    ".musubix/journal/normal/000000000648.json": "032c8a20611a8934da991a0fada03a18866ad3df7336668a70fe2675ed11e561",
+    ".musubix/journal/normal/000000000649.json": "7044aeabfa228f1493fb223c97f82121ad932a13dcc8a50321b65858e87745b2",
+    ".musubix/journal/normal/000000000650.json": "4f843ef9b2f6cca4de67217779a04c326c3d84431c56dd8caa934ea3b37a4bf9",
+    ".musubix/journal/normal/000000000651.json": "358c4f50775c93db2a521f4baaf32a8de92b9b572f2881125d1f4dde608f8e37",
+    ".musubix/journal/normal/000000000652.json": "5379b19eb2dce1e73c67e1900af20be14d24a5b12fc77f5999c55e95a6938e18",
+    ".musubix/journal/normal/000000000653.json": "00e71277a3cf6544d9595c982f32beae7a9e817bea792050a9bf5fd71cc15845",
+    ".musubix/journal/normal/000000000654.json": "e8bd5899fce66aeb23be3e495d6298f2efcffdbe40e7563db28aa0f23787f1f4",
+    ".musubix/journal/normal/000000000655.json": "522d19390c400217637339676030bf2d6ec54d14cf39eb879027b27d693b4465",
+    ".musubix/journal/normal/000000000656.json": "1ef2cb9c4d4f83b05d51f3566d252a7fb04b63acc5a15ec84e88e7d157402a95",
+    ".musubix/journal/normal/000000000657.json": "8c170b6beee6a28fb0205c12c7353378267d0bc100a5043fd211df87b6ced46b",
+    ".musubix/journal/normal/000000000658.json": "7b4a21633d2d8b996dc2b6cd96df3d8c130130b71941c0e06c94120e9c7cc8b0",
+    ".musubix/journal/normal/000000000659.json": "7e89a67e4cd577c1177789fdde94812331b24f41f8ae7fe5af2d8c17dab5177e",
+    ".musubix/journal/normal/000000000660.json": "3c1feb8bb9f93d47dde2a7ae0eadbd6cc0bf59bc80cae87ce9da1c66e3184d7b",
+    ".musubix/journal/normal/000000000661.json": "50ef6003c5731ed7435226b70e7f2875cf0e2b3cd034c3977f72b986d9437d81",
+    ".musubix/journal/normal/000000000662.json": "a127af77de2d189bc58dc052c852d269e679a437fac3c3d069a6227323d810f8",
+    ".musubix/journal/normal/000000000663.json": "1fec00755fde99f23522bf96a92cbd4c21481bf3ca83599a8bd198785e56a4cc",
+    ".musubix/journal/normal/000000000664.json": "ea624b5fbf8fba489f6f4e516d6812f2fa6212821331a9ffb9e104ece79ec0f0",
+    ".musubix/journal/normal/000000000665.json": "c5761207e53028ac98837af728a43e807f5e883b603757f8103b7bdad8998adc",
+    ".musubix/journal/normal/000000000666.json": "048ec1d390158f40a0a9b27b73a3ce9de3f50dcce984a9c33e303ef3a47d92f0",
+    ".musubix/journal/normal/000000000667.json": "d29c9e070d3d1cb7769d9b5d7f22209c31194bf754a0dc6e47b23917bbe15db3",
+    ".musubix/journal/normal/000000000668.json": "99f50718ac51e391b31d37d050ba5e3511c75c9a514b899debca9ca66427dac6",
+    ".musubix/journal/normal/000000000669.json": "051e1beffcb00e530ae1dd6307d9c03e399aafbd074ea40913a1743dde1277a3",
+    ".musubix/journal/normal/000000000670.json": "14a859159912adbd29fa9c9146d53ad835b51cf1ad9bec5a20f4b05ec06134b4",
+    ".musubix/journal/normal/000000000671.json": "8d29657980a831db51d22006a89ad65ab77f917a89887ad7c8166f1dd2de9c38",
+    ".musubix/journal/normal/000000000672.json": "b9bf00852a0916e06ae9b6fcedf09731ecc9293aea1c0acddfaebfe5057cfa34",
+    ".musubix/journal/normal/000000000673.json": "f95ddd589c0d19d527ff0a414e56105cc501af70a947784d9ac47421ee0bfa44",
+    ".musubix/journal/normal/000000000674.json": "108fa5cac3ec338a84d319060c104872bf02ca10bdb6e9fd40406f3fcf22a3da",
+    ".musubix/journal/normal/000000000675.json": "f6330881b59281062d299a4e98a4c814201ed702f890f8962329b5c3b3969749",
+    ".musubix/journal/normal/000000000676.json": "0443184fb972de5271703352c430be1519ad1f6d667b4194a4e117cf8d0c1538",
+    ".musubix/journal/normal/000000000677.json": "4cdd609f039cee7d09da94a893d9d6ef0f9f2a5a865b6f3df3e7199522418a73",
+    ".musubix/journal/normal/000000000678.json": "cdfcc9eb088400df8d0e33501f9fe6eea0d2abb6052ed212c756815343021827",
+    ".musubix/journal/normal/000000000679.json": "e99ca89b6532089de84bcc53400c6528d68cc158f2fbcefe60ecfcb856f6c59c",
+    ".musubix/journal/normal/000000000680.json": "084ac19a6b4534115b3dcec35b81bd90742fcfbda4ff0ea16d911a5949afb0b1",
+    ".musubix/journal/normal/000000000681.json": "fbcf8b5d24ff56e427c8ad010ecde9d1dfb88ec2cec07bcff242af0f3ae349a5",
+    ".musubix/journal/normal/000000000682.json": "cb3b6581aa452097d23f817fa9eb12fd57f6fccc5b24b369356d223a9f26398b",
+    ".musubix/journal/normal/000000000683.json": "5d7bb7440d7586f65a2241c1a2e97453f17adf5c061aef16aadf36a9115423ef",
+    ".musubix/journal/normal/000000000684.json": "f4683a08f4920f0cc8cdfca587a141620682aadbcab666915ca1d02d4bd22fde",
+    ".musubix/journal/normal/000000000685.json": "91b30d7f34972ed3d80e40b11b567696c130dc0a8ae0b9324a0123fdfabde33b",
+    ".musubix/journal/normal/000000000686.json": "ccd085a60b2364e284cd688dc00e65b3ce12a8e118c6320fe038612847081bbd",
+    ".musubix/journal/normal/000000000687.json": "8931b6617b097f8bf393cde10cfdd819f2833e09f967d741c080f260e636c59c",
+    ".musubix/journal/normal/000000000688.json": "7ea5e9fae3add189ce09087c58e5feffd9d010fdddacb10b6411f02d1223b817",
+    ".musubix/journal/normal/000000000689.json": "38aae9bd7481845215265bd6536052a559e490ea77b113ca5a11b9cc6ba0008e",
+    ".musubix/journal/normal/000000000690.json": "59b1f76b00481e08e03ce1176c8039f1ca4cc9f9674d1095f3ce74eb23e7a0df",
+    ".musubix/journal/normal/000000000691.json": "eba6087c31963eba5a281b493f6122bacca39ac3bfbccef316cac863d40c056a",
+    ".musubix/journal/normal/000000000692.json": "ef0afd7e289dc7d6568b27680afa152f8b4609cffc4e27370f2e27cb78becd61",
+    ".musubix/journal/normal/000000000693.json": "14142f28f7cbc0cb0926d4e4dd37a329558a0d70b7b4c0532a1a2625d948cca8",
+    ".musubix/journal/normal/000000000694.json": "cd23466c733aa4917eba8d31457233fddf4feb17436eaa5211a2ef218806360b",
+    ".musubix/journal/normal/000000000695.json": "fbeaa24313131ccc545a24c9609a1c1f11b3f7eedfc6a512678dd2b74636e4c5",
+    ".musubix/journal/normal/000000000696.json": "c52746ef354e99684b3595f6c722c91a295136688e041b9653b5a07b100711f0",
+    ".musubix/journal/normal/000000000697.json": "7f0a0af2b484500ed299efdcf25baf3897ed624c9043c27b62bccece1ed26003",
+    ".musubix/journal/normal/000000000698.json": "9aa54d16b47c22024efe1c72b7198f3919772b9becaa0936c8f181ec74ee6d95",
+    ".musubix/journal/normal/000000000699.json": "87582a172fa6f2a485f5cf25a43e0fa3d542df55048e584613ba743c33ae5524",
+    ".musubix/journal/normal/000000000700.json": "a4da53d10c7f95c4d06a8bb042fa59888f569a6d6a019e19e73498ab2525bd22",
+    ".musubix/journal/normal/000000000701.json": "4d9b51d3c759f7f8d4453ffd05649910f5163b0fc0136c4ee20f04536cf85290",
+    ".musubix/journal/normal/000000000702.json": "192ae7fe214b6a4e589a280b3cfdf1760cbf2daedee14a0f8809761c2b8208ac",
+    ".musubix/journal/normal/000000000703.json": "341a20e419ddc1a4e1c7162f8aa48c65f2896361620408440a96ece5320d7412",
+    ".musubix/journal/normal/000000000704.json": "547f12b12e9e3c9610aa8e4171759b15b1029d2fe5ed14a9f01808f4ec90b3ad",
+    ".musubix/journal/normal/000000000705.json": "1ec3e58bd4e7ae4300366489fb020d2886c09c0d98a5c2726fcba3b122145203",
+    ".musubix/journal/normal/000000000706.json": "72280f077fffc68b1ed1fabad343bf1d3696adc8f02624333a627f8fac97d239",
+    ".musubix/journal/normal/000000000707.json": "a90e9797abbb63dca05335d98382324c32ff17f90ed29c49da199d6aa83b2b0f",
+    ".musubix/journal/normal/000000000708.json": "3c8b5ca275e6328c6baaf88c2840299635e1bed2889946a90166632db0914177",
+    ".musubix/journal/normal/000000000709.json": "7779facc49896adfa09768058b7d644fb9e9d90258aa51461d9a4b55005917b9",
+    ".musubix/journal/normal/000000000710.json": "46bac5accc93c6e854481b20812c3db957362eb017d24f1bd8e8cfc610624143",
+    ".musubix/journal/normal/000000000711.json": "df3b8286fa5c24ad9291f0f8f01ba7076dc7adaef1fbac8bdb2e7272ed4d49f2",
+    ".musubix/journal/normal/000000000712.json": "cedb4234a9e5fb93e927f5e7d112bcc44ac8bd2274f780bb0a6766961965845e",
+    ".musubix/journal/normal/000000000713.json": "af961a26c168e7733757add9196a3c102cd90197045ec820e37b5cc0bb362f93",
     ".musubix/parallel/CHANGE-0014-plan.json": "6ca6deeecdb33ac4e07ebfe0e3019d6e86b93ced67d72339aee586d577ef7e64",
     "assets/ADR-0001.md": "07d68c567d75e9ec88f554114f8df4d1259a82cf45fd6567c65c3fc9db7090f0",
     "assets/constitution.md": "f8b47fdc486f395bab05223a94821b145cf8df70ffde2c838a28f8d71fe0fa92",
@@ -1601,30 +3851,31 @@
     "packages/analysis/src/budget-ledger.ts": "c7e4fa74032e066491708685359ca7115ab34c44a0d2af18337bd15a4da25590",
     "packages/analysis/src/candidate-evidence-binding.ts": "b1a0f978e747939dcae508f8a91e1fd8a6681d98c6d3887b9ee43468cf7d307a",
     "packages/analysis/src/candidate-gate.ts": "cd80817329b60627a532cd952eeaab839d5011fe8f407ff1991a98287f76da55",
-    "packages/analysis/src/candidate-integration.ts": "692dc9ed9c6272b80f5119814d6c6abe18bc9f7a6a83cbc2009b743d5ae882d2",
+    "packages/analysis/src/candidate-integration.ts": "17c040c9247b25b3558c2f932a1d67703888891d9cb738968ecef5a9c73b0907",
     "packages/analysis/src/candidate-path.ts": "12be923afca597681dfae8edea1bb143f33d148ebb79bfbf5c0e4d2e0e8123b3",
-    "packages/analysis/src/candidate-state.ts": "2fdc0f662bea2b1250588e8665b8f4e8e73ca4f1daf57e184ceb30cbe2fa82ce",
+    "packages/analysis/src/candidate-state.ts": "4f46e874eba37791bacd942eadcb954f441aae2225dfe4927671ea08ad07c90d",
     "packages/analysis/src/canonical.ts": "4135d7521ba529d61a695586a206e71081b4e300938a5ae160dcfda770e73195",
-    "packages/analysis/src/change-evidence.ts": "349a7712d72ffecba2f7894b11302270d21b20dff1bf7303da2733b7aedb055a",
+    "packages/analysis/src/change-evidence.ts": "2d52072cffbf77ffdcb07df725d54fae9bced88f5a470dba7014f5c4b5c29f4c",
     "packages/analysis/src/change-generation.ts": "34622e366b1e5f53f826331562ba31a2fd46cd40b9367f22263a11af547cfd33",
+    "packages/analysis/src/change-phase-checkpoint.ts": "af6159307d6b3d2d785ed9cf6684818967bb8e005b156bdd084b24f2b233b9a1",
     "packages/analysis/src/change-waiver.ts": "1b880c29a16080445f324265e0da067dd8537e64cb42f360369fd2a1eda0f9c3",
-    "packages/analysis/src/change.ts": "f37a8f324a6b81981fe189d423ee28d2c9ffa8a5d5330aba1197668c31089858",
+    "packages/analysis/src/change.ts": "2728e01eac0d4b6ea2fd0f5c7f785227bb7abe97fd108bdb2f1802fc439195ed",
     "packages/analysis/src/compatibility-oracle.ts": "83aac1ddcf29d0ff7d76a8e05c9be9dfa1911f94c1ec960145578c43f2b32d98",
     "packages/analysis/src/config.ts": "b75dacf7bce0e58eaa465a32a6181e75d3492a1dafb4cbb5e09cc9220f9ffcba",
     "packages/analysis/src/evidence-registry.ts": "41bdd3f05c91734baf22cccf5289a9906eae30bfd1356236bc98c96be47da660",
     "packages/analysis/src/files.ts": "6e0a660a732694f9d5b0c41b1e2573778ff1f76462134c5b449f2dc0727ec3a1",
     "packages/analysis/src/formal.ts": "5adc1531fa0c9b81d858c9e29bf9cd380268d23d483098a3ae316347b4b80653",
-    "packages/analysis/src/gate.ts": "14f0d053c2049aefa5686892ea91da4a7989b0b07f51f35d4641dfe6c3f6fb45",
+    "packages/analysis/src/gate.ts": "9672504a18fc3a0f54e612a3a0133874be1e569e418b95d241f84d2ef50ac1e5",
     "packages/analysis/src/git-status.ts": "ad35d3df9faf11035998ed3c2373a366f2b2e9a4bb61a0f0195c869a836a2b00",
     "packages/analysis/src/graph.ts": "4de84f582a8da7ca24475354e0890600f34c7533f0c7af41346e879610ae4392",
     "packages/analysis/src/index.ts": "98aeb852b39a9bb7be29b69ccad929af2fca863a4162d22785b729130f29fd13",
-    "packages/analysis/src/journal.ts": "b41cdb5cdb625c70d1d647bb7d0a420fd4a7dcf2b75dd1fbee37169c916c5c25",
+    "packages/analysis/src/journal.ts": "8870036fb0b97a5ee6bf7d87049228e4fa33568b6c801620fb5ff5bcf0629ea1",
     "packages/analysis/src/knowledge.ts": "31313a4519c711ac98648313059359daf69959403e39deb1509dea90840182b4",
     "packages/analysis/src/lifecycle.ts": "6dfcd2fd1915ea8edbc8d611da3d35aadd8a09581796c029e83d41a2a6fc7fc2",
     "packages/analysis/src/model-correspondence.ts": "160075970bb43170c020cecf962ce2c9a792597749bcd26ffda35ad5d248e64a",
     "packages/analysis/src/mutation.ts": "87fcc7a0ef44b43a093c941319d7d6d600314d3ca2c4d94abddcb6c247c1dd9b",
     "packages/analysis/src/native-approval.ts": "bd6bba0231389ada6758213a90be9a6cfde96e45e89dc9776d9d4e46e2951c53",
-    "packages/analysis/src/order.ts": "712ef698e5136da577602a9e603cbd59fe84f237ccda712cdcc9d2c6dd2335aa",
+    "packages/analysis/src/order.ts": "82f48b77ef3070f95d408f280236313d77f76e4e0535bfa64bcab5901156a5fa",
     "packages/analysis/src/parallel-runtime.ts": "88759b519838f24b9e6562c654664756d8781ad162fced23944739fecbf2df25",
     "packages/analysis/src/parallel-tdd-evidence.ts": "8953e04282d1c5406b7b4d548e6f4ee73ffba1e02f4261cefd49c375b35d1266",
     "packages/analysis/src/parallel.ts": "ac698520f8a60dcae907c4da7ec6bf53d920003a6db3ab8470d04252bdabcdae",
@@ -1639,9 +3890,9 @@
     "packages/analysis/src/scaffold-artifact.ts": "8734de778f121421b3fcfbf5263611bfcffc94cf63248ef3f127459bdfa4f692",
     "packages/analysis/src/tdd-cycle-resolver.ts": "31068477228533bb387cbc7c52690a74d2348ae2b208ce112919dedb45ea23f2",
     "packages/analysis/src/tdd-types.ts": "13bae90aca9313bbb6e0a9c2f332d892234e3a229305757dc01ab359237d0e35",
-    "packages/analysis/src/tdd.ts": "7c8ec2081e5958a5d358de37effdc415352748de0d32f69de2223a717e26590c",
+    "packages/analysis/src/tdd.ts": "36d7d5440bb3e36d0e9d2cf3fb0cf4f04b16fc561e8cb3ed5d8dd7e18ca688a0",
     "packages/analysis/src/test-report.ts": "c4389c1a73b8ff61beae2061c1eaaeeadc4c5cc529befc059111ea5430d602c4",
-    "packages/analysis/src/trace.ts": "8d9aa9499072aa6fcc56e2f58040b3e4708c6a8c283fdb584e65c16d7c0ba314",
+    "packages/analysis/src/trace.ts": "9f95196dead55f62357d60c1107012b8c460f9204db21343bc847c0467385f47",
     "packages/analysis/src/workflow-correction.ts": "63fddf07315b8af34b7a96a542c68f82eee5ba8a321795a24bafe1ca8033e2f6",
     "packages/analysis/src/workflow-types.ts": "4fa0d85248bd9373eed4dc7043f1320c9b918f08fc8874dd982c528876b74783",
     "packages/analysis/src/workflow-waiver.ts": "77a93cc41b1a917bf08f8a26eacafc0ce32edcf3b3d90a2b5ccca5d792d014ac",
@@ -1649,7 +3900,7 @@
     "packages/analysis/src/workspace-manager.ts": "d1dd8b55d51389f5bcd2c129add8972ba2c83d15cd8e65b6a933f7873db8f6f5",
     "packages/cli/package.json": "a2c263a6713f6030861ea09e310d43ca6235f91f821395259b8430c84a52b5fa",
     "packages/cli/src/install.ts": "5af752b5995abc883f93d230eadb4d54f76ae903860535755d555240ec887081",
-    "packages/cli/src/main.ts": "7b1cc3ac3d3bc4e9a24440e8e8f7d11ad25209b03809bfa0eea5e21a1238c903",
+    "packages/cli/src/main.ts": "f80f4188fbac44ca0b6ad412c8b4a1942af30494370f78ef76acb86667d2ad1e",
     "packages/domain/package.json": "00dece622fbb7794ef413f8f1717f5c7236c034030489c2aa9cd8513ccfb349a",
     "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
     "packages/domain/src/design.ts": "60adc0ecfabecc59326084cf32932fbc37be83c1ec541d6bc74921f8116205ff",
@@ -1658,10 +3909,11 @@
     "packages/domain/src/requirements.ts": "79158eda4e96b391f4e83e1df28903a5b50a7c7d154649ddb787e83a2a2ba301",
     "packages/domain/src/types.ts": "e64c97304cc492ed3f47dc9852ecfc8461cad36b208f6f518690473f507bad34",
     "plugin.json": "ac68adbdf44926a763b0f7254f114abce0ddea333daae6f43edcaaca38fa1930",
-    "README-ja.md": "7c3880e179665ce2df2a1256ad05e014d2c7625104b8f3efb34734ff561afc95",
-    "README.md": "d9a0093cc14415b8bd16622cf1b23dd954f40130afa553e5ffe6684f1d14d23f",
+    "README-ja.md": "c72aff4c493498ea243137175e8d5ca01bbd732f05926adf715cce1772ef02fb",
+    "README.md": "1b18adff46fad4dde70983850e2fe3fd0959dea900c7894a92c40106b7c13670",
     "scripts/check-package.mjs": "b817a08296efb0f2f90be012df55c598f59aaaf5230c8501c1af02b900546593",
-    "scripts/run-codegraph-tests.mjs": "62fc1a0bbc7e8facf0976b52d02854f0646f182f9b53662bf1bbc2808f098f45",
+    "scripts/run-codegraph-tests.mjs": "2f7820da5ed15b38dfdaf06a747892443cb04e3d07550a9161d18ad5cd842b23",
+    "scripts/run-concurrency-load.mjs": "6ac4ab549f52c750d952be44984d4afe049a71b64fd54bd3b9c78557f7431600",
     "scripts/smoke-package.mjs": "b5f69bc4c0109632acdd266717695065dbce04e4d7f8d543eb164c1596a1568c",
     "scripts/verify-npm-registry-integrity.mjs": "359449f82fa4a060fd73cf4df80d389ef4fccdd95c723408b53fe2cf3da38d1b",
     "tests/active-change-context.test.ts": "40f02a949441fe637d2747977996a489db70015e4f527c78eb45de7ee419cda3",
@@ -1680,10 +3932,13 @@
     "tests/budget-usage.test.ts": "45bf344f884740b91adfaf18a41830a72a3095a314aa71193a8750186752689f",
     "tests/candidate-cleanup-policy.test.ts": "058b9beb771a91f23b77f721d9be57b370170fe888c5fdc1298176174a6fed58",
     "tests/candidate-evidence-binding.test.ts": "600faef9b573be440d41f19e18ef9d8adcd6efb93f6d847fbe32f60cda106cbf",
-    "tests/candidate-evidence-checkpoint.test.ts": "29a854ac96c4806623d559b77d9fb717ec9c44b81763c207744ec84116de69f8",
+    "tests/candidate-evidence-checkpoint.test.ts": "d68fba0bf9e8010934805f3756cb7b9c6788d747156de2a0a492ad49b87f4e57",
     "tests/candidate-evidence-integration-context.test.ts": "13a051d2e571f0f7ed451ab9210e26155518ad4a2d645eb6f1a19f50c6c7c2fa",
     "tests/candidate-evidence-integration-status.test.ts": "0dea86cc49799d45497b4e703785e525171458aa171e464d8936d6c1ef485c14",
-    "tests/candidate-evidence-red-checkpoint.test.ts": "6e4a0082b3fb95999db915c83777fbb2ae8c8a0990b122d65d385c6a054f60c9",
+    "tests/candidate-evidence-red-checkpoint.test.ts": "da3272cde4521e45b6125af78f0b8156bb287efa9d3f694ee26afe2a596ec629",
+    "tests/candidate-finalization-contract.test.ts": "a0a85ba83d75f9122824f63f70fd0ffe2adfd3bed1ad20cfa00a6fda7a3084a9",
+    "tests/candidate-finalization-durability.test.ts": "0ac297eb6381105542987b1c8a3271acd6038eb8f42aa27a9b4673ab2ecad0f8",
+    "tests/candidate-finalization-state.test.ts": "3235f93ed92d58cb2450ad466fd86a579e650e39d74682dc71b9b46a29a80623",
     "tests/candidate-gate-eol.test.ts": "db72054d71bb5bb2cb986c7a5ccb7b31d714b6c863e5901fd7d1fe723e8a1ad4",
     "tests/candidate-gate-trust.test.ts": "67839542db934c1e1658aab3e15899df189c9ba4f7c23170dc18de1d3c9b9a42",
     "tests/candidate-gate.test.ts": "631aff9c100e48b935e258883d67dc266ba4facea7181d31a1c1c76613f173ba",
@@ -1691,7 +3946,7 @@
     "tests/candidate-integration-determinism.test.ts": "72dd197925de5226dcacae00cac1187b9cf1cdbeb7970b199849e2113ae185f6",
     "tests/candidate-integration-evidence-context.test.ts": "851dca5786e5778387e570b1c44b3280c7fa90e27c728c7ceef0e75187fef88a",
     "tests/candidate-integration-fencing-recovery.test.ts": "dd3b3961da100beba413ce1de1716ea830dd63177cf4ccae3d1c761fdcc289a5",
-    "tests/candidate-integration-orchestration.test.ts": "e65aa1f78ce127fbc9020ad9a1af5bcd9b197f0c22b5cd184d9dcf35dae5d0fa",
+    "tests/candidate-integration-orchestration.test.ts": "e3784b2c0faa509b59029f7a2c83e035279ad35cb8b4ce90bcb29b99b6712751",
     "tests/candidate-integration-recovery.test.ts": "3993ea88f2df57c3967e8363335d476260a26b30c55eb1b45cd2a2fb2e8abf52",
     "tests/candidate-integration-review-regressions.test.ts": "db43a92f9a99e3ad749a7fd91e09d1e8e67a9274944e5c654df4eac92e0fb6e0",
     "tests/candidate-integration-verification-exit.test.ts": "6e61bddcd25eaf638449bdff8d2b7106023f84c44be5475ba23d2b4db72af1eb",
@@ -1717,13 +3972,16 @@
     "tests/change-generation-resume.test.ts": "e760d9c55ed2fe3a67d21151df509da479a0487c9ffd0934b98b99956491a06d",
     "tests/change-generation.test.ts": "acad6bc9e438dd793a0018f8ccd66b7580850d081a4f032c23960df7912a7284",
     "tests/change-lease-sharing-violation.test.ts": "be16c66abdd7b1eb2adaa2a811fc4c5f0d959ea0659f41043731326934315434",
-    "tests/change-lease.test.ts": "90f359b766b40a5a70854148cc20115915fb127514c27bd13dcff9f03eaa256b",
-    "tests/change-phase-checkpoint-operation.test.ts": "7a7f9611adbf133697e8d4c9485c39b4ec9300834283a998ae6f625027b10612",
+    "tests/change-lease.test.ts": "c078c5de1968e67393d350042c03814c39a8dace9ccb2185f1c54e28472f884d",
+    "tests/change-phase-checkpoint-operation.test.ts": "a384eaa8569fa9c33813d510b9c76590bb89e3d096b13ac995e8361c004aa38e",
+    "tests/checkpoint-clock.test.ts": "50b4f9859d410b24f9b1bf637d649ba10140ba58a3ba937ea3f6ab2833e97e5e",
     "tests/cli-help-contract.test.ts": "34fc65d4285d35fb7c8969a9e473fdaece1ab08b0bb288daa91436410d9ebe22",
     "tests/cli-json-error-contract.test.ts": "07ba0fcadcb9085907800917d8bf0d1ed596d6c8700896555f8403b85f191a7d",
     "tests/codegraph-incremental-regressions.test.ts": "cb0cb9d9675ec1336966ff448a3994a339a7950ef819e2b71db0e6dd8e14fbf4",
     "tests/codegraph-performance.test.ts": "b6481920fb15944ddf64a29b4cf421fee1115abfa94497c9296d5f0aae05ae6d",
     "tests/compatibility-oracle.test.ts": "246a1fb3090c0377d72feece8e578b9608bbb86cf75cdca3ae316956860adc90",
+    "tests/concurrency-lease-contract.test.ts": "e9488631ae0bcef45c9f8c8abf2549be7f842ca29ef02c766d49372324653d72",
+    "tests/concurrency-load.config.ts": "5ed0a5ab342f47dfe7cf5a66b32b4832cf97d218ffe73dac883024f328296def",
     "tests/cross-change-candidate-branch.test.ts": "cb340d1c22862a88654df138166f9d880b49d77aef6ba7efec607cbc61588740",
     "tests/evidence-binding.test.ts": "17e118ccc2ae168913c6af833ac40deedeac84668522573c64286848c1207248",
     "tests/evidence-identity.test.ts": "3467588120ed4b23c73dd5f0aff0be4b3ff83d38867ff18beda6bcceae98a899",
@@ -1734,8 +3992,11 @@
     "tests/fixtures/parallel-runtime-fixture.ts": "73239f520c54c20b5d5f9079693ac2d7eb044ec0e28eb5bffa260a12b64568d1",
     "tests/fixtures/short-unix-socket.ts": "8b6e158c7a9880b2db6d3c3d87d533e208660f7b611089e08152a8689958a803",
     "tests/global-setup.ts": "531cd25f855ef1c87176021b389361aee40615bb1aee62d111666fa43f69b856",
+    "tests/helpers/concurrency-runner-clock.mjs": "acaead9b4e4f42aa387307648bf2582046805f51dbd95ca5b13c1f74bad9078e",
+    "tests/helpers/concurrency-wall-setup.ts": "af6d5e57d334d924b7522d14579755f24de38bd32015ab3ac9419e6df117fc09",
     "tests/helpers/evidence-selector-architecture.ts": "343d8770a1a4ab2f1db45a41e6f8d9807b6a9f30f298db319350d4c5d2e614f5",
     "tests/helpers/journal-order-sentinel.ts": "4202b2775d671925f346eadf6ff8b5a54cfa8134842197f3952eed9842c5b3b1",
+    "tests/helpers/workspace-checkpoint.ts": "a49cf876397f56be3cc98258bd363538e786957ccb581c6de433009e5e699973",
     "tests/journal-order.test.ts": "72d385f473d71776d707fb988cce06fd2534975492d7ff3eb22e8d4e9214429a",
     "tests/lifecycle-resume.test.ts": "05f7a3f30acf4b0b628e1c068d17c28cb248508fa2e9523c51e6455c4bd2e6ed",
     "tests/lifecycle-state-machine.test.ts": "5cbae549161c93fb5943575d9e0ba974d716f53ca2600ef8e6e07586622a0d33",
@@ -1747,7 +4008,7 @@
     "tests/package-contract.test.ts": "3536d366dd871d09d1e6633b14f54354aed82349f3269de119cfcba40354dd1c",
     "tests/parallel-consumer-policy-generation5.test.ts": "075446948f66ad29d4aa87a3fd94cfd7de49787a2cf0c153ec1c1047f444d00a",
     "tests/parallel-development.test.ts": "6d49970e05e0cac6f500c06ac75f4bd4dd7fcab1810b29c9fb41fd89733a0383",
-    "tests/parallel-final-findings-generation5.test.ts": "3b3c0e70fc136e4f0376da1d9492df56e101f360fcaec8a7ca9176c8229e90de",
+    "tests/parallel-final-findings-generation5.test.ts": "74b6b065922b905f3f6cf170c3456de02ae3b769248518ee11ca1c85e7b0536c",
     "tests/parallel-handoff-porcelain.test.ts": "a302e87c6a2a1a7bad63861474e491a6418b4931937127eea885f1c768b945a7",
     "tests/parallel-ownership-history-generation5.test.ts": "5cc0f366a22059d1eafe81d4f22ad41e68b5ecdffa6accf6f824b00835e6311b",
     "tests/parallel-quality-regressions.test.ts": "4b5adb2f59d3089955976379828eb93da014bb3dc98c2e7d5fe1be509fa5b2f5",
@@ -1785,7 +4046,7 @@
     "tests/resilient-removal.test.ts": "04abd69134a65e17114930b836e5df7136c03b523bc1ca341f80cfc919b94d16",
     "tests/run-local-workspace.test.ts": "b0071c5905412c1f846d854155fbd37b0f72c08db40a20405be71cbfc2f10561",
     "tests/short-unix-socket.test.ts": "87a2c5a24abc90c9fb440214b65254dc849664163b1c589312229da96a5b10c8",
-    "tests/tdd-batch-recording.test.ts": "e254e04461665d42877b747d038bf977f680a0c72255a03b5dfc471cca2f8ef8",
+    "tests/tdd-batch-recording.test.ts": "95b215ccbeaeebf7efbdfd9f2722bc0a5a57d7724d7948098de306fcd7babf98",
     "tests/tdd-cycle-repair.test.ts": "023ba419fe712af60a1906b99bb43c6fdf67a4e6c0bbba9a709760c04a8e4973",
     "tests/tdd-cycle-resolver.test.ts": "e97858964eb27b9b5aa5108ae0b40cafe8ba5053cbc38aceec3a2069458ac885",
     "tests/tdd-generation-scope.test.ts": "ca6be09781cc00ea47cb255ac469c7e618fd237652435778f3cbd29ea0ee9442",
@@ -1798,6 +4059,7 @@
     "tests/workflow-declaration-correction-regressions.test.ts": "4a5f75009254776b002102e4878d8767f31471974e75c4a0fa7905f6d9d75df6",
     "tests/workflow-declaration-correction.test.ts": "c818422c7e69ad13adbbb0eb33ee25fb411246d2ecab9993a8fc2996646a0bf6",
     "tests/workflow-generation-reconciliation.test.ts": "bfb96a739cbafac14dd6cb32e7c105533b32449e2bc0aa9f3ce8028b3e65d934",
+    "tests/workspace-batch-checkpoint.test.ts": "65351d329a7df21e07df9d788907475e77e8d5bc22754063269e2cc5fbbb90ea",
     "tests/workspace-isolation.test.ts": "2b06a278bc118350e0ee2f5b1f1ab6d984e63d42229e3f7902117f2de8d6cb50",
     "tests/workspace-ownership.test.ts": "29a82dab0567a09e186c127b8f25fe33a73d7a4943154acb01566382ac66744c",
     "tsconfig.build.json": "c7b099d0ad5da404e2cf50e1c681ab55130dfd1f9d622dbb036990cd34b43dd8",

@@ -1,0 +1,87 @@
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { expect, it, vi } from 'vitest';
+import * as journal from '../packages/analysis/src/journal.js';
+
+/** @id TEST-M5-LEASE-RENEWAL-BACKWARD-001
+ * @verifies REQ-M5-LIFECYCLE-006
+ * @design DES-M5-004
+ */
+it('TEST-M5-LEASE-RENEWAL-BACKWARD-001 preserves authorized expiry across backward clocks and rejects stale ownership', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'musubix5-renewal-backward-'));
+  execFileSync('git', ['init', '--quiet', root]);
+  const epoch = Date.now();
+  let now = epoch;
+  const wall = vi.spyOn(Date, 'now').mockImplementation(() => now);
+  try {
+    const lease = await journal.acquireChangeLease(root, 'CHANGE-0017');
+    const path = join(lease.path, 'owner.json');
+    const readOwner = () => JSON.parse(readFileSync(path, 'utf8')) as {
+      token: string; fencingToken: number; expiresAt: number;
+    };
+    const acquired = readOwner();
+    expect(acquired.expiresAt).toBe(epoch + 30_000);
+    now = epoch - 12_000;
+    await journal.renewLease(lease);
+    expect(readOwner()).toEqual(acquired);
+    now = epoch + 1_000;
+    await journal.renewLease(lease);
+    expect(readOwner()).toEqual({ ...acquired, expiresAt: now + 30_000 });
+    now = epoch - 6_000;
+    await Promise.all([journal.renewLease(lease), journal.renewLease({ ...lease })]);
+    expect(readOwner().expiresAt).toBe(epoch + 31_000);
+    await journal.assertChangeLeaseCurrent(lease);
+    const foreign = { ...acquired, token: 'foreign-owner', fencingToken: acquired.fencingToken + 1,
+      expiresAt: epoch + 90_000 };
+    writeFileSync(path, JSON.stringify(foreign));
+    const before = readFileSync(path, 'utf8');
+    await expect(journal.renewLease(lease)).rejects.toThrow('LEASE_FENCED');
+    expect(readFileSync(path, 'utf8')).toBe(before);
+    writeFileSync(path, JSON.stringify({ ...acquired, expiresAt: now }));
+    await expect(journal.renewLease({ ...lease })).rejects.toThrow('LEASE_FENCED');
+    expect(readOwner().expiresAt).toBe(now);
+  } finally {
+    wall.mockRestore();
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+/** @id TEST-M5-CHECKPOINT-MONOTONIC-WAIT-001
+ * @verifies REQ-M5-LIFECYCLE-006
+ * @design DES-M5-004 DES-M5-012 DES-M5-022
+ */
+it('TEST-M5-CHECKPOINT-MONOTONIC-WAIT-001 tolerates a wall-clock jump while sixteen callers wait within the unchanged acquisition budget', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'musubix5-checkpoint-clock-'));
+  execFileSync('git', ['init', '--quiet', root]);
+  const owner = await journal.acquireChangeLease(root, 'CHANGE-0017');
+  const clock = Date.now.bind(Date);
+  let offset = 0;
+  const acquired: number[] = [];
+  const wall = vi.spyOn(Date, 'now').mockImplementation(() => clock() + offset);
+  const started = performance.now();
+  const waiters = Array.from({ length: 16 }, () => journal.withChangeLease(root, 'CHANGE-0017', async (lease) => {
+    await journal.assertChangeLeaseCurrent(lease);
+    acquired.push(lease.fencingToken);
+    await new Promise((done) => setTimeout(done, 25));
+  }));
+  const settled = Promise.allSettled(waiters);
+  try {
+    await new Promise((done) => setTimeout(done, 150));
+    offset = 20_000;
+    await new Promise((done) => setTimeout(done, 50));
+    await journal.releaseChangeLease(owner);
+    const results = await settled;
+    expect(results.filter((result) => result.status === 'rejected')).toEqual([]);
+    expect(acquired).toHaveLength(16);
+    expect(new Set(acquired).size).toBe(16);
+    expect(acquired.every((token, index) => token > (acquired[index - 1] ?? owner.fencingToken))).toBe(true);
+    expect(performance.now() - started).toBeLessThan(10_000);
+  } finally {
+    await journal.releaseChangeLease(owner);
+    await settled;
+    wall.mockRestore();
+    rmSync(root, { recursive: true, force: true });
+  }
+}, 15_000);

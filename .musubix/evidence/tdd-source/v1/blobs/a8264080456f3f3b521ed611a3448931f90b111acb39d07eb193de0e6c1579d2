@@ -1,0 +1,679 @@
+import { basename } from 'node:path';
+import {
+  error, validateConstitution, validateDesign, validateRequirements, type Diagnostic,
+} from '../../domain/src/index.js';
+import type { ApprovalConfig } from './config.js';
+import { loadApprovalProjectionConfig, materializeExecutionPolicy } from './config.js';
+import { canonicalBytes, sha256 } from './canonical.js';
+import { exists, files, readText, snapshot, within } from './files.js';
+import {
+  domainOwning, domainsConfigured, featureOwningDesignFile, featureOwningRequirement, resolveDomains,
+  type ResolvedDomain,
+} from './approval-domains.js';
+import {
+  buildReleaseCandidateContent, releaseExclusionIdentity, type ReleaseExclusion,
+} from './release-manifest.js';
+import { requireCandidateGateSet } from './candidate-gate.js';
+import {
+  candidateEvidenceBinding,
+  candidateEvidenceInputs,
+  candidateEvidencePath,
+  integrationApprovalContext,
+  integrationEvidenceBinding,
+  preserveEvidenceDiagnostics,
+  validateCandidateBinding,
+  type CandidateEvidenceBinding,
+  type CandidateEvidenceContext,
+  type EvidenceBinding,
+  type IntegrationEvidenceBinding,
+  type IntegrationEvidenceContext,
+} from './candidate-evidence-binding.js';
+export {
+  candidateEvidenceBinding,
+  candidateEvidenceInputs,
+  candidateEvidencePath,
+  integrationApprovalContext,
+  integrationEvidenceBinding,
+  preserveEvidenceDiagnostics,
+  validateCandidateBinding,
+  type CandidateEvidenceBinding,
+  type CandidateEvidenceContext,
+  type EvidenceBinding,
+  type IntegrationEvidenceBinding,
+  type IntegrationEvidenceContext,
+} from './candidate-evidence-binding.js';
+import {
+  resolveNormativeArtifacts, snapshotNormativeArtifacts,
+} from './approval-normative.js';
+import {
+  activeChangeContext,
+  resolveValidationChangeContext,
+  type ChangeContextSelection,
+} from './change-generation.js';
+
+export {
+  domainsConfigured, domainOwning, featureOwningDesignFile, featureOwningRequirement, resolveDomains,
+  type ResolvedDomain,
+} from './approval-domains.js';
+
+export const approvalStages = ['requirements', 'design', 'release'] as const;
+export type ApprovalStage = typeof approvalStages[number];
+export type ApprovalStatus = 'approved' | 'missing' | 'stale';
+
+export interface ApprovalManifest {
+  schemaVersion: 1;
+  stage: ApprovalStage;
+  domain?: string;
+  features?: string[];
+  changeId?: string;
+  generation?: number;
+  artifacts: Record<string, string>;
+  projection: unknown;
+  exclusions: ReleaseExclusion[];
+  artifactSha256: string;
+  binding?: EvidenceBinding;
+}
+
+export interface ApprovalEvidence extends ApprovalManifest {
+  schemaVersion: 1;
+  approver: string;
+  approvedAt: string;
+}
+
+export interface ApprovalStageValidation {
+  stage: ApprovalStage;
+  domain?: string;
+  required: boolean;
+  present: boolean;
+  status: ApprovalStatus;
+  evidence: ApprovalEvidence | null;
+  currentArtifactSha256: string;
+  diagnostics: Diagnostic[];
+}
+
+export interface DomainApprovalValidation {
+  name: string;
+  stages: ApprovalStageValidation[];
+}
+
+export interface ApprovalValidation {
+  schemaVersion: 1;
+  mode: ApprovalConfig['mode'];
+  present: boolean;
+  valid: boolean;
+  stages: ApprovalStageValidation[];
+  domain?: string;
+  domains?: DomainApprovalValidation[];
+  release?: ApprovalStageValidation;
+  diagnostics: Diagnostic[];
+}
+
+const integrationApprovalDetails: Readonly<Record<string, string>> = {
+  APPROVAL_CANDIDATE_MISSING: 'integration-candidate-snapshot-missing',
+  APPROVAL_MISSING: 'integration-release-approval-missing',
+  APPROVAL_STALE: 'integration-release-approval-stale',
+  RELEASE_GATE_EVIDENCE_MISSING: 'integration-candidate-gate-missing',
+  RELEASE_GATE_EVIDENCE_STALE: 'integration-candidate-context-mismatch',
+  RELEASE_GATE_CANDIDATE_MISMATCH: 'integration-candidate-context-mismatch',
+};
+
+export function classifyIntegrationApprovalDiagnostic(
+  diagnostic: Diagnostic,
+  stage: ApprovalStage = 'release',
+  domain?: string,
+): Diagnostic {
+  if (diagnostic.detail !== undefined || stage !== 'release' || domain !== undefined) {
+    return preserveEvidenceDiagnostics([diagnostic])[0]!;
+  }
+  const detail = integrationApprovalDetails[diagnostic.code];
+  return detail ? { ...preserveEvidenceDiagnostics([diagnostic])[0]!, detail } : preserveEvidenceDiagnostics([diagnostic])[0]!;
+}
+
+function approvalDiagnosticsForContext(
+  diagnostics: Diagnostic[],
+  stage: ApprovalStage,
+  domain: string | undefined,
+  context: CandidateEvidenceContext | IntegrationEvidenceContext | undefined,
+): Diagnostic[] {
+  if (!context || !('integrationId' in context)) return diagnostics;
+  return diagnostics.map((diagnostic) => ({
+    ...classifyIntegrationApprovalDiagnostic(diagnostic, stage, domain),
+    sourceStage: stage,
+    ...(domain ? { domain } : {}),
+  }));
+}
+
+export function approvalPath(stage: ApprovalStage, domain?: string): string {
+  return domain ? `.musubix/evidence/approvals/domains/${domain}/${stage}.json` : `.musubix/evidence/approvals/${stage}.json`;
+}
+
+const featureRequirementsPattern = /^\.musubix\/features\/([^/]+)\/requirements\.md$/;
+const featureDesignPattern = /^\.musubix\/features\/([^/]+)\/design\.md$/;
+
+export function releaseCandidateChangeId(
+  requestedChangeId: string | undefined,
+  activeChange: { changeId: string } | null,
+): string | undefined {
+  return requestedChangeId ?? activeChange?.changeId;
+}
+
+export async function approvalManifest(
+  root: string,
+  stage: ApprovalStage,
+  domain?: ResolvedDomain,
+  releaseChangeId?: string,
+  evidenceContext?: CandidateEvidenceContext | IntegrationEvidenceContext,
+  validationContext?: ChangeContextSelection | null,
+): Promise<ApprovalManifest> {
+  if (stage === 'release' && domain) {
+    throw new Error('APPROVAL_DOMAIN_MISMATCH: release approval is repository-wide.');
+  }
+  let projection: unknown = null;
+  const binding = evidenceContext
+    ? 'integrationId' in evidenceContext
+      ? integrationEvidenceBinding(evidenceContext)
+      : candidateEvidenceBinding(evidenceContext, evidenceContext.candidateCommit)
+    : undefined;
+  const explicitChange = evidenceContext
+    ? 'integrationId' in evidenceContext
+      ? integrationApprovalContext(evidenceContext)
+      : { changeId: evidenceContext.changeId, generation: evidenceContext.generation }
+    : null;
+  const selectedChange = explicitChange
+    ?? (validationContext === undefined
+      ? await activeChangeContext(root)
+      : validationContext);
+  const activeChange = selectedChange && selectedChange.generation !== null
+    ? { changeId: selectedChange.changeId, generation: selectedChange.generation }
+    : null;
+  if (stage !== 'release') {
+    const config = await loadApprovalProjectionConfig(root);
+    const projectedConfig = materializeExecutionPolicy(config);
+    projection = stage === 'requirements'
+      ? { schemaVersion: config.schemaVersion, approval: config.approval }
+      : Object.fromEntries([
+        'schemaVersion',
+        'commands',
+        'requiredChecks',
+        'thresholds',
+        'architecture',
+        'codeGraph',
+        'formal',
+        'mutation',
+        'tdd',
+        'workflow',
+        'attestation',
+      ].map((key) => [key, projectedConfig[key]]));
+  }
+  if (domain && stage !== 'release') {
+    const artifacts = await snapshotNormativeArtifacts(
+      root,
+      await resolveNormativeArtifacts(root, stage, domain.features),
+    );
+    const identity = {
+      schemaVersion: 1 as const,
+      stage,
+      domain: domain.name,
+      ...(activeChange ? {
+        changeId: activeChange.changeId,
+        generation: activeChange.generation,
+      } : {}),
+      ...(binding ? { binding } : {}),
+      artifacts,
+      projection,
+      exclusions: [],
+    };
+    return {
+      ...identity,
+      features: domain.features,
+      artifactSha256: sha256(canonicalBytes(identity)),
+    };
+  }
+  if (stage === 'release') {
+    const content = await buildReleaseCandidateContent(
+      root,
+      releaseCandidateChangeId(releaseChangeId, activeChange),
+    );
+    const hasChangeEvidence = await exists(within(root, '.musubix/evidence/changes.json'));
+    if (hasChangeEvidence && (!activeChange || activeChange.changeId !== content.changeId)) {
+      throw new Error('CHANGE_GENERATION_INCOMPLETE: release approval requires the matching active CHANGE generation.');
+    }
+    const candidateGate = activeChange
+      ? await requireCandidateGateSet(root, content.changeId, activeChange.generation, content.commit)
+      : null;
+    const identity = {
+      schemaVersion: 1 as const,
+      stage,
+      changeId: content.changeId,
+      ...(activeChange?.changeId === content.changeId
+        ? { generation: activeChange.generation }
+        : {}),
+      ...(binding ? { binding } : {}),
+      artifacts: content.artifacts,
+      projection: candidateGate,
+      exclusions: releaseExclusionIdentity(content.exclusions),
+    };
+    return {
+      ...identity,
+      exclusions: content.exclusions,
+      artifactSha256: sha256(canonicalBytes(identity)),
+    };
+  }
+  const artifacts = await snapshotNormativeArtifacts(
+    root,
+    await resolveNormativeArtifacts(root, stage),
+  );
+  const identity = {
+    schemaVersion: 1 as const,
+    stage,
+    ...(activeChange ? {
+      changeId: activeChange.changeId,
+      generation: activeChange.generation,
+    } : {}),
+    ...(binding ? { binding } : {}),
+    artifacts,
+    projection,
+    exclusions: [],
+  };
+  return { ...identity, artifactSha256: sha256(canonicalBytes(identity)) };
+}
+
+export function formatApprovalManifestText(manifest: ApprovalManifest): string {
+  const lines = [
+    `${manifest.stage} artifact manifest: ${manifest.artifactSha256}`,
+    ...Object.entries(manifest.artifacts).map(([path, sha256]) => `INCLUDED ${path} ${sha256}`),
+    ...(manifest.exclusions ?? []).map((entry) =>
+      `EXCLUDED ${entry.path} ${entry.sha256} ${entry.reason}`),
+  ];
+  return lines.join('\n');
+}
+
+export async function loadApproval(root: string, stage: ApprovalStage, domain?: string): Promise<ApprovalEvidence | null> {
+  const path = approvalPath(stage, domain);
+  if (!await exists(within(root, path))) return null;
+  const value = JSON.parse(await readText(root, path)) as Partial<ApprovalEvidence>;
+  if (value.schemaVersion !== 1 || value.stage !== stage
+    || typeof value.approver !== 'string' || !value.approver.trim()
+    || typeof value.approvedAt !== 'string' || !Number.isFinite(Date.parse(value.approvedAt))
+    || typeof value.artifactSha256 !== 'string' || !/^[a-f0-9]{64}$/.test(value.artifactSha256)
+    || !value.artifacts || typeof value.artifacts !== 'object' || Array.isArray(value.artifacts)
+    || Object.entries(value.artifacts).some(([path, sha256]) => !path || path.startsWith('/')
+      || path.includes('\0') || typeof sha256 !== 'string' || !/^[a-f0-9]{64}$/.test(sha256))
+    || (value.exclusions !== undefined && (!Array.isArray(value.exclusions)
+      || value.exclusions.some((entry) => !entry || typeof entry !== 'object'
+        || typeof entry.path !== 'string' || !entry.path || entry.path.startsWith('/')
+        || entry.path.includes('\0') || typeof entry.reason !== 'string' || !entry.reason
+        || typeof entry.sha256 !== 'string' || !/^[a-f0-9]{64}$/.test(entry.sha256))))
+    || (stage === 'release' && (typeof value.changeId !== 'string' || !/^CHANGE-\d+$/.test(value.changeId)))
+    || (value.changeId !== undefined && (!/^CHANGE-\d+$/.test(value.changeId)
+      || !Number.isInteger(value.generation) || Number(value.generation) < 1))
+    || (value.changeId === undefined && value.generation !== undefined)
+    || (domain !== undefined && (value.domain !== domain || !Array.isArray(value.features) || value.features.some((f) => typeof f !== 'string')))) {
+    throw new Error(`Invalid ${stage} approval evidence.`);
+  }
+  return value as ApprovalEvidence;
+}
+
+export function classifyReleaseApprovalDiagnostic(code: string): boolean {
+  return [
+    'APPROVAL_CANDIDATE_MISSING',
+    'APPROVAL_CANDIDATE_UNAVAILABLE',
+    'CHANGE_GENERATION_INCOMPLETE',
+    'RELEASE_GATE_EVIDENCE_MISSING',
+    'RELEASE_GATE_EVIDENCE_STALE',
+    'RELEASE_GATE_CANDIDATE_MISMATCH',
+    'RELEASE_CANDIDATE_TREE_MISMATCH',
+  ].includes(code);
+}
+
+/** @id CODE-M5-APPROVAL-GATE-DIAGNOSTIC-001
+ * @implements REQ-M5-RELEASE-002
+ * @design DES-M5-019
+ */
+export async function validateApprovalStage(
+  root: string,
+  stage: ApprovalStage,
+  config: ApprovalConfig,
+  domain?: ResolvedDomain,
+  evidenceContext?: CandidateEvidenceContext | IntegrationEvidenceContext,
+  validationContext?: ChangeContextSelection | null,
+): Promise<ApprovalStageValidation> {
+  const contextualize = (diagnostics: Diagnostic[]): Diagnostic[] =>
+    approvalDiagnosticsForContext(diagnostics, stage, domain?.name, evidenceContext);
+  const path = approvalPath(stage, domain?.name);
+  const present = await exists(within(root, path));
+  let evidence: ApprovalEvidence | null;
+  try {
+    evidence = await loadApproval(root, stage, domain?.name);
+  } catch (cause) {
+    const required = config.mode === 'required';
+    const diagnostics = [error(
+      'APPROVAL_SCHEMA',
+      cause instanceof Error ? cause.message : String(cause),
+      path,
+    )];
+    try {
+      const current = await approvalManifest(
+        root, stage, domain, undefined, evidenceContext, validationContext,
+      );
+      return { stage, ...(domain ? { domain: domain.name } : {}), required, present, status: 'stale', evidence: null, currentArtifactSha256: current.artifactSha256, diagnostics: contextualize(diagnostics) };
+    } catch (manifestCause) {
+      const message = manifestCause instanceof Error ? manifestCause.message : String(manifestCause);
+      const code = message.split(':', 1)[0]!;
+      const releaseDiagnostic = stage === 'release' && classifyReleaseApprovalDiagnostic(code);
+      if (!releaseDiagnostic) {
+        throw manifestCause;
+      }
+
+      diagnostics.push(error(code, message, path));
+      return {
+        stage,
+        ...(domain ? { domain: domain.name } : {}),
+        required,
+        present,
+        status: 'stale',
+        evidence: null,
+        currentArtifactSha256: sha256(canonicalBytes({
+          schemaVersion: 1,
+          stage,
+          diagnostic: code,
+        })),
+        diagnostics: contextualize(diagnostics),
+      };
+    }
+  }
+  const required = config.mode === 'required';
+  let current: ApprovalManifest;
+  try {
+    current = await approvalManifest(
+      root,
+      stage,
+      domain,
+      stage === 'release' ? evidence?.changeId : undefined,
+      evidenceContext,
+      validationContext,
+    );
+  } catch (cause) {
+    const message = cause instanceof Error ? cause.message : String(cause);
+    const code = message.split(':', 1)[0]!;
+    const releaseDiagnostic = stage === 'release' && classifyReleaseApprovalDiagnostic(code);
+    if (!releaseDiagnostic) throw cause;
+    const diagnostics = [error(code, message, path)];
+    const diagnosticSha256 = sha256(canonicalBytes({
+      schemaVersion: 1,
+      stage,
+      diagnostic: code,
+    }));
+    return {
+      stage,
+      ...(domain ? { domain: domain.name } : {}),
+      required,
+      present,
+      status: evidence ? 'stale' : 'missing',
+      evidence,
+      currentArtifactSha256: diagnosticSha256,
+      diagnostics: contextualize(diagnostics),
+    };
+  }
+  if (!evidence) {
+    const diagnostics = required
+      ? [error('APPROVAL_MISSING', `Current ${stage} approval is required.`, path)]
+      : [];
+    return { stage, ...(domain ? { domain: domain.name } : {}), required, present: false, status: 'missing', evidence: null, currentArtifactSha256: current.artifactSha256, diagnostics: contextualize(diagnostics) };
+  }
+  const stale = evidence.artifactSha256 !== current.artifactSha256
+    || JSON.stringify(evidence.artifacts) !== JSON.stringify(current.artifacts)
+    || JSON.stringify(releaseExclusionIdentity(evidence.exclusions ?? []))
+      !== JSON.stringify(releaseExclusionIdentity(current.exclusions ?? []));
+  const diagnostics = stale
+    ? [error('APPROVAL_STALE', `${stage} approval does not match the current artifact manifest.`, path)]
+    : [];
+  return {
+    stage,
+    ...(domain ? { domain: domain.name } : {}),
+    required,
+    present: true,
+    status: stale ? 'stale' : 'approved',
+    evidence,
+    currentArtifactSha256: current.artifactSha256,
+    diagnostics: contextualize(diagnostics),
+  };
+}
+
+/**
+ * Read the current repository-wide release approval without acquiring a
+ * mutation lease. The normal approval projection and candidate-gate paths are
+ * deliberately reused so stale evidence cannot be mistaken for authorization.
+ */
+export async function readReleaseApprovalDigest(
+  root: string,
+  candidateCommit: string,
+): Promise<string> {
+  if (!/^[a-f0-9]{40,64}$/.test(candidateCommit)) {
+    throw new Error('RELEASE_APPROVAL_CANDIDATE_MISMATCH: candidateCommit must be 40 to 64 lowercase hexadecimal characters.');
+  }
+  const config = await loadApprovalProjectionConfig(root);
+  const validation = await validateApprovalStage(root, 'release', config.approval);
+  if (validation.status !== 'approved' || !validation.evidence) {
+    const diagnostic = validation.diagnostics[0];
+    throw new Error(`RELEASE_APPROVAL_STALE: ${diagnostic?.message ?? 'current release approval is not approved.'}`);
+  }
+  const projection = validation.evidence.projection;
+  if (!projection || typeof projection !== 'object' || Array.isArray(projection)
+    || (projection as Record<string, unknown>).candidateCommit !== candidateCommit) {
+    throw new Error('RELEASE_APPROVAL_CANDIDATE_MISMATCH: release approval is bound to another candidate.');
+  }
+  return validation.evidence.artifactSha256;
+}
+
+export async function validateApprovals(
+  root: string,
+  config: ApprovalConfig,
+  evidenceContext?: CandidateEvidenceContext | IntegrationEvidenceContext,
+  validationContext?: ChangeContextSelection | null,
+): Promise<ApprovalValidation> {
+  const selectedContext = evidenceContext
+    ? undefined
+    : validationContext === undefined
+      ? await resolveValidationChangeContext(root)
+      : validationContext;
+  if (!domainsConfigured(config)) {
+    const stages = await Promise.all(approvalStages.map((stage) =>
+      validateApprovalStage(root, stage, config, undefined, evidenceContext, selectedContext)));
+    const diagnostics = stages.flatMap((stage) => stage.diagnostics);
+    return {
+      schemaVersion: 1,
+      mode: config.mode,
+      present: stages.some((stage) => stage.present),
+      valid: diagnostics.length === 0,
+      stages,
+      diagnostics,
+    };
+  }
+  const resolved = await resolveDomains(root, config);
+  const domains = await Promise.all(resolved.map(async (domain): Promise<DomainApprovalValidation> => ({
+    name: domain.name,
+    stages: await Promise.all((['requirements', 'design'] as const).map((stage) =>
+      validateApprovalStage(root, stage, config, domain, evidenceContext, selectedContext))),
+  })));
+  const release = await validateApprovalStage(
+    root, 'release', config, undefined, evidenceContext, selectedContext,
+  );
+  const diagnostics = [...domains.flatMap((d) => d.stages.flatMap((s) => s.diagnostics)), ...release.diagnostics];
+  return {
+    schemaVersion: 1,
+    mode: config.mode,
+    present: domains.some((d) => d.stages.some((s) => s.present)) || release.present,
+    valid: diagnostics.length === 0,
+    stages: [],
+    domains,
+    release,
+    diagnostics,
+  };
+}
+
+export async function validateApprovalsForDomain(
+  root: string,
+  config: ApprovalConfig,
+  domainName: string,
+  evidenceContext?: CandidateEvidenceContext | IntegrationEvidenceContext,
+  validationContext?: ChangeContextSelection | null,
+): Promise<ApprovalValidation> {
+  const selectedContext = evidenceContext
+    ? undefined
+    : validationContext === undefined
+      ? await resolveValidationChangeContext(root)
+      : validationContext;
+  const resolved = await resolveDomains(root, config);
+  const domain = resolved.find((d) => d.name === domainName);
+  if (!domain) {
+    throw new Error(`Unknown approval domain "${domainName}"; configured domains: ${config.domains.map((d) => d.name).join(', ')}.`);
+  }
+  const stages = await Promise.all((['requirements', 'design'] as const).map((stage) =>
+    validateApprovalStage(root, stage, config, domain, evidenceContext, selectedContext)));
+  const diagnostics = stages.flatMap((s) => s.diagnostics);
+  return {
+    schemaVersion: 1,
+    mode: config.mode,
+    present: stages.some((s) => s.present),
+    valid: diagnostics.length === 0,
+    stages: [],
+    domain: domainName,
+    domains: [{ name: domainName, stages }],
+    diagnostics,
+  };
+}
+
+export async function validateApprovalsForFeatureGate(
+  root: string,
+  config: ApprovalConfig,
+  domainName: string,
+  evidenceContext?: CandidateEvidenceContext | IntegrationEvidenceContext,
+  validationContext?: ChangeContextSelection | null,
+): Promise<ApprovalValidation> {
+  const selectedContext = evidenceContext
+    ? undefined
+    : validationContext === undefined
+      ? await resolveValidationChangeContext(root)
+      : validationContext;
+  const base = await validateApprovalsForDomain(
+    root, config, domainName, evidenceContext, selectedContext,
+  );
+  const release = await validateApprovalStage(
+    root, 'release', config, undefined, evidenceContext, selectedContext,
+  );
+  const diagnostics = [...base.diagnostics, ...release.diagnostics];
+  return { ...base, release, diagnostics, valid: diagnostics.length === 0 };
+}
+
+export function requireDomainOption(config: ApprovalConfig, stage: ApprovalStage, domain: string | undefined): void {
+  if (stage === 'release') {
+    if (domain !== undefined) throw new Error('The release stage is always repository-wide; --domain is not accepted for release.');
+    return;
+  }
+  if (domainsConfigured(config)) {
+    if (domain === undefined) {
+      throw new Error(`--domain is required for the ${stage} stage because approval.domains is configured; configured domains: ${config.domains.map((d) => d.name).join(', ')}.`);
+    }
+    if (!config.domains.some((d) => d.name === domain)) {
+      throw new Error(`Unknown approval domain "${domain}"; configured domains: ${config.domains.map((d) => d.name).join(', ')}.`);
+    }
+  } else if (domain !== undefined) {
+    throw new Error('--domain is not accepted because approval.domains is not configured.');
+  }
+}
+
+export function requireValidateDomainOption(config: ApprovalConfig, domain: string | undefined): void {
+  if (!domainsConfigured(config)) {
+    if (domain !== undefined) throw new Error('--domain is not accepted because approval.domains is not configured.');
+    return;
+  }
+  if (domain !== undefined && !config.domains.some((d) => d.name === domain)) {
+    throw new Error(`Unknown approval domain "${domain}"; configured domains: ${config.domains.map((d) => d.name).join(', ')}.`);
+  }
+}
+
+/** @id CODE-M5-APPROVAL-GUIDANCE-001
+ * @implements REQ-M5-APPROVAL-010
+ * @design DES-M5-002 DES-M5-006
+ */
+export async function requireApproval(root: string, stage: ApprovalStage, config: ApprovalConfig, domain?: ResolvedDomain): Promise<void> {
+  if (config.mode !== 'required') return;
+  const result = await validateApprovalStage(root, stage, config, domain);
+  if (result.status !== 'approved') {
+    const scope = domain ? ` for domain "${domain.name}"` : '';
+    throw new Error(`${stage} approval${scope} is ${result.status}; record explicit current approval before continuing. Run \`musubix5 approval validate\` for a full per-stage status.`);
+  }
+}
+
+export async function resolveOwningDomainOrThrow(root: string, config: ApprovalConfig, slug: string): Promise<ResolvedDomain | undefined> {
+  if (!domainsConfigured(config)) return undefined;
+  const resolved = await resolveDomains(root, config);
+  const name = domainOwning(resolved, slug);
+  if (!name) {
+    throw new Error(`Feature "${slug}" is not owned by any configured approval domain.`);
+  }
+  return resolved.find((d) => d.name === name);
+}
+
+export async function resolveNamedDomain(root: string, config: ApprovalConfig, domainName: string): Promise<ResolvedDomain> {
+  const resolved = await resolveDomains(root, config);
+  const domain = resolved.find((d) => d.name === domainName);
+  if (!domain) {
+    throw new Error(`Unknown approval domain "${domainName}"; configured domains: ${config.domains.map((d) => d.name).join(', ')}.`);
+  }
+  return domain;
+}
+
+export async function resolveDesignFileDomain(root: string, config: ApprovalConfig, file: string): Promise<ResolvedDomain | undefined> {
+  if (!domainsConfigured(config)) return undefined;
+  const slug = featureOwningDesignFile(file);
+  if (!slug) throw new Error(`${file} is outside every configured approval domain; design validate/c4 requires a path of the form .musubix/features/<slug>/design.md.`);
+  return resolveOwningDomainOrThrow(root, config, slug);
+}
+
+export async function resolveRequirementDomain(root: string, config: ApprovalConfig, requirementId: string): Promise<ResolvedDomain | undefined> {
+  if (!domainsConfigured(config)) return undefined;
+  const slug = await featureOwningRequirement(root, requirementId);
+  return resolveOwningDomainOrThrow(root, config, slug);
+}
+
+export async function validateStageArtifacts(root: string, stage: ApprovalStage, domain?: ResolvedDomain): Promise<void> {
+  const paths = await files(root);
+  const owns = (slug: string): boolean => !domain || domain.features.includes(slug);
+  const requirementPaths = paths.filter((path) => {
+    const slug = featureRequirementsPattern.exec(path)?.[1];
+    return slug !== undefined && owns(slug);
+  });
+  if (!requirementPaths.length) throw new Error('Approval requires at least one requirements artifact.');
+  const requirementResults = await Promise.all(requirementPaths.map(async (path) =>
+    validateRequirements(await readText(root, path), path)));
+  const requirementError = requirementResults.flatMap((result) => result.diagnostics)
+    .find((diagnostic) => diagnostic.severity === 'error');
+  if (requirementError) throw new Error(`Approval requires valid requirements: ${requirementError.message}`);
+  if (paths.includes('.musubix/constitution.md')) {
+    const constitutionError = validateConstitution(
+      await readText(root, '.musubix/constitution.md'),
+      '.musubix/constitution.md',
+    ).diagnostics.find((diagnostic) => diagnostic.severity === 'error');
+    if (constitutionError) throw new Error(`Approval requires a valid constitution: ${constitutionError.message}`);
+  }
+  if (stage === 'requirements') return;
+  const requirementIds = new Set(requirementResults.flatMap((result) => result.value.map((requirement) => requirement.id)));
+  const designPaths = paths.filter((path) => {
+    const slug = featureDesignPattern.exec(path)?.[1];
+    return slug !== undefined && owns(slug);
+  });
+  if (!designPaths.length) throw new Error('Design approval requires at least one design artifact.');
+  const designIds = new Set<string>();
+  for (const path of designPaths) {
+    for (const component of validateDesign(await readText(root, path), path).value) designIds.add(component.id);
+  }
+  const adrIds = new Set(paths.filter((path) => /^\.musubix\/decisions\/ADR-\d+\.md$/.test(path))
+    .map((path) => basename(path, '.md')));
+  for (const path of designPaths) {
+    const designError = validateDesign(await readText(root, path), path, { requirementIds, designIds, adrIds })
+      .diagnostics.find((diagnostic) => diagnostic.severity === 'error');
+    if (designError) throw new Error(`Approval requires valid design: ${designError.message}`);
+  }
+}

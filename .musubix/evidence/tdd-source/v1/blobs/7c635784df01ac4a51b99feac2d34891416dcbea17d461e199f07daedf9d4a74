@@ -1,0 +1,58 @@
+# ADR-0022: Bind test sockets through a fixed short directory alias
+
+Status: accepted
+
+## Context
+
+The parallel-runtime overlay rollback test must place a real Unix-domain socket
+inside a fixture repository so recursive copy fails on the unsupported entry.
+On macOS, deriving that socket pathname from `os.tmpdir()` can exceed the
+104-byte `sun_path` storage limit before the intended copy failure is exercised.
+CHANGE-0010 temporarily set the candidate workflow's `TMPDIR` to
+`${{ runner.temp }}`, but that masks the fixture defect and leaves default local
+macOS verification exposed.
+
+## Decision
+
+Create a unique mode-0700 directory under the fixed POSIX `/tmp` base, place a
+directory symlink named `target` inside it that points to the fixture
+repository's `.musubix` directory, and bind `z-overlay-copy-failure.sock`
+through that short alias. Reject candidate socket pathnames above 90 UTF-8 bytes
+before creating the symlink or calling `listen()`. Keep a caller-supplied base
+only as a test seam; normal verification always uses `/tmp`.
+
+The helper owns the server and all short-directory resources, handles
+asynchronous bind errors, and cleans up without traversing the directory
+symlink or deleting caller-owned non-socket entries. The candidate workflow
+does not set `TMPDIR`; the default runner environment remains observable.
+
+## Alternatives considered
+
+- Keep overriding `TMPDIR` in GitHub Actions. Rejected because it masks the
+  fixture defect, does not protect local macOS runs, and depends on runner path
+  length.
+- Shorten only the socket basename. Rejected because the user-specific macOS
+  temporary-directory prefix can still consume most of `sun_path`.
+- Move the socket outside the fixture repository. Rejected because recursive
+  overlay copy would no longer encounter the unsupported socket entry.
+- Create the entire fixture repository directly under `/tmp`. Rejected because
+  it changes every parallel-runtime fixture rather than isolating the
+  platform-specific pathname constraint to the socket scenario.
+- Change the process working directory and bind a relative socket pathname.
+  Rejected because `process.chdir()` is process-global and unsafe when Vitest
+  executes tests concurrently in the same worker process.
+
+## Consequences
+
+- POSIX verification depends on a writable conventional `/tmp` directory.
+- The socket's pathname is independent of `os.tmpdir()` and temporary-directory
+  environment variables.
+- A directory symlink is test infrastructure only; production runtime behavior
+  and package runtime support are unchanged.
+- Windows continues to skip the Unix-socket copy scenario while retaining
+  platform-independent workflow and source assertions.
+
+## Links
+
+Requirements: REQ-M5-CI-002
+Design: DES-M5-CI-002

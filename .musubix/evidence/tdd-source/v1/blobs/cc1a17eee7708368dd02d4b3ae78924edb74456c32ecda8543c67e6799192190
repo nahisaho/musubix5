@@ -1,0 +1,173 @@
+# ADR-0030: Use one state-conditional predicate for candidate cleanup
+
+Status: proposed
+
+## Context
+
+Candidate workspace cleanup and integration-attempt cleanup currently evaluate
+similar safety facts through different control flow. The candidate path rejects
+every unintegrated commit, while the integration safety helper permits
+unintegrated commits for `failed | abandoned | stale`. This contradicts the
+amended `REQ-M5-MULTI-CHANGE-007` and can permanently retain managed worktrees
+after failed or abandoned work even though their branches and commits can be
+preserved safely.
+
+Cleanup also crosses an audit boundary. A managed worktree is disposable, but
+candidate identity, CHANGE generation, branch, commits, registry chronology,
+and cleanup attribution are recoverable history. A crash or command retry must
+not turn that history into duplicate tombstones or cause a deleted registry
+entry to block unrelated candidate operations.
+
+## Decision
+
+Define one pure `evaluateCandidateCleanupPolicy` predicate in the analysis
+layer. Candidate CLI cleanup and integration cleanup normalize their inspection
+results to the same input:
+
+- lifecycle state;
+- dirty tracked/staged/deleted content;
+- untracked content;
+- live lease;
+- unresolved index conflict; and
+- whether the candidate commit is unintegrated relative to the applicable
+  default/base commit.
+
+The predicate returns either `allow-worktree-only` with a deterministic
+retention reason or one registered rejection code and detail. Callers may
+inspect Git and leases and may execute the approved effect, but may not add
+state-specific policy around the predicate.
+
+The existing public analysis exports and call shapes remain
+`cleanupCandidate(root, selector, options)` and
+`cleanupCandidateIntegration({ controlRoot, integrationId, deletedBy, ... })`.
+The existing exported `CandidateCleanupState`, `CleanupInspectionAdapter`,
+`assertCandidateCleanupSafe(state)`, and `inspectCandidateCleanupSafety(input)`
+remain compatibility surfaces and delegate to the shared predicate.
+`CandidateCleanupPolicyInput`, `CandidateCleanupDecision`, and
+`evaluateCandidateCleanupPolicy` are explicitly registered additive exports;
+replay, marker, and tombstone helpers remain internal rather than introducing
+replacement public cleanup names.
+
+`CandidateCleanupState.state` remains optional for source compatibility.
+`assertCandidateCleanupSafe` deterministically normalizes an omitted state to
+`active`, preserving the existing conservative result: universal hazards and
+unintegrated commits are rejected. Terminal unintegrated permission is
+available only when the caller supplies the actual `failed`, `abandoned`, or
+`stale` state. The compatibility contract test covers this omitted-state case.
+
+Universal hazards have first precedence. Dirty content, untracked content, a
+live lease, or unresolved conflicts produce `CANDIDATE_CLEANUP_UNSAFE` in every
+inspectable non-deleted state. A deleted candidate has no managed worktree to
+inspect, so selection returns `CANDIDATE_WORKSPACE_NOT_FOUND` before synthetic
+hazard fields can be supplied; this preserves the requirements' explicit
+deleted-state zero-write rule. With no universal hazard, the matrix is:
+
+| State | Reachable/integrated commit | Unintegrated commit |
+|---|---|---|
+| `prepared` | allow worktree-only cleanup | `CANDIDATE_CLEANUP_UNSAFE` |
+| `active` | allow worktree-only cleanup | `CANDIDATE_CLEANUP_UNSAFE` |
+| `ready` | allow worktree-only cleanup | `CANDIDATE_CLEANUP_UNSAFE` |
+| `integrating` | `CANDIDATE_INTEGRATION_CONFLICT` | `CANDIDATE_INTEGRATION_CONFLICT` |
+| `verified` | `CANDIDATE_INTEGRATION_CONFLICT` | `CANDIDATE_INTEGRATION_CONFLICT` |
+| `integrated` | allow worktree-only cleanup | `CANDIDATE_CLEANUP_UNSAFE` |
+| `failed` | allow worktree-only cleanup | allow worktree-only cleanup |
+| `abandoned` | allow worktree-only cleanup | allow worktree-only cleanup |
+| `stale` | allow worktree-only cleanup | allow worktree-only cleanup |
+| `deleted` | `CANDIDATE_WORKSPACE_NOT_FOUND` | `CANDIDATE_WORKSPACE_NOT_FOUND` |
+
+`integrating | verified` remain integration-owned and cannot be removed even if
+their commit has become reachable. `failed | abandoned | stale` may be cleaned
+with unintegrated commits only after explicit confirmation. The effect is
+terminal worktree-only cleanup: invoke normal `git worktree remove` for the
+selected managed worktree and never delete, force-delete, move, or rewrite its
+branch or commits.
+
+Append one authoritative `candidate-workspace-deleted` tombstone with additive
+`recordVersion: 2`, containing the logical candidate identity, CHANGE ID,
+generation, repository identity, creation epoch, identity/current base commits,
+candidate commit, branch, prior state, former relative worktree path, cleanup
+actor, deterministic cleanup reason, timestamp, and journal order. Existing
+tombstones remain readable; missing legacy fields are not fabricated. The
+cleanup reason is derived from the policy decision rather than free-form user
+text. Registry projection retains a deleted entry with these identity and
+reference bindings. Journal records and tombstones are never removed during
+cleanup.
+
+Deleted entries are excluded from live-owner uniqueness and implicit workspace
+resolution, but retained for audit list/show and future creation-epoch
+derivation. Exact candidate-ID show returns the saved tombstone. Resume,
+refresh, ready, and create in the same deleted generation return
+`CANDIDATE_WORKSPACE_NOT_FOUND` without writes. A deleted candidate from one
+CHANGE does not affect create, list, or show for another CHANGE.
+
+Cleanup uses an idempotency key derived by
+`candidateCleanupOperationKey(kind, ownerId, deletedBy)`, where mandatory
+`kind` is `candidate` or `integration`, followed by the logical owner ID and
+normalized actor. Including the kind gives the two cleanup surfaces disjoint
+idempotency namespaces even if malformed or future identifiers share bytes.
+After the allow decision and fencing revalidation, it writes
+an untracked Git-common-directory `candidate-cleanup-v1` marker containing the
+cleanup kind, operation key, and complete candidate/tombstone binding, removes
+the worktree, appends the tombstone, updates the registry projection, and
+removes the marker. The marker is excluded from tracked operational state,
+materialization, and fingerprints.
+
+If retry finds a valid marker and the worktree still exists, it re-inspects the
+worktree and resumes removal. If the worktree is absent, it completes only the
+missing tombstone and projection. A marker whose schema, cleanup kind,
+operation key, candidate binding, actor, path, or fencing lineage is
+inconsistent is retained and rejected as `CANDIDATE_INTEGRATION_CONFLICT`. If
+the authoritative journal already contains the exact operation, retry returns
+the saved cleanup result without Git calls, registry replacement, byte changes,
+or another tombstone. A deleted selector without that exact replay key is an
+ordinary operation on a missing workspace and returns
+`CANDIDATE_WORKSPACE_NOT_FOUND` with zero writes. This narrow replay exception
+reconciles crash recovery with the deleted-state contract.
+
+## Alternatives considered
+
+- **Always reject unintegrated commits in every state.** Rejected because it
+  strands managed worktrees for failed, abandoned, and stale candidates even
+  though retaining their branch and commit makes worktree removal recoverable.
+  It also preserves the current inconsistency between candidate and integration
+  cleanup instead of satisfying the amended approved requirement.
+- Keep separate candidate and integration predicates. Rejected because policy
+  drift caused this defect and separate state switches cannot prove identical
+  decisions for identical inputs.
+- Force-delete the branch together with terminal worktree cleanup. Rejected
+  because it destroys the recovery path and violates retained history and
+  tombstone reconstruction requirements.
+- Remove deleted entries from the registry. Rejected because registry rebuild,
+  creation-epoch monotonicity, show behavior, and compatibility checks need a
+  stable projection of retained journal history.
+- Treat every cleanup call on a deleted selector as success. Rejected because
+  it hides invalid operations and conflicts with the required
+  `CANDIDATE_WORKSPACE_NOT_FOUND` behavior; only an exact idempotency replay may
+  return the prior result.
+
+## Consequences
+
+- Candidate and integration cleanup share one reviewable policy and diagnostic
+  precedence.
+- Existing public cleanup export names and signatures remain compatible; the
+  shared predicate and its input/decision types are the only additive exported
+  policy surfaces, while existing safety helpers become adapters.
+- Failed, abandoned, and stale candidates no longer leak managed worktrees
+  solely because their retained branch contains unintegrated commits.
+- Cleanup storage grows append-only because registry tombstones, journal
+  records, branches, and commits are retained intentionally.
+- Callers must separate inspection, pure decision, tombstone persistence, and
+  filesystem effect so crash recovery can detect and replay a completed
+  operation without duplicate writes.
+- Cleanup adds one untracked recovery-marker protocol and must validate its
+  fencing lineage before completing a partially executed operation.
+- Registry readers must distinguish live resolution from audit projection:
+  deleted entries remain visible to exact-ID show and rebuild logic but never
+  satisfy a live workspace selector.
+- The ten-state public matrix and shared-input contract test become the
+  regression boundary for future lifecycle-state additions.
+
+## Links
+
+Requirements: REQ-M5-MULTI-CHANGE-007 REQ-M5-WAVE1-CLEANUP-001 REQ-M5-WAVE1-CLEANUP-002
+Design: DES-M5-CANDIDATE-CLEANUP-001 DES-M5-CANDIDATE-CLEANUP-002 DES-M5-CANDIDATE-CLEANUP-003 DES-M5-CANDIDATE-CLEANUP-004

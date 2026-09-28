@@ -1,0 +1,55 @@
+  /** @id TEST-M5-CHECKPOINT-SESSION-001
+   * @verifies REQ-M5-LIFECYCLE-006
+   * @design DES-M5-004
+   */
+  it('TEST-M5-CHECKPOINT-SESSION-001 serializes four same-CHANGE and two cross-CHANGE writers and fences supplied sessions',async () => {
+    mkdirSync(resolve('.musubix/cache'),{ recursive: true });
+    const root=mkdtempSync(resolve('.musubix/cache/checkpoint-session-'));
+    temporaryDirectories.push(root);
+    execFileSync('git',['init','--quiet',root]);
+    type Lease=import('../packages/analysis/src/journal.js').ChangeLease;
+    type Set={ changeLeases: Lease[]; projectionLease: Lease; appendSession?: Lease };
+    const journal=await import('../packages/analysis/src/journal.js');
+    const api=journal as unknown as {
+      withChangeProjectionLeases<T>(root: string,ids: string[],operation: (leases: Set) => Promise<T>): Promise<T>;
+      withOrderLease<T>(root: string,operation: (session: Lease) => Promise<T>): Promise<T>;
+      writeChangeProjection(root: string,leases: Set,value: unknown): Promise<void>;
+      renewLease(lease: Lease): Promise<void>;
+      appendJournalRecord(root: string,input: import('../packages/analysis/src/journal.js').JournalRecordInput,session: Lease): Promise<unknown>;
+    };
+    const projection=join(root,'.musubix/evidence/changes.json');
+    const started=Date.now();
+    await Promise.all(['CHANGE-0001','CHANGE-0001','CHANGE-0001','CHANGE-0001','CHANGE-0002','CHANGE-0003']
+      .map((id) => api.withChangeProjectionLeases(root,[id],async (leases) => {
+        let state: Record<string,number>={};
+        try { state=JSON.parse(readFileSync(projection,'utf8')); } catch { /* initially absent */ }
+        await new Promise((done) => setTimeout(done,50));
+        state[id]=(state[id]??0)+1;
+        await api.writeChangeProjection(root,leases,state);
+      })));
+    expect(JSON.parse(readFileSync(projection,'utf8'))).toEqual({
+      'CHANGE-0001': 4,'CHANGE-0002': 1,'CHANGE-0003': 1,
+    });
+    expect(Date.now()-started).toBeLessThan(10_000);
+    await api.withChangeProjectionLeases(root,['CHANGE-0002','CHANGE-0001'],async (leases) => {
+      expect(leases.changeLeases.map((lease) => lease.path.split('/').at(-1)))
+        .toEqual(['change-CHANGE-0001','change-CHANGE-0002']);
+      const oldOwner=JSON.parse(readFileSync(join(leases.projectionLease.path,'owner.json'),'utf8'));
+      await api.renewLease(leases.projectionLease);
+      expect(JSON.parse(readFileSync(join(leases.projectionLease.path,'owner.json'),'utf8')).expiresAt)
+        .toBeGreaterThanOrEqual(oldOwner.expiresAt);
+      await api.withOrderLease(root,async (session) => {
+        const input={ stream: 'normal' as const,changeId: 'CHANGE-0001',kind: 'fixture',idempotencyKey: 'one',payload: {} };
+        await api.appendJournalRecord(root,input,session);
+        const owner=JSON.parse(readFileSync(join(session.path,'owner.json'),'utf8'));
+        writeFileSync(join(session.path,'owner.json'),JSON.stringify({ ...owner,expiresAt: 0 }));
+        await expect(api.renewLease(session)).rejects.toThrow('LEASE_FENCED');
+        await expect(api.appendJournalRecord(root,{ ...input,idempotencyKey: 'two' },session))
+          .rejects.toThrow('LEASE_FENCED');
+        await expect(api.writeChangeProjection(root,{ ...leases,appendSession: session },{}))
+          .rejects.toThrow('LEASE_FENCED');
+      });
+    });
+    expect((await journal.loadJournalRecords(root)).length).toBe(1);
+    expect(JSON.parse(readFileSync(projection,'utf8'))['CHANGE-0001']).toBe(4);
+  },20_000);

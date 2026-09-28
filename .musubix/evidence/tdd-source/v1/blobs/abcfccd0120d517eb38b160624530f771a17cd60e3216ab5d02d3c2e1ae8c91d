@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "language": "auto",
+  "qualityProfile": "custom",
+  "commands": [
+    {
+      "name": "typecheck",
+      "command": "npm",
+      "args": [
+        "run",
+        "typecheck"
+      ],
+      "required": true,
+      "timeoutMs": 120000
+    },
+    {
+      "name": "build",
+      "command": "npm",
+      "args": [
+        "run",
+        "build"
+      ],
+      "required": true,
+      "timeoutMs": 120000
+    },
+    {
+      "name": "test",
+      "command": "npx",
+      "args": [
+        "vitest",
+        "run"
+      ],
+      "adapter": "vitest",
+      "required": true,
+      "timeoutMs": 180000
+    },
+    {
+      "name": "codegraph-tests",
+      "command": "node",
+      "args": [
+        "scripts/run-codegraph-tests.mjs",
+        "--report",
+        "{reportPath}"
+      ],
+      "tddArgs": [
+        "--test-id",
+        "{testId}"
+      ],
+      "tddReport": {
+        "format": "musubix-json",
+        "path": ".musubix/cache/test-results/{testId}.json"
+      },
+      "testReport": {
+        "format": "musubix-json",
+        "path": ".musubix/cache/test-results/codegraph.json"
+      },
+      "required": true,
+      "timeoutMs": 300000
+    },
+    {
+      "name": "compatibility",
+      "command": "npm",
+      "args": [
+        "run",
+        "test:compat"
+      ],
+      "required": true,
+      "timeoutMs": 180000
+    },
+    {
+      "name": "pack-check",
+      "command": "npm",
+      "args": [
+        "run",
+        "pack:check"
+      ],
+      "required": true,
+      "timeoutMs": 120000
+    },
+    {
+      "name": "pack-smoke",
+      "command": "npm",
+      "args": [
+        "run",
+        "pack:smoke"
+      ],
+      "required": true,
+      "timeoutMs": 180000
+    }
+  ],
+  "requiredChecks": [
+    "requirements",
+    "design",
+    "constitution",
+    "trace",
+    "graph",
+    "commands"
+  ],
+  "thresholds": {
+    "design": 1,
+    "implementation": 1,
+    "tests": 1
+  },
+  "architecture": {
+    "forbidCycles": true,
+    "rules": []
+  },
+  "codeGraph": {
+    "mode": "compatible"
+  },
+  "formal": {
+    "solver": "none",
+    "minModeledFraction": 0,
+    "timeoutMs": 12000
+  },
+  "mutation": {
+    "mode": "compatible"
+  },
+  "tdd": {
+    "redPreflightCommands": []
+  },
+  "approval": {
+    "mode": "required",
+    "domains": []
+  },
+  "workflow": {
+    "mode": "compatible",
+    "maxAgeSeconds": 3600,
+    "maxFutureSkewSeconds": 60,
+    "maxTranscriptBytes": 125000000
+  },
+  "attestation": {
+    "mode": "local",
+    "maxAgeSeconds": 3600,
+    "maxFutureSkewSeconds": 60,
+    "trustedPublicKeys": [],
+    "githubOidc": {
+      "mode": "off"
+    }
+  }
+}
