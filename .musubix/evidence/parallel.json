@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "nextOrder": 558,
+  "nextOrder": 562,
   "plans": [
     {
       "assignments": [
@@ -10970,6 +10970,43 @@
       "order": 545,
       "planId": "parallel-plan:d0a9440d0761ae3a60cf05c97ca65a04eaf934101a61307960372595db9434ff",
       "removed": [],
+      "retained": []
+    },
+    {
+      "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+      "order": 558,
+      "maintenance": true,
+      "removed": [],
+      "retained": []
+    },
+    {
+      "planId": "parallel-plan:290f19111d024ad369bd79ff14e4098c6001410693a97a4afa5959469c7e52a2",
+      "order": 559,
+      "maintenance": true,
+      "removed": [],
+      "retained": []
+    },
+    {
+      "planId": "parallel-plan:d0a9440d0761ae3a60cf05c97ca65a04eaf934101a61307960372595db9434ff",
+      "order": 560,
+      "maintenance": true,
+      "removed": [],
+      "retained": []
+    },
+    {
+      "planId": "parallel-plan:a61b4b3c8d05d3a6caa0da59d7f22845b88314337e5a5cf5d81a053a75144030",
+      "order": 561,
+      "maintenance": true,
+      "removed": [
+        "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-a61b4b3c8d05d3a6caa0/assignments/release-manifest-filter/attempt-1",
+        "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-a61b4b3c8d05d3a6caa0/assignments/parallel-baseline-cli/attempt-1",
+        "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-a61b4b3c8d05d3a6caa0/assignments/workflow-verify-current/attempt-1",
+        "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-a61b4b3c8d05d3a6caa0/assignments/codegraph-benchmark/attempt-1",
+        "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-a61b4b3c8d05d3a6caa0/assignments/release-manifest-filter/attempt-2",
+        "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-a61b4b3c8d05d3a6caa0/assignments/parallel-baseline-cli/attempt-2",
+        "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-a61b4b3c8d05d3a6caa0/assignments/workflow-verify-current/attempt-2",
+        "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-a61b4b3c8d05d3a6caa0/assignments/codegraph-benchmark/attempt-2"
+      ],
       "retained": []
     }
   ]
