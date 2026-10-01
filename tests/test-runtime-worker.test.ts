@@ -1,0 +1,563 @@
+import { execFileSync } from 'node:child_process';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { expect, inject, it, vi } from 'vitest';
+import { canonicalBytes, sha256 } from '../packages/analysis/src/canonical.js';
+import { acquireChangeLease, releaseChangeLease } from '../packages/analysis/src/journal.js';
+import { runProcess } from '../packages/analysis/src/process.js';
+
+type StableWallClockProviderV1 = Readonly<{
+  schemaVersion: 1;
+  kind: 'test-runtime-provider-v1';
+  executionRunId: string;
+  profileSha256: string;
+  bootstrapSha256: string;
+  inputsSha256: string;
+  anchorId: string;
+  anchor: Readonly<{
+    schemaVersion: 1;
+    kind: 'test-runtime-anchor-v1';
+    runId: string;
+    wallEpochMs: number;
+    monoEpochMs: number;
+    hrtimeNs: string;
+  }>;
+}>;
+
+declare module 'vitest' {
+  export interface ProvidedContext {
+    musubix5StableWallClockV1: StableWallClockProviderV1;
+  }
+}
+
+const root = fileURLToPath(new URL('..', import.meta.url));
+const markerKey = 'musubix5.testRuntime.stableWallClock.install.v1';
+const moduleProvider: unknown = inject('musubix5StableWallClockV1');
+const moduleDescriptor = Object.getOwnPropertyDescriptor(globalThis, Symbol.for(markerKey));
+const moduleNow = Date.now;
+const bootstrapUrl = new URL('../scripts/test-runtime/stable-wall-clock.mjs', import.meta.url);
+const profileSha256 = 'f9fbe94729722eaaea1f1e49bbaf6c48053ea1ed6a8498a2287dbfe4a20bf06e';
+
+function record(value: unknown): asserts value is Record<string, unknown> {
+  expect(value).not.toBeNull();
+  expect(typeof value).toBe('object');
+  expect(Array.isArray(value)).toBe(false);
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new Error('Expected a runtime data object');
+  }
+  expect([Object.prototype, null]).toContain(Object.getPrototypeOf(value));
+  for (const descriptor of Object.values(Object.getOwnPropertyDescriptors(value))) {
+    expect(descriptor).toHaveProperty('value');
+    expect(descriptor.get).toBeUndefined();
+    expect(descriptor.set).toBeUndefined();
+  }
+}
+
+function binding() {
+  expect(moduleProvider, 'stable runtime provider must exist before the test module').toBeDefined();
+  expect(moduleDescriptor, 'stable runtime install marker must exist before the test module').toBeDefined();
+  record(moduleProvider);
+  expect(Object.keys(moduleProvider).sort()).toEqual([
+    'anchor', 'anchorId', 'bootstrapSha256', 'executionRunId', 'inputsSha256',
+    'kind', 'profileSha256', 'schemaVersion',
+  ]);
+  expect(moduleProvider).toMatchObject({
+    schemaVersion: 1, kind: 'test-runtime-provider-v1', profileSha256,
+  });
+  for (const key of ['anchorId', 'bootstrapSha256', 'inputsSha256', 'profileSha256']) {
+    expect(moduleProvider[key]).toMatch(/^[a-f0-9]{64}$/);
+  }
+  expect(moduleProvider.executionRunId).toMatch(/\S/);
+  const anchor = moduleProvider.anchor;
+  record(anchor);
+  expect(Object.keys(anchor).sort()).toEqual([
+    'hrtimeNs', 'kind', 'monoEpochMs', 'runId', 'schemaVersion', 'wallEpochMs',
+  ]);
+  expect(anchor).toMatchObject({ schemaVersion: 1, kind: 'test-runtime-anchor-v1' });
+  expect(anchor.runId).toMatch(/\S/);
+  expect(Number.isSafeInteger(anchor.wallEpochMs)).toBe(true);
+  expect(Number.isFinite(anchor.monoEpochMs)).toBe(true);
+  expect(anchor.hrtimeNs).toMatch(/^(0|[1-9][0-9]*)$/);
+  expect(moduleProvider.anchorId).toBe(sha256(canonicalBytes(anchor)));
+  expect(Object.isFrozen(moduleProvider)).toBe(true);
+  expect(Object.isFrozen(anchor)).toBe(true);
+  expect(moduleDescriptor).toMatchObject({ enumerable: false, writable: false, configurable: false });
+  const marker: unknown = moduleDescriptor?.value;
+  record(marker);
+  expect(Object.keys(marker).sort()).toEqual([
+    'anchorId', 'bootstrapSha256', 'calibration', 'installedNow',
+    'kind', 'profileSha256', 'schemaVersion',
+  ]);
+  expect(marker).toMatchObject({
+    schemaVersion: 1, kind: 'test-runtime-install-v1',
+    anchorId: moduleProvider.anchorId, profileSha256,
+    bootstrapSha256: moduleProvider.bootstrapSha256,
+  });
+  expect(Object.isFrozen(marker)).toBe(true);
+  expect(typeof marker.installedNow).toBe('function');
+  expect(Object.isFrozen(marker.installedNow)).toBe(true);
+  expect(moduleNow).toBe(marker.installedNow);
+  expect(Date.now).toBe(marker.installedNow);
+  expect(Object.getOwnPropertyDescriptor(Date, 'now')).toMatchObject({
+    configurable: true, writable: true,
+  });
+  expect(Object.isFrozen(Date)).toBe(false);
+  expect(Object.isFrozen(Date.prototype)).toBe(false);
+  expect(sha256(readFileSync(bootstrapUrl))).toBe(moduleProvider.bootstrapSha256);
+  const calibration = marker.calibration;
+  record(calibration);
+  expect(Object.keys(calibration).sort()).toEqual([
+    'localMonoEpochMs', 'localWallEpochMs', 'samples', 'selectedIndex',
+  ]);
+  expect(Object.isFrozen(calibration)).toBe(true);
+  const samples = calibration.samples;
+  expect(Array.isArray(samples)).toBe(true);
+  if (!Array.isArray(samples)) throw new Error('Expected calibration samples');
+  expect(samples).toHaveLength(8);
+  expect(Object.isFrozen(samples)).toBe(true);
+  const widths = samples.map((sample: unknown) => {
+    record(sample);
+    expect(Object.keys(sample).sort()).toEqual(['hrtimeAfterNs', 'hrtimeBeforeNs', 'performanceMs']);
+    expect(Object.isFrozen(sample)).toBe(true);
+    expect(Number.isFinite(sample.performanceMs)).toBe(true);
+    expect(sample.hrtimeBeforeNs).toMatch(/^(0|[1-9][0-9]*)$/);
+    expect(sample.hrtimeAfterNs).toMatch(/^(0|[1-9][0-9]*)$/);
+    if (typeof sample.hrtimeBeforeNs !== 'string' || typeof sample.hrtimeAfterNs !== 'string') {
+      throw new Error('Expected decimal hrtime strings');
+    }
+    const width = BigInt(sample.hrtimeAfterNs) - BigInt(sample.hrtimeBeforeNs);
+    expect(width >= 0n).toBe(true);
+    return width;
+  });
+  const minimum = widths.reduce((a, b) => a < b ? a : b);
+  const selectedIndex = widths.indexOf(minimum);
+  expect(calibration.selectedIndex).toBe(selectedIndex);
+  expect(minimum <= 1_000_000n).toBe(true);
+  expect(calibration.localMonoEpochMs).toBe(samples[selectedIndex].performanceMs);
+  expect(Number.isFinite(calibration.localWallEpochMs)).toBe(true);
+  return { provider: moduleProvider, marker, calibration };
+}
+
+function callable(value: unknown): asserts value is (...args: unknown[]) => unknown {
+  expect(typeof value).toBe('function');
+  if (typeof value !== 'function') throw new Error('Expected an exported runtime function');
+}
+
+function namespace(value: unknown): asserts value is Record<string, unknown> {
+  expect(typeof value).toBe('object');
+  if (typeof value !== 'object' || value === null) throw new Error('Expected a module namespace');
+}
+
+async function clockModel() {
+  const api: unknown = await import(bootstrapUrl.href);
+  namespace(api);
+  const { calibrateClock, createClock } = api;
+  callable(calibrateClock);
+  callable(createClock);
+  return { calibrateClock, createClock };
+}
+
+const childObservation = `
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis, Symbol.for(${JSON.stringify(markerKey)}));
+  const marker = descriptor?.value;
+  console.log(JSON.stringify({
+    present: !!marker,
+    anchorId: marker?.anchorId,
+    profileSha256: marker?.profileSha256,
+    bootstrapSha256: marker?.bootstrapSha256,
+    nowMatches: marker?.installedNow === Date.now,
+    timeOrigin: performance.timeOrigin,
+    now: Date.now(),
+    argv: process.argv.slice(2),
+  }));
+`;
+
+async function nestedWorker(pool: string) {
+  const fixture = mkdtempSync(join(root, '.musubix/cache/worker-runtime-probe-'));
+  try {
+    const observationPath = join(fixture, 'observation.json');
+    const testPath = join(fixture, 'worker.test.ts');
+    const configPath = join(fixture, 'vitest.config.mjs');
+    const setup = join(root, 'scripts/test-runtime/vitest-setup.mjs');
+    const reporter = join(root, 'scripts/test-runtime/coordinator-reporter.mjs');
+    writeFileSync(testPath, `
+      import { inject, it, expect } from 'vitest';
+      import { writeFileSync } from 'node:fs';
+      const provider = inject('musubix5StableWallClockV1');
+      const descriptor = Object.getOwnPropertyDescriptor(globalThis, Symbol.for(${JSON.stringify(markerKey)}));
+      const marker = descriptor?.value;
+      const moduleObservation = {
+        provider, marker: marker && { ...marker, installedNow: undefined },
+        flags: descriptor && { enumerable: descriptor.enumerable, writable: descriptor.writable, configurable: descriptor.configurable },
+        frozen: Object.isFrozen(provider) && Object.isFrozen(provider?.anchor) && Object.isFrozen(marker),
+        installedNowMatches: marker?.installedNow === Date.now,
+      };
+      it('observes the runtime before module effects', () => {
+        expect(provider).toBeDefined();
+        expect(marker).toBeDefined();
+        expect(moduleObservation.installedNowMatches).toBe(true);
+        writeFileSync(${JSON.stringify(observationPath)}, JSON.stringify(moduleObservation));
+      });
+    `);
+    writeFileSync(configPath, `export default ${JSON.stringify({
+      test: {
+        include: [testPath],
+        globalSetup: [join(root, 'tests/global-setup.ts')],
+        setupFiles: [setup],
+        maxWorkers: 1,
+        minWorkers: 1,
+        pool,
+      },
+    })};\n`);
+    const result = await runProcess(process.execPath, [
+      join(root, 'node_modules/vitest/vitest.mjs'), 'run', '--config', configPath,
+      '--reporter=json', `--outputFile=${join(fixture, 'native.json')}`,
+      `--reporter=${reporter}`,
+    ], { cwd: root, timeoutMs: 30_000 });
+    expect(result.status, result.stderr).toBe('completed');
+    expect(result.exitCode, result.stderr).toBe(0);
+    expect(existsSync(observationPath)).toBe(true);
+    const observation: unknown = JSON.parse(readFileSync(observationPath, 'utf8'));
+    record(observation);
+    expect(observation).toMatchObject({
+      flags: { enumerable: false, writable: false, configurable: false },
+      frozen: true, installedNowMatches: true,
+    });
+    record(observation.provider);
+    record(observation.marker);
+    expect(observation.provider.executionRunId).not.toBe(
+      typeof moduleProvider === 'object' && moduleProvider !== null
+        ? Reflect.get(moduleProvider, 'executionRunId') : undefined,
+    );
+    return observation;
+  } finally {
+    rmSync(fixture, { recursive: true, force: true });
+  }
+}
+
+/** @id TEST-M5-TEST-CLOCK-MODULE-ORDER-001
+ * @verifies REQ-M5-LIFECYCLE-006
+ * @design DES-M5-015
+ */
+it('TEST-M5-TEST-CLOCK-MODULE-ORDER-001 installs immutable bindings before module evaluation and publishes only after build', async () => {
+  const { provider } = binding();
+  for (const pool of ['forks', 'threads', 'vmForks', 'vmThreads']) {
+    const nested = await nestedWorker(pool);
+    expect(nested.provider).toMatchObject({
+      anchorId: provider.anchorId, profileSha256,
+      bootstrapSha256: provider.bootstrapSha256,
+    });
+    expect(nested.marker).toMatchObject({
+      anchorId: provider.anchorId, profileSha256,
+      bootstrapSha256: provider.bootstrapSha256,
+    });
+  }
+  const coordinatorPath = '../packages/analysis/src/test-runtime.js';
+  for (const failure of [null, 'build', 'provider', 'clone', 'provide']) {
+    const events: string[] = [];
+    vi.resetModules();
+    vi.doMock('node:child_process', async () => ({
+      ...await vi.importActual<typeof import('node:child_process')>('node:child_process'),
+      execFileSync: () => {
+        events.push('build');
+        if (failure === 'build') throw new Error('build failure');
+        return Buffer.alloc(0);
+      },
+    }));
+    vi.doMock(coordinatorPath, async () => {
+      events.push('provider-import');
+      const actual: unknown = await vi.importActual(coordinatorPath);
+      namespace(actual);
+      return Object.fromEntries(Object.entries(actual).map(([name, value]) => [
+        name,
+        typeof value === 'function' ? () => {
+          events.push('provider');
+          if (failure === 'provider') throw new Error('provider failure');
+          return failure === 'clone' ? { ...provider, unexpected: () => 0 } : provider;
+        } : value,
+      ]));
+    });
+    try {
+      const setup: unknown = await import('./global-setup.js');
+      namespace(setup);
+      const execute = setup.default;
+      callable(execute);
+      const invoke = async () => {
+        await execute({
+          provide(key: string, supplied: unknown) {
+            events.push('provide');
+            expect(key).toBe('musubix5StableWallClockV1');
+            structuredClone(supplied);
+            expect(supplied).toEqual(provider);
+            if (failure === 'provide') throw new Error('provide failure');
+          },
+        });
+        events.push('workers');
+      };
+      if (failure === null) {
+        await invoke();
+        expect(events).toEqual(['build', 'provider-import', 'provider', 'provide', 'workers']);
+      } else {
+        await expect(invoke()).rejects.toThrow();
+        expect(events[0]).toBe('build');
+        expect(events).not.toContain('workers');
+        if (failure === 'build') expect(events).toEqual(['build']);
+        if (failure === 'provider') expect(events).not.toContain('provide');
+      }
+    } finally {
+      vi.doUnmock('node:child_process');
+      vi.doUnmock(coordinatorPath);
+      vi.resetModules();
+    }
+  }
+  const source = readFileSync(join(root, 'tests/global-setup.ts'), 'utf8');
+  expect(source).toContain('TestProject');
+  const buildIndex = source.indexOf('execFileSync(');
+  const provideIndex = source.indexOf('.provide(');
+  expect(buildIndex).toBeGreaterThanOrEqual(0);
+  expect(provideIndex).toBeGreaterThan(buildIndex);
+  const coordinator = readFileSync(join(root, 'packages/analysis/src/test-runtime.ts'), 'utf8');
+  expect(coordinator).not.toMatch(/(?:from\s*|import\s*\()\s*['"]vitest(?:\/node)?['"]/);
+  expect(coordinator).not.toContain('.provide(');
+  const reporter = readFileSync(join(root, 'scripts/test-runtime/coordinator-reporter.mjs'), 'utf8');
+  expect(reporter).not.toContain('.provide(');
+});
+
+/** @id TEST-M5-TEST-CLOCK-MONOTONIC-001
+ * @verifies REQ-M5-LIFECYCLE-006
+ * @design DES-M5-015
+ */
+it('TEST-M5-TEST-CLOCK-MONOTONIC-001 progresses and clamps without resampling wall time and uses exactly eight brackets', async () => {
+  binding();
+  const { calibrateClock, createClock } = await clockModel();
+  const anchor = {
+    schemaVersion: 1, kind: 'test-runtime-anchor-v1', runId: 'model-origin',
+    wallEpochMs: 1_800_000_000_000, monoEpochMs: 50, hrtimeNs: '1000000000',
+  };
+  const samples = Array.from({ length: 8 }, (_, index) => ({
+    hrtimeBeforeNs: String(1_030_000_000n + BigInt(index) * 3_000_000n),
+    performanceMs: 100 + index * 3,
+    hrtimeAfterNs: String(1_032_000_000n + BigInt(index) * 3_000_000n),
+  }));
+  samples[5] = { hrtimeBeforeNs: '1045000000', performanceMs: 115, hrtimeAfterNs: '1045500000' };
+  const calibration = calibrateClock(anchor, samples);
+  record(calibration);
+  expect(calibration.selectedIndex).toBe(5);
+  expect(calibration.localMonoEpochMs).toBe(115);
+  expect(calibration.localWallEpochMs).toBe(anchor.wallEpochMs + 45.25);
+  expect(calibration.samples).toEqual(samples);
+  const tied = samples.map((sample) => ({ ...sample }));
+  tied[6] = { hrtimeBeforeNs: '1048000000', performanceMs: 118, hrtimeAfterNs: '1048500000' };
+  expect(calibrateClock(anchor, tied)).toMatchObject({ selectedIndex: 5 });
+  for (const invalid of [
+    samples.slice(1),
+    [...samples, samples[0]],
+    samples.map((sample) => ({ ...sample, hrtimeAfterNs: String(BigInt(sample.hrtimeBeforeNs) + 1_000_001n) })),
+    samples.map((sample, index) => index === 0 ? { ...sample, performanceMs: NaN } : sample),
+    samples.map((sample, index) => index === 0 ? { ...sample, hrtimeAfterNs: '0' } : sample),
+    samples.map((sample, index) => index === 0 ? { ...sample, hrtimeBeforeNs: '01' } : sample),
+  ]) {
+    expect(() => calibrateClock(anchor, invalid)).toThrow(/TEST_RUNTIME_BOOTSTRAP_INVALID.*calibration/);
+  }
+  let monotonic = 100;
+  const rawWall = vi.fn(() => { throw new Error('Post-anchor wall read'); });
+  const clock = createClock({
+    wallEpochMs: anchor.wallEpochMs, monoEpochMs: 100,
+    performanceNow: () => monotonic, wallNow: rawWall,
+  });
+  callable(clock);
+  const observed = [100, 100.9, 101.1, 90, 130, 30_100].map((value) => {
+    monotonic = value;
+    return clock();
+  });
+  expect(observed).toEqual([
+    anchor.wallEpochMs, anchor.wallEpochMs, anchor.wallEpochMs + 1,
+    anchor.wallEpochMs + 1, anchor.wallEpochMs + 30, anchor.wallEpochMs + 30_000,
+  ]);
+  expect(observed.every(Number.isSafeInteger)).toBe(true);
+  expect(rawWall).not.toHaveBeenCalled();
+  for (const value of [NaN, Infinity, -Infinity]) {
+    monotonic = value;
+    expect(() => clock()).toThrow(/TEST_RUNTIME_BOOTSTRAP_INVALID/);
+  }
+  expect(() => createClock({
+    wallEpochMs: Number.MAX_SAFE_INTEGER + 1, monoEpochMs: 0, performanceNow: () => 0,
+  })).toThrow(/TEST_RUNTIME_BOOTSTRAP_INVALID/);
+});
+
+/** @id TEST-M5-TEST-CLOCK-CHILD-001
+ * @verifies REQ-M5-LIFECYCLE-006
+ * @design DES-M5-015
+ */
+it('TEST-M5-TEST-CLOCK-CHILD-001 inherits the same origin through Node npm and npx with spaced paths and delayed startup', async () => {
+  const { provider } = binding();
+  const fixture = mkdtempSync(join(tmpdir(), 'musubix5 runtime child '));
+  try {
+    const script = join(fixture, 'child observation.mjs');
+    writeFileSync(script, `await new Promise(resolve => setTimeout(resolve, 25));\n${childObservation}`);
+    writeFileSync(join(fixture, 'package.json'), JSON.stringify({
+      private: true, scripts: { observe: 'node \"child observation.mjs\"' },
+    }));
+    const launchers = [
+      { command: process.execPath, args: [script, 'space preserved'] },
+      { command: 'npm', args: ['run', '--silent', 'observe', '--', 'space preserved'] },
+      { command: 'npx', args: ['--no-install', '--', process.execPath, script, 'space preserved'] },
+    ];
+    for (const launcher of launchers) {
+      const before = Date.now();
+      const result = await runProcess(launcher.command, launcher.args, { cwd: fixture, timeoutMs: 20_000 });
+      expect(result.status, result.stderr).toBe('completed');
+      expect(result.exitCode, result.stderr).toBe(0);
+      const child: unknown = JSON.parse(result.stdout.trim());
+      record(child);
+      expect(child).toMatchObject({
+        present: true, nowMatches: true, anchorId: provider.anchorId,
+        profileSha256: provider.profileSha256, bootstrapSha256: provider.bootstrapSha256,
+        argv: ['space preserved'],
+      });
+      expect(child.timeOrigin).not.toBe(performance.timeOrigin);
+      expect(child.now).toBeGreaterThanOrEqual(before);
+      expect(child.now).toBeLessThanOrEqual(Date.now());
+    }
+    const nested = await nestedWorker('forks');
+    expect(nested.provider).toMatchObject({
+      anchorId: provider.anchorId, anchor: provider.anchor,
+      profileSha256, bootstrapSha256: provider.bootstrapSha256,
+    });
+  } finally {
+    rmSync(fixture, { recursive: true, force: true });
+  }
+});
+
+/** @id TEST-M5-TEST-CLOCK-MOCK-001
+ * @verifies REQ-M5-LIFECYCLE-006
+ * @design DES-M5-015
+ */
+it('TEST-M5-TEST-CLOCK-MOCK-001 preserves marker identity and local backward spies across duplicate imports', async () => {
+  const { marker } = binding();
+  const before = canonicalBytes(marker.calibration);
+  const spy = vi.spyOn(Date, 'now').mockReturnValue(17);
+  try {
+    await import(bootstrapUrl.href);
+    expect(Date.now()).toBe(17);
+    spy.mockReturnValue(-100);
+    await import(bootstrapUrl.href);
+    expect(Date.now()).toBe(-100);
+    expect(Object.getOwnPropertyDescriptor(globalThis, Symbol.for(markerKey))?.value).toBe(marker);
+    expect(canonicalBytes(marker.calibration)).toEqual(before);
+  } finally {
+    spy.mockRestore();
+  }
+  expect(Date.now).toBe(marker.installedNow);
+  const mismatched = await runProcess(process.execPath, ['--input-type=module', '-e', `
+    import { readFileSync } from 'node:fs';
+    import vm from 'node:vm';
+    const context = vm.createContext({
+      console, process, performance, Date: class extends Date {},
+    });
+    Object.defineProperty(context, Symbol.for(${JSON.stringify(markerKey)}), { value: Object.freeze({ schemaVersion: 1, kind: 'conflicting' }) });
+    const module = new vm.SourceTextModule(readFileSync(${JSON.stringify(fileURLToPath(bootstrapUrl))}, 'utf8'), { context, identifier: ${JSON.stringify(bootstrapUrl.href)} });
+    await module.link(async name => {
+      const namespace = await import(name);
+      return new vm.SyntheticModule(Object.keys(namespace), function () {
+        for (const key of Object.keys(namespace)) this.setExport(key, namespace[key]);
+      }, { context });
+    });
+    await module.evaluate();
+  `, '--experimental-vm-modules'], { cwd: root, timeoutMs: 10_000 });
+  expect(mismatched.exitCode).not.toBe(0);
+  expect(mismatched.stderr).toMatch(/TEST_RUNTIME_BOOTSTRAP_INVALID.*duplicate-conflict/);
+});
+
+/** @id TEST-M5-TEST-CLOCK-ISOLATION-001
+ * @verifies REQ-M5-LIFECYCLE-006
+ * @design DES-M5-015
+ */
+it('TEST-M5-TEST-CLOCK-ISOLATION-001 excludes the runtime from clean consumers and rejects partial inherited state', async () => {
+  binding();
+  const clean: NodeJS.ProcessEnv = {
+    PATH: process.env.PATH, HOME: process.env.HOME,
+    SystemRoot: process.env.SystemRoot, TEMP: process.env.TEMP, TMP: process.env.TMP,
+    NODE_OPTIONS: '--enable-source-maps',
+  };
+  const consumer = await runProcess(process.execPath, ['--input-type=module', '-e', childObservation], {
+    cwd: root, timeoutMs: 10_000, env: clean,
+  });
+  expect(consumer.exitCode, consumer.stderr).toBe(0);
+  expect(JSON.parse(consumer.stdout)).toMatchObject({ present: false, nowMatches: false });
+  expect(process.env.NODE_OPTIONS).toContain('--import=');
+  const partial = { ...process.env, NODE_OPTIONS: '--enable-source-maps' };
+  const partialResult = await runProcess(process.execPath, ['--input-type=module', '-e',
+    `await import(${JSON.stringify(bootstrapUrl.href)});`], { cwd: root, timeoutMs: 10_000, env: partial });
+  expect(partialResult.exitCode).not.toBe(0);
+  expect(partialResult.stderr).toMatch(/TEST_RUNTIME_BOOTSTRAP_INVALID.*worker-scope/);
+  const packed = await runProcess('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], {
+    cwd: root, timeoutMs: 30_000, env: clean,
+  });
+  expect(packed.exitCode, packed.stderr).toBe(0);
+  const packages: unknown = JSON.parse(packed.stdout);
+  expect(Array.isArray(packages)).toBe(true);
+  if (!Array.isArray(packages)) throw new Error('Expected npm pack inventory');
+  for (const entry of packages) {
+    record(entry);
+    expect(Array.isArray(entry.files)).toBe(true);
+    if (!Array.isArray(entry.files)) throw new Error('Expected packed file inventory');
+    for (const file of entry.files) {
+      record(file);
+      expect(file.path).not.toMatch(/(?:^|\/)(?:scripts\/test-runtime\/|tests\/global-setup)/);
+      expect(file.path).not.toMatch(/(?:stable-wall-clock|vitest-setup|coordinator-reporter)\.mjs$/);
+    }
+  }
+});
+
+/** @id TEST-M5-TEST-CLOCK-HOST-BOUNDARY-001
+ * @verifies REQ-M5-LIFECYCLE-006
+ * @design DES-M5-015
+ */
+it('TEST-M5-TEST-CLOCK-HOST-BOUNDARY-001 isolates raw wall jumps but preserves fixture ownerless mtime and explicit clock semantics', async () => {
+  binding();
+  const { createClock } = await clockModel();
+  const epoch = 1_800_000_000_000;
+  let rawWall = epoch;
+  let mono = 100;
+  const nativeDate = Date;
+  const nativeTimeout = setTimeout;
+  const clock = createClock({ wallEpochMs: epoch, monoEpochMs: mono, performanceNow: () => mono, wallNow: () => rawWall });
+  callable(clock);
+  for (const jump of [60_000, -60_000, 3_600_000, -3_600_000]) {
+    rawWall = epoch + jump;
+    mono += 10;
+    expect(clock()).toBe(epoch + mono - 100);
+  }
+  expect(Date).toBe(nativeDate);
+  expect(setTimeout).toBe(nativeTimeout);
+  const fixture = mkdtempSync(join(tmpdir(), 'musubix5-runtime-mtime-'));
+  execFileSync('git', ['init', '--quiet', fixture]);
+  const spy = vi.spyOn(Date, 'now').mockReturnValue(epoch);
+  let lease: Awaited<ReturnType<typeof acquireChangeLease>> | undefined;
+  try {
+    lease = await acquireChangeLease(fixture, 'CHANGE-0017');
+    const leasePath = lease.path;
+    await releaseChangeLease(lease);
+    lease = undefined;
+    mkdirSync(leasePath, { recursive: true });
+    const future = new Date(epoch + 60_000);
+    utimesSync(leasePath, future, future);
+    await expect(acquireChangeLease(fixture, 'CHANGE-0017')).rejects.toThrow(/BUSY/);
+    const past = new Date(epoch - 60_000);
+    utimesSync(leasePath, past, past);
+    lease = await acquireChangeLease(fixture, 'CHANGE-0017');
+    expect(lease.fencingToken).toBeGreaterThan(0);
+    expect(Date.now()).toBe(epoch);
+  } finally {
+    try {
+      if (lease) await releaseChangeLease(lease);
+    } finally {
+      spy.mockRestore();
+      rmSync(fixture, { recursive: true, force: true });
+    }
+  }
+  expect(Date.now).toBe(moduleNow);
+});

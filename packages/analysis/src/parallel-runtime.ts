@@ -31,6 +31,8 @@ import {
 } from './parallel.js';
 import { digest, exists, portable, readText, within, writeJson } from './files.js';
 import { runProcess, type ProcessResult } from './process.js';
+import { runTestRuntimeCommand, testRuntimeExecutionContext } from './test-runtime.js';
+import { adapterInvocation, mergeAdapterArgs, clearAdapterOutput } from './adapters.js';
 import { resolveChangeContext } from './change-generation.js';
 import { loadApproval as loadStageApproval } from './approval.js';
 import { commandCwd, loadConfig, type CommandConfig, type Config } from './config.js';
@@ -2168,6 +2170,23 @@ export async function verifyParallelIntegration(
     await runProvisioning(plan, integration.worktree, workspaceRoot, verification.provisioning);
     const env = await managedRunnerEnvironment(plan, integration.worktree, workspaceRoot);
     for (const command of binding!.config.commands.filter((entry) => entry.required)) {
+      if (binding!.config.testRuntime?.commandNames.some((name) => name === command.name)) {
+        const adapter = command.adapter ? adapterInvocation(command.adapter, command.name) : null;
+        const reportPath = command.testReport?.path ?? adapter?.reportPath;
+        const configuredArgs = command.args.map((arg) => reportPath ? arg.replaceAll('{reportPath}', reportPath) : arg);
+        const args = adapter ? mergeAdapterArgs(command.adapter!, configuredArgs, adapter.args) : configuredArgs;
+        if (adapter) await clearAdapterOutput(adapter, resolve(integration.worktree, adapter.reportPath));
+        const context = await testRuntimeExecutionContext(integration.worktree, 'integration', runProcess,
+          { changeId: plan.binding.changeId, generation: plan.binding.generation });
+        const result = await runTestRuntimeCommand(integration.worktree, command, args,
+          { cwd: commandCwd(integration.worktree, command), timeoutMs: command.timeoutMs, env },
+          runProcess, context, root);
+        verification.commands.push({ command: command.command, args, ...result });
+        if (result.status !== 'completed' || result.exitCode !== 0) {
+          domain('PARALLEL_INTEGRATION_VERIFICATION_FAILED', `${command.name} failed: ${result.stderr || result.stdout}`);
+        }
+        continue;
+      }
       await runChecked(
         command.command,
         command.args,

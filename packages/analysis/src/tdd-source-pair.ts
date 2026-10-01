@@ -6,11 +6,12 @@ import { promisify } from 'node:util';
 import { canonicalBytes, sha256 } from './canonical.js';
 import { mapWithConcurrency } from './files.js';
 import { runProcess } from './process.js';
-import type { CommandConfig } from './config.js';
+import { loadConfig, type CommandConfig } from './config.js';
+import { runTestRuntimeCommand, testRuntimeExecutionContext } from './test-runtime.js';
 import { adapterInvocation, mergeAdapterArgs, normalizeAdapterReport } from './adapters.js';
 import { parseMusubixTestReport } from './test-report.js';
 import { sourceAdmissionFailure, type spliceCanonicalTestBlock } from './tdd-source-review.js';
-import { captureSourceSnapshot, sourceOutputs, type CapturedSourceSnapshot, type SourceSnapshotEntry } from './tdd-source-snapshot.js';
+import { recheckSourceSnapshot, sourceOutputs, type CapturedSourceSnapshot, type SourceSnapshotEntry } from './tdd-source-snapshot.js';
 import { readSourceBlob, storeSourceBlob } from './tdd-source-storage.js';
 import type { SourcePair, SourceRun } from './tdd-source-types.js';
 import { sourcePath } from './tdd-source-ledger.js';
@@ -44,7 +45,7 @@ function output(path: string): boolean {
   return sourceOutputs.some((entry) => path.startsWith(entry.path.slice(0, -2)));
 }
 
-async function verifyInputs(root: string, expected: SourceSnapshotEntry[]): Promise<{
+async function verifyInputs(root: string, expected: SourceSnapshotEntry[], runtimeEnabled = false): Promise<{
   inputSha256: string; outputs: InventoryEntry[];
 }> {
   const all = await inventory(root);
@@ -58,8 +59,10 @@ async function verifyInputs(root: string, expected: SourceSnapshotEntry[]): Prom
     }
   }
   const paths = new Set(expected.map((entry) => entry.path));
-  if (all.some((entry) => !paths.has(entry.path) && !output(entry.path))) sourceAdmissionFailure('snapshot-unverifiable');
-  return { inputSha256: hash(expected), outputs: all.filter((entry) => output(entry.path) && !paths.has(entry.path)) };
+  const selectedOutput = (path: string) => output(path)
+    || runtimeEnabled && path.startsWith('.musubix/evidence/test-runtime/v1/blobs/');
+  if (all.some((entry) => !paths.has(entry.path) && !selectedOutput(entry.path))) sourceAdmissionFailure('snapshot-unverifiable');
+  return { inputSha256: hash(expected), outputs: all.filter((entry) => selectedOutput(entry.path) && !paths.has(entry.path)) };
 }
 
 async function materialize(root: string, blobs: string, entries: SourceSnapshotEntry[]): Promise<void> {
@@ -118,12 +121,12 @@ async function executeSourceVariants(
   const invocationId = randomUUID();
   const scratch = join(common, 'musubix5/scratch/tdd-source', hash({ node, snapshot: snapshot.binding }), invocationId);
   await mkdir(scratch, { recursive: true });
-  const runs: SourceRun[] = [];
-  const built: InventoryEntry[][] = [];
   const initialBinding = snapshot.binding.stateSha256;
+  const config = await loadConfig(sourceRoot);
+  const runtimeEnabled = config.testRuntime?.commandNames.some((name) => name === command.name) ?? false;
   try {
-    for (const variant of variants) {
-      const beforeSnapshot = await captureSourceSnapshot(sourceRoot, command, node.path);
+    const results = await Promise.all(variants.map(async (variant) => {
+      const beforeSnapshot = await recheckSourceSnapshot(sourceRoot, command, node.path, snapshot);
       if (beforeSnapshot.binding.stateSha256 !== initialBinding) sourceAdmissionFailure('input-drift');
       const root = join(scratch, variant.name);
       const sourceSha256 = await store(Buffer.from(variant.file));
@@ -136,8 +139,12 @@ async function executeSourceVariants(
       const env = Object.fromEntries(Object.entries(snapshot.manifest.environment)
         .map(([key, value]) => [key, value.replaceAll('$ROOT', root)]));
       const startedAt = new Date().toISOString();
-      const execution = await runProcess(resolve(root, '.musubix-runtime/bin', command.command), args,
-        { cwd: root, env, timeoutMs: command.timeoutMs });
+      const execution = runtimeEnabled
+        ? await runTestRuntimeCommand(root, command, args, { cwd: root, env, timeoutMs: command.timeoutMs },
+          runProcess, await testRuntimeExecutionContext(sourceRoot, 'tdd', runProcess), sourceRoot)
+        : await runProcess(resolve(root, '.musubix-runtime/bin', command.command), args,
+          { cwd: root, env, timeoutMs: command.timeoutMs });
+      if (execution.testRuntime) await store(canonicalBytes(execution.testRuntime));
       const completedAt = new Date().toISOString();
       if (execution.status !== 'completed' || execution.exitCode === null) {
         throw new SourceOperationError('TDD_SOURCE_IO_FAILED', 'execute', undefined, { stage: `${variant.name}-run` });
@@ -149,12 +156,11 @@ async function executeSourceVariants(
       if (report.tests.length !== 1 || report.tests[0]?.id !== node.id || report.tests[0].status !== 'passed') {
         sourceAdmissionFailure('selected-run-failed');
       }
-      const after = await verifyInputs(root, entries);
+      const after = await verifyInputs(root, entries, runtimeEnabled);
       const build = after.outputs.filter((entry) => entry.path.startsWith('dist/'));
       if (!build.length || !build.some((entry) => entry.path === 'dist/packages/cli/src/main.js')) {
         sourceAdmissionFailure('pair-mismatch');
       }
-      built.push(build);
       const reportSha256 = await store(canonicalBytes(report));
       const fingerprint = variant.fingerprint;
       const outputs = {
@@ -162,18 +168,22 @@ async function executeSourceVariants(
         afterBuildSha256: await store(canonicalBytes(build)),
         afterSha256: await store(canonicalBytes(after.outputs)),
       };
-      runs.push({
+      const run: SourceRun = {
         invocationId: randomUUID(), testId: node.id, command: command.name, startedAt, completedAt,
         exitCode: execution.exitCode, runnerSha256: snapshot.binding.runnerSha256,
         configSha256: snapshot.binding.configSha256, environmentSha256: snapshot.binding.environmentSha256,
         reportSha256, preSourceSha256: fingerprint, postSourceSha256: fingerprint,
         preProductionSha256: snapshot.binding.productionSha256, postProductionSha256: snapshot.binding.productionSha256,
         preInputManifestSha256: before.inputSha256, postInputManifestSha256: after.inputSha256, outputs,
-      });
-      const afterSnapshot = await captureSourceSnapshot(sourceRoot, command, node.path);
+      };
+      const afterSnapshot = await recheckSourceSnapshot(sourceRoot, command, node.path, snapshot);
       if (afterSnapshot.binding.stateSha256 !== initialBinding) sourceAdmissionFailure('input-drift');
-    }
-    return { runs, built };
+      return { run, build };
+    }));
+    return {
+      runs: results.map((result) => result.run),
+      built: results.map((result) => result.build),
+    };
   } finally {
     await rm(scratch, { recursive: true, force: true });
   }

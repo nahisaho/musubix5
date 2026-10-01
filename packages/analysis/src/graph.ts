@@ -131,9 +131,48 @@ interface GraphBuildOptions {
   onSourceExtraction?: CodeGraphIndexOptions['onSourceExtraction'];
 }
 
-const CODEGRAPH_ANALYZER_REVISION = 'm5-graph-001-phase-units-3';
+const CODEGRAPH_ANALYZER_REVISION = 'm5-graph-001-phase-units-4';
 const LOCKFILES = ['package-lock.json', 'npm-shrinkwrap.json', 'pnpm-lock.yaml', 'yarn.lock'] as const;
 const ANALYSIS_VERSION = `${CODEGRAPH_ANALYZER_REVISION}:typescript-${ts.version}`;
+
+/** @id CODE-M5-GRAPH-NESTED-ALIAS-001
+ * @implements REQ-M5-GRAPH-003 REQ-M5-COMPAT-013
+ * @design DES-M5-GRAPH-002 DES-M5-GRAPH-004
+ */
+function resolveMappedSource(specifier: string, containingFile: string, options: ts.CompilerOptions): ts.ResolvedModuleFull | undefined {
+  if (!options.paths || specifier.startsWith('.') || isAbsolute(specifier)) return undefined;
+  const base = options.baseUrl ?? options.pathsBasePath;
+  if (typeof base !== 'string') return undefined;
+  let selected: string | undefined;
+  let matched = '';
+  if (Object.hasOwn(options.paths, specifier)) selected = specifier;
+  else {
+    let longestPrefix = -1;
+    for (const pattern of Object.keys(options.paths)) {
+      const star = pattern.indexOf('*');
+      if (star < 0 || star <= longestPrefix || pattern.indexOf('*', star + 1) !== -1) continue;
+      const suffix = pattern.slice(star + 1);
+      if (specifier.length >= pattern.length - 1
+        && specifier.startsWith(pattern.slice(0, star)) && specifier.endsWith(suffix)) {
+        selected = pattern;
+        longestPrefix = star;
+        matched = specifier.slice(star, specifier.length - suffix.length);
+      }
+    }
+  }
+  if (selected === undefined) return undefined;
+  const sourceOptions = { ...options, moduleResolution: ts.ModuleResolutionKind.Node10 };
+  delete sourceOptions.paths;
+  delete sourceOptions.baseUrl;
+  // Explicit compiler aliases describe source files, not Node ESM runtime specifiers.
+  // Probe only their ordered targets; never retry package imports in a different mode.
+  for (const substitution of options.paths[selected] ?? []) {
+    const target = resolve(base, substitution.replace('*', matched));
+    const resolved = ts.resolveModuleName(target, containingFile, sourceOptions, ts.sys).resolvedModule;
+    if (resolved) return resolved;
+  }
+  return undefined;
+}
 
 export async function graphInputs(root: string): Promise<string[]> {
   return (await files(root)).filter((p) => isTraceSource(p) || /(?:^|\/)(?:tsconfig[^/]*\.json|package\.json|go\.mod|pubspec\.yaml)$/.test(p));
@@ -976,7 +1015,8 @@ async function fullIndexGraph(root: string, buildOptions: GraphBuildOptions = {}
       const mode = kind === 'require' ? ts.ModuleKind.CommonJS
         : kind === 'dynamic' || !ts.isStringLiteralLike(expression) ? ts.ModuleKind.ESNext
           : ts.getModeForUsageLocation(source!, expression, options);
-      const resolved = ts.resolveModuleName(specifier, source!.fileName, options, ts.sys, undefined, undefined, mode).resolvedModule;
+      const resolved = ts.resolveModuleName(specifier, source!.fileName, options, ts.sys, undefined, undefined, mode).resolvedModule
+        ?? resolveMappedSource(specifier, source!.fileName, options);
       const target = resolved ? portable(relative(root, resolved.resolvedFileName)) : '';
       const local = target && !target.startsWith('../') && !isAbsolute(target) && !target.includes('node_modules/');
       const external = !local;

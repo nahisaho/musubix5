@@ -5,6 +5,7 @@ import { error, type Diagnostic } from '../../domain/src/index.js';
 import { loadConfig, commandCwd } from './config.js';
 import { digest, evidenceInputs, exists, files, isArtifact, isSource, readText, safePath, snapshot, within, writeJson } from './files.js';
 import { runProcess, type Runner } from './process.js';
+import { runTestRuntimeCommand, testRuntimeExecutionContext, validateTestRuntimeOutcome } from './test-runtime.js';
 import { buildTrace, hasTraceSourceEntity, traceInputs, type TraceNode } from './trace.js';
 import { adapterInvocation, clearAdapterOutput, mergeAdapterArgs, normalizeAdapterReport, readAdapterOutput } from './adapters.js';
 import {
@@ -2458,10 +2459,14 @@ export async function runTddPhase(
     : [...configuredArgs, ...targetedArgs];
   const inputs = await captureTddInputs(workspace, [reportPath]);
   const authorityInputs = resolve(root) === resolve(workspace) ? inputs : await captureTddInputs(root);
-  const execution = await runner(command.command, args, {
+  const executionOptions = {
     cwd: commandCwd(workspace, command),
     timeoutMs: command.timeoutMs,
-  });
+  };
+  const execution = config.testRuntime?.commandNames.some((name) => name === command.name)
+    ? await runTestRuntimeCommand(workspace, command, args, executionOptions, runner,
+      await testRuntimeExecutionContext(workspace, 'tdd', runner, activeChange ?? null), root)
+    : await runner(command.command, args, executionOptions);
   const output = `${execution.stdout}\n${execution.stderr}`;
   const diagnostics: Diagnostic[] = [];
   let reportText: string | null = null;
@@ -2547,6 +2552,7 @@ export async function runTddPhase(
     }];
   }
   const result: TddPhaseEvidence = {
+    ...(execution.testRuntime ? { testRuntime: execution.testRuntime } : {}),
     phase,
     valid: !diagnostics.length,
     scoped: true,
@@ -2757,6 +2763,7 @@ export async function validateTddEvidence(
     }
   }
   const validlyVoidedCycles = new Set<TddCycle>();
+  let runtimeRepositoryId: string | undefined;
   const currencyChainIndex = buildTddChainIndex(evidence.chain);
   const voided: Array<{ testId: string; cycleId: string; void: { approver: string; reason: string; recordedAt: string } }> = [];
   for (const cycle of evidence.cycles) {
@@ -2942,6 +2949,26 @@ export async function validateTddEvidence(
     }
     if (cycle.refactor?.valid && (!cycle.refactor.scoped || !cycle.refactor.resultObserved || cycle.refactor.testStatus !== 'passed' || !cycle.refactor.reportSha256 || !cycle.refactor.sourceFingerprint || !cycle.refactor.executionId)) {
       diagnostics.push(error('TDD_LEGACY_OR_UNSCOPED_EVIDENCE', `${cycle.testId} Refactor lacks test-scoped execution provenance.`, cycle.testPath));
+    }
+    for (const phase of [cycle.red, cycle.green, cycle.refactor]) {
+      if (!phase?.testRuntime) continue;
+      try {
+        runtimeRepositoryId ??= await workspaceRepositoryIdentity(root);
+        await validateTestRuntimeOutcome(root, phase.testRuntime, {
+          repositoryId: runtimeRepositoryId, changeId: cycle.changeId ?? null,
+          generation: cycle.generation ?? null, role: 'tdd',
+        }, phase.commandSha256);
+      } catch (cause) {
+        diagnostics.push(error('TEST_RUNTIME_BOOTSTRAP_INVALID',
+          cause instanceof Error ? cause.message : String(cause), cycle.testPath));
+      }
+    }
+    if (cycle.red.testRuntime && cycle.green && !cycle.green.testRuntime
+      || cycle.green?.testRuntime && cycle.refactor && !cycle.refactor.testRuntime
+      || cycle.red.testRuntime && cycle.green?.testRuntime
+        && cycle.red.testRuntime.profileSha256 !== cycle.green.testRuntime.profileSha256) {
+      diagnostics.push(error('TEST_RUNTIME_BOOTSTRAP_INVALID',
+        `${cycle.testId}: phase-runtime-transition.`, cycle.testPath));
     }
   }
   for (const phase of ['red', 'green', 'refactor'] as const) {

@@ -1,6 +1,7 @@
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { performance } from 'node:perf_hooks';
 
 const testIds = [
   'TEST-M5-CONCURRENCY-LEASE-CONTRACT-001',
@@ -91,7 +92,6 @@ for (const testId of selected) {
   if (!filesByTestId.has(testId)) throw new Error(`Missing authoritative test file: ${testId}`);
 }
 const reportPath = resolve(reportArgument);
-await mkdir(dirname(reportPath), { recursive: true });
 const tests = [];
 let failed = false;
 const groups = targetTestId ? [[targetTestId]] : [
@@ -99,33 +99,66 @@ const groups = targetTestId ? [[targetTestId]] : [
   ...selected.filter((id) => id.startsWith('TEST-M5-GRAPH-')).map((id) => [id]),
 ];
 
-for (const group of groups) {
+const describedGroups = groups.map((group, ordinal) => ({
+  ordinal, testIds: group, testFiles: [...new Set(group.map((id) => filesByTestId.get(id)))],
+  command: process.execPath,
+  args: [
+    resolve('node_modules/vitest/vitest.mjs'), 'run',
+    ...new Set(group.map((id) => filesByTestId.get(id))),
+    '-t', group.map((id) => `${id}(?: |$)`).join('|'),
+    '--maxWorkers=1', '--reporter=json',
+    `--outputFile=${resolve(dirname(reportPath), `.vitest-${group[0]}.json`)}`,
+  ],
+}));
+if (process.argv.includes('--describe-groups')) {
+  console.log(JSON.stringify({ schemaVersion: 1, groups: describedGroups }));
+  process.exit(0);
+}
+const runtimeDispatchPath = option('--runtime-dispatch');
+const runtimeDispatch = runtimeDispatchPath
+  ? JSON.parse(await readFile(runtimeDispatchPath, 'utf8')) : null;
+if (runtimeDispatch && (runtimeDispatch.schemaVersion !== 1
+  || Object.keys(runtimeDispatch).sort().join(',') !== 'groups,schemaVersion'
+  || !Array.isArray(runtimeDispatch.groups) || runtimeDispatch.groups.length !== describedGroups.length)) {
+  throw new Error('TEST_RUNTIME_BOOTSTRAP_INVALID: augmentation-binding: group dispatch');
+}
+await mkdir(dirname(reportPath), { recursive: true });
+for (const { ordinal, testIds: group, args } of describedGroups) {
+  const supplied = runtimeDispatch?.groups[ordinal];
+  if (supplied && (Object.keys(supplied).sort().join(',') !== 'args,command,env,ordinal,resultPath'
+    || supplied.ordinal !== ordinal || supplied.command !== process.execPath
+    || !Array.isArray(supplied.args) || !supplied.args.every((arg) => typeof arg === 'string')
+    || !supplied.env || typeof supplied.env !== 'object' || Array.isArray(supplied.env)
+    || Object.values(supplied.env).some((value) => typeof value !== 'string')
+    || typeof supplied.resultPath !== 'string')) {
+    throw new Error('TEST_RUNTIME_BOOTSTRAP_INVALID: augmentation-binding: supplied group');
+  }
   const operationsPath = resolve(dirname(reportPath), `.operations-${group[0]}.json`);
   const vitestReportPath = resolve(dirname(reportPath), `.vitest-${group[0]}.json`);
   await mkdir(dirname(operationsPath), { recursive: true });
   await rm(operationsPath, { force: true });
   await rm(vitestReportPath, { force: true });
-  const result = spawnSync(process.execPath, [
-    resolve('node_modules/vitest/vitest.mjs'),
-    'run',
-    ...new Set(group.map((id) => filesByTestId.get(id))),
-    '-t',
-    group.map((id) => `${id}(?: |$)`).join('|'),
-    '--maxWorkers=1',
-    '--reporter=json',
-    `--outputFile=${vitestReportPath}`,
-  ], {
+  const started = performance.now();
+  const result = spawnSync(process.execPath, supplied?.args ?? args, {
     cwd: process.cwd(),
-    env: { ...process.env, MUSUBIX_OPERATION_REPORT: operationsPath },
+    env: { ...supplied?.env ?? process.env, MUSUBIX_OPERATION_REPORT: operationsPath },
     stdio: 'inherit',
   });
   let assertions = [];
+  let nativeReportBase64 = null;
   try {
-    const vitestReport = JSON.parse(await readFile(vitestReportPath, 'utf8'));
+    const bytes = await readFile(vitestReportPath);
+    nativeReportBase64 = bytes.toString('base64');
+    const vitestReport = JSON.parse(bytes.toString('utf8'));
     assertions = (vitestReport.testResults ?? []).flatMap((file) => file.assertionResults ?? []);
   } catch (cause) {
     if (cause?.code !== 'ENOENT') throw cause;
   }
+  if (supplied) await writeFile(supplied.resultPath, `${JSON.stringify({
+    status: result.error ? 'error' : result.signal ? 'timeout' : 'completed',
+    exitCode: result.status, durationMs: Math.max(0, Math.round(performance.now() - started)),
+    nativeReportBase64,
+  })}\n`, { flag: 'wx', mode: 0o600 });
   let operations;
   try {
     const value = JSON.parse(await readFile(operationsPath, 'utf8'));

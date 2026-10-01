@@ -540,6 +540,7 @@ export async function candidateGateFingerprintConfig(root: string): Promise<Reco
     language: _language,
     qualityProfile: _qualityProfile,
     approval,
+    testRuntime,
     ...executionConfig
   } = materialized;
   return {
@@ -547,6 +548,7 @@ export async function candidateGateFingerprintConfig(root: string): Promise<Reco
     approvalAutomation: approvalAutomationPolicy(raw.approvalAutomation),
     candidateGate: candidateGatePolicy(raw.candidateGate),
     executionPolicy: executionConfig,
+    ...(testRuntime === undefined ? {} : { testRuntime }),
   };
 }
 

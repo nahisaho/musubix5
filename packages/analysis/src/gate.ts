@@ -55,6 +55,7 @@ import {
 } from './approval.js';
 import { listCandidateSnapshotRecords } from './workspace-manager.js';
 import { requiredCommandDiagnostics } from './quality-policy.js';
+import { runTestRuntimeCommand, testRuntimeExecutionContext } from './test-runtime.js';
 
 export interface GateReport {
   schemaVersion: 1;
@@ -487,12 +488,18 @@ export async function runGate(root: string, options: {
     const args = command.adapter
       ? mergeAdapterArgs(command.adapter, configuredArgs, adapterArgs)
       : configuredArgs;
-    const result = await runner(command.command, args, { cwd: commandCwd(root, command), timeoutMs: command.timeoutMs });
+    const executionOptions = { cwd: commandCwd(root, command), timeoutMs: command.timeoutMs };
+    const result = config.testRuntime?.commandNames.some((name) => name === command.name)
+      ? await runTestRuntimeCommand(root, command, args, executionOptions, runner,
+        await testRuntimeExecutionContext(root, options.evidenceContext && 'integrationId' in options.evidenceContext
+          ? 'integration' : 'command', runner, validationContext ?? null))
+      : await runner(command.command, args, executionOptions);
     const commandCheck: Evidence = {
       name: `command:${command.name}`, required: command.required,
       status: result.status === 'missing' ? 'skipped' : result.status !== 'completed' || result.exitCode !== 0 ? 'fail' : 'pass',
       summary: `${command.command}: ${result.status}, exit ${result.exitCode ?? 'none'}.`,
       durationMs: result.durationMs, exitCode: result.exitCode, stdout: result.stdout, stderr: result.stderr,
+      ...(result.testRuntime ? { testRuntime: result.testRuntime } : {}),
     };
     commandChecks.push(commandCheck);
     if (reportPath && result.status === 'completed' && result.exitCode === 0) {

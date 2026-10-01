@@ -5,6 +5,8 @@ export * from './trace.js';
 export * from './graph.js';
 export * from './knowledge.js';
 export * from './canonical.js';
+export * from './generation10-recovery.js';
+export * from './generation11-recovery.js';
 export * from './journal.js';
 export * from './lifecycle.js';
 export * from './evidence-registry.js';

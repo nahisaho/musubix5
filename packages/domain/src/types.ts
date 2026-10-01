@@ -95,6 +95,7 @@ export interface Constitution {
 }
 
 export interface Evidence {
+  testRuntime?: unknown;
   name: string;
   status: CheckStatus;
   required: boolean;

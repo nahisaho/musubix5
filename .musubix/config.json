@@ -1,5 +1,35 @@
 {
   "schemaVersion": 1,
+  "testRuntime": {
+    "calibration": { "maxWidthMs": 1, "samples": 8 },
+    "commandNames": ["codegraph-tests", "compatibility", "test"],
+    "inputs": [
+      ".musubix/config.json",
+      "package-lock.json",
+      "package.json",
+      "packages/analysis/src/adapters.ts",
+      "packages/analysis/src/candidate-gate.ts",
+      "packages/analysis/src/canonical.ts",
+      "packages/analysis/src/config.ts",
+      "packages/analysis/src/gate.ts",
+      "packages/analysis/src/parallel-runtime.ts",
+      "packages/analysis/src/process.ts",
+      "packages/analysis/src/tdd-source-pair.ts",
+      "packages/analysis/src/tdd.ts",
+      "packages/analysis/src/test-runtime.ts",
+      "scripts/run-codegraph-tests.mjs",
+      "scripts/test-runtime/coordinator-reporter.mjs",
+      "scripts/test-runtime/stable-wall-clock.mjs",
+      "scripts/test-runtime/vitest-setup.mjs",
+      "tests/global-setup.ts",
+      "tsconfig.build.json",
+      "tsconfig.json",
+      "vitest.config.ts"
+    ],
+    "kind": "stable-test-wall-clock-v1",
+    "reporterMode": "append-after-native-v1",
+    "schemaVersion": 1
+  },
   "language": "auto",
   "qualityProfile": "custom",
   "commands": [

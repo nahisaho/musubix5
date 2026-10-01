@@ -4,6 +4,7 @@ import { dirname, delimiter, join, relative, resolve } from 'node:path';
 import { promisify } from 'node:util';
 import { canonicalBytes, sha256 } from './canonical.js';
 import type { CommandConfig } from './config.js';
+import { mapWithConcurrency } from './files.js';
 import { sourcePath } from './tdd-source-ledger.js';
 import { sourceAdmissionFailure } from './tdd-source-review.js';
 import type { SourceSnapshotBinding } from './tdd-source-types.js';
@@ -129,10 +130,10 @@ export async function captureSourceSnapshot(
       throw cause;
     }
     if (stat.isDirectory()) {
-      for (const name of (await readdir(physical)).sort(byteSort)) {
+      await mapWithConcurrency((await readdir(physical)).sort(byteSort), 8, async (name) => {
         const nested = `${path}/${name}`;
         if (!excludedSourcePath(nested)) await include(nested, join(physical, name), role, runtime);
-      }
+      });
       return;
     }
     if (stat.isSymbolicLink()) {

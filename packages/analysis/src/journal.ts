@@ -69,7 +69,7 @@ export type TddWriteLeaseSet = ChangeProjectionAppendLeaseSet & Readonly<{
 export class LeaseAcquisitionTimeout extends Error {
   readonly code = 'LEASE_ACQUISITION_TIMEOUT';
   constructor(readonly leaseKind: LeaseKind, readonly leaseName: string) {
-    super(`Timed out acquiring ${leaseKind} lease ${leaseName}.`);
+    super(`LEASE_BUSY: Timed out acquiring ${leaseKind} lease ${leaseName}.`);
   }
 }
 
@@ -83,6 +83,9 @@ export class LeaseFencedError extends Error {
 const lostLeases = new WeakSet<ChangeLease>();
 const appendSessions = new WeakSet<AppendLeaseSession>();
 const leaseRenewals = new Map<string, Promise<void>>();
+const gitCommonDirectories = new Map<string, Promise<string>>();
+const changeLeaseQueues = new Map<string, Promise<void>>();
+const activeChangeLeases = new Map<string, number>();
 
 function errorCode(cause: unknown): string | undefined {
   return cause && typeof cause === 'object' && 'code' in cause
@@ -91,8 +94,18 @@ function errorCode(cause: unknown): string | undefined {
 }
 
 async function gitCommonDirectory(root: string): Promise<string> {
-  const { stdout } = await execFileAsync('git', ['-C', root, 'rev-parse', '--git-common-dir']);
-  return resolve(root, stdout.trim());
+  const key = resolve(root);
+  const existing = gitCommonDirectories.get(key);
+  if (existing) return existing;
+  const pending = execFileAsync('git', ['-C', key, 'rev-parse', '--git-common-dir'])
+    .then(({ stdout }) => resolve(key, stdout.trim()));
+  gitCommonDirectories.set(key, pending);
+  try {
+    return await pending;
+  } catch (cause) {
+    gitCommonDirectories.delete(key);
+    throw cause;
+  }
 }
 
 async function delay(milliseconds: number): Promise<void> {
@@ -386,8 +399,34 @@ export async function withRenewingLease<T>(
 export async function withChangeLease<T>(
   root: string, changeId: string, operation: (lease: ChangeLeaseHandle) => Promise<T>,
 ): Promise<T> {
-  const lease = await acquireChangeLease(root, changeId);
-  return withRenewingLease(lease, () => operation(lease));
+  const key = `${resolve(root)}\0${changeId}`;
+  const run = async (): Promise<T> => {
+    const lease = await acquireChangeLease(root, changeId);
+    activeChangeLeases.set(key, (activeChangeLeases.get(key) ?? 0) + 1);
+    try {
+      return await withRenewingLease(lease, () => operation(lease));
+    } finally {
+      const remaining = (activeChangeLeases.get(key) ?? 1) - 1;
+      if (remaining > 0) activeChangeLeases.set(key, remaining);
+      else activeChangeLeases.delete(key);
+    }
+  };
+  if ((activeChangeLeases.get(key) ?? 0) > 0) return run();
+  const previous = changeLeaseQueues.get(key) ?? Promise.resolve();
+  let releaseQueue!: () => void;
+  const current = new Promise<void>((resolveQueue) => { releaseQueue = resolveQueue; });
+  const tail = previous.catch(() => {}).then(() => current);
+  changeLeaseQueues.set(key, tail);
+  await previous.catch(() => {});
+  try {
+    return await run();
+  } finally {
+    releaseQueue();
+    if (changeLeaseQueues.get(key) === tail) {
+      await tail;
+      if (changeLeaseQueues.get(key) === tail) changeLeaseQueues.delete(key);
+    }
+  }
 }
 
 export async function withChangeProjectionLease<T>(

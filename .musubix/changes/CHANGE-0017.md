@@ -8,10 +8,1947 @@ status: active
 
 Requirements: REQ-M5-APPROVAL-007 REQ-M5-COMPAT-013 REQ-M5-EVIDENCE-007 REQ-M5-GRAPH-003 REQ-M5-LIFECYCLE-006 REQ-M5-WORKTREE-004
 
+## Generation 10 recovery requirements
+
+Generation 9 is abandoned after its approved Epoch A and safe between-epochs
+abort. Its approval invocation, RecoveryAuthority29, release records, search
+evidence, historical allocation identity and absent P/claim/D1 state are
+immutable non-current history. Generation 10 shall not replay, amend, infer
+credit from, or present any Generation-9 approval, P, claim, D1, Red,
+Implementation, Green or Quality evidence as Generation-10 evidence.
+
+Under REQ-M5-APPROVAL-007, REQ-M5-EVIDENCE-007 and
+REQ-M5-LIFECYCLE-006, Generation 10 shall obtain fresh requirements and design
+approval whose manifest, aggregate hash and recorded approval identity are
+bound to CHANGE-0017 generation 10 before any recovery mutation. Generation 9
+requirements/design approvals, consent, intent and consumed invocation
+allowance are non-transferable. A Generation-10 native approval allowance may
+exist only after an exact presentation and a fresh ordinary root-user consent
+message; its manifest hash, intent identity, consent event identity and
+invocation result shall all bind generation 10. Tests shall reject every
+Generation-9 approval hash, intent identity, consent identity or invocation
+result offered as Generation-10 authority. Historical `authorityKey` and `pId`
+values may be retained only as allocation namespace compatibility values when
+the approved design explicitly binds them to a distinct Generation-10
+authority; they never authorize a write by themselves.
+
+The approved design shall define, without model-only or historical inference:
+
+1. the positive monotonic `GapCampaignClaim.lockFence` derivation from the
+   concrete Generation-10 fence authority;
+2. the exact schemas and canonical bytes for empty attempt and owner-ledger
+   genesis objects;
+3. the single physical owner root and repository-relative path for
+   `preparation/budget-spec.json`;
+4. the claim journal path, positive sequence allocation rule and exact
+   `previousSha256` derivation; and
+5. the complete deterministic allowlist of final, pending, writing and other
+   transient publication paths for P, the sole claim, release, D1,
+   `NoCredit10` and `CreditInvalidation10`.
+
+Before design approval, executable fixtures shall independently reproduce every
+canonical byte string, relative path and SHA-256 value and shall reject zero,
+reused or non-monotonic fence values and unknown, missing, duplicate or
+out-of-order journal transitions. The design shall enumerate a closed
+publication-boundary matrix with one row for every final or transient write,
+rename, fsync, dispatch, release and D1 boundary. Each row shall identify the
+crash point, exact persisted-byte set, one classified state and exactly one
+next-action kind from the closed enum `resume`, `abort-before-dispatch`,
+`release-only-verify`, `terminal-no-credit-stop` or `complete`. The approved
+design shall declare a closed set of named resume steps, and every `resume`
+action shall reference exactly one member. Tests shall cover 100 percent of
+matrix rows and shall execute every resumable, abort or release-only action
+twice from every applicable row to prove byte-identical idempotence.
+
+The approved Generation-10 state machine shall classify pristine, P-building,
+P-sealed-unclaimed, claim-dispatched, claim-verified,
+claim-present-unverified, ambiguous, released-credit-eligible,
+released-no-credit-pending, released-no-credit, D1-durable,
+D1-invalidation-pending and D1-invalidated states plus every design-declared
+transient state, including pending and writing states for `NoCredit10` and
+`CreditInvalidation10`. The design shall contain a total
+state-and-observation-to-action table for every matrix row. Before dispatch,
+each classified row maps to exactly one named `resume`,
+`abort-before-dispatch`, or `terminal-no-credit-stop`; abort is available only
+after under-fence proof that claim and claim-transient paths are absent. Once
+dispatch or any claim bytes are observed and no verified release record exists,
+including null-after-dispatch, malformed or conflicting claim state, the
+action is always `release-only-verify`; ambiguity grants no credit and ends in
+a released no-credit state. If the dedicated release-path safety check itself
+fails, the closed release-publication-blocked row preserves all bytes, performs
+no mutation, grants no credit and maps to `terminal-no-credit-stop` even after
+dispatch. After a verified release record exists, a released-credit-eligible
+state maps to the single named D1 resume step; released-no-credit-pending maps
+to the named idempotent `NoCredit10` publication resume step;
+released-no-credit maps to `complete`; D1-invalidation-pending maps to the named
+idempotent `CreditInvalidation10` publication resume step; and D1-invalidated
+maps to `complete`. D1-durable maps to `complete` only while accounting remains
+valid. No unclassified byte set may be resumed.
+
+A pre-mutation verifier shall run under the same Generation-10 kernel fence
+used by the writer, after a fresh complete writer inventory, and shall require
+exact Generation-9 historical custody, current Generation-10 approvals,
+P/claim/D1 absence for the initial transition, no unauthorized transient and
+the Git HEAD recorded in the sealed Generation-10 baseline presentation and
+intent. The verifier shall rerun before each authority transition. Any identity
+drift, ambiguity or unauthorized path stops before the next mutation,
+preserves all observed bytes and grants no recovery credit.
+
+The design shall provide one closed accounting manifest sorted by the byte-wise
+order of NFC-normalized UTF-8 repository- or authority-root-relative paths. It
+shall cover every charged retained-G9 custody object, Generation-10 recovery
+object, journal, diagnostic, executable/runtime/source copy and any transcript
+bytes copied into recovery authority. External session transcripts referenced
+only by identity and hash are not charged as copied bytes. The manifest shall
+contain its complete directory list and one entry per possible regular file
+with state `required-present`, `required-absent` or `may-appear`, exact bytes
+for present files, a nonnegative `maximumBytes`, and its declared authority
+root and device. Every `required-present` entry shall be immutable and exact;
+every mutable, growing or replaceable file shall be `may-appear`, and any
+manifest violating this distinction is rejected. Directories are uncharged;
+future P, claim, release
+and D1 files and every `may-appear` entry, including pending and writing
+transients and final published files, are charged at `maximumBytes` in every
+state. `required-present` files are charged at their exact apparent
+bytes, `required-absent` files are charged zero and must remain absent, and an
+actual file is rejected if its apparent bytes exceed `maximumBytes`.
+
+A deterministic no-follow enumerator shall verify exact directory membership,
+declared root and device, state, mode, size and hash where applicable; require
+link count one and a globally unique device/inode pair for every regular file;
+reject symbolic links, special files, mount/device drift and every undeclared
+entry; and compute the total as exact charged bytes for `required-present`
+entries plus `maximumBytes` once for every `may-appear` entry before every
+mutation and after every publication. No entry is counted twice. The total
+shall be at most 536,870,912 bytes.
+Pre-dispatch failure maps to the row's declared abort or terminal no-credit
+action. After dispatch or any claim bytes, every accounting failure maps only
+to `release-only-verify` until a verified release record exists and cannot
+grant credit. The release-only action may publish only its predeclared final
+and transient release-record entries, whose maximum bytes are already charged;
+it uses a dedicated no-follow root/device/inode safety check for those entries
+and records the accounting failure without permitting any other mutation.
+An accounting failure after verified release but before D1 changes the state
+to released-no-credit-pending, then idempotently publishes the predeclared,
+maximum-byte-charged `NoCredit10` record before reaching released-no-credit and
+`complete`. After D1, it changes to D1-invalidation-pending, idempotently
+publishes the predeclared, maximum-byte-charged `CreditInvalidation10` record,
+then reaches D1-invalidated and `complete`; release and gate verification
+independently rerun the accounting check, so a missing invalidation record can
+never make the D1 count as valid. Every publication and crash boundary for both
+records is part of the closed matrix. No diagnostic or model artifact is
+executable authority.
+
+REQ-M5-COMPAT-013, REQ-M5-GRAPH-003 and REQ-M5-WORKTREE-004 remain applicable:
+the recovery may add only approved compatibility surface, must preserve current
+trace/graph ownership and shall bind every source and generated artifact to the
+immutable baseline and selected Generation-10 workspace.
+
+## R29 root-coordinated online recovery (Generation 9 historical design)
+
+<!-- G9-R29-ONLINE-BEGIN -->
+
+R29 was the sole Generation-9 recovery route. Requirements approval,
+the six normative IDs, D0/order3821, gapKey, historical raw evidence and the
+permanent one-invocation rule are unchanged. R28 offline shutdown/private
+runtime/guardian/observer work is stopped and retained only as diagnostic
+history; no further retry, cap increase, compaction or `/exit` is authorized.
+
+The root session stays alive. Its transcript stream remains writable but is
+separate from repository authority. Before presentation, seal a stable
+role/capability policy and pre-create the session-owned fence inode outside
+repository authority. After consent, enumerate concrete repository writers;
+require identity-gone or controller-verifiable paused-no-write acknowledgement
+for each, then launch the exact attached long-lived `flock` holder. Unknown
+classes or newly appearing undeclared writers stop before intent. Pin the exact
+existing Node/Git/loader/CLI runtime identities, argv, cwd and environment
+before and after execution.
+
+After the mandatory review reports zero findings, prepare the design approval
+manifest and present all exact artifact paths/hashes, runtime binding,
+writer-policy hash, prepared fence identity, command shape, residual risks and
+one-invocation consequence. Only
+the next explicit ordinary root user message may consent; historical consent,
+agent/tool forwarding and `ask_user` results are invalid. Under the fence,
+perform full SearchRecheck and text validation, seal intent, and invoke exactly
+one native `approval record design` child. The root never writes approval
+bytes. Intent sealing consumes the allowance even if spawn is not observed;
+nonzero, signal, timeout, lost wait, missing outcome or ambiguous post-state is
+terminal and never reinvoked. The only allowed repository delta is the exact
+native replacement of `.musubix/evidence/approvals/design.json`; all other
+authority bytes must remain identical and no staging file may remain during
+Epoch A. Epoch B has a separate exact path/hash allowlist for the deterministic
+P tree, registry/index and sole claim; all other repository bytes remain equal
+to the Epoch-A post-state.
+
+Verified success requires exit0, exact manifest/approval identity, requirements
+approved, design approved, complete post-SearchRecheck, unchanged runtime/fence
+identity and no unauthorized authority mutation. Create the typed r29
+gap/history/authority objects and release approval Epoch A.
+The holder wait and lock reacquisition are sealed in a separate Epoch-A release
+record before Epoch B may start. Writers remain paused and cannot change HEAD
+between epochs.
+P is created only in a separate Epoch B after a fresh writer inventory,
+kernel-fence acquisition and SearchRecheck that requires controlHead equality
+with RecoveryAuthority29. Epoch B reuses the permanent
+authorityKey `9dc882e33a5b453757c4b3a5ca16593aac43fc8375cde648c74e8e50553c482b`
+and pId `fe27129bcb82de2245c321e2a8af1e01704a87101fb6013e497881b4c77cd690`
+as allocation identity, but binds authorization to RecoveryAuthority29.
+After P verification, reverify the bridge/P/current approval and exact Git HEAD
+under the same Epoch-B fence, append the sole claim, and seal a durable release
+intent before holder termination. Claim durability requires fsync, transient
+absence, exact presealed hash reread and the sole registry/index edge.
+Immediately before writing the claim, fsync a G29 write-ahead ClaimDispatch29
+bound to its exact presealed hash and publication. Once that record exists, or
+if any claim/transient path is observed without it, abort is unavailable.
+Crash recovery classifies the claim as verified,
+present-unverified or ambiguous and always seals a release-only intent; only
+verified permits recovery credit, and a null claim after dispatch is
+ambiguous. Release-record sealing is idempotently
+resumable after a crash. Terminal states before claim dispatch require an
+under-fence claim-absence SearchRecheck and use a no-authority/no-credit
+abort-release record; the between-epochs form permits a null holder. Abort and
+claim are mutually exclusive; abort requires both no dispatch record and
+complete claim/transient absence under the fence.
+
+On the successful path, keep repository mutation entries disabled through
+RecoveryAdmission-v6 and durable D1, then resume writers and seal the separate
+resume record. Abort or poisoned post-claim paths resume after their release
+record and never enter v6. No approval invocation, P, D1, Red or implementation
+occurs in this document revision.
+
+<!-- G9-R29-ONLINE-END -->
+
+## R28 closed offline execution interface (historical; unreviewed)
+
+<!-- G9-R28-SYNC-BEGIN -->
+R28 historically replaced only the undefined r27 fence/writer/executor interface and its
+private policy/consent/typed admission bindings. DES-M5-015 G9-R28-OFFLINE
+is superseded by G9-R29-ONLINE; r27 core incident/raw custody/one record/P/preparation rules stay
+conjunctive. Old consent/policy/operator paths are not current alternatives.
+Requirements bytes/approval, six IDs, D0/order3821 and all main caps remain.
+R27 attempt2 actual presentation a3a1cedc-d700-4c8a-9b73-fea54b62fc6e and
+consent ebcbc2aa-b62c-448c-aa7d-45552737313a are immutable history, NOT r28
+approval. New review/full manifest+source+inventory presentation/fresh
+APPROVE-R28-FORWARD-ONCE consent is required; policy has no future hash cycle.
+
+G/.git-relative common-root musubix5/g9-recovery-v1/fence/<gapKey> holds the
+stable owned lock inode and atomic state/state.pending index. Exact C/S/G
+locations, closed schemas, no-follow/owner checks and command shapes are
+normative in design. Exclusive nonblocking flock, durable monotonic counter,
+actual PID/startTicks/bootId, serialized 10-second renewal and recorded release
+are separate from native CHANGE/projection leases. Live lock cannot expire
+or be stolen; partial/unknown index or dispatched record stops without retry.
+
+Closed writer inventory covers root/child transcripts, database/WAL,
+scheduler, background/control writers and planned launcher/supervisor.
+Requests are not acks: each actual identity must be exited/stopped or the
+design's owned-no-write participant. Missing controller/unknown actor stops;
+Schedule #3 alone is not all writers. Root seals both launch copies then
+exits/suspends; the hash-bound supervisor survives with explicit human
+authorization. Session-only executable prototype/audit/spikes are now supplied, size/mode/
+runtime bound. They reject product roots and emit only fixture surrogates.
+Actual CLI shutdown/flush and all-writer completeness remain blockers.
+
+Same supervisor PID owns fence -> quiescence -> full two-root SearchRecheck
+-> present-time r23/r26 custody -> guard/one intent -> one real native record
+-> raw outcome/current custody/validation -> versioned gap/history/authority
+-> deterministic P seal -> authority-sealed-P-unclaimed result/normal release.
+Root and foreign writers remain stopped until this PREFIX result/release.
+Resumed root verifies RootHandoff28/original bytes/wait/unclaimed P, then
+owns one claim/source/tooling/fixtures/build/final P/W/v5/D1. Offline script
+neither authors nor audits those stages; no native intent/owner transfer.
+During
+search no dialogue, agent forward, native command or C/S output; complete
+before/after enumeration and all-row stability, including events/database,
+must agree. Observations/renewal stay outside both roots; report publishes
+only after the observed end. Prefix copying is never complete search.
+
+Launcher ready/seal pipes bind actual process and final launch hash without
+future argv/hash cycles. Stdin is /dev/null; bounded native-raw stdio and
+actual wait status are retained. Exit0 needs the sealed unclaimed prefix;
+exit1 is safe-stop, never preparation/D1 credit.
+An owned launcher wait-monitor observes actual supervisor waitpid; it has
+no fence/intent authority, writes only its declared native-raw wait slot
+after return, and adds no setup file. No result status substitutes for wait.
+exit2 prelaunch/input failure; lost/signal/absent outcome is unknown. Intent
+owner cannot transfer, old intent cannot invoke again. Root resumes only to
+rehash original result/raw objects, never to infer success or execute replay.
+Sealed r28 launch cannot be reassigned after owner loss: no same-consent
+process relaunch, even before intent. Preserve complete custody read-only;
+new reviewed revision/fresh consent is required, with zero invocation only
+when complete intent/registry absence is proved. This closes immutable paths.
+
+Gap-setup stays786432 bytes/64 files: base524288/32 + forward262144/32.
+Explicit28 physical forward files reserve249856 bytes; remaining12288/4 is
+bounded retry/terminal reserve, not free copies or a new owner. Keep every
+raw/search/custody owner cap. P266/W102 and combined534118400 <536870912,
+unwritable margin2752512, one permanent gapKey and 42-path closure remain.
+Current schema/model/primitive command spikes are non-authority only; actual
+executable prototype command/survival/full-search spikes are archived.
+Human actor is explicit: actual /exit or proved suspend/flush request;
+120000ms human-exit,30000ms ack,10000ms fence deadlines stop before intent
+with approvalInvocations=0. Shutdown/final events/DB flush precede epoch.
+Binding hash in fresh consent covers source/interpreter/runtime/audit/spikes.
+Runtime metadata<=65536/1 existing native-raw; originals<=33554432/256
+count in I-source, not free or duplicated inline setup metadata.
+Real authenticated CLI exit/suspend/flush and all shared DB/scheduler/
+background controllers remain unproved: NOT review-ready/presentable.
+External diagnostic-only probe at G/.git/musubix5/design-evidence/
+CHANGE-0017/g9/r28-shutdown-probe is outside C/S/recovery fence; no SDK/
+SQLite write/approval/custody/P; historical r3/r4 had no current-root target. Fresh hash-named
+input runs bind source/interpreter/PID/startTicks/bootId/session/task; fsync
+ready/observations/stdio/result, unknown/timeout blocked, zero invocations.
+Separate design-only16777216/128 cap plus retained33554432/512 yields
+50331648/640, not enlarged P/W/setup; original runtime union is charged.
+Historical r3 detached fixture passed, but CLI help/workspace readiness
+failed within75000ms. Observer-ready and `/exit` were not reached; cleanup
+SIGTERM/return0 is not natural exit. First failure safe-stop, raw retained,
+reviewReady=false. Group/known-descendant absence is not escaping-producer,
+DB-flush/shared-writer/scheduler completeness or Copilot-parent-survival proof.
+Explicit r4 continuation diagnosed a help-modal false-negative, not auth
+failure: signed-in/workspace/model evidence exists; local taskId is null.
+Fresh forkpty36x120/--screen-reader/--no-color, ordinary HOME/XDG, child-only
+agent-env removal, empty owned /tmp cwd; no credentials/config copies.
+Composite alive+log+workspace id/cwd+post-request GLOBAL/INPUT help response,
+ESC/prompt close, observer-ready hash, then /exit passed with natural
+CLI0/observer wait0 and known-target/group absence; no SIGTERM success.
+Plan3698991b19a9ebd112204d335cc7fb5716dd124fe61fb9f41632ab8f53afacd3;
+observer inputdae463c04f61b3b69515c4a993ef43c7f6ec4dbfa58325e21ce1fd24f6d83065.
+Retain both previous failures/raw/source mappings, fresh paths and owners.
+No current-root exit/SDK-parent survival, DB flush, escaping-producer or
+all-shared-writer/API proof; no retroactive pass or invented task/session
+evidence. Existing design-only caps apply to all target/scratch outputs.
+reviewReady=false; this scoped disposable pass is not recovery authority.
+Stop before Claude review, approval prepare/record, implementation/P/tooling/
+D1/HOST/runtime/Red/Green and workflow completion.
+Actual current-root diagnostic failure and minimal retry contract:
+Bundle ddcd44480ffb320980b0772f22ec6510586a85677e4aba843b11ebbafcf4ed8f
+completed safely with status=blocked, reason=root-exit-timeout; original result
+SHA e9db6e6fe48aa84fe1e896d187111bd2be2964a7d4077a720e0c27ccfccc9210.
+The root PID51841/startTicks1856377/boot2d7fa8a9-b68d-4e61-9b66-258c90723ca9
+did NOT exit within120000ms. targetExitAndKnownGroupAbsent=false,
+firstAbsenceMonotonicNs=null, finalObservedFiles=null; actual ready existed,
+but readiness and safe observer termination are NOT root shutdown.
+logicalFlushProved=false; schedulerBackgroundCompleteness=false;
+escapingProducerCompleteness=false; approvalInvocations=0; recoveryAllowed=false.
+Preserve original seven holder rows, including root51841 and external
+shared DB/WAL holders65735,171853,724752,817574 and VS Code166961,829102.
+Do not stop, kill, close, exempt or claim acknowledgement from these holders.
+Preserve unknownConditions verbatim: logical-flush-not-proved;
+scheduler/background-root-capabilities-not-proved;
+escaping/other-UID/remote-producers-not-exhaustively-proved.
+The old bundle-index is an inert preparation snapshot, NOT current launch/
+ready state. Retain all original bytes; no timeout-to-pass reinterpretation.
+Retry requires a new fresh content-addressed bundle after agent/tools return,
+with fresh nonce, root identity/group/session, source/interpreter, control/
+scheduler/holder inventories and input hashes; snapshot age<=30000ms.
+Launch the external diagnostic observer and verify actual observer-ready
+original bytes against expected-ready and exact input/source/target bindings.
+Only then the user must execute the literal slash command `/exit` and press
+Enter in the Copilot CLI, not shell commands or task bullets. Do not resume
+or submit agent/tools while waiting; wait for observer completion, then verify
+its original bound result and stopped identity before resuming. Exit deadline
+remains120000ms, settle deadline30000ms; timeout/unknown stays blocked and
+requires another fresh bundle. No new bundle/observer is launched here.
+reviewReady=false; requirements/approval unchanged. This procedure is diagnostic
+only, not recovery fence/custody/authority/P/tooling/D1 or workflow completion.
+<!-- G9-R28-SYNC-END -->
+
+## Generation-9 r28 diagnostic archive correction (design only)
+
+<!-- G9-R28-FULL-SYNC-BEGIN -->
+<!-- G9-R28-B2-SYNC-BEGIN -->
+**r28 B2 alternatives are diagnostic-only; no cap/owner change.** Original
+read-only Node/git/library bytes and identities remain fully charged; metadata
+alone is never admission. Startup ELF union11/135763704 and Node124836408
+exceed runtime33554432. Sizing floor134443657/2155 is not execution;
+gap/native-raw margins60591479/30925901 cannot hold the host union;
+P/W2752512 is unwritable. Hypothetical host150994944 + other144572416 +
+documents46268416 + gap195035136 = total536870912, but reduces the original
+other-source allowance by150994944, lacks complete future-floor inventory,
+and does not authorize bypassing the independent runtime cap.
+Candidate B's exact PATH=/usr/bin/Git-config sanitized environment produces
+real native results but is not current SupervisorBinding28; source still
+invokes bare git and has no absolute-git environment override. C's unchanged
+native writer API has fixture semantic/hash equivalence, not full CLI/validation
+equivalence; validationContext=null bypass is forbidden. NVM Node/bun are
+oversized and unsupported/unspiked. Pin/recheck original path/dev/inode/
+mode/UID/GID/SHA/ELF closure at every mutation boundary and return; pre/post
+fixture stability is not continuous host immutability. Dynamic closure and
+host mutation exclusion remain unproved. B2/reviewReady stay blocked/false.
+No actual consent/migration/observer/approval/P/D1 or workflow completion.
+Measured B catalog169/146903507 and C subset141/141564684 remain oversized.
+B native record/validate exits0/1; C native writer/stage validator exits0.
+Latest full-check evidence append safe-stopped at retained512/33554432;
+historical5761 is not current B2 verification. Pending isolated fixture bytes
+remain hash-inventoried; no deletion, cap change or owner transfer is authorized.
+<!-- G9-R28-B2-SYNC-END -->
+Sole current r28 ordering is design.md G9-R28-FULL-CORRECTION:
+reviewed immutable manifest/policy/exact paths+hashes/review verdict+index/
+residuals -> full presentation -> fresh original ROOT FeasibilityConsent28
+-> diagnostic-only non-credit migration and retired receipt -> same consent
+observer -> verified raw outcomes -> docs/indexes reconciliation. Manifest
+drift requires review/new consent; unchanged manifest permits HUMAN design
+presentation -> fresh r28 Consent28/RestartConsent -> offline ONE native
+record -> v5 RecoveryAuthority28/P-unclaimed -> verified RootHandoff28 ->
+separately approved root suffix. No feasibility authority/P/Red/source credit
+or permanent native-invocation consumption. Native current design approval
+is NOT prerequisite for feasibility; current requirements approval and every
+original reviewed/consented hash are checked at EACH mutation boundary.
+No real feasibility consent, migration, observer or native approval here.
+No npx/npm/PATH/network fetching in current r28 command shapes; exact original
+/usr/bin/node + C/dist/packages/cli/src/main.js, cwd C, sanitized fixed env
+and complete package/dist/native writer/ELF closure in SupervisorBinding28/
+RuntimeInventory28. Executable INCLUDED in unchanged256/33554432 runtime cap.
+Installed Node v22.23.2 alone124836408 bytes: native admission BLOCKED.
+Measured static/ELF catalog166/142098931, dynamic closure not proved.
+Strict empty-PATH control validation exits2: spawn git ENOENT. No workaround
+PATH population or fake current native predicate; B2 remains blocked.
+Isolated copied-approval native parser/writer spike is NON-AUTHORITY and
+cannot waive that cap or certify production closure/readiness.
+Epoch writer set is exactly writes/capability under C OR COMPLETE S plus
+planned launcher/supervisor. Home/VSCode global shared DB holders outside
+C/S are informational, never epoch ack/exempt/kill targets. Preserve old
+holder bytes/unknownConditions. Root C/S descriptors and complete S producer
+absence remain mandatory. C/S holders need exact PID/startTicks/bootId
+presentation, human normal owning CLI/editor closure and independent thread/
+descendant/fd identity-gone ack; controller-less holder ineligible.
+Fresh root schedule list0/running agents0/active shells0 AND post-exit absence
+are required; no shell echo or graceful-return proxy.
+Feasibility maximumAttempts=2, monotonic/no reset. Zero-invocation timeout
+retry needs fresh full presentation/new ROOT consent/new hash path/input;
+prior safe-stop remains original. At102 files, one14-file attempt gives116;
+second7+10 reserve133 BLOCKED. Conditional second-slot <=1MiB timeout archive
+and single retry-1.json<=16384 (shared pending/5-control-file cap), full
+reference/consumer audit and exact retirement yield104+17=121. Oversized/
+unsealed/unknown/conflicting data or any cap refuses retry with0 new files.
+Original ddcd timeout and legacy Base64 stay live. All later r27/v4 headings,
+tables and operator chains are HISTORICAL only; current chain is r28/v5.
+verify-result checks original result bytes/hash, actual wait/code/signal,
+supervisor identity, immutable fence release and closed epoch END/acks/
+enumeration plus authority/P-unclaimed edges; never reinvoke on conflict.
+Requirements/approval/caps/D0/order3821/gapKey/pre-D1 prohibitions unchanged.
+Full re-review/feasibility readiness FALSE while native runtime exceeds cap.
+<!-- G9-R28-FULL-SYNC-END -->
+
+<!-- G9-R28-ARCHIVE-SYNC-BEGIN -->
+DES-M5-015 G9-R28-DIAGNOSTIC-ARCHIVE is the sole closed archive contract.
+Requirements statement/acceptance/approval and D0/order3821/P/W are unchanged.
+Current D120 files/3261900 bytes is bound by inventory SHA
+5e5598d45569ae13fca49b7700ea84ff82816cff358649fd40041d6e8780c8ec.
+One r28-diagnostic-retention owner keeps128/16777216 TOTAL, including all
+source+dest/pending/metadata/output overlap: live121/14483456,
+archive2/2097152, migration-control5/196608; no additional/free owner.
+Only D/archives-v1/<archiveSha>.json and .<planSha>.pending, and
+D/migrations-v1/<planSha>/{plan.json,index.json,verified.json,retired.json,
+.pending}. Metadata limits65536/32768/16384/16384 plus one65536 pending.
+No-replace canonical ASCII JSON/LF sorted keys and member paths, uid/gid/
+mtime0, original mode292, kind regular, raw SHA/size/padded Base64; no tar,
+compression, extraction, symlink/hardlink members or unknown fields.
+Fsync and renameat2(RENAME_NOREPLACE), same-plan exact-byte replay only.
+Complete owned pending0600/0444 replays fsync/fchmod0444/fsync/rename;
+owned partial0600 must equal the expected canonical exact prefix, reserve
+the full length, reopen O_RDWR/no-follow, append suffix THEN truncate to
+expected length/fsync/fchmod/fsync/rename. Never unlink or repair foreign/
+non-prefix pending. Apply to container and all four metadata phases; shared
+pending is checked against the next missing eligible phase. Mkdir crashes
+revalidate/recreate only declared directories, then fsync bottom-up through
+plan/migrations/archives/D/D-parent before any seal. Newly created directories
+are opened via no-follow directory FD, identity checked, fchmod0755 despite
+umask077, then directory/parent fsynced bottom-up. Never chmod existing
+foreign/mode-mismatched directories. The only pre-chmod replay exception is
+same-plan declared exact0700 path, no-symlink lstat, owner uid, plan/prestate
+device/inode and parent binding, authenticated original creation receipt,
+and empty/no child pending. Open O_DIRECTORY|O_NOFOLLOW, recheck identity,
+emptiness and parent/path, reread authorization, fchmod0755 and fsync
+dir+parent bottom-up; every path/mode/uid/dev/ino/content conflict blocks.
+Receipt absence/drift blocks. Receipt canonical bytes bind plan/absent
+prestate/root/parent/created identities and owner authorization hashes;
+surviving admitted supervisor durably captures them in the EXISTING bounded
+caller evidence ledger before the pre-chmod crash boundary. No new D file,
+storage owner or cap: retained ledger512/33554432, D128/16777216 unchanged.
+Real receipt transport/authentication/durability must be supplied/audited;
+fixture capture is not production implementation or ownership by hash alone.
+Exact-prefix guarantees and fixtures concern PROCESS crashes only. Power
+loss/fs reordering can leave zero tails/non-prefix bytes: preserve, charge,
+safe-stop, no speculative repair and no power-loss proof.
+Diagnostic directory-FD flock serializes ALL admitted D writers; it is NOT
+the recovery fence or DB/root quiescence. Unknown legacy writers stop.
+Select ALL8 files of183d0fe38aef53d8859ac504ac206ee854a1998f9d1670a41048b5d701dae682,
+ALL8 of7f4631aebfb2b31de6ee6b4b82e69cffd5597cda4e4abaa3865ed81c3fa91363,
+ALL7 of2e91ddff41c810328b0f89f6aae5ee2af660b3e5aa2f27d43aa360d710182e61.
+Their23/541760 originals predict728215-byte container SHA
+115f736664279f8f799acaa6e73f20282167b77aec2dc6a3d9ee14729e976d69.
+Peak127/4914938; after verified retirement102/<=3579427, freeing18 net
+file slots. Fresh prefix7/<=1048576 plus10/10485760 output/partial reserve
+yields119/<=15113763. Capacity/partition/freshness check BEFORE ANY prepare
+allocation; failure emits explicit diagnostic, writes zero files.
+Seal plan/container/index, verify all member/source bytes and durable
+verified receipt BEFORE exact23 approved source unlinks; parent fsync.
+Before verified, resolver-audit138 unique logical identities/1493 hash refs
+with selected23 paths projected absent. Enumerate69/300 logical-index Ref
+hits (299 D logical occurrences plus one drift-file Ref) and23 hash hits at
+externalDesignEvidence[45..67]; later added refs also require audit.
+Hash-bound consumer registry requires resolver compatibility or current
+disabled/absence proof; unknown direct consumers stop. Embed compact report
+and its SHA in verified.json<=16384, no extra file. retired.json binds the
+actual verified.json raw SHA and same report hash. Real tools revalidate
+record raw SHA, native current design approval and artifact hash equal the
+plan requiredDesignManifest before every mutation/replay; all-zero hash is
+fixtureOnly at the pinned fixture, never real approval. Real plans additionally
+bind original requirements and requirements-approval raw hashes. Immediately
+before EACH pending create/repair/write/truncate/fchmod, rename, source unlink
+and receipt publication, reopen/rehash all three original authorization inputs,
+check native current requirements/design predicates and reread after validation.
+Guard mkdir/new-directory chmod too; drift after unlink1 prevents unlink2.
+An audited real tool must exclude concurrent authorization publication or stop.
+Seal retired receipt only after all selected sources absent. Foreign/
+non-prefix pending or missing source before verified stops; verified partial
+retirement rechecks remaining originals; final replay is read-only.
+Logical refs retain original D/path/rawSHA/size/mode and use verified
+archive member resolution, never rewrite old raw indexes or extract.
+Timed-out ddcd44480ffb320980b0772f22ec6510586a85677e4aba843b11ebbafcf4ed8f
+14 files/result e9db6e6fe48aa84fe1e896d187111bd2be2964a7d4077a720e0c27ccfccc9210
+remain live/blocked/root-exit-timeout;2e91's7 remain failed partial logical refs.
+Existing648415-byte Base64 container7ab55b16c75e12b2148411ecaa6e2a47947031a016a87bedcb96e6de356f93c5
+retains16 originals via explicit legacy resolver; no retrospective permission.
+Historical root-control SHAe0a4a6311eea6f3e780056293ca306a5fb4c76df2f03a390ca6d7b05908f5b5b
+resolves ddcd/control-state; current SHA05a6850a1b99dd795b263305a5fa6dabdb96c30757cb1f2ed758f755481a170c
+is DIFFERENT. Preserve both observations and old index raw bytes/drift.
+Current root-control bytes equal failed2e91/control-state: failed prepare
+overwrote the current path; equal SHA is not equal path identity or success.
+Five named fresh caps sum184320, leaving864256, not817152; actual prefix
+has two32768-byte sources, so six non-baseline maxima217088 leave831488
+for baseline.json. Charge both sources within unchanged1048576/seven files.
+plan/archive/verify/migrate/resolve/preflight/spike are diagnostic-only shapes;
+design.md G9-R28-ARCHIVE and closed schemas are authoritative, not prototype
+patches. Current checkpack mutates ONLY its fixed bounded session fixture;
+fixture authorization/drift checks are not production implementation or
+certification. productionImplementationSupplied=false; powerLossProved=false.
+No actual archive migration without reviewed explicit FeasibilityConsent28;
+current native design approval is not the diagnostic gate (FULL correction).
+Archive-correction Claude-review readiness is SCOPED, not whole recovery
+readiness/Claude review/approval. Current task stops before actual migration,
+observer retry, approval prepare/record, recovery/P/tooling/D1/workflow.
+<!-- G9-R28-ARCHIVE-SYNC-END -->
+
+## R27 bounded forward approval restart (historical design interface)
+
+<!-- G9-R27-SYNC-BEGIN -->
+R27 is design-only, unreviewed/unapproved. DES-M5-015 G9-R27-RESTART is
+current for this single branch; retained r26/r25 text is historical where
+it assumes live r23 or uses the replaced consent/authority/admission types.
+Requirements bytes/approval and all six IDs remain unchanged.
+
+The design's normative supersession table applies everywhere: live r23 ->
+pinned r26 raw approval; r25/r26 consent -> fresh RestartConsent; retained
+r23 custody -> present-tense Custody27 r23-history/r26-predecessor after
+fence/SearchRecheck; old approval-prefix GapLaunchEntry -> RestartLaunchEntry;
+v3/old targets -> v4/HistoricalEvidenceGap27/RetainedDesignHistory27/
+RecoveryAuthority27; r25 authority/operative policy -> RecoveryAuthority27/
+RestartPolicy. Only the post-prefix claim/D1 suffix retains GapLaunchEntry.
+Retained conjunctive rules cannot reactivate any superseded operator path.
+
+Pin native-approved/recovery-unapproved r26 raw approval
+47992519e1e50caf28121a621178ffc2dbc3beb478c201b979fab0dd6e58c663,
+manifest ce1ccb29fc7b44680026af2f2683e016f21e89d9dbc6921f443bc9ad1128f5a8,
+approvedAt 2026-09-30T06:45:45.580Z. Original native record offsets
+233673332/233675080 precede complete presentation
+2f787cc5-e429-4484-9425-6e9510f5dc11 (235473822) and root consent
+9c7a9ea2-80bf-4b09-9b36-d17bbbed7173 (235508873).
+Those authentic r26 events remain history, not fresh r27 consent.
+R23 raw 64f8fd0a1ccc7af6b7c9c67bebb5c3926a12535ff709247592522392a480515a
+and all 68 approved artifacts are available; no new raw-content gap.
+
+RestartPolicy H =
+4d84679d9ce3db8452d65f485fa536b76f61fdc53e049f962dc7a54578f0488e.
+It embeds the unchanged base policy ad6b838223e9d3d8eeb115f2f4218ec7a5a996967244466788a169efcabd2703,
+but has no current/future r27 manifest, outcome or own hash.
+Permanent gapKey remains 604514880a44924d56a8f0f3177a62540de526f7101b356271be67fc33977af9;
+authorityKey is 9dc882e33a5b453757c4b3a5ca16593aac43fc8375cde648c74e8e50553c482b,
+pId fe27129bcb82de2245c321e2a8af1e01704a87101fb6013e497881b4c77cd690.
+No identity is a published P or authority.
+
+Separate review -> full new native manifest/policy/risk presentation ->
+fresh exact root `APPROVE-R27-FORWARD-ONCE manifest=<64hex> policy=<64hex> gapKey=<64hex> approver=<name>`
+-> fenced writer quiescence/SearchRecheck -> present-tense r23/r26
+Custody27 seals -> guard/one intent -> actual new design approval record ->
+raw before/after capture/current custody/exact native validation ->
+versioned gap/history/authority -> deterministic P seal -> one claim ->
+source/preparation -> final P charge/W/v4 admission -> genuine D1.
+The presentation discloses r16 loss, r26 premature ordering, no retroactive
+compliance and mandatory permanent release disclosure; it is not release.
+
+The sole approval-attempt domain is restart/<gapKey>/r27 under the recovery
+cache. A sealed intent consumes its single invocation even when dispatch
+is unknown. Unknown/nonzero return, drift, lost fence, competing/partial
+publication or duplicate attempt blocks without re-record. A durable
+successful outcome may resume wholly absent current custody or the missing
+verification tail against exact retained inputs, NEVER repeat the CLI.
+Replay of a completed prefix is read-only. Raw approvedAt values are
+retained observations; only ordered actual launch bytes prove chronology.
+Custody27 always says provesPriorCustody=false and binds fresh consent.
+
+A crash during pre-intent predecessor custody sealing is an unrecoverable
+non-campaign diagnostic for this revision: retain all owned partial bytes,
+no invocation consumed without sealed intent, no same-revision retry or
+exact-prefix resume. Retry requires a new reviewed revision, full new
+presentation and fresh exact consent; permanent-key guards and caps remain.
+
+Only when BOTH predecessor Custody27 seals are complete/verified and all
+guard/intent/registry/prefix paths absent, reuse their immutable bytes under
+a NEW exclusive fence with the SAME reviewed r27 revision/RestartConsent.
+Reverify all inputs/hashes/owners/caps and run fresh SearchRecheck; retain
+old observations, never recreate/overwrite custody. RestartGuard's closed
+nullable custodyReuse binds the original recheck and actual new owner;
+new guard/recheck/registry share the current fence/owner, old fence is audit
+only. No invocation consumed before intent; no extra metadata file/cap.
+Partial/conflict/unknown still stops unrecoverably under the preceding rule.
+
+Closed r27 schemas and their exact prefix table are normative in design.
+RecoveryAdmission-v4 keeps v3's field set but binds only the new typed
+gap/history/authority. No old v2/v3 admission or r26 approval supplies it.
+All other genuine preparation/fingerprint/native-D1 predicates remain.
+No prior authority/P/pending P/claim/source/Red is eligible for this branch;
+changing a policy never resets the permanent key.
+
+No higher cap or new top-level owner. r25-custody's 8,388,608 bytes/128 files
+jointly cover predecessor r26 and current r27 with verified single physical
+objects, not hash-only copy discounts. Gap-setup's 786,432/64 partitions
+589,824/48 base plus 196,608/16 forward metadata. Historical and future
+human events share 2,097,152/8; future events each <=983,040, response <=512.
+Complete custody/ownership, raw overwrite, crash/replay/rejection, schema
+and overflow models are mandatory, never execution evidence.
+P/W 266/102 slots, maximum 534,118,400 <536,870,912, all existing owner
+caps, D0/order3821/70-file archive and 42-path closure remain unchanged.
+No requirements edit, native approval record, workflow complete, P,
+tooling, runtime/HOST, freeze/Red or D1 is performed by this design task.
+<!-- G9-R27-SYNC-END -->
+
+## R26 reservation replay and stop ownership (design only; unreviewed)
+
+<!-- G9-R25-SYNC-BEGIN -->
+Historical r25/r26 decision basis only; the G9-R27-RESTART supersession
+table controls current operator/type/state bindings throughout this block.
+R26 corrects the two r25 ownership/replay findings without widening the
+exception. R25 wire kinds/revision fields, consent grammar and policy hash
+are historical base-policy inputs, not operative r27 consent or authority.
+The prior five unreplaced constraints remain.
+It supersedes ONLY the impossible r23 requirement to retain/resolve the raw
+r16 replacement approval. Expected SHA
+58972d59459b6dbad8a9427a1784cc6b527830d75abe1c303078da5e0fabf9dd
+(11,080 bytes), reported manifest
+89c0b99ced55705dbfc9c050708289e0b46f3d8abb13f1691f6d0a9eb3a29f97:
+known historical evidence loss, NOT retained bytes or proof of contents.
+R23 was approved as f149ea3d95e6b9af297c8aeba7d933bc21f698645cc6a7b3f31852a4c774482d
+and safe-stopped before P/source/tooling/build/fixture/D1/HOST/Red.
+Exact safe-stop SHA d256a63bdee457a416c064b848a7b3f4ee21c921e25305c19421f0d08d5815c3;
+exhaustive bounded search SHA 8f61daac55c079cdf2194dd2859fea75921d3ce600f837ca8ab9b23bc9c41f3e
+hashed 19,493 control and 1,300 complete-session regular files: zero matches
+or read-instability/errors. No global absence or reconstructed history.
+
+DES-M5-015's G9-R27-RESTART is the sole normative operator path:
+RestartPolicy/RestartConsent/Custody27/RestartLaunchEntry and the new
+HistoricalEvidenceGap27/RetainedDesignHistory27/RecoveryAuthority27 typed
+targets in RecoveryAdmission-v4. G9-R25-GAP's replaced schemas/v3 remain
+historical input only. The gap is NOT the missing approval, cannot prove its
+contents, cannot alter D0, cannot stand in for a Ref, and cannot excuse any
+other missing artifact. Only new reviewed r27 presentation/fresh exact
+RestartConsent starts the fenced prospective path from pinned r26 raw bytes;
+old r25/r26 consent and r16/r23 approvals cannot authorize it.
+Native requirements remain unchanged/current at 7ac689e4d1073880f023ca42fcb8e63fd355dd6d8704f724c229a3dee8a395ea:
+no acceptance, six-ID set, test boundary, CLI or native evidence rule changes.
+This records a real preservation failure, not retrospective compliance.
+
+Historical r27 order ONLY, superseded by current r28/v5/RootHandoff28:
+design-only checks -> separate zero-finding r27 review -> full new
+manifest/policy/risk presentation -> fresh exact RestartConsent ->
+fenced quiescence/SearchRecheck and D0/tests/native rechecks -> present-tense
+Custody27 r23-history/r26-predecessor -> RestartLaunchEntry guard/intent ->
+one new r27 native record -> raw before/after/current custody/validation ->
+new r27 gap/history/authority -> seal P with
+fixed metadata reservations -> one durable claim bound to that P -> source
+authoring/genuine bootstrap/audit/preparation -> P-charge-sealed -> W -> v4
+admission -> actual native D1 -> unchanged HOST/diagnostic/feasibility/
+freeze/Red. Permanent repository-scoped gapKey, not a replaceable approval
+hash, limits this to one campaign/one D1; exact crash replay resumes the
+same journal/claim, divergence/drift/another loss stops. No inferred orders.
+No workflow complete before review/approval; this revision stops before both.
+
+D0 order 3821 and archive d78d4ca1d2307434170d122f37cc0b8a9d5d34cc31f5817f9b4ab52d209dafac
+remain immutable/read-only: 70 files, 68 approved artifact references and
+raw ea9c9e07ca7fb7f45eccb289a1ac7c58421bce0c9aceb8804bd570fac2cc9bed
+(11,080 bytes) must verify on admission/replay. Preserve available r16
+launch/stop bytes, all prior observations, worker and unrelated dirty work.
+V3 replaces priorDesignApprovalHistory with historicalEvidenceGap,
+recoveryAuthority and retainedDesignHistory; it transitively binds D0 and
+the gap without substituting either. Same 42-path closure/list SHA
+8d20cbff579b61377acce5efd7a9579333f6713856205762ec4c01bac227196d;
+same P/W slots 266/102 and all caps. Existing payload/ObjectEntry custody
+owns every raw byte; extra history inputs use I-source, new metadata
+P-control, admission W-admission. Actual overflow fails, never expands caps.
+
+R25 pins gapPolicySha256
+ad6b838223e9d3d8eeb115f2f4218ec7a5a996967244466788a169efcabd2703
+and permanent gapKey
+604514880a44924d56a8f0f3177a62540de526f7101b356271be67fc33977af9.
+Only exact raw human content
+`APPROVE-R25-GAP-ONCE manifest=<64hex> policy=<64hex> gapKey=<64hex> approver=<name>`
+is consent: one ASCII line without LF, fixed order/spaces, lowercase hex,
+name `[A-Za-z0-9][A-Za-z0-9_.-]{0,63}`. Retain original root-user event
+UUID/raw JSONL bytes/offset and prior presentation UUID/raw bytes; reject
+agent/schedule/generated events and compare parsed approver to native
+argv/approval. Hash literals are outside the policy; no self-cycle.
+
+Post-record approval validate requires requirements/design approved with
+exact recorded/current manifests, release stale ONLY, overall valid=false,
+exit 1 and signal null, without other errors. This expected scoped result
+is not a passing overall approval or release waiver; anything else stops.
+availableObservations is exactly the 24 SHA-sorted unique raw objects
+derived from the ten pinned inputs, sixteen DIRECT pinned r23-index rows
+and five specified r16 outputs/observations, including 8cce6e8c... and
+aa797182... . NO transitive Ref/path/hash traversal is allowed.
+
+Explicit I-source slices total 195,035,136 bytes/4,624 files within its
+existing 512 MiB cap: full histories/D0, report, ONE report-derived
+enumeration, raw consent/provenance/native outputs and BOTH complete
+custodies. Realistic floor includes complete pre/post-D1 native copies,
+not just Ref metadata. P-control retains 4,194,304 total with gap-setup
+786,432 and gap-P-lifecycle 262,144 reserved; base metadata is 2,801,664.
+W-abort retains 901,120 with fixed gap-W-lifecycle 262,144 for post-P-charge-seal
+stops/D1-intent/D1-observed and base-abort 638,976. Full physical byte/file
+sums apply before writes; sealed P/admission never gains future suffix
+bytes. Trace/output maximum stays 534,118,400 <536,870,912, separate from
+I-source; no extra trace allowance. Seal P FIRST, append one P-bound claim
+SECOND, source authoring THIRD, with no optional/reversed ordering.
+
+P-sealed-unclaimed means only the reservation was published. P-charge-sealed
+means the FINAL actual PreparationCharge is durably verified after all P
+writers stop; these are different states. Gap-P-lifecycle owns ONLY claim,
+registry and fence, never stops. Every GapCampaignStop/campaign-stop occurs
+after first sealing that final charge and belongs to gap-W-lifecycle,
+including early failures. Stop points before normal finalization first seal
+all actual retained P bytes, then write W stop; unverifiable accounting
+blocks without a fake complete charge/stop. Charge -> stop is acyclic;
+P roots never contain stops and W walks resolve P charge as an already
+owned immutable input, not another W-owned copy. Exactly one owner per
+physical allocation; overlapping/unowned/duplicate roots reject.
+
+P id is H(["CHANGE-0017",9,"preparation-reservation",authorityKey]); its sole
+path is campaigns/<gapKey>/p/<pId>/header/P.json under the recovery cache.
+GapPRegistry and GapPSeal bind exact current authority/P/table/genesis.
+No-replace seal publication is idempotent for byte-identical inputs only.
+Crash after seal enters P-sealed-unclaimed: reverify exactly one matching
+P and append the claim to THAT P without rewriting/resealing or allocating
+another. Second/different/multiple P, unregistered pending bytes, drift or
+an existing final charge/stop block. Owned incomplete publication remains
+retained/non-authorizing, never orphaned or silently cleaned. Claim replay
+reuses the same one-shot P; W suffix lives in a sibling w-gap root.
+
+Release must explicitly disclose the unrecoverable r16 contents, all bound
+search/stop/gap/approval/admission/D1 identities and consumed authority, with
+human acknowledgment. No disclosure means no release; no other failed or
+skipped check is cleared. If review finds a requirements/constitution
+conflict or the human rejects the residual risk, remain blocked and seek
+separate safe abandonment/new-generation authority, never repair/backfill
+history or carry g9 credit into a new generation.
+<!-- G9-R25-SYNC-END -->
+
+### Retained r22/r23 tracer contract, subject to r25 gap authority
+
+<!-- G9-R17-SYNC-BEGIN -->
+R22/r23's tracer contract is retained subject to r25 above. The reported r16 manifest is
+89c0b99ced55705dbfc9c050708289e0b46f3d8abb13f1691f6d0a9eb3a29f97;
+its expected, unavailable raw approval SHA is
+58972d59459b6dbad8a9427a1784cc6b527830d75abe1c303078da5e0fabf9dd.
+Preserve D0/order 3821 and the published r16 D0 archive
+d78d4ca1d2307434170d122f37cc0b8a9d5d34cc31f5817f9b4ab52d209dafac.
+Requirements stay SHA ede0d7761bdd7cf738c2285dbb4607553b928f6077035f84e684ec8dcbaee199;
+no observable behavior/acceptance changes and no requirements reapproval.
+DES-M5-015's r22 section (retained G9-R17-CONTRACT anchor) is the single normative implementation interface,
+overriding earlier v1 tracer/namespace/build shapes, not r14 write-set semantics.
+
+Order: draft -> separate review/human exact-hash reapproval -> r25 authority
+-> seal P with reserved metadata -> unique P-bound claim -> source-authored
+(non-credit, not executed) -> parent/executor bootstrap-built ->
+audited-prepared -> admission-sealed -> native verified D1 -> existing
+HOST/diagnostic/27-shape feasibility/freeze/Red sequence. No stage skipping.
+The source author may author the complete deterministic driver without
+executing it; the parent owns mount/namespace/build/fixture execution.
+Source/spec changes invalidate later evidence; design changes reopen approval.
+All five tests, absent runtime and native history remain protected.
+
+Five future authored inputs: tooling/tracer.c, tooling/tracer-bootstrap.py,
+tooling/tracer-build-spec.json, tooling/tracer-policy-spec.json,
+tooling/tracer-fixtures.json. Their excluded authoring root is
+C/.musubix/cache/g9-recovery-v1/source-authoring/<design-manifest-sha256>/.
+Only later actual outputs may occupy tooling/tracer and tooling/tracer-build.json;
+the latter is NEVER an unbuilt recipe. Future F copies all seven exact bytes.
+The ordered closure is 42 files (previous 38 followed by build-spec,
+policy-spec, fixtures, bootstrap.py); SHA
+8d20cbff579b61377acce5efd7a9579333f6713856205762ec4c01bac227196d.
+41 files are 100644, only tooling/tracer is 100755; publish 41 then manifest,
+ready-41. Old 38-path hashes remain historical, not current closure authority.
+
+Tracer v2 accepts only the design's fixed argv arrays with --policy,
+--catalogue, --audit, --bootstrap-proof-fd 3, --cwd and -- command separator;
+fixture-only --fixture/--case cannot grant official authority. No shell parsing.
+Canonical closed TracePolicy, source/namespace/process/fd/write/Git/allocator/
+seccomp/budget schemas and deterministic diagnostics are authoritative there.
+policySha256 excludes only itself. TraceLog/Terminal contain actual ordered
+events, child waits, content-addressed chunks, stdout/stderr, completeness,
+network/violation/budget counters and source/spec/binary/provenance bindings.
+Wrapper exits are 0,20,21,64,65,66,70,71,72,73,74; root status is never rewritten.
+Bootstrap's fixed Python -I -B -S argv reads BuildSpec/Request/catalogue, creates
+mapped-root user/mount/net views, nested same-host-owner command uid/gid,
+private namespace /tmp and /var/tmp, read-only masks and exact writable sets,
+then sealed-fd handoff to the tracer's barrier/filter/ptrace custody.
+Parent checks host invariance, owned process closure and cleanup.
+
+BuildSpec pins compiler/linker/interpreter/observer identities and exact
+GCC compile/ld link argv, names inventory kinds and requires two builds.
+SeedPlan records actual raw tool/header/library/Python dependency inputs;
+BuildProvenance records the verified inventories and observed build outputs.
+No future output hash or execution claim occurs in BuildSpec.
+BuildProvenance precedes policy; 22 ordered FixtureDefinitions produce only
+actual FixtureResults; independent accepted source/bootstrap/binary audit
+is required before TracerBuild publication. Seed compiler observations are
+explicitly not tracer evidence. The historical RecoveryAdmission-v2 base binds
+sourceSnapshot, buildSpec, policySpec, fixtureDefinitions, bootstrapSource,
+buildProvenance, bootstrapEvidence, tracerAudit and priorDesignApprovalHistory.
+R25 v3 replaces that last unavailable-history predicate with its required
+historicalEvidenceGap/recoveryAuthority/retainedDesignHistory triad.
+Its full hash, never a recipe hash, is the existing native operationId.
+Preserve all r14 9,398 model cases/Git semantics and r16 archive/recovery cases.
+R2/R3 concerns agent execution restrictions, not kernel incapability;
+parent capability probes do not satisfy preparation.
+
+R22 fixes exactly the three r21 blockers and direct consistency regressions:
+complete physical case-file ownership, normative slot derivation and capped
+single-store input custody. Requirements/history remain unchanged.
+Schema-derived populated object models are required; synthetic metadata is
+NOT a dispatched fixture measurement.
+Keep all 9,398 fixture-21 cases in order, but use 37 batches of <=256
+(36*256+182), one request/namespace and lossless per-case logs/terminals/
+handoffs/actual comparisons each. Other 189 cases stay single: 226 corpus
+requests. Fresh case trees/roots, baseline restoration and cumulative
+stored/decoded quota checks are mandatory; no per-case quota reset.
+P has 266 slots including author, eight seed probes, two fixture-shaped
+guards and 24 retries. Slot bytes 261,488,640 + six capped shared owners
+25,165,824 =286,654,464; only 524,288 is P-carried.
+Shared owners explicitly include case arrays (8 MiB stored/32 MiB expanded
+combined), charge ledger (2 MiB including itself), BootstrapEvidence
+(2 MiB including entries AND attempts), control/base/table (4 MiB),
+build/audit (4 MiB) and census/policy (4 MiB). Failed bytes remain charged.
+W has 102*2.25 MiB =240,648,192 slot bytes plus 6,291,456 shared bytes with
+capped header/table/post-source contract/census/results/admission/abort
+owners. P maximum 287,178,752 +240,648,192 +6,291,456 =534,118,400.
+This is 509.375 MiB; the remaining 2,752,512 bytes below 536,870,912 are
+unallocated safety margin, NOT an owner, overflow capacity or dispatch grant.
+Fixture-batch caps are 4,325,376 (metadata3,407,872/data917,504);
+guard caps are 4,456,448 (metadata3,538,944/data917,504, duplicate index included);
+light131,072 (metadata98,304/data32,768); heavy/seed/probe2 MiB;
+post2.25 MiB (metadata262,144/data2,097,152). Terminal4,096 is inside metadata.
+Each case physically retains five WireObjects (descriptor+payload) for
+handoff/log/Terminal/actual/comparison, event chunk descriptors, every
+registration/stdout/stderr/argv WireStream AND all their chunk descriptors,
+their compressed payloads, raw filter <=2,048, and raw summary.json.
+No descriptor is implicitly inside a compressed per-case envelope. The
+per-case tracer writes log/Terminal, streams/events/filter/summary directly;
+bootstrap writes handoff and actual/comparison. Metadata payloads/descriptors,
+raw filter/summary and partial writes charge metadata; event/raw-stream
+compressed payloads charge data. Supervisor stdout is compared, not retained
+as an uncounted duplicate. Multiple execs/chunks grow the same capped owners.
+After separate approval/build, actually dispatch env-hop positive and
+the full 256-case Git batch36 before corpus admission. Reclassify their
+measured complete owners against corpus caps; record all actual bytes.
+Neither guard nor campaign has run. Failure stops, not sampled success.
+BudgetSpec has the exact DES-M5-015 schema/tables, immutable
+preparation/budget-spec.json; P leaf.sourceContractSha256=H(BudgetSpec).
+W binds preparation/post-source-contract.json; W leaf uses
+H(PostSourceContract). The latter contains declared per-class metadata/
+data caps and W owner caps. Independent verifier reconstructs the exact
+tables from the normative G9-R22-DERIVATION table, including every entry
+field, and recomputes slotsSha256 and Merkle roots (P depth9/W depth7).
+P families are author; build[1,2], dist[1,2], npx[1]; seed retries;
+probes[1..8]; probe retries; env-hop and Git-batch guards; guard retry;
+one original fixture-order segment (batches only at fixture21); light,
+heavy, batch retries. Seed ordinal is null, never its build index. Pool
+retry ordinal/fixtureId/caseId/batchIndex are null; the failed target is
+bound by PreparationRetry, not a mutated leaf. Only primary probes/guards
+have ordinal in P. Exact W strings/order: diagnostic:plain:NN:00,
+diagnostic:observed:NN:00 (NN=01..12 each), feasibility:NN:00 (01..27),
+then official:NN:AA (01..27, interleaved AA=00 then 01 except 13/14/27
+have only 00). W ordinal=NN as integer; all W fixture/case/batch fields
+null; official retryClass=official iff AA=01, all other W retries=none.
+Every maximumBytes comes from its exact derived class; BS/PS hashes and
+all null/string rules are fixed by the normative table, not model choices.
+Request membership is only header/entry/proof, not whole tables.
+Catalogue row files resolve relative to the OWNING catalogue. Immutable
+base path is preparation/catalogues/base/<viewSha256>/catalogue.json,
+viewSha256=H(the base with base=null); delta remains
+preparation/catalogues/<nonce>/catalogue.json. No mutable base, shadowing
+or base chains. Raw original inputs have one immutable content-addressed
+store at preparation/input-store/objects/<sha>; row.file remains
+objects/<sha> relative to its OWNING catalogue, via verified hardlinks.
+I-source <=536,870,912 bytes/16,000 canonical files is a subcap of aggregate
+2 GiB/60,000 snapshot limits; I-dependency shares existing 2 GiB/100,000
+dependency limits. Actual copies across views count again; input/F/inline/
+sidecar limits are AND constraints, not extra trace allowance. Current
+documents and all 9,587 FixtureDefinitions are size-modeled; the five
+authored files keep explicit source/spec caps. Ten specified input maxima
+total 46,268,416, not the P-control 2,801,664 base-metadata partition.
+Catalogue JSON/identity registry/generated policies/evidence retain P/W
+owners even when consumed as inputs. Global device/inode accounting verifies
+canonical origin, all aliases, bytes/modes/nlink and sealed custody. Root
+commitments include zero-charge alias rows; only verified original input
+identities are excluded from P/W totals. No prefix exclusion, hash-only
+deduplication, output-to-input laundering, symlink or unknown alias.
+Four modeled base views share source inodes but retain charged catalogue
+JSON; actual other inventories/views must pass caps. Storage remains
+O(K+N log N), where K includes actual base/view/alias rows.
+HOST_PROC is driver-held OUTSIDE ProcBindPlan. The shared plan contains
+only boot-stable paths/topology/constants; actual boot/source/mount/PID
+namespace identities remain request-bound before/after observations.
+AUDIT/OBSERVATIONS stay /__g9_audit, never a host output pathname.
+Pinned zlib1.3 keeps every byte/decision and existing framing/hash/flush,
+1 MiB chunk/64 MiB entire request or batch/8 GiB decoded-program limits.
+The retained 58 strace streams' 4,348,937 stored/71,655,205 raw bytes are
+log-only evidence, not full tracer/fixture fit. No future success claim.
+BootstrapEvidence has 241 logical requests, 241..265 actual attempts;
+9,587 corpus case results remain lossless and exclude measurement duplicates.
+Requirements remain approved; design approval remains stale. Stop before
+review/approval, source authoring, preparation, D1, HOST/runtime, freeze or Red.
+<!-- G9-R17-SYNC-END -->
+
+The r15/r16 sequences below are retained design history. Their bootstrap
+interfaces and closure are updated by r22; their prior "not yet archived/
+approved" status is historical; r25 explicitly records the lost raw bytes.
+
+## Generation-9 design correction and execution boundary
+
+Generation 9 began at impact order 3819, record SHA-256
+c7a7a5df8c69a6253c585e8124799ff367ece285f9dda4d740384c1f94b5b3d9,
+with the SAME six normative requirement IDs above and zero g9 Reds.
+Requirements approval 7ac689e4d1073880f023ca42fcb8e63fd355dd6d8704f724c229a3dee8a395ea
+and requirements checkpoint 3820, record SHA-256
+5858b61a33643fb0adcb3d4c3c586af5c4ccb76b5630a0beb108d609d2e287e8,
+are now recorded. This action corrects design/ADR-0036/this plan/migration
+documentation only under LIFECYCLE-006 and COMPAT-013. Requirements remain
+byte-identical and the other four scopes are not broadened. Initial design D0
+was recorded at 3821 but failed its tooling/reset prerequisite; the r15
+superseding approval/checkpoint and all test/runtime preparation remain future work. Stop before
+Claude review or approval preparation after design/C4/trace/graph validation.
+
+All generation-5/7/8 execution sequences, approvals, tables, preflight recipes
+and imperative commands retained below are HISTORICAL CONTEXT, not current
+execution authority. Only the following g9 sequence governs continuation,
+subject to current requirements and future exact-hash design approval. In particular,
+no old instruction to prepare a g8 manifest, amend its EVIDENCE fixture,
+resume its intent 14 or run a g8 phase is executable.
+
+### R15 recovery of the initial design checkpoint (not executed)
+
+Keep D0=3821, record SHA
+429a728050f64472c6fca7f8569711d55e22cc5ff7ef462251b06b07264a3616, immutable.
+It proves the approved proposal, not preflight readiness. The blocker is
+g9-preparation-r1-blocker.json SHA
+5ffdd41889829ce1417a6086d81c4f784350d3b74925ad521e704b1282fa6fca; bind all
+eight raw r1 result/finding/index files exactly as DES-M5-015's r15 table.
+No tooling/tracer storage, dist reset, HOST edit, scratch, freeze or Red was
+performed. Preserve stale dist observations and every historical record.
+
+Requirements stay SHA
+ede0d7761bdd7cf738c2285dbb4607553b928f6077035f84e684ec8dcbaee199 with approval
+7ac689e4d1073880f023ca42fcb8e63fd355dd6d8704f724c229a3dee8a395ea.
+The normative COMPAT-013/LIFECYCLE-006 guards require diagnostics pre-Red,
+archived files at every design checkpoint and HOST after the latest, not
+tooling/dist before the first checkpoint. D0/D1 satisfies those unchanged
+obligations; no requirement ID or approval is reopened. A contrary normative
+finding must stop for requirements reapproval, never be edited silently.
+
+The authoritative order is r16 review -> prepare/show exact design manifest
+-> explicit human approval -> publish/verify the D0 archive while live approval
+is still D0 -> guarded approval record -> non-credit bootstrap tools/tracer and
+full dist reset/build/audit -> sealed RecoveryAdmission -> fresh superseding
+D1 -> HOST -> scratch diagnostics/feasibility -> freeze/replay -> Red.
+This task performs only design checks and stops before that review.
+The r15 edit makes r14 design approval stale; 3821 and workflow event 270
+remain historical. Preparation cannot record Red/implementation/Green or a
+workflow completion. Before D1 all five tests stay archived (worker
+5591efa0440a03a201df78c47b547b61939b118f68ef83e6b88237c24ab0a600);
+runtime source, three scripts, profile and stale compiled outputs must be
+absent, six restored baseline paths unchanged, and full actual toolchain/
+tracer/reset/build evidence verified. Bind the exact 42-path/mode manifest,
+digest 8d20cbff579b61377acce5efd7a9579333f6713856205762ec4c01bac227196d,
+without pretending post-D1 HOST/diagnostic/freeze content already exists.
+
+R16 fixes only the unbound D0 preservation finding: RecoveryAdmission requires
+initialDesignApproval:Ref (raw SHA
+ea9c9e07ca7fb7f45eccb289a1ac7c58421bce0c9aceb8804bd570fac2cc9bed,
+11,080 bytes) and initialDesignArtifacts:Ref to DES-M5-015's canonical
+D0ArtifactManifest. Verify the raw approval's parsed/native-recomputed
+artifactSha256=e0e626f78b37dba5bd09b56e5bd6798b7f8c21602f40a81ff95743d7cb997bd5
+equals D0's approvalManifestSha256. Archive all 68 approved paths/bytes;
+only design.md bb65622f77c0c374c2f161f4647f9402e183e4724bd9c228127e90ec07af51fd
+and ADR-0036.md acb759ccd9231e1413cce5569382e79ec9dd1da8a11d53b59cc8d657d45e5397
+currently differ. Recompare all paths before record and preserve every other
+newly differing approved version too. Publish the immutable content-addressed
+.musubix/cache/g9-recovery-v1/initial-design/<H(D0ArtifactManifest)>/ archive
+and verify its full closure BEFORE `approval record design`; keep actual
+verification/live-hash-read/record-call observations in launch order under
+writer exclusion. Missing/tampered bytes, identity/manifest mismatch, late
+archive or missing ordering evidence stops before reapproval/preparation/D1.
+Bind the two Refs, complete archived objects and observations into admission/
+preparationEvidence, retaining the same addresses in existing F payloads.
+No current approval or session-only snapshot substitutes for this archive.
+This revision stops before rereview, approval or archive creation.
+
+Use DES-M5-015's closed RecoveryAdmission and its full canonical SHA as
+`change-record CHANGE-0017 design --operation-id <H(RecoveryAdmission)>`
+with the exact full-six `--requirement` list above. D1 must be ordinal 2,
+actual g9:design:2, preserve D0 in designHistory, and match current approval,
+all native fingerprints and the independently resolved admission. Any
+preparation mismatch stops before the command; post-command concurrent drift
+leaves immutable non-admitted history and blocks HOST. Never run a native
+checkpoint dry-run on control: it can recover pending journal writes.
+Later pre-Red design edits first restore worker, repeat review/human approval/
+retained-D0-archive verification before approval record/preparation/checkpoint
+and redo diagnostics/freeze; after Red no reset.
+Do not supersede/re-record the legitimate D0 workflow declaration. Only one
+completion for a distinct genuinely completed new design invocation, with
+fresh transcript reconciliation, is allowed later. No such record now.
+All following executable D/pre-D/post-D references mean D1 or a later admitted
+supersession. R14's initial-pre-D rule is superseded, not retroactively passed;
+its Git/write-set/9,398-case semantics remain unchanged.
+
+### Preserved abandoned generations and #52
+
+G7 remains abandoned with individual Reds 3789-3800 and batch Red
+3801/journal 939. G8 also remains abandoned, with these immutable bindings:
+
+| Historical item | Exact binding |
+|---|---|
+| G8 freeze manifest/root basename | 6b981dcd7b507962aece3b10bb09eade55c51f625af30fd7945cb1d5beee0e74 |
+| G8 freeze commit | f117bbabac10617529ecfa8c17ce3144b6693f3c |
+| G8 individual Reds | 3806-3817, all twelve receipts retained |
+| G8 serial batch Red | 3818; order-record SHA 25cf37b15d11775ff5c6249326db48733417ae8726a02b86a97b134c68d89e7c |
+| Orphan g8 calls/14.json | f00ad15539b39b71f4e86e6d4dfb3c698ce4b149c3fbee2b0f70fabe5c683a41 |
+| Blocked implementation result | 6c65cdf9f6d72bc840bab1a3a71bd5104e0889c8f6776b9588cb6a09a4f4959b |
+| Transition archive manifest | 83eb781f6b1c8052402752e3c26691e777b0baf39771a04e0ae279f3f24bcecb |
+| Transition result | 2ea7fd5c2c16375b67699a5eab21aa909653b6c4b3bbbaeb6ae0374c15135089 |
+
+The freeze is beneath .musubix/evidence/test-file-freeze/CHANGE-0017/g8/.
+The excluded archive is
+.musubix/cache/g9-transition/83eb781f6b1c8052402752e3c26691e777b0baf39771a04e0ae279f3f24bcecb/manifest.json;
+its addressed blobs preserve exact partial implementation/baseline bytes,
+freeze/receipt/report/journal sources and lease-contract evidence.
+.musubix/cache/g9-transition/result.json records the official transition.
+G8 has no implementation checkpoint or Green; its orphan intent receives
+no backfilled completion. All g7/g8 evidence is non-current and grants no
+g9 approval, phase, TDD, integration or quality credit. Preserve g6 work,
+SESSION approval, legacy/non-credit order 3274 and inactive stale waivers.
+
+Issue #52's demonstrated mismatch is an API assertion, not a production
+lease defect: the frozen HOST-BOUNDARY assertion expects /BUSY/, while the
+ownerless future-mtime waiting attempt throws LeaseAcquisitionTimeout,
+code "LEASE_ACQUISITION_TIMEOUT", leaseKind "change",
+leaseName "change-CHANGE-0017", and message
+"Timed out acquiring change lease change-CHANGE-0017.".
+Prove actual class identity with toBeInstanceOf(LeaseAcquisitionTimeout),
+not name, constructor.name or a message regex. Only inside the HOST-BOUNDARY
+@id block's approved assertion region, obtain the constructor through
+await import('../packages/analysis/src/journal.js'); the throwing acquisition
+API and constructor must use that exact specifier and the same module instance.
+Keep the line-8 journal import and all other top-level imports byte-identical;
+no outside-block helper/import, alternate path, cache-busting import or adapter.
+A fulfilled acquisition fails; assert all four exact fields/message above.
+
+Acquisition-window evidence is conservative and source-bound. G9 preflight
+must verify packages/analysis/src/journal.ts SHA-256
+14f5e66f6709d5dd8be485a3cc773c0ff6e85d8acb9e99d9bdc8f6632787e1fe,
+leaseRetryMs = 25, leaseAttempts = 400,
+deadline = performance.now() + leaseAttempts * leaseRetryMs,
+the attempt bound, performance.now() >= deadline guard and the unchanged
+forward-ownerless wait/retry-to-LeaseAcquisitionTimeout path. Bind that
+source hash and consistency result, not an exact elapsed measurement.
+The configured budget is 10,000 ms; scheduling/I/O can delay delivery.
+Do not add exact/minimum/maximum elapsed thresholds or infer this budget from
+wall time. The unchanged 60,000 ms runner timeout is a watchdog only:
+expiration fails the diagnostic and is never contract proof or success.
+The +60,000 ms fixture mtime
+keeps the ownerless directory unavailable through that window; the
+-60,000 ms fixture mtime permits the existing takeover and positive token.
+Keep native Date/timers/mtime behavior, owner-bearing expiry controls and
+explicit local mocks. No production predicate, code/message translation,
+OS wall-clock change, runtime exception adapter or suppressed failure.
+
+### Generation-9 ordered continuation (not execution authorization)
+
+1. Requirements corrections, review, approval and checkpoint 3820 are complete.
+   Keep those approved requirement bytes unchanged. This action prepares the
+   DES-M5-015/ADR-0036 g9 design only; validate it and stop before review,
+   approval preparation or phase recording.
+2. After separate design review and explicit exact-hash human approval, FIRST
+   publish/verify the exact D0 archive above while live approval remains D0,
+   then invoke guarded `approval record design`. Before any later replacement
+   reverify that retained archive and its original before-record evidence.
+   Only after successful recording,
+   provision/audit the expanded private toolchain and reproducibly built
+   tracer in excluded content-addressed storage, with no runtime/test edit.
+   Its source/build/binary hashes have no dependency on D or future F.
+   Then
+   perform the guarded dist inventory/archive/reset and BuildProof check
+   defined in DES-M5-015, bound to the verified actual order tip BEFORE D.
+   Keep the runtime source/profile absent and all five test bytes archived;
+   no implementation or test edit is part of this build-output hygiene.
+   Store the non-credit reset/build records in excluded preparation storage
+   for later diagnostic catalogue resolution. Recheck that tip has not
+   advanced, then record the
+   full-six-ID superseding D1 using the preparation-bound operation ID above,
+   while ALL FIVE source files still have the g8 hashes listed below.
+   The archived-file rule applies to EVERY g9 design checkpoint, including
+   D0 and superseding/re-recorded checkpoints: the worker-file hash must be
+   5591efa0440a03a201df78c47b547b61939b118f68ef83e6b88237c24ab0a600.
+   Before any later pre-Red design edit, approval or checkpoint, first restore
+   those exact archived worker bytes, preserving the other four files.
+   Prior prepared edits/diagnostics/preflight/freezes become non-current.
+   Use actual persisted checkpoint/order/approval identities, never predicted
+   orders or g8 checkpoint 3805 as g9 authority.
+3. Only AFTER the latest active design checkpoint, apply/reapply the exact approved region
+   containing HOST-BOUNDARY's ownerless acquisition assertion in
+   tests/test-runtime-worker.test.ts. DES-M5-015 pins the region
+   wholly inside that test's @id block, including the block-local
+   await import('../packages/analysis/src/journal.js'), same-instance
+   toBeInstanceOf check and exact code/leaseKind/leaseName/message above.
+   The line-8 imports remain byte-identical; no outside-block import/helper
+   or other worker-file region or any of the other FOUR files may change. Use the
+   existing serial-scope fingerprint calculation to prove a real test-set
+   difference from the active g9 design checkpoint, caused solely by this
+   assertion correction. No annotation/proxy/helper/discovery/decoder edit,
+   redundant TRUST edit or different predecessor fingerprint is a substitute.
+   After any design replacement, require a fresh post-checkpoint edit,
+   twelve-pass diagnostic, fingerprint checks, preflight and admissible fresh
+   freeze; never overwrite old freezes. This guard does not permit post-Red
+   restoration or test edits: a conflicting later design revision blocks
+   continuation under the existing frozen-source rules.
+4. In an isolated scratch diagnostic context, restore hash-verified archived
+   implementation bytes and complete the approved implementation there.
+   Run ALL TWELVE exact corrected source tests to native passed results,
+   with no skips, missing selection or bootstrap errors. Resolve the known
+   MODULE-ORDER acknowledgment inventory failures across all four pools
+   and MOCK duplicate-conflict failure; the partial archive is not proof.
+   Include EVIDENCE, AGGREGATE and BLOB-PLATFORM rather than extrapolating
+   from the six previously passing tests. Bind commands/exits, environment,
+   toolchain, source/config/input hashes, five-file hashes and fresh reports
+   to a reproducible completed-implementation inventory in excluded storage.
+   This step must neither append official evidence nor hold shared leases
+   while runners execute, and gives NO TDD/phase/approval/release credit.
+   Before ANY g9 Red, also use the existing official
+   currentChangeFingerprints/checkpoint calculation diagnostically for
+   CHANGE-0017 and [REQ-M5-COMPAT-013,REQ-M5-LIFECYCLE-006]. Compare actual
+   runtime-absent control against an isolated matching workspace with ONLY
+   the completed archived implementation restore inventory applied.
+   Keep prepared tests and unrelated inputs identical. Require a different
+   overall implementation fingerprint and a changed
+   requirementImplementations[id].fingerprints for each applicable selected
+   requirement under the native checkpoint comparison, not just changed paths.
+   Bind calculation-source hash, exact inventories, both outputs, full maps,
+   applicability and comparisons in preflight. Missing/inapplicable maps need
+   explicit source-backed applicability evidence; do not silently skip or
+   synthesize changes. Any unchanged applicable map/overall fingerprint or
+   unprovable comparison blocks Red. Synthetic activation-fixture values
+   cannot stand in for these actual source fingerprints.
+   Also reconstruct the archived-test view with the exact D-time inputs and
+   run currentChangeFingerprints using Authority's full six IDs/order,
+   verified against D's enclosing CHANGE generation; the native phase itself
+   has no requirementIds member.
+   Require exact equality to D.fingerprints for impact, requirements, design,
+   tests, implementation, requirementImplementations and tdd. Bind raw output
+   in archivedTestOutputs; mismatches point to the resolved
+   /materialization/calculatorOutputs/0/value/<field>. No observed-read
+   instrumentation, selected-map projection or inferred equality is accepted.
+5. Before Red, independently check EVERY asserted diagnostic against its
+   actual throwing API, source hash, class/code/fields/message and timeout
+   policy. Shorthand-only rejection applies to normative requirements/design/
+   inventory expectations and the approved corrected HOST-BOUNDARY region,
+   not retroactively to other byte-frozen matcher syntax. Inventory every
+   other frozen matcher exactly as written, including bare toThrow(), regex
+   and stderr-regex matchers, without editing it. In the isolated scratch
+   diagnostic, capture each matcher's actual caught/reported error and prove
+   (a) its class/code/fields/message equal the approved exact contract,
+   (b) the unchanged frozen matcher accepts that exact error, and
+   (c) a bare toThrow() rejection is the intended named diagnostic, not a
+   module/setup/import/tooling failure. Do not alter frozen test bytes or
+   remap the observed error to obtain this capture/proof. On matcher-contract
+   grounds, only a demonstrated contract contradiction blocks Red;
+   matcher syntax alone does not. Existing execution, evidence-completeness
+   and sequence guards remain mandatory.
+   In particular prove HOST-BOUNDARY's exact LeaseAcquisitionTimeout outcome
+   and MOCK's required duplicate-conflict outcome. HOST-BOUNDARY remains the
+   sole post-design edit, with exact same-module class/code/fields/message
+   assertions rather than /BUSY/ shorthand. Verify the block-local
+   same-instance toBeInstanceOf proof and the source-bound constants/deadline
+   inventory above, with no elapsed threshold; the 60s watchdog is not proof.
+   The scratch test bytes
+   must be exact prospective g9 frozen bytes, not relaxed diagnostic copies.
+   Any mismatch, unsupported execution or test failure blocks preparation.
+   Never leave the scratch implementation or profile activation in control.
+   Remove the restored implementation again from the diagnostic comparison
+   workspace and verify its baseline plus control's continued runtime absence
+   before genuine Red. Keep the completed bytes only in excluded archives;
+   no restoration into control precedes batch Red plus implementation intent.
+   Hash-check explicit baseline/restore/removal allowlists and unrelated
+   dirty paths; no blanket stash/clean/checkout or environment leakage.
+6. Prepare and verify newly approved g9 preflight/freeze/intent/receipt/
+   lineage artifacts only after the twelve-pass diagnostic. Bind the current
+   latest g9 approvals/checkpoint, actual changed test fingerprint, actual
+   overall/per-requirement implementation-change proof, source-bound
+   acquisition-window and diagnostic-contract inventories/results and exact
+   five-file hashes. Verify preserved
+   g8 history separately: g8-specific v3 tooling, inputs, harness success,
+   native-order descriptors and receipts are not reusable g9 authority.
+   The future g9 design must distinguish immutable EVIDENCE-001's historical
+   g8 discovery/fixture behavior from independent g9 authority verification.
+   No helper loophole, relabeled history or edit to that frozen file is
+   allowed; unresolved coexistence blocks Red. Any relevant pre-Red drift
+   invalidates the diagnostic/preflight and requires successful revalidation
+   and an admissible fresh freeze. Do not rewrite a published freeze.
+7. With runtime absent in control and the prepared tests fixed, record the
+   twelve fresh genuine g9 Reds in the existing exact TEST/requirement order,
+   each with new g9 protocol bindings and expected selected native failure.
+   Then record the fresh serial batch Red for
+   [REQ-M5-COMPAT-013,REQ-M5-LIFECYCLE-006]. No prior Red/report or scratch
+   pass is reused; no missing-module error or deliberate regression is Red.
+8. Only after that batch Red, create its chained g9 implementation intent.
+   Restore the hash-bound, reviewed diagnostic implementation into control
+   through the explicit allowlist; complete implementation and focused
+   validation without changing frozen tests. Only then record the serial
+   implementation checkpoint/receipt, followed by newly authorized Green
+   intents/calls and batch Green. Never use orphan g8 intent 14 as authority
+   or fabricate an implementation checkpoint before implementation.
+9. Later APPROVAL, WORKTREE, EVIDENCE, GRAPH and combined COMPAT batches retain
+   their existing scope/order and require current g9 approvals, planning and
+   genuine evidence. No parallel work precedes serial runtime Green and the
+   approved committed base. This design action authorizes none of them.
+   Source supersession, waiver, void, repair, migrate and refactor are not
+   recovery alternatives; no history or diagnostic credit transfer.
+
+### Generation-9 deterministic protocol binding
+
+DES-M5-015's current g9 section is authoritative for all closed schemas,
+exact source ranges/hashes, capsule resolution, failure precedence and replay.
+It selects historical-only EVIDENCE-001 validation: NO helper/factory/decoder/
+discovery edit is authorized in that file. Current-phase admission is a
+separate live g9-context check, also exercised by new g9 diagnostic fixtures.
+The generation-agnostic structural validator accepts internally consistent
+g7/g8 contexts; only the current g9-context check rejects foreign generation.
+The observed EVIDENCE run captures its exact 47 actual candidate objects,
+including UUID values and undefined fields, with the closed lossless codec.
+Replay validates those stored objects without invoking the g8 random factory.
+None can authorize new evidence.
+
+The proposed exact HOST hunk yields worker SHA
+fd56d9197047a59d6d60152a223f9df3a4b266e461ce13db29aaf427c75b9f25;
+its official block fingerprint changes from 8b294707... to 817a7537....
+Those are in-memory design calculations, not an applied edit or executed test.
+Verify full AST/byte boundaries and whole traced-test-set delta after the
+latest design checkpoint; matching the short fingerprints alone is insufficient.
+Every other frozen matcher remains byte-identical; source-reachable diagnostic
+inventory and exact error observation prove its contract, not stricter syntax.
+
+The isolated diagnostic requires all twelve plain and twelve observed passes,
+all applicable actual implementation-map deltas using both existing official
+fingerprint calculators, and removal of restored implementation afterward.
+Store exact source Git identities/closed overlays and bounded observer/native-
+report/capture payloads in sealed excluded storage;
+no diagnostic run appends ordinary lifecycle evidence or leaves runtime active
+in control. MODULE-ORDER four-pool acknowledgment and MOCK duplicate-conflict
+remain real completion requirements, not assumed fixes in the partial archive.
+
+New preparation is .musubix/cache/g9-recovery-v1/<inputsSha256>/.
+Its immutable freeze has exactly 42 normal blobs (41 at 100644, tooling/tracer
+alone at 100755) at
+.musubix/evidence/test-file-freeze/CHANGE-0017/g9/<manifestSha256>/,
+with ordered-path-list SHA
+8d20cbff579b61377acce5efd7a9579333f6713856205762ec4c01bac227196d.
+The current design appends tooling/tracer.c, tooling/tracer-build.json and
+tooling/tracer after lineage/seed.json, then tooling/tracer-build-spec.json,
+tooling/tracer-policy-spec.json, tooling/tracer-fixtures.json and
+tooling/tracer-bootstrap.py: 35+3+4=42 paths, replacing the unpublished
+35-file proposal. Exact Git commit/tree/blob references and eight history/eight
+diagnostic partitions provide bounded replay: <=64 MiB per file, <=320 MiB
+decoded inline and <=512 MiB total F, without a node_modules bundle.
+Inline raw rows are capped at 46 MiB, not 32 MiB. Large Git-backed historical
+objects instead count against the 2 GiB snapshot/replay budgets. The measured
+126,595,440 B Git source blob and 34.6/35.7/35.5 MB HEAD/live/archive changes
+ledgers have distinct immutable addresses and exact size/hash bindings in
+DES-M5-015; no sourcePath-only lookup or base64 copy of the large Git object.
+The snapshot caps are aggregate PER REPLAY: 60,000 paths / 2,147,483,648 B.
+Three full measured views use 28,740 paths / 905,073,501 B, leaving
+31,260 paths / 1,242,410,147 B before overlays, private Git metadata and other
+source copies. Count each copy; 20,000 aggregate paths was infeasible.
+Native.sourceRoot control/sharedGit maps exactly and bijectively to
+object/live namespace segments control/shared-git; no alternate spelling.
+Inputs -> checks -> preflight -> manifest -> introducing commit -> external
+seal is the hash dependency order. Double cache generation and committed replay
+must agree before any intent. No g8 v3 output is promoted into this new chain.
+Pin the exact Node/TypeScript/vite-node/Vite/esbuild versions, entry hashes,
+lock, resolution map and private dependency/caches described in DES-M5-015.
+Observer config/command/bootstrap equality, canonical JSON/native-byte
+distinction and operation/time/memory budgets are hard admission conditions.
+Do not confuse validation of recorded observations with rerunning diagnostics.
+Use the one exact R-root replay template, including --max-old-space-size=2048
+and ./preflight paths, for both cache mirrors and committed replay.
+Store DES-M5-015's exact 17-key environment as unexpanded literal strings.
+`${R}` is realpath(replay cwd); substitute it without shell evaluation,
+starting from an empty environment. The table fixes every private directory,
+PATH, both empty npm config files, locale/timezone, Node and npm flags;
+no inherited variables, lowercase npm aliases or host PATH fallback.
+The CHANGE document has an explicit overlay bound to D.fingerprints.impact;
+dirty guide/trace are versioned read-only non-calculator rows. The unknown
+dirty-input rule applies to declared runner/calculator dependencies, not
+unrelated preserved work. Official calculators use fixed input-sized budget
+reservations, not internal instrumentation. All view pointers use declared
+numeric array indices; structural/current diagnostics follow the complete
+truth table, with null/null for g9-positive.
+
+Seals, intents, receipts, reports and final implementation supplements use
+.musubix/evidence/runtime-recovery-calls/CHANGE-0017/g9/<manifestSha256>/.
+Ordinals 1-12/13/14/15-26/27 are Reds/batch Red/implementation/Greens/batch Green.
+At all three batch calls explicitly use
+`npx musubix5 change-record CHANGE-0017 <red|implementation|green> --requirement
+REQ-M5-COMPAT-013 REQ-M5-LIFECYCLE-006 --workspace . --json`
+from control. Do not omit --workspace, use its unsupported --dry-run
+combination, or repair a non-journaled checkpoint by backfilling.
+Publish intent 14 after receipt 13 and BEFORE restoring any implementation.
+Every intent has current source-to-dist CLI build provenance; the post-restore
+build also requires the recorded dist reset: stale compiled runtime currently
+exists despite absent source. Inventory/archive only the exact ignored control
+dist tree, clean-build privately and publish under launch exclusion. Do not
+perform reset or source changes in this documentation action. Pre-Red
+runtime absence includes the compiled output set, not only source files.
+The post-restore
+dispatch for 14 binds a fresh build and implementation-supplement-v1. Receipt
+14 references that exact supplement, with final inventory/results/deltas and
+current focused passes; ordinal 15 rechecks the same build/source closure.
+No Green starts earlier. Missing receipts may be recovered only from matching
+persisted facts/report bytes before any later intent. S artifacts use fsync
+plus an external durability-seal chain, leaving F immutable. A stranded g9
+TDD intent has at most one exact-intent operational retry under the full
+DES-M5-015 predicate, not file-existence-based report detection.
+Dispatch.nativeTarget={path,before:Source|null,identity:TargetIdentity|null}
+archives the exact existing
+target BEFORE release: before.path is its immutable version address, with
+raw SHA/size and mode 100644. All twelve targets exist; missing TDD before
+blocks admission, never authorizes a placeholder. nativeTarget.identity
+binds device/inode/ctimeNs/size/sha256 with exact bigint decimal stat values.
+Batch nativeTarget is {path:null,before:null,identity:null}.
+Attempt.nativeReport is set only for present byte-different after output;
+unchanged g8/earlier g9 bytes are historical, not attempt output. Removal is
+terminal. TDD receipt/recovery requires changed report bytes, not an old SHA.
+Retry requires byte-identical before/after AND identical full target identity,
+proven dead owner, unchanged facts/guards/build and NO changed
+attempt-owned report, receipt or
+native phase/order/journal persistence. Pre-call Facts and historical target
+archives are explicitly allowed. First seal the actual Attempt/outcome,
+complete trace and pre/post Facts. Retry.priorAttemptSha256 and preRunProof
+bind those observations and the build/identities; reuse intent/target/
+environment at 01. This replaces the unpublished no-Attempt rule; no outcome
+may be inferred from a raw log or fabricated as success.
+BuildProof pins ONLY the seven ordered AST/source slices in DES-M5-015, not
+whole-file hashes across builds. Recompute ranges/hashes/order per build;
+legitimate tdd.ts/adapters.ts edits outside them remain allowed. Pre-D
+TracePolicy binds pre-authority slices; ordinal-14 supplement/policy binds
+post-restore slices. namespace.distProof is a Ref to canonical isolatedDist
+[{path,mode,sha256}], published before policy, containing no BuildProof/
+Toolchain hash and equal to dispatch BuildProof.dist. Supplement TracePolicy
+replaces ONLY retrySourceContractSha256 and namespace.distProof; all other
+canonical bytes equal pre-D policy. Validate both replacements against
+dispatch BuildProof; unchanged values are allowed. Ordinals 14..27 verify
+supplement.tracePolicy (15..27 via receipt 14); Toolchain/toolchainSha256 stay
+pre-D. Feasibility binds tracePolicy per shape: 1..13 pre-D, 14..27 supplement,
+not globally. Dist/slices -> policy -> fixtures/audit/TracerBuild/Toolchain/
+BuildProof -> supplement (also referencing its policy) is an explicitly
+cycle-checked hash DAG before publication.
+Before authority, completed-implementation scratch
+SliceProof must preserve all seven hashes/order/relationships despite moving
+offsets/file hashes: pre-run lease acquisition -> existing-file unlink -> runner.
+Unchanged device/inode/ctimeNs/size/sha256 mechanically proves the pre-unlink
+boundary under sole custody. Changed/disappeared/reappeared/unmeasurable
+identity defeats retry. No code-only or fabricated launch/output-range proof;
+g8 LEASE_FENCED remains stage-unknown. Missing/unsealed Attempt blocks retry.
+A changed phase-expected report may only continue deterministic persistence
+through a real native no-run continuation, never a rerun. The ordinary TDD
+CLI has none; report-only stranding stops at /sidecar/resumeCapability.
+Unexpected reports are terminal. Batch ordinals 13/14/27 have dispatch 00
+only; journaled-pending/interrupted state stops at /sidecar/batchPending,
+with no reissued change-record or duplicate fact. Complete exact native facts
+allow receipt recovery only absent the overriding fencing/ambiguity rule.
+No other musubix5 process acquiring relevant leases may run between dispatch
+and attempt seal plus immediate retry classification/dispatch; use launch exclusion,
+not shared runner-held leases. Lease loss/fencing after test/report execution
+or persistence ambiguity requires official g9 abandonment at
+/sidecar/generationAbandonRequired. Stop g9 calls; satisfy the existing
+approver/confirmation contract, never self-approve or auto-record abandonment.
+Not every lease failure is retryable. Other terminal/consumed-retry conflicts
+stop without cleanup or reclassification.
+This never retries or backfills any g8 history.
+Ordinal facts reference deduplicated immutable ledger versions; they do not
+copy a 36 MB changes ledger per call. Enforce the 844 MiB ledger/fact plus
+1,024 MiB other-sidecar bound (1,868 MiB total <2 GiB), retaining every exact
+version needed to reconstruct native facts.
+
+### Official-call environment and terminal decisions
+
+Every ordinal 1-27 and NN-01 uses cwd `${C}`=realpath(control), the following
+exact unexpanded key-sorted Dispatch.environment and
+environmentSha256=H(that ordered list). Expand only `${C}` without shell
+evaluation, starting from an empty environment; unset every other variable.
+Replay retains its separate `${R}` environment. NODE_PATH is empty.
+
+```text
+CI=true
+GIT_ATTR_NOSYSTEM=1
+GIT_CONFIG_GLOBAL=${C}/.musubix/cache/g9-official-v1/private/gitconfig
+GIT_CONFIG_NOSYSTEM=1
+GIT_EXEC_PATH=${C}/.musubix/cache/g9-official-v1/lib/git-core
+GIT_TEMPLATE_DIR=${C}/.musubix/cache/g9-official-v1/private/git-template
+HOME=${C}/.musubix/cache/g9-official-v1/private/home
+LANG=C.UTF-8
+LC_ALL=C.UTF-8
+NODE_OPTIONS=--max-old-space-size=2048
+NODE_PATH=
+NPM_CONFIG_AUDIT=false
+NPM_CONFIG_CACHE=${C}/.musubix/cache/g9-official-v1/private/npm-cache
+NPM_CONFIG_FUND=false
+NPM_CONFIG_GLOBALCONFIG=${C}/.musubix/cache/g9-official-v1/private/npm-globalconfig
+NPM_CONFIG_OFFLINE=true
+NPM_CONFIG_PREFER_OFFLINE=true
+NPM_CONFIG_PREFIX=${C}/.musubix/cache/g9-official-v1/private/npm-prefix
+NPM_CONFIG_SCRIPT_SHELL=${C}/.musubix/cache/g9-official-v1/bin/sh
+NPM_CONFIG_UPDATE_NOTIFIER=false
+NPM_CONFIG_USERCONFIG=${C}/.musubix/cache/g9-official-v1/private/npm-userconfig
+NPM_CONFIG_YES=true
+PATH=${C}/.musubix/cache/g9-official-v1/bin:${C}/node_modules/.bin
+TMPDIR=${C}/.musubix/cache/g9-official-v1/private/tmp
+TZ=UTC
+XDG_CACHE_HOME=${C}/.musubix/cache/g9-official-v1/private/cache
+```
+
+There are exactly 26 keys. Pin private bin/node v24.21.0, npm 11.19.0 lib/npm/bin/npm-cli.js/npx-cli.js,
+bin/git and bin/sh using the full raw hashes/paths in Toolchain.official's
+DES-M5-015 table and complete launcher inventories. The pinned Linux/x64
+ptrace tracer must observe fork/vfork/clone/exec/exit and record every
+exec-stop image/hash BEFORE continuation, including interpreter/native-tool
+roles, /usr/bin/env, esbuild and Git helpers. Sampling /proc is insufficient.
+EXITKILL and traced child registration close short-lived descendants;
+use PTRACE_SEIZE behind a pre-exec barrier, not TRACEME/late attachment, with
+TRACEFORK/TRACEVFORK/TRACECLONE/TRACEEXEC/TRACEEXIT/TRACESECCOMP and
+EXITKILL/TRACESYSGOOD. Hash-bound seccomp plus no_new_privs routes clone/
+clone3, ptrace, setns/unshare, mount, io_uring and declared write/network
+operations; no unfiltered per-syscall coverage claim. Deny escape; return
+ENOSYS for clone3 and trace/register the glibc clone fallback. Queue early
+unknown-TID stops in pendingUnknownTids until the exact parent event joins;
+unmatched entries fail custody. Handle all exec-TID/seccomp/exit/event/
+signal/group/terminal stops, pass real signals, PTRACE_LISTEN group-stops,
+suppress only identified synthetic traps. Set/record umask 0022 before first
+exec and verify/record it at every exec-stop.
+escaped children, tracer death or lost identity after dispatch lose custody.
+Dispatch.launcherProof binds the tracer; Attempt.processProofs references
+the complete ordered JSONL trace. Unsupported ptrace/isolation/stat fails
+platform; wrong/missing executable proof fails executableIdentity.
+Empty read-only npm configs, read-only private admitted dependencies and
+disjoint owned caches/temp are prerequisites, never authority sources.
+No inherited environment, shared chmod, network/global executable fallback.
+Only approved native augmentation and pinned npm child variables may follow.
+Before official calls, build/review the three closure tracer files with pinned
+GCC 13.3.0/ld.bfd 2.42 and complete source/compiler/header/library inventories.
+Two private builds must have identical actual binary hashes; none is fabricated
+or produced by this design correction. Run all 22 tracer fixtures: the original
+fourteen plus untraced-clone-denied, clone3-enosys-fallback,
+early-child-stop-order, namespace-change-denied, signal-passthrough,
+vitest-results-write and ancestor-mkdir (permitted writes/no-ops, discard,
+and unlisted/symlink rejection), plus ancestor-mkdir-runtime-blobs.
+The ancestor-mkdir extension enumerates all 14 frozen mkdtemp sites and four
+explicit mkdir sites below, every registered root/chain, per-test limits,
+empty probes, Git/lease children and fixed official-command parents. In both
+views check wrong-owner/over-limit registration, every unregistered sibling
+and descendant, TMP/unlisted, cross-view paths and native EEXIST/ENOENT.
+Also replay the pinned Git file-operation manifest, including exact per-writer
+flags/modes, config lock rounds, transient init symlink lifecycle, commit
+HEAD/ref/reflog/object routes, absent unlink probes and maintenance child lock.
+Mutate writer/path/op/mode/order/identity and deny every unlisted boundary.
+For commit fanout, learn the per-case full ID from access before mkdir and
+deny a second unknown commit; never use a precomputed commit ID.
+Execute fixed-parent EEXIST/missing-parent/foreign-writer/sibling checks on
+actual model nodes. Derive ordinal owners independently from the frozen
+invocation inventory, then attempt registration; equal copies of a registry
+or an expected-result expression are not tests. Keep valid prior cases and
+report revised executed counts, excluding the 120 replaced tautologies.
+ancestor-mkdir-runtime-blobs checks C-rooted and every registered R-rooted
+chain, including nested-run IDs: parent-first 0700 creation after the required
+parents exist, before/after identities, unchanged EEXIST and actor/control-copy
+parity. For C/registered R it checks exact 0600 blob/temp filenames and
+create-only publication/fsync/cleanup, rejecting unregistered roots outside
+admitted private TMP, undeclared children, wrong actors, modes/order, symlinks,
+races and chmod repair. It also admits caller-supplied private-TMP call-511
+linux and win32 cases under the existing private TMP row plus the registered
+private-runtime-blobs allocations below, including their blob-directory chains.
+It checks TMP/unlisted denial, registered root/chain admission and denial of
+unregistered siblings under a registered root. Private behavior still includes
+win32 temporary unlink without directory fsync, test-side blob overwrite/restore,
+injected sync/rehash-fault leftovers and cleanup, without applying C/R
+fsync/publication rules to these private writes.
+They provide neither C/R grammar authority nor publication evidence.
+An unregistered non-private root remains denied. This widens the existing fixture;
+the ordered fixture count remains 22.
+Exec fixtures also verify umask. TracerBuild.audit binds actual reviewer/
+report, source/binary hashes, H(build provenance), H(fixture results), zero
+findings/accepted verdict using DES-M5-015's TracerAudit. Exclude enclosing
+audit/proof hashes to avoid cycles; do not invent acceptance or future hashes.
+Bootstrap order is raw tool/tracer builds, normalized TS/dist, private npx
+binding, then final policy/fixtures/TracerBuild/BuildProof before D. Policy
+hashes exclude their own/enclosing build hashes. Compiler inputs remain an
+exact hashed external prerequisite; no provisional proof authorizes a phase.
+GitRuntime closes the complete recursive private git-core tree (166 measured
+top-level entries), maintenance helper, interpreters and every Git config/
+include/template input. The five GIT_ keys select private helpers and empty
+read-only global config/templates, with no system config fallback.
+GIT_ATTR_NOSYSTEM=1 excludes system attributes; bind repository/worktree attributes.
+
+Before dispatch, materialize TracePolicy.namespace's closed OfficialNamespace
+from DES-M5-015: actual current uid/gid maps, deny setgroups, tracer-created
+mounts before first exec, network none, read-only /run/WSL, /run/user,
+/mnt/wslg masks. Private C/node_modules/.vite-temp tmpfs is empty before/after
+and excluded from dependency inventory. Add the exact second exclusion/
+private empty tmpfs C/node_modules/.vite/vitest (vitest-results): only pinned
+Vitest <sha1(label)> bucket mkdir and results.json write, label=projectName or
+empty string; audit/discard at tree exit. Other .vite stays read-only.
+ancestor-mkdir records EEXIST for existing non-symlink parents of admitted
+paths; missing creation is limited to G/musubix5, its leases and leases/fencing,
+the closed runtime parent grammar below and other explicitly registered bounded
+directory allocations. Provision
+all other static parents before first exec; every other mkdir fails closed.
+The closed authoritative runtime parent grammar has two durableBlob root
+categories outside admitted private TMP.
+For C, admit C/.musubix/evidence/test-runtime,
+C/.musubix/evidence/test-runtime/v1 and C/.musubix/evidence/test-runtime/v1/blobs.
+R is an exact entry in the registered run-directory inventory at
+C/.musubix/cache/test-runtime/<runId>, including each separately registered
+nested-run ID; a writable prefix or caller-supplied root is not registration.
+For every R, after R and R/worker-acks exist, admit only
+R/.musubix, R/.musubix/evidence, R/.musubix/evidence/test-runtime,
+R/.musubix/evidence/test-runtime/v1 and R/.musubix/evidence/test-runtime/v1/blobs.
+Only pinned durableBlob creates either chain, parent-first, mode 0700.
+C/.musubix/cache/test-runtime remains an exact parent allocation only for
+pinned prepareTestRuntimeProvider, mode 0700; its registered R and R/worker-acks
+allocations are unchanged. Require C's evidence/cache ancestors to exist.
+Before/after identity/mode checks require absence -> owned non-symlink/0700,
+or existing 0700 -> unchanged identity/mode through EEXIST; no chmod repair.
+Nonmutating recursive-mkdir ENOENT probes retain the error without advancing
+creation order. Hold parent identities stable through each child creation;
+reject races, symlinks, wrong actor/order/mode and undeclared children.
+At B=C or any registered B=R, only pinned durableBlob may create
+B/.musubix/evidence/test-runtime/v1/blobs/<raw SHA-256> and its exact temporary
+B/.musubix/evidence/test-runtime/v1/blobs/.<sha>.<UUID>.tmp, mode 0600;
+sha is the same lowercase raw SHA-256 of the blob bytes. Open the temporary
+exclusively (wx), write/file-fsync/close, then hard-link to the create-only
+target; EEXIST is accepted only with exact existing-byte verification.
+On POSIX, directory-fsync after publication, unlink that temporary,
+directory-fsync again and rehash the target. No replacing rename of a blob
+target is admitted; existing transport-file rename semantics stay unchanged.
+Bind the temporary, target and cleanup to the same pinned writer/root.
+Outside admitted private TMP, no arbitrary root, other filename, sibling
+or descendant is authorized by this grammar.
+The explicitly registered private-runtime-blobs allocations cover only the
+frozen EVIDENCE-001 shared helper and BLOB-PLATFORM-001 mkdtemp roots
+TMP/musubix5-runtime-{evidence,publication,publication-failure}-<six-character suffix>.
+The braces denote exactly those three prefixes; bind each realized root to its
+pinned frozen test/helper mkdtemp call before admitting creation. Register only
+that root and its exact parent-first directory chain: <root>/.musubix,
+<root>/.musubix/evidence, <root>/.musubix/evidence/test-runtime,
+<root>/.musubix/evidence/test-runtime/v1 and
+<root>/.musubix/evidence/test-runtime/v1/blobs, for the pinned frozen helper
+or durableBlob writer as applicable. Root-pattern membership is not registration.
+The ancestor-mkdir checks still apply: keep identities under custody, reject
+symlinks/escapes, and deny TMP/unlisted and every unregistered root, sibling or
+descendant directory, including siblings beneath a registered root.
+These private durableBlob roots are governed by the existing private TMP row
+plus these registered private allocations, including linux behavior, win32
+temporary unlink without directory fsync, test-side blob overwrite/restore,
+injected sync/rehash-fault leftovers and cleanup. C/R-specific directory, actor,
+mode and fsync/publication rules do not constrain these private TMP writes;
+the private allocation's own writer/path/identity bounds still apply.
+They are neither C/R grammar authority nor publication evidence, and do not
+establish a third authoritative runtime blob-root category.
+The following frozen directory-allocation registry is exhaustive for the
+twelve-test batch. SIX means exactly six ASCII alphanumeric characters
+returned by the pinned mkdtemp call, not a wildcard permission. Q denotes
+that call's exact registered root. Test labels abbreviate the frozen IDs;
+TRUST denotes TEST-M5-RELEASE-002-TRUST-001. Limits are per selected test
+execution, reset only for a new traced invocation, not a retry within it.
+Shared helpers inherit the selected test owner and their actual loop slot.
+Register the view, ordinal/test ID, source hash/range, call/loop slot,
+realized path, operation/writer set and parent identity BEFORE admitting
+the first mkdir. Failed candidate-name collisions retain EEXIST without
+authorizing an existing foreign root; only a successful owned allocation
+consumes its slot. No registration by matching a prefix alone.
+
+| Allocation | Exact root | Owner, maximum successful roots | Admitted directories/files beneath Q |
+|---|---|---|---|
+| blob-evidence | TMP/musubix5-runtime-evidence-SIX | EVIDENCE-001: 4, one per tdd/command/result/integration role; BLOB-PLATFORM-001: 2, one per linux/win32 | The five-component blob chain above, then only helper-generated SHA-256 blob files, their frozen tamper/restore/delete cases and registered publication temporaries as applicable. |
+| blob-publication | TMP/musubix5-runtime-publication-SIX | BLOB-PLATFORM-001: 2, one per platform | The same blob chain; pinned durableBlob and frozen observation/fault writers only, retaining the private publication semantics above. |
+| blob-publication-failure | TMP/musubix5-runtime-publication-failure-SIX | BLOB-PLATFORM-001: 3, linux sync and win32 sync/rehash | The same blob chain; only the corresponding injected fault's targets/temporaries and cleanup. |
+| untransferred | TMP/musubix5-runtime-untransferred-SIX | EVIDENCE-001: 4, one per role | None: create/remove Q only; missing blob reads must stay missing. |
+| aggregate-a | TMP/musubix5 runtime A SIX | AGGREGATE-001: 6, one per logical invocation | None: create/remove Q only. |
+| aggregate-b | TMP/musubix5 runtime B SIX | AGGREGATE-001: 6, one per logical invocation | None: create/remove Q only. |
+| child | TMP/musubix5 runtime child SIX | CHILD-001: 1 | No subdirectories; only child observation.mjs and package.json written by the frozen test. Node/npm/npx execute those inputs, with npm derived outputs confined to the separate private cache. |
+| gate-config | TMP/musubix5-runtime-gate-SIX | GATE-FINGERPRINT-001: 1 | Only .musubix and .musubix/config.json, including the frozen config replacements. |
+| timers | TMP/musubix5-test-runtime-timers-SIX | TIMERS-001: 1 | Only the private Git-init and CHANGE-0017 lease grammar below. |
+| mtime | TMP/musubix5-runtime-mtime-SIX | HOST-BOUNDARY-001: 1 | The same Git/lease grammar; the frozen test may recreate only its released lease directory and set that directory's mtime. |
+| trust | TMP/musubix5-candidate-trust-SIX | TRUST: 1 | Only .musubix/config.json, package.json, their .musubix parent and the per-writer private Git-init/config/add/commit/maintenance grammar below; unsigned ingestion rejects before any evidence writer. |
+| nested-worker | C/.musubix/cache/worker-runtime-probe-SIX | MODULE-ORDER-001: 4, one per forks/threads/vmForks/vmThreads; CHILD-001: 1, forks | No subdirectories; only observation.json, worker.test.ts, vitest.config.mjs and native.json. |
+| type-boundary | C/.musubix/cache/runtime-type-boundary-SIX | EVIDENCE-001: 1 | No subdirectories; only unvalidated.mjs. Both tsc invocations use --noEmit; no build output is allocated here. |
+| groups | C/.musubix/cache/runtime-groups-SIX | AGGREGATE-001: 1 | None: --describe-groups emits stdout only. native.json must remain absent; described runId/run/command-run/report paths are values, not directory allocations. |
+
+There are 14 mkdtemp source sites, four explicit mkdir source sites and at
+most 39 successful test-body root allocations across one complete twelve-test
+pass. A failed Red may exercise a strict subset; it gets no other allocation.
+In particular, the evidence helper serves EVIDENCE-001 as well as
+BLOB-PLATFORM-001. No empty aggregate/untransferred/groups root may acquire
+a .musubix, run, command-run, worker-acks or arbitrary UUID child.
+These roots are not registered runtime R entries merely because an API
+parameter is called repo, run or controlRoot. Cache placement grants no C
+publication authority; private Git common roots are not the authority G.
+
+For timers/mtime/trust Q only, use Git 2.43.0, /usr/bin/git raw SHA-256
+2a8c18fbf43da9f692d75474c72bea9dfd796c260b0f3dfe456376abc3bbd668
+(the official private copy has identical bytes), umask 0022, the exact
+26-key environment, empty read-only global config/template and pinned
+private git-core. Bind each process to its frozen caller: candidate-gate-trust
+24-26/33-34, timers 118, worker 537; no permission from a Git basename alone.
+The safe isolated file-operation probe is non-credit, not the official tracer.
+Its operation manifest retains native flags/modes/results, writer PID/exec,
+ordered paths, raw trace/tool/helper/environment/source hashes and cleanup.
+The following is the closed per-writer Git write-set; paths are relative to Q.
+
+| Pinned writer | Exact operations and lifecycle |
+|---|---|
+| git init --quiet Q (timers/mtime/trust) | mkdir .git, .git/objects, .git/objects/info, .git/objects/pack, .git/refs, .git/refs/heads, .git/refs/tags with native 0777 (0755 under umask). Create/write/close .git/HEAD.lock then rename to HEAD (refs/heads/master); four serial config.lock create/write/close/rename-to-config rounds for the pinned empty-template init. Lock opens are O_RDWR\|O_CREAT\|O_EXCL\|O_CLOEXEC, 0666 (0644). After the first config publication, chmod that exact regular file 0100744 then restore 0100644; each subsequent config.lock chmod is exactly 0644 after open and before write/close/rename. No chmod repair, other mode or other target. |
+| init filesystem probe (same init PID only) | Exactly one successful .git/tSIX leaf: O_RDWR\|O_CREAT\|O_EXCL, 0600 regular-file creation, close, unlink; then symlink("testing", SAME leaf), no-follow lstat, unlink. Both objects must be absent before init exits. Register the actual six ASCII alphanumeric suffix before creation; EEXIST candidate collisions grant no existing-object permission. This is the sole symlink exception, not a writable symlink subtree. |
+| git -C Q config user.email test@example.com (trust line 25) | One .git/config.lock exclusive 0666/0644 open, chmod 0644, write/close, rename to .git/config. Bound to this exact process/argv/key/value; no direct config write, config chmod, directory creation or borrowed init permission. |
+| git -C Q config user.name "Test User" (trust line 26) | The same single config.lock lifecycle, separately registered to this second exact process/argv/key/value, not permission for arbitrary git config. |
+| git -C Q add . (trust line 33) | One .git/index.lock exclusive 0666/0644 open, write/close and rename to index; only the two content-bound staged blobs and their object publication lifecycle below. No config, refs, reflogs or maintenance writes. |
+| git -C Q commit --quiet -m candidate (trust line 34) | One index.lock exclusive 0666/0644 write/close/rename-to-index; .git/COMMIT_EDITMSG O_WRONLY\|O_CREAT\|O_TRUNC 0666/0644 write/close; the two trees and at most one unknown commit object below. Create/close .git/HEAD.lock and unlink it (NOT rename to HEAD); create/write/close .git/refs/heads/master.lock and rename only to master. mkdir .git/logs, .git/logs/refs, .git/logs/refs/heads (0777/0755); open/write/close only logs/HEAD and logs/refs/heads/master with O_WRONLY\|O_CREAT\|O_APPEND 0666/0644. Missing-parent open probes retain native ENOENT, then parent-first mkdir/retry. |
+| commit absent-state probes (same commit PID only) | unlink only .git/AUTO_MERGE, .git/MERGE_HEAD, .git/MERGE_MSG, .git/MERGE_MODE and .git/SQUASH_MSG, each independently no-follow checked absent and returning native ENOENT without mutation. Existing entries, symlinks, races, foreign writers or another name are denied, never deleted or translated to ENOENT. |
+| commit's pinned maintenance run --auto --quiet child | Verify the child exec image/hash and parent/argv binding. Only .git/objects/maintenance.lock O_RDWR\|O_CREAT\|O_EXCL\|O_CLOEXEC 0666/0644 create/close/unlink. No lock-content write, pack/repack, maintenance directory, ref/config or other object mutation; unexpected auto-maintenance work blocks authority. |
+
+Only trust add/commit may allocate object fanout directories. Derive the
+complete IDs of the two blobs and two trees independently from the frozen
+staged bytes/tree encoding. Do NOT precompute or reuse a commit ID: its native
+timestamp varies. For each case, observe the pinned commit process's
+access(".git/objects/<two lowercase hex>/<38 lowercase hex>", F_OK) at entry,
+after the two known trees and COMMIT_EDITMSG, and register that full unknown
+40-hex ID before any corresponding fanout mkdir. Bind it to this Q/view/
+invocation/PID; admit at most ONE distinct unknown commit ID per case, including
+retries. A prefix alone, later link destination, post-exit object enumeration,
+another process's access or a previous case's commit ID cannot authorize it.
+Retain the native access result. Only that registered full-ID route may mkdir
+its fanout (0777/0755); an existing owned fanout is unchanged through EEXIST.
+Known blobs/trees also require their writer's observed complete-path access
+before their fanout/publication, not hex-prefix matching.
+For each registered object, admit its writer's exclusive
+.git/objects/<bound fanout>/tmp_obj_SIX open (O_RDWR|O_CREAT|O_EXCL, 0444),
+write/close, hard-link to that exact full-ID destination and unlink the same
+temporary; never replacing rename or a link to a different object. A failed
+pre-mkdir temporary open retains ENOENT without allocating; a new suffix on
+retry is separately bound, at most one live successful temporary per object.
+EEXIST collision probes cannot adopt foreign objects; existing owned targets
+require exact content/type verification. Rehash/decompress the published
+object and verify its type/content; the sole commit must reference the two
+bound trees, have no parents, and bind the configured author/committer,
+observed native timestamp and candidate message. No pack, new branch, hook,
+template/hooks/branches subtree or maintenance directory is allocated.
+
+The init .git/tSIX exception overrides reject-symlink ONLY for creating,
+no-follow inspecting and unlinking that registered leaf in the same init
+lifecycle. It never permits traversal, read/write through the link, children,
+rename/link destinations, another target, another writer or a surviving link.
+Keep .git and all ancestor identities pinned; hold absence/identity checks
+through each syscall. General no-symlink/escape and unregistered-descendant
+denial remains mandatory everywhere else, including cleanup. A leftover probe,
+wrong lifecycle/flags/mode, missing required removal or unexpected operation
+fails closed; do not chmod, follow or delete an unregistered object to recover.
+For timers/mtime only, journal.ts may create Q/.git/musubix5,
+Q/.git/musubix5/leases, its fencing child and its change-CHANGE-0017 child.
+Admit only that lease's owner.json, owner-<UUID>.tmp, fencing counter and
+counter.<UUID>.tmp; takeover may rename the exact lease to its registered
+change-CHANGE-0017.stale-<UUID> sibling solely for removal. A stale sibling
+is not a mkdir allocation. The HOST test's ownerless recreation/utimes is
+restricted to its exact released lease. These are private test artifacts,
+not control leases, journal/order evidence or runtime publication.
+
+Except for the exact transient init tSIX leaf above, all root/child
+admissions retain ancestor-mkdir identity/no-symlink checks,
+parent-first creation, native EEXIST/ENOENT and the pinned writer's own flags/
+modes; the C/R 0700/0600/fsync contract is not imposed on frozen helpers'
+ordinary mkdir/write calls. Cleanup may remove only the owned allocation
+and registered descendants, never pre-existing parents or an unregistered
+sibling. Unregistered descendants fail closed even under a registered root.
+No non-test writer may borrow a frozen test's registration or slot.
+The private row is not an alternate permit for a denied registered/unlisted
+test root. TMP/unlisted, prefix lookalikes, wrong-view roots and C/G/R
+substitutions remain denied.
+
+Official ordinals 1..12 and 15..26 select exactly their frozen test; 13, 14
+and 27 are batch checkpoints and receive no test-body allocations. Their
+existing native/ledger/journal/source-blob/atomic-temp/external-lease rules
+remain unchanged. Before first exec, provision and pin the fixed C parents
+.musubix/cache, .musubix/evidence/native/test, .musubix/journal/normal,
+.musubix/trace and .musubix/evidence/tdd-source/v1/blobs, including ancestors;
+provision BuildProof's exact dist parent inventory, the two Vite mount roots
+and the declared private HOME/npm/cache parents from their closed inventories.
+Their recursive mkdir calls are EEXIST checks, not new dynamic authority.
+Only the already registered Vitest label bucket, G lease chain, provider
+test-runtime/R/worker-acks and C/R blob chains may add their listed dynamic
+parents outside the frozen registry. Npm/npx/cache writers must use the
+pinned derived-output inventory, with parents provisioned before dispatch;
+any newly required directory needs pre-authority revision, not a TMP escape.
+Ordinal 14's authorized restore/build uses only restored source paths and
+the supplement BuildProof's exact parent inventory, provisioned by the
+supervisor before the traced build/checkpoint; it grants no test fixture root.
+The supervisor's separate S publication allocations are not runner writes.
+Source-supersession pair scratch, unselected test suites, npm installs and
+executing described codegraph groups are not these 27 command shapes.
+The real-command spike must check every actual mkdir against this complete
+allocation/fixed-parent inventory, including nested Node/npm/npx/Vitest,
+Git and tsc operations. A new dependency writer blocks authority until a
+design revision; this source enumeration/model is not an executed trace.
+Source enumeration: worker 178/396/536/545; evidence
+104/106/717/736/773/774/838/902/943; gate 66/68; timers 117;
+candidate-gate-trust 22/27. Lines name the five frozen test files, not a
+combined worker file. Archived runtime mkdir sites are 251/579/580/581;
+journal.ts 149/184/192/521, adapters.ts 193 and files.ts 126 cover the
+selected production parent writers. Read-only runtime augmentation and
+group validation create no directories.
+Direct source: archived packages/analysis/src/test-runtime.ts SHA-256
+92bd7ebfad27fcfdecb29bdb32e9f00ecf6b5200ee8db2432b374a76bb389296,
+lines 197/249-271 (directory and durableBlob; temporary/publication/fsync at
+252-264), 502-511 (publishTestRuntimeClosure passes caller-supplied controlRoot;
+the frozen call-511 cases use private TMP, not C), 548-559/582 (snapshotRuntime into R),
+578-581 (provider allocations), and 612-653 (R dispatch/request/anchor,
+worker and completed-ack blobs).
+Frozen TEST-M5-TEST-CLOCK-BLOB-PLATFORM-001 in tests/test-runtime-evidence.test.ts,
+SHA-256 51444711ff40986c9bd5359a89e5b9ded2fbf98f81387d36df678be6c605fb18:
+99-112 (private-TMP source/blob helper), 588-632 (observedPublication and
+injected sync/rehash faults), 900-908 (linux/win32 mkdtemp controlRoot calls),
+920-923 (platform-specific directory sync), 930-966 (repeat calls, overwrite/
+restore, fault leftovers and cleanup). The labels control/controlRoot do not
+establish C identity. Apply identical closed lists/checks in
+control and feasibility copy, resolving C and its registered R inventory
+to that view only; neither view authorizes the other's paths.
+
+Closed frozen write-set summary (same per-owner/slot/identity bounds as the
+registry; no recursive permission): private-runtime-blobs are exactly
+TMP/musubix5-runtime-evidence-SIX, TMP/musubix5-runtime-publication-SIX and
+TMP/musubix5-runtime-publication-failure-SIX, with their registered blob chains,
+files, private tamper/fault/cleanup behavior, never C/R publication authority.
+Private-frozen-tests are exactly TMP/musubix5-runtime-untransferred-SIX,
+TMP/musubix5 runtime A SIX and TMP/musubix5 runtime B SIX (empty);
+TMP/musubix5 runtime child SIX (child observation.mjs and package.json);
+TMP/musubix5-runtime-gate-SIX (.musubix/config.json and its parent);
+TMP/musubix5-test-runtime-timers-SIX and TMP/musubix5-runtime-mtime-SIX
+(only their registered Git-init/probe and CHANGE-0017 lease operations);
+TMP/musubix5-candidate-trust-SIX (the two staged files/.musubix parent and
+only the per-writer Git init/config/add/commit/maintenance operations above).
+Control-cache probes are exactly C/.musubix/cache/worker-runtime-probe-SIX
+(observation.json, worker.test.ts, vitest.config.mjs, native.json),
+C/.musubix/cache/runtime-type-boundary-SIX (unvalidated.mjs only), and
+C/.musubix/cache/runtime-groups-SIX (empty; no native.json).
+These 14 allocation families cover at most 32 private-TMP and seven
+control-cache roots per twelve-test pass. Neither cache probe is R; no private
+Git root is G. Empty roots stay empty. Unregistered descendants/siblings,
+wrong writers/views and C/G/R substitutions remain denied. The init tSIX
+symlink is only the exact transient exception above, never path traversal.
+Deterministic checks must compare all four mirrored registries AND this
+summary against every registry root, allowed child and owner/limit; omitting
+a family or either control-cache probe fails even when mirrors agree.
+
+Allow dist writes for global-setup/nested Vitest only with post-call BuildProof
+bytes/modes/path equality. Register ALL bounded private frozen-test and
+control-cache allocations in the closed frozen write-set summary above,
+nested runtime runIds, selected native report, order/tdd/changes,
+trace index, next normal journal record, runtime/source blobs and pinned
+atomic temporaries. External G/musubix5/leases admits only registered
+invocation lease/fencing/owner paths. Admit private HOME/TMP/npm/XDG outputs
+under their closed rules; pack stays HOME/TMP-only. Everything else is
+read-only/no-write; F/prior S and runner access to sidecar authority stay
+immutable. A writable parent never admits siblings. Audit seccomp-routed
+mutations; undeclared writes or changed dist fail, not broaden a live policy.
+
+After actual tracer/audit/policy/namespace/environment preparation and before
+F/S authority/intent, run the isolated non-credit real-command feasibility
+spike with separate Git common root/leases. Execute all ordinal 1..27 shapes:
+twelve Reds, Red batch, full ordinal-14 restore/build/slice-policy supplement
+and implementation batch, twelve completed-implementation Greens, Green batch.
+Bind results.feasibility to Feasibility/SliceProof with per-shape namespaceProof
+equal to its TraceLog.namespaceProof
+Ref, checked against selected tracePolicy.namespace/distProof: pre-D 1..13,
+supplement 14..27; no top-level proof or cross-shape/policy substitution.
+Capture exec/write/mount closure, trace bytes and wall time.
+Every shape/nested window must be <=50%
+of its tightest enclosing timeout (30,000-ms child <=15,000 ms, less under
+a tighter test). An unavailable authority/hash cycle fails, not fabricated
+phases. Cache executable hashes only by dev/inode/size/mtimeNs/ctimeNs,
+re-stat at each exec-stop and rehash changes. Failure permits policy/design
+revision before authority; never control mutation/TDD credit. Existing
+campaign/memory/storage caps apply; use existing payload Refs, no new closure
+path. This task does not execute the spike.
+
+Keep the exact npx commands; direct Node equivalence of npm side effects is
+not assumed. Dist reset and both comparison builds use umask 0022, normalize
+only dist/packages/cli/src/main.js to 0755 BEFORE hashing, and bind the private
+cache/_npx link tree whose real entry is that exact file/bytes/mode. Only this
+cache is admitted, not global/shared cache. Rebind after ordinal 14's build
+and recheck at 15. Inventory every npm-prepended ancestor node_modules/.bin,
+explicit binPath and node-gyp-bin before/after and at exec-stop; read-only
+shared parents must lack node/npm/npx/git/sh/env/vitest/musubix5 and never
+supply an approved executable. No shared chmod or silent PATH shadowing.
+Mask existing outside-parent bins with empty read-only namespace views,
+preserving separate host/view inventory hashes before/after; absent host
+paths remain absent. No host mkdir/chmod or masking of admitted control/cache bins.
+
+Read-only HOME/.npmrc retains offline/prefer-offline, disabled notifier/audit/
+fund and private HOME cache/prefix/global-config/log policy for the frozen
+ISOLATION npm pack child's reduced environment. Owned namespaces provide
+private /tmp and /var/tmp even without TMPDIR; only declared HOME/TMP writes
+are permitted for pack. Ptrace syscall admission denies network/registry
+attempts, io_uring/namespace escape and other writes; verify zero network
+attempts, not merely a successful exit. Unavailable namespace/ptrace support
+is a prerequisite failure, not permission to edit the test.
+Tracer source/binary/build proof are capped at 64 KiB/4 MiB/4 MiB; unchanged
+F/dependency/payload caps still apply. R22 lossless wire outputs use selected
+slot caps, decoded<=64 MiB/call and stored<=512 MiB aggregate within S;
+<=100,000 process/exec and <=5,000,000 pack syscall events per call.
+P<=287,178,752 bytes permits separately approved source/seed/fixture/probe work;
+W before D1 adds post slot caps<=240,648,192 bytes (102×2,359,296) PLUS seven W
+shared owners<=6,291,456 bytes to actual P charges (all six P shared owners
+and carry included); combined <=534,118,400 bytes with 2,752,512 bytes
+unallocated margin. Overflow blocks
+admission/Red, not P authorization;
+no 54-dispatch shortcut, aggregate cap increase or sampling.
+
+Closed sidecar precedence is generationAbandonRequired > batchPending >
+resumeCapability > platform > environment > executableIdentity > isolation >
+sourceContract > targetIdentity > nativeReport > retryConsumed >
+retryEligibility > ownership > facts > authority > lineage > durability >
+capacity > callFailed > callInterrupted > missingPersistence > admission.
+These are exactly 22 fields; no additional /sidecar field/suffix is allowed.
+The first three outrank every other validation/admission failure.
+generationAbandonRequired means official abandonment under its existing
+approver/confirmation contract. batchPending, resumeCapability, retryConsumed,
+retryEligibility, ownership, lineage, callFailed, callInterrupted and
+missingPersistence mean suspend/manual investigation
+with no mutation. Other fields permit deterministic preparation retry only
+before any F/S authority/intent; after publication they mean suspension.
+No cleanup or self-approved abandonment is implied.
+
+Use full before/after raw native order/journal/TDD/changes snapshots.
+Classify each delta O,J,T,P as U=unchanged, E=the exact expected native delta,
+or X=anything else/unreadable. UUUU is clean; EUEU is TDD complete; EEUE is
+batch complete; UEUU/EEUU are known batch pending. All other combinations
+or any X after dispatch are persistenceAmbiguity and require abandonment.
+Custody loss or lease failure without unchanged target identity also requires
+abandonment. A known pending batch is terminal, not a no-run continuation;
+a changed expected report with clean TDD facts and no native continuation
+selects resumeCapability. Exact native digests/linkage and preserved unrelated
+records are mandatory; no exit-code/tip-only inference.
+Classify outcome=success|failed|interrupted from the sealed actual Attempt's
+outer exit/signal. AA=00 failure/interruption can retry only with unchanged
+identity, clean native facts and every guard; AA=01 failure is terminal.
+Missing targets, unexpected reports and higher-ranked failures take precedence.
+Success/clean official calls fail missingPersistence; only success/complete
+with full proofs yields receipt. Failed/interrupted complete facts suspend.
+Rank 2 is batch-only; receipt requires dispatch; fallback covers ALL dispatched
+calls. Undispatched non-base execution fields (excluding admission metadata
+authorityPublished/flags) reject facts/suspend if authorityPublished=true,
+otherwise facts/prepare before classification, never
+permission to mutate/recover published authority. Base flags use P/M rules.
+Exhaust 279,936 states: 3^4 deltas * 3 outcomes * 2 kinds * 4 targets *
+3 reports * 2 lease * 2 custody * 2 attempts * 3 retry reasons * 2 guards,
+with dispatched/authorityPublished true, continuation false and flags empty.
+Require one decision, no dispatched none and no TDD batchPending.
+The design's 66 deterministic classifier fixtures cover every terminal action
+and precedence collisions. checks.terminalCases stores their non-credit
+results, including retry-collision with leaseFailure=true and the two
+undispatched facts/prepare cases plus sealed-undispatched-failure/facts-suspend,
+in the 42-file closure; no test/evidence edit is authorized now.
+
+The five-file baseline at EVERY g9 design checkpoint, including superseding
+or re-recorded checkpoints, is:
+
+| Authoritative file (under tests/) | G8 SHA-256 |
+|---|---|
+| candidate-gate-trust.test.ts | f1f6c2f9f26c764225a7a317357879dd85866365e8fd5cf2ddbd6cd273fd43be |
+| test-runtime-evidence.test.ts | 51444711ff40986c9bd5359a89e5b9ded2fbf98f81387d36df678be6c605fb18 |
+| test-runtime-gate.test.ts | 282e88756b4c89d182c04af24bc51e74c639c309f955d6c1fdb5f9162dc32beb |
+| test-runtime-timers.test.ts | 537545a730e760093cba4cc272802560aed507c6f0e23cb7737918afb4a30457 |
+| test-runtime-worker.test.ts | 5591efa0440a03a201df78c47b547b61939b118f68ef83e6b88237c24ab0a600 |
+
+After the latest active design checkpoint and its approved HOST-BOUNDARY edit,
+only the last whole-file hash may differ.
+G9 freezes all five prepared files and checks them before/after every official
+phase. These requirements do not assert that a g9 diagnostic or freeze already
+exists or that the archived incomplete implementation can already pass.
+
+## Historical generation-7 failure and generation-8 recovery
+
+Generation 7 recorded twelve genuine Reds at evidence orders 3789-3800 and
+one serial batch Red checkpoint at order 3801, normal journal 939. Preserve
+these records and their frozen sources; no implementation or Green was recorded.
+The frozen TEST-M5-TEST-CLOCK-EVIDENCE-001 positive activation fixture reuses
+identical design/Red/implementation fingerprints. Existing checkpoint predicates
+identify both tests-unchanged-since-design and implementation-unchanged-since-Red.
+Structural journal validity does not make that a completed admissible history.
+The approved recovery analysis finds no valid in-generation correction:
+void, source-supersession, repair, migrate and refactor do not apply.
+
+The exact twelve TEST-to-source bindings occupy FIVE distinct authoritative
+files, not twelve distinct files. Their raw bytes and native reports are
+archived under .musubix/cache/g8-transition/g7-frozen-sources/ and
+.musubix/cache/g8-transition/g7-native-reports/. The complete hash inventory is
+.musubix/cache/g8-transition/g7-frozen-report.json, SHA-256
+6761d8e9f8e9cb89cc2e5fb795002645d4edb0a13f1ec52bf6411cf638436a8f.
+Focused defect evidence is
+.musubix/cache/g7-runtime-implementation-preflight/frozen-activation-fixture.json,
+SHA-256 16d22c875385d6da104579a27a29a6d854b33860c4128bbe32831ca52ccd01cf;
+an exact copy is retained beside the inventory.
+
+Nahisaho's normal-execution authorization permits official generation-7
+abandonment and generation-8 impact reopening with the full six-ID set,
+without deleting branches, cleaning dirty control, or changing frozen tests.
+It does not approve generation-8 requirements/design or authorize new test
+edits, Red, implementation, Green or a plan at this recovery boundary.
+Preserve generation-6 branches/results, provisional integration f35dc5c,
+SESSION approval, order 3274 and inactive waivers. Official CLI records alone
+establish the actual transition orders and active generation.
+
+Official abandonment completed with approver nahisaho/confirm and the exact
+hash-bound reason in .musubix/cache/g8-transition/abandonment-summary.json.
+It allocated no new evidence order. Generation-8 impact reopened at order
+3802 with all six requirements. No generation-7 plan existed, so no cleanup
+or worktree removal was required; all branch tips and worktrees are retained.
+That recovery boundary ended with g8 requirements preparation, not approval;
+it is historical and does not describe the current g9 action.
+
 ## Classification
 
 Defect correction, workflow UX improvement, public CLI completion, and
 benchmark infrastructure covering GitHub Issues #48, #23, #46, and #8.
+Generation 9 additionally corrects the diagnostic-contract requirements
+documented by #52 without adding an unrelated production behavior change.
 
 ## Confirmed intent
 
@@ -55,7 +1992,864 @@ benchmark infrastructure covering GitHub Issues #48, #23, #46, and #8.
   `REQ-M5-TDD-004`, or `REQ-M5-WAVE1-TDD-001/002` as permission to bypass their
   current contracts or reuse maintenance commands as implicit supersession.
 
-## Current phase: design after requirements supersession
+- Refine `REQ-M5-LIFECYCLE-006` / `REQ-M5-COMPAT-013` with a committed,
+  content-bound deterministic TEST verification runtime. Preserve the six-ID
+  set and ordinary source-supersession behavior; fix the environment rather
+  than editing frozen tests or adding source-maintenance authority.
+
+## Deterministic verification runtime contract
+
+The superseded test-edit protocol proposals are withdrawn. Their
+artifact/CLI/schema/diagnostic/terminal/batch-exception definitions have been
+removed from the normative files. No such operation artifact or terminal was
+ever published. Prior read-only diagnostic caches remain historical
+observations, not authority. Approved ordinary source-supersession, its
+SESSION artifacts, order 3274 and inactive waivers are unchanged.
+
+The runtime uses the existing IDs and DES-M5-015 / ADR-0036 refinement.
+At the recorded diagnostic baseline, generation 6 was active and control HEAD was
+9b2dc0170a5065a952a5cbe23fe68268325fbb30. Preserve failed integration commit
+f35dc5c364182f723da2581a7a7c6e5107aa1eef and every assignment branch/evidence
+record. Approval and lifecycle status are established only by official records,
+not by wording in this document.
+
+### Read-only evidence and root cause
+
+Normal journal 929 binds generation 6, plan
+parallel-plan:2cfea773195eacf800437b39530f7374d40941c334a186988d738784b88c409d,
+integration attempt 1 and the failed commit above. Its record chain hash is
+d3a31b93c29d47cc7f4f17e8c2f2395a68234ebe18b6c791e347822a7136a889;
+the complete canonical record hash is
+fea26116440b9c17d305fe24a81f0db77f8062501cb93d9137acc7e5f5e0ab85.
+It records these four failures and an incomplete npx vitest run timeout of
+180028 ms (approved 180000, exitCode null):
+
+| Test | Required correction |
+| --- | --- |
+| TEST-M5-TDD-WRITER-DIAGNOSTIC-001 | Stable test wall progression in the holder and Node child; test unchanged. |
+| TEST-M5-CHECKPOINT-CLI-DIAGNOSTICS-001 | Same shared test-clock origin, including npx-spawned CLI; test unchanged. |
+| TEST-M5-CONCURRENCY-LEASE-CONTRACT-001 | Bootstrap before all three rows/renewal timers, preserving their real timing and TTL assertions; test unchanged. |
+| TEST-M5-PARALLEL-GRAPH-ACYCLIC-001 | Fresh implementation TDD for the production workflow cycle and benchmark-input scope. |
+
+The earlier isolated integration/alias-overlay diagnostics are retained under
+.musubix/cache/g6-third-review/. They observed LEASE_FENCED under real wall
+advances of 24318 ms during 506 ms monotonic elapsed. The alias fix removed
+unresolved @lib/value but left workflow.ts/workflow-current.ts and intentional
+benchmark cycle-a/cycle-b cycles. Full overlay execution still timed out at
+180021 ms with functional failures; neither cutoff is a completion budget.
+
+All three contention files remain byte-identical to the failed integration.
+No historical cycle is required for running the unchanged concurrency test.
+The separate unchanged controls are TEST-M5-LEASE-RENEWAL-BACKWARD-001 in
+tests/checkpoint-clock.test.ts and TEST-M5-LIFECYCLE-004 in
+tests/change-lease.test.ts. Keep their existing explicit clock injections
+and expiry/takeover/fencing assertions. Their fixed two-worker diagnostic
+passed (98 ms and 89 ms); retain the reports under
+.musubix/cache/g6-fourth-review/ without treating them as new TDD credit.
+
+### Current-base focused failure inventory
+
+The read-only command below ran without code/test/config edits or evidence
+recording; its result is .musubix/cache/g6-runtime-review3/focused.json.
+
+```sh
+npx vitest run tests/candidate-gate-trust.test.ts tests/change-completeness-current.test.ts tests/candidate-gate.test.ts tests/candidate-gate-eol.test.ts tests/approval-effective-projection.test.ts --reporter=json --outputFile=.musubix/cache/g6-runtime-review3/focused.json
+```
+
+Exit 1: 12 tests, 10 passed, 2 failed. No full-suite run was performed.
+
+| Test/file | Classification and exact observation |
+| --- | --- |
+| TEST-M5-RELEASE-002-TRUST-001 / candidate-gate-trust.test.ts | Deterministic stale expected policy digest: expected 4024de812ec88cca469bc4e86825b742691c92f8f605c03d4b44b3294a1dfd2d; actual bb4a58c169b4e4f7357b608dc3b00028a613f907613b88d1540b3654ea600c8a, matching the prior base design. Failed in ~657 ms. Not evidence the existing materializer is wrong; future runtime gate derivation is a separate implementation change requiring genuine Red. |
+| TEST-M5-QUALITY-COMPLETENESS-001 / change-completeness-current.test.ts | Current evidence/state-dependent failure, ~11018 ms. Four CHANGE_COMPLETENESS_TDD diagnostics for CHANGE-0017 APPROVAL-007, EVIDENCE-007, LIFECYCLE-006 and WORKTREE-004. Read-only validator also reports PARALLEL_TDD_UNCONSUMED for APPROVAL/EVIDENCE/WORKTREE. No CHANGE_COMPLETENESS_TEST or ACCEPTANCE error. Preserve the real-state assertion; do not manufacture completeness before verified integration. |
+| candidate-gate.test.ts; candidate-gate-eol.test.ts; approval-effective-projection.test.ts | All 10 tests passed (~2139/~1/~379 ms per file). No implementation defect reproduced in this bounded adjacent set. |
+
+The exported read-only validateChangeCompleteness(process.cwd()) result is
+saved in completeness-detail.json; official `npx musubix5 tdd validate --json`
+returned exit 1 and is saved in tdd-validation.json. These are diagnostics,
+not Red or quality credit, and are distinct from journal 929's historical
+failures. Completeness must eventually pass from genuine integrated evidence;
+if valid completed evidence still fails, isolate a fresh defect regression.
+
+TRUST is a fresh ordinary g8 cycle target under serial REQ-M5-COMPAT-013,
+not a parallel APPROVAL-007 cycle. Its complete file is frozen by the g8 #51
+workaround. After requirements/design approval and checkpoints, verify its
+archived g7 bytes already contain the toBe literal
+327baa0f399450fd6714f112e41bc23e13de79a9c1113499795ea76d87bcd03e
+and @verifies REQ-M5-COMPAT-013, retaining all other assertions including
+unsigned-artifact rejection. Do not edit it or credit the historical edit as
+the g8 design-to-Red change. This is a fresh ordinary cycle, not source
+supersession or dedicated human source approval.
+TRUST's path remains tests/candidate-gate-trust.test.ts.
+
+TDD-003 selects the greatest verified terminal order across all cycles. TRUST
+already has the ordinary CHANGE-0005/g1 -> CHANGE-0013/g1 precedent:
+cycle 32478a19-c5ce-4279-ac6b-3e229b1686bb (Red 1596, Green 1597), then
+de97853b-9d78-4021-9479-6411544d2f11 (Red 2087, Green 2101), same TEST ID/path.
+No maintenance selection or cross-CHANGE evidence mutation is needed.
+Older cycles remain immutable history; the fresh g8 cycle receives
+its own ordinary credit once, not transferred credit.
+
+Removing only testRuntime from the 327baa... normative gate object recomputes
+bb4a58c169b4e4f7357b608dc3b00028a613f907613b88d1540b3654ea600c8a,
+the current candidateGateFingerprintConfig output. It does not yet derive
+testRuntime, so after preparation only this missing behavior may cause Red:
+actual bb4a... versus expected 327baa.... Reject setup/module/unrelated failure.
+The gate policy, profile digest and 21-path inventory are unchanged.
+The separate GATE-FINGERPRINT-001 regression still needs its own genuine cycle.
+Temporary TDD_TEST_STALE between preparation and successful new Red is expected;
+do not claim a passing gate during that interval. Red clears source staleness,
+not the need for Green or verified integration. No test edits are allowed
+after Red, including annotation changes.
+
+### Bounded runtime and graph work
+
+DES-M5-015 defines a worker-before-modules stable Date.now bootstrap, one
+shared run wall/monotonic anchor, per-process monotonic calibration, scoped
+Node preload inheritance, local mock precedence and duplicate-import
+idempotency. It changes neither timers/lease production nor frozen test
+source. Source hashes and actual runtime identity belong in command/runner
+evidence; bootstrap implementation is committed but absent from production
+dist/exports/package outputs. No source approval is needed for unchanged
+contention tests; TRUST uses the read-only verification and fresh ordinary cycle above.
+
+Commands outside the Vitest process tree retain their ordinary environment;
+descendant build/typecheck/pack may inherit the preload. The globalSetup build
+and packaged-consumer isolation checks explicitly strip BOTH marker/preload
+in a copied environment. At entry the coordinator validates NODE_OPTIONS
+against the closed grammar (unknown/ambiguous options fail node-options) and
+emits one preload. BOTH valid binding components reuse the anchor; NEITHER
+permits an independent fresh Node/Vitest run; exactly one/mismatch fails
+worker-scope. Managed/source-pair environment replacement follows this rule.
+The same-host performance.now/hrtime bridge takes exactly K=8 samples,
+selects minimum width with earliest-index tie-break, and fails calibration
+only when all valid widths exceed 1 ms; invalid samples/domains fail separately.
+No ninth sample, wall reseeding or failed-test retry is allowed.
+Genuine monotonic delays beyond TTL are not hidden.
+The exact test argv and timeout remain npx vitest run / 180000 ms.
+
+new Date(), filesystem mtimeMs and Git remain native. Ownerless mtimeMs +
+leaseTtlMs is still compared to stable Date.now. A fixture-owned forward
+mtime that remains unavailable through the existing monotonic acquisition
+window produces LeaseAcquisitionTimeout with the exact code, leaseKind,
+leaseName and message specified in the g9 boundary above, not /BUSY/.
+Class proof uses only its approved block-local same-instance dynamic import
+and toBeInstanceOf, preserving top-level imports. Acquisition-window proof
+is the source-hash/constants/deadline inventory above, not an elapsed
+threshold or the separate 60,000 ms test-runner watchdog.
+Backdated fixture mtimes permit the existing takeover path. HOST-BOUNDARY
+retains forward/backward model wall observations and +/-2*leaseTtlMs fixture
+mtimes without changing production/error behavior or hiding mixed-clock failures.
+
+The optional TOP-LEVEL .musubix/config.json.testRuntime follows ADR-0009.
+Design fixes schemaVersion/kind, commandNames (codegraph-tests, compatibility,
+test), calibration, reporterMode and the closed 21-path input inventory.
+Canonical policy SHA-256 is
+f9fbe94729722eaaea1f1e49bbaf6c48053ea1ed6a8498a2287dbfe4a20bf06e.
+Existing loadApprovalProjectionConfig excludes the top-level key without any
+allowlist change. Runtime enforces a (kind,schemaVersion)-keyed constant in
+packages/analysis/src/test-runtime.ts, without reading CURRENT approval records.
+EVIDENCE-001 and GATE-FINGERPRINT-001 prove constant/design/config digest equality.
+Policy changes require a new kind and fresh design approval. Gate fingerprint
+includes the normative policy, while approval projection config does not.
+Parser, exact config instance and candidate-gate derivation are post-Red work.
+The coordinator-only fixed
+.musubix/cache/test-runtime/<runId>/ack.json / test-runtime-ack-v1 bind
+request/input/profile hashes, shared anchor, worker acks and file inventory.
+TDD/result/integration command evidence binds versioned immutable objects in
+.musubix/evidence/test-runtime/v1/blobs/<sha256>: profile, requests, input
+inventory/file snapshots, anchors, worker packets, dispatch, acks and results.
+The authoritative store is the journal-root CONTROL worktree, not child or
+assignment roots. Parent runner reads/verifies/publishes the full closure
+BEFORE cleanup/reset/removal and only then appends journal/result references;
+publication failure rejects blob-io. POSIX requires file+directory fsync;
+win32 explicitly lacks directory fsync and uses file flush + atomic no-replace
++ post-write rehash, matching the existing Windows contract. Use byte-identical reuse;
+official transfer revalidates the full reference closure before detached result,
+integration or handoff acceptance. No input-fingerprint feedback from evidence.
+TEST-M5-TEST-CLOCK-EVIDENCE-001 must reject tamper/stale/missing/deleted/
+untransferred data and prove legacy encoding and approval projection unchanged.
+TEST-M5-TEST-CLOCK-AGGREGATE-001 binds native exit/result/ack to final ordinary,
+gate/matrix and grouped wrapper argv. Runtime reporter is appended AFTER native
+argument composition, not supplied by Vitest config; JSON reporters remain
+active and ack has a separate path. Missing reporter is an explicit failure.
+Configured argv/timeout remain fixed; effective reporter additions are explicit.
+Reuse an existing npm `--` and insert flags before Vitest's terminator; never
+generate a second separator. The pure .mjs wrapper receives parent-prepared
+groups/requests/env/argv and launches process.execPath + root-local vitest.mjs,
+never imports the TS coordinator. Runtime script inputs are exclusively .mjs,
+with no extra .d.ts; use the explicit node --check/checked-JS/Vitest import
+validation specified in DES-M5-015.
+
+A profiled source-pair uses that same parent publication boundary before pair
+cleanup; existing pair output manifests bind the runtime hashes after control
+publication. Pair-local blobs are not authority. Source terminal/admission/
+approval schemas remain unchanged.
+
+Retain both genuine implementation-defect batches:
+
+1. TEST-M5-WORKFLOW-FACADE-ACYCLIC-001: break the workflow facade/current
+   implementation dependency cycle by a lower layer/inversion, preserving
+   public exports, types and runtime/error behavior. Own its helper/test
+   paths in the EVIDENCE assignment before plan freeze.
+2. TEST-M5-GRAPH-BENCHMARK-SCOPE-001: exclude only root-relative
+   benchmarks/codegraph/labeled/** from ordinary repository architecture
+   input, with consistent cache/index/impact/gate scope. Explicit benchmark
+   root indexing retains expected intentional cycles and metrics. Preserve
+   the alias fix, counters and production cycle/unresolved diagnostics.
+
+These correct existing approved graph/parallel obligations, not test-source
+authority. Author regressions before production edits; record genuine
+Red/Implementation/Green with unchanged test fingerprints. Never deliberately
+reintroduce a bug or count missing-module setup failure as the cycle Red.
+
+### Historical generation-8 continuation sequence and authorization boundaries
+
+The following generation-8 sequence through the next level-two heading is
+retained historical text, including its former stop points and commands.
+It is not g9 authority and must not be rerun or adapted by field substitution.
+
+Historical generation-7 worker-observation revision: requirements approval
+0d5bbf7fe0a64586bdf89a00a84ea9a5deea8933100a6beb257194166007bc9b
+and requirements checkpoint 3786 remain historical. Preserve prior design
+approval ea953bd7866d300160f72807a1a92c43d794ebca55d3537791bb77dbebe41943
+and checkpoint 3787, followed by replacement approval
+879523d96b160ed04e958c1173128cdc760b652c63dfaeceb3852509994c25ab and
+checkpoint 3788, operation-id worker-observation-v1. Those g7 bindings and
+their Reds are retained, not reused or superseded again inside g7.
+The g8 activation AND rule instead requires new g8 requirements/design
+approvals and full-set checkpoints. The g7 operation-id and orders are not
+g8 approval or checkpoint identities.
+
+Freeze symbol key musubix5.testRuntime.stableWallClock.install.v1 and inject
+key musubix5StableWallClockV1 with DES-M5-015's readonly provider/install schemas
+and exact twelve-row TEST/requirement/source mapping. MODULE-ORDER, MONOTONIC
+and TIMERS read both before asserting behavior; old-runtime undefined values
+produce native assertion failures, never missing-module/setup errors.
+Retain the archived g7 TRUST/timer test bytes without changing them
+during this recovery revision. Historical g7 preparation added the combined
+binding assertion while preserving timer/expiry assertions. Later g8
+preparation retains those controls and corrects the invalid positive activation
+fixture before any g8 Red. No config/API skeleton.
+The keys are fixed source/evidence contracts, not new profile JSON options:
+canonical profile f9fbe947... and gate/TRUST 327baa... stay unchanged only after
+explicit recomputation; all 21 input paths remain fixed. Fresh g8 requirements/design approvals are required even though policy
+digests do not change.
+
+The sole publication site is tests/global-setup.ts's globalSetup(TestProject):
+existing build/validation first, then validated plain provider returned by
+the Vitest-independent test-runtime.ts, then project.provide before returning.
+Build/provider/provide failure prevents workers. Reporter/coordinator never
+provide; reporter reads vitest.getProvidedContext only after setup/worker
+execution for correlation. Preserve SESSION build behavior; do not interpret
+the new provider publication as permission to bypass/suppress globalSetup.
+Use identical typed ProvidedContext augmentation and inline provider shapes
+only in TS setup/tests; no future runtime import or .d.ts. In checked-JS setup,
+only DES-M5-015's exact unknown -> (string)=>unknown inject cast is allowed,
+followed by full validation. MODULE-ORDER/EVIDENCE-001/AGGREGATE-001 cover the
+lifecycle, strict standalone checkJs command and late-only reporter correlation.
+No test/config/implementation changes occur during this normative revision.
+
+1. Preserve the g7 source/native-report/defect hashes and evidence, then use
+   the official generation abandon operation authorized by nahisaho.
+   This completed recovery retains g6/g7 approvals and evidence as history;
+   it creates no in-g7 repair or credit transfer. No cleanup is required
+   without a g7 plan; never clean dirty control to force a transition.
+   Assign TRUST's ordinary g8 cycle to serial REQ-M5-COMPAT-013.
+   Freeze the top-level policy JSON/digest, closed inventory and normative gate
+   config before the g8 approval sequence. The existing top-level
+   approval allowlist already excludes this extension; no projection bypass,
+   approval transfer or additional activation approval is needed for the exact
+   fixed policy. Parser/config-instance/candidate-gate edits wait for fresh Red.
+2. Reopen g8 impact with the official
+   `npx musubix5 change-record CHANGE-0017 impact --reopen --requirement REQ-M5-APPROVAL-007 REQ-M5-COMPAT-013 REQ-M5-EVIDENCE-007 REQ-M5-GRAPH-003 REQ-M5-LIFECYCLE-006 REQ-M5-WORKTREE-004`.
+   This completed at order 3802; do not repeat it or reopen another generation.
+   Amend the normative activation bindings and corrected sequence to g8.
+   Validate requirements/constitution/trace/graph and prepare requirements
+   only after amendments settle. Parent Claude review and human requirements
+   approval remain separate future steps. Stop here for the current recovery;
+   do not record approval, edit frozen tests or start Red/implementation.
+3. After review, obtain and record ONE exact-hash human g8
+   requirements approval, then record the requirements checkpoint with the
+   full six-ID set. Validate/review design, prepare and record ONE exact-hash g8
+   initial human design approval, then record its full-set design checkpoint. If already
+   recorded and current, reuse those g8 records rather than duplicating them.
+   Checkpoint recording requires the corresponding current approval.
+   Do not transfer generation-6/7 approvals, cycles, or plan/results.
+   At the INITIAL design checkpoint, all five authoritative source files must still
+   equal their archived g7 hashes. Capture the exact traced-test inventory and
+   hashes contributing to the checkpoint's tests fingerprint. After that
+   checkpoint and BEFORE Red, verify TRUST's expectation/annotation without
+   editing it. Correct ONLY the EVIDENCE-001 helper/fixture-data regions
+   enumerated in DES-M5-015's "G8 fixture admission and temporary five-file
+   freeze (#51)" contract; leave the other four files byte-identical.
+   **Post-3804 correction:** Initial g8 design is recorded at 3804/g8:design,
+   bound to approval f877988db2531dbb921748e38f5326717c5817dc9d3300752be1281ff39c6dc5.
+   Preserve this checkpoint, requirements 3803/current approval and the ONE
+   already-recorded g8 sdd-design completion; do not record completion again.
+   Preserve prepared EVIDENCE SHA
+   1e73b80d3e77d4ec615b6abebab0f05856100dfcd09c7fc6e09ea58dbf79f6ac
+   and the other four files through review/approval/superseding checkpoint.
+   Only after renewed human design approval, use official change-record design
+   with operation ID `g8-native-order-strings-v1`, the SAME six IDs above,
+   dry-run first, then record. Verify designOrdinal=2/key g8:design:2, actual
+   order D/checkpoint-bound approval and retained 3804 history; never predict an order.
+   This review does not prepare approval or record that checkpoint.
+   The D checkpoint captures the existing prepared 148-path test fingerprint
+   b7793f093f06cbd999ef5c1578e37502294bd28fc52752cb137c2d0fef1a02ac.
+   AFTER D only, correct the native-string consumer inside activationCases'
+   valid initializer per DES-M5-015; retain the prior prepared fixture, factory,
+   imports, mutations and test bodies. This functional decoder change must
+   produce a genuinely different workspace tests fingerprint from ACTIVE D,
+   solely through EVIDENCE. No 3804 baseline substitution or unchanged-test
+   waiver is allowed. Rebind preflight/manifest/fixtures/receipts to D/new
+   checkpoint-bound approval and regenerate preparation; no old failed-preflight credit.
+   Do not change implementation/config, test bodies, imports, IDs or commands.
+   The corrected positive fixture binds actual checkpoint-bound g8 requirements/
+   design approval SHAs and checkpoint identities, CHANGE-0017/g8/repository, exact
+   [REQ-M5-COMPAT-013,REQ-M5-LIFECYCLE-006] scope and the closed twelve-ID batch.
+   Its simulated later event orders are fixture data, not persisted evidence.
+   Preserve a g7-bound negative copy to prove foreign-generation rejection.
+   Correct EVIDENCE-001's checkpoint data:
+   independent design/Red test fingerprints must differ, independent
+   Red/implementation fingerprints must differ, and applicable selected
+   per-requirement implementation maps must change. Keep Red/Green test
+   fingerprints equal and recompute all linked fixture hashes consistently.
+   Before any g8 Red, run diagnostic fixture preflight independently of the
+   runtime-presence assertion. Validate EVERY runtime-independent activation
+   conjunct, including generation, all twelve assignments, scope/set, approval/
+   checkpoint identities and strict synthetic order inequalities, not just
+   journal schema and false testsUnchangedCondition/
+   implementationUnchangedCondition predicates. Require matching negative
+   cases. Separately calculate actual workspaceChangeFingerprints.tests for
+   the serial scope: it must differ from the g8 design checkpoint, and the
+   traced-test inventory comparison must attribute the difference solely to
+   the allowed post-design EVIDENCE correction, never historical TRUST edits.
+   Persist exact five-file hashes, the proof and immutable freeze manifest
+   bound to g8 design approval/checkpoint, scope and twelve TEST assignments,
+   using DES-M5-015's content-addressed evidence directory and companion
+   receipt protocol. No future phase order is predicted in the manifest.
+   Use the exact cache-only
+   `.musubix/cache/g8-freeze-preflight/<preparationSha256>/preflight.mjs`
+   procedure: first rehash live EVIDENCE against manifestCore, then extract
+   the exact approved factory/mutation declarations and consumer initializer using pinned anchors,
+   parser byte ranges and range hashes. Do not load the test module/inject
+   or any future runtime function. Existing generic journal/order/checkpoint
+   helpers plus explicit binding assertions check the deterministic g8
+   positive and preserved-g7 negative, with every runtime-independent
+   conjunct recorded. Bind harness/source/extraction/helper hashes, observed
+   Node/musubix/TypeScript versions, argv, parent-observed exit/status and
+   case results in preflight.json; failure blocks first Red. Hash inputs
+   before preflight, then preflight, then final manifest, never a circular
+   final-manifest address inside its own upstream inputs.
+   Use the v2 native-string transport retained by the v3 cache inputs/preflight
+   recipe. Both g7/g8 orderPrefix fields carry DES-M5-015's closed
+   evidence-order-native-strings-v1 descriptor: exact compact
+   native record JSON strings in source array order, source path/byte SHA,
+   schema/algorithm/version, prefix length/tip sequence/tip SHA, H(ordered
+   strings) and H(descriptor without extractionSha256). Validate strict UTF-8,
+   source duplicate decoded keys, and exact JSON.parse/native-stringify string
+   round trips; rebuild records ONLY by parsing those strings, then require
+   unchanged validateEvidenceOrderLog valid=true/zero diagnostics. No individual
+   canonicalization, reordered reconstruction or historical hash rewriting.
+   Snapshot 3804 source SHA is
+   1df8b145134bb48a2d48fec52dea5e82649339c4b47702990b7bbbba2dbc0f2e;
+   native-string aggregates are 3788:
+   749a7e4d694338e4e3903a6191bdb71de3bd14000f66c15181c73c2c9c8cc7df,
+   3804: 599d0d1a644d8443eb863efa29164bee5912189176472b9dccd11a0ce4be0af8.
+   DES-M5-015 pins exact snapshot extraction hashes and mutation proof.
+   After D extract fresh source metadata but require these retained-prefix
+   aggregates unchanged; g8's active prefix ends at D, not 3804. Replays use
+   frozen inputs strings, never mutable-source recovery. Synthetic g7 suffix
+   payloads follow official appendEvidenceOrder construction/key order, then
+   the same native-string round trip/validator, bound in nativeOrderReplay.
+   Transport failures use PREFLIGHT_ASSERTION_FAILED:native-order-prefix-binding
+   after lineage structural checks, before fixture evaluation; not one of the
+   fixed 20 checks or an expected g7 rejection. No new closure file or runtime
+   policy input is added; preserve all 23 mutation rows/hashes.
+   Additionally close the real test consumer: add activationCases.valid as
+   the fourth pinned extraction, with exact parser/anchor/AST identity,
+   authoritative UTF-8 initializer range and raw SHA. The preserved source's
+   current range [19556,22669) hashes to
+   799c444c1e5fafb5ef4b9217fca742a42e02b24bf78349732fa9146b33c36d28;
+   it still consumes objects and is static review evidence only. Re-pin the
+   authorized corrected initializer after approval/D, not during this review.
+   Execute only that expression in DES-M5-015's separate sealed consumer VM:
+   closed dependencies/effects, deterministic input/discovery read stubs,
+   activationFixture capture stub, no real factory/UUID/runtime/test-module
+   execution. Feed exact staged, then F/preflight/inputs.json bytes. Independently
+   decode another parse of those bytes; require consumer and host records to
+   stringify exactly to the pinned strings, with all prefix/source/schema/
+   aggregate bindings, native zero diagnostics and current positive g8
+   approval/phase bindings. No shared decoder implementation or injected
+   decoded data may stand in for the initializer.
+   Bind recipe/extraction in inputs and consumerDecoder/results in checks and
+   preflight. Step 2 runs in staging before F publication: structural transport,
+   native prefixes g7 then g8, consumer, then factory/mutation evaluation.
+   Import the staged harness and compare its exported consumer/structural result
+   byte-identically with the CLI result before writing preflight/computing F.
+   Step 3 is the SOLE partial consumer-replay exception, REPEATABLE read-only
+   in fresh processes, only after ALL eleven non-manifest
+   files are durably published/rehashed/byte-equal to staging and F's final
+   segment equals the step-2 prospective manifest byte SHA, with the shared
+   A/B/C state classifier and ready-eleven seal freshly verified. No candidate
+   committed-tip guard or writes at that replay; committed predecessors remain
+   verified and an incomplete consumer may re-execute in a fresh process.
+   Step 4 publishes
+   manifest last, commits/verifies all twelve files, then applies the real
+   manifest/committed-tip/full-lineage guard before full committed verification
+   (transport, both prefixes, consumer; not another factory run).
+   Use verifyConsumerDecoder({repositoryRoot,sourceBytes,inputsBytes}) with the
+   SAME explicit verified control root at steps 2/3/4; CLI derives it only
+   from verified cwd. No harness-location/import.meta.url repository lookup;
+   defer repository-dependent imports until root verification, without preflight
+   execution on import. This is a read-only root-explicit export; normalized
+   logical discovery reads never require the unknown final manifest address.
+   Monitor the predecessorFreeze-only discovery view; reject other manifest
+   field reads, enumeration or reflection rather than silently omitting data.
+   Both replays must equal the already-bound result, with no closure rewrite.
+   Enforce all-branch dependency positions: value occurs only twice in the
+   outer factory's arguments value.provenance and
+   value.executionBinding.logicalCommandSha256; root occurs once, solely as
+   argument 0 of join(root, '.musubix/evidence/test-file-freeze/CHANGE-0017/g8').
+   Reject aliases/destructuring/other reads or passes/branches/interpolation/
+   computed/optional/shadow uses at dependency; never inject undefined defaults.
+   Derived root paths may feed only approved joins/filesystem path arguments,
+   not text inspection or branches that indirectly observe the logical root.
+   Narrow this to DES-M5-015's exact ROOT/BASE/listing-name/candidate-name/tip-name/
+   READ_PATH flows: three base reads only; names only in candidate.name, the
+   manifest join, predecessors.has and the selected inputs join. Freeze the
+   six discovery statements through inputs read, with descriptor H
+   0d4532bc720e88426873aa2f9f074fc075ca6d0413cb162865ffa3522131a4e5,
+   byte range [19650,20412), raw SHA
+   eb5b3f45f6c22c3de4fec283b40f12c1727c8fc5eabc69d136c516721c9ed83f.
+   The authoritative inputs call has 'preflight/inputs.json' as one literal
+   and tips[0]!.name; do not normalize it to four arguments. All decoder edits
+   occur AFTER this read; any discovery/taint mismatch is dependency failure.
+   Use frozen-native-json-v1: frozen delegates to native VM parse/stringify,
+   deep-freeze parsed JSON, monitor only the exact delivered discovery text,
+   retain native key order and reject mutation/prototype escape. Bind version,
+   twelve capability-probe outcomes and deterministic access log.
+   Use consumer-operation-budget-v1, limit 100000000, not wall time.
+   ts-statement-call-arrow-v1 accounts source statements, calls/new, arrow entries;
+   JSON accounts parse/stringify UTF-8 bytes and preorder freeze nodes.
+   Bind all counters/sum/instrumented-source SHA identically across modes.
+   Read-only consumer host watchdog expiry is INCOMPLETE: no persisted pass/fail
+   or abandon decision from that replay.
+   Stage 2 may rerun identical staged work; stage 3 may freshly revalidate the
+   same ready-eleven seal/address/no-call/predecessor bindings and re-execute
+   read-only consumer verification without restoring creation authority.
+   Only a deterministic match authorizes separate fixed-manifest-only
+   finalization/commit. Stage 4 fresh-process committed replay is also allowed.
+   Reuse completed results only byte-identically; partial output gives no credit.
+   Exact manifest/temp recovery is bounded; never repair the other eleven files.
+   Use ONE state classifier for step-3 entry, seal, manifest-only recovery and
+   diagnostics: A = manifest absent/no temp; B = manifest absent/exactly one
+   destination-derived manifest temp in F, target manifest.json only, satisfying
+   fixed grammar/no-follow/euid/0600/single-link/stable-identity checks;
+   C = exact independently reconstructed manifest present, closure uncommitted,
+   no temp. No other entry/temp/state is admitted. C verifies the manifest's
+   bytes rather than requiring absence; neither B nor C grants generic
+   partial-root recovery. Every fresh A/B/C process re-verifies all eleven
+   files and reruns the same read-only consumer/budget before ANY write.
+   Only deterministic success permits B's alias-safe publication/durability
+   or C's durability/commit verification/commit; a read-only consumer watchdog
+   leaves the phase incomplete.
+   B uses the absent-target single-link branch; if the target appears during
+   the authorized atomic operation, switch to the existing-target branch,
+   never open/write/truncate the temp or overwrite the destination there.
+   A fresh scan with manifest AND temp is not state C or a fourth exception:
+   it rejects. Stage/kind/path diagnostic ordering is shared with DES-M5-015;
+   other incomplete roots remain terminal. No other recovery target/context.
+   Use portable no-replace hard-link publication, without a new renameat2 or
+   Windows API dependency; prefer fail-closed evidence integrity over guaranteed
+   recovery for every write window. Interruption/watchdog during read-only
+   consumer replay or before the first write is incomplete and repeatable under
+   the approved state classifier. Once any eleven-file publication write begins,
+   or during B's manifest temp/write/link/unlink/durability steps (also normal
+   publication from A), a crash may leave a non-A/B/C snapshot, including
+   manifest-plus-temp. That state is terminal
+   PREFLIGHT_ASSERTION_FAILED:g8-freeze-lineage-binding: abandon/reopen.
+   No automatic deletion, backfill or reclassification can make it recoverable.
+   Alias-safe cleanup is only within an already admitted uninterrupted
+   operation, not before fresh-entry classification. Never restore first-
+   preparation authority or reuse a partial eleven-file set; fresh admission
+   needs the complete verified A/B/C seal or committed root.
+   Diagnostic order is the mode-specific structural guard, structural transport/
+   historical approval/phase checks, native-order-prefix-binding g7 then g8,
+   consumer-decoder-binding, then factory/mutation evaluation, with DES-M5-015's
+   exact stage/index/path/AST-byte ties. Envelope/recipe/source/helper failures
+   use PREFLIGHT_ASSERTION_FAILED:preflight-structural-transport.
+   Consumer checks never run before native prefixes pass.
+   PREFLIGHT_ASSERTION_FAILED:consumer-decoder-binding blocks Red.
+   With complete F1, a permitted correction uses only
+   eligible pre-Red F2/new preflight and archive copying; invalid partial
+   publication fails closed outside the sealed replay/manifest-only exception.
+   Apply the portable publication crash boundary, not the read-only interruption
+   rule, to write-window crashes. No post-Red correction.
+   Require DES-M5-015's exact ordered 12-file immutable Git closure: manifest.json
+   and preflight.json separately, three preflight recipe files, two exact raw
+   approval archives and five exact source copies. Every path must be a normal
+   non-executable blob in the identifying commit, with verified bytes and
+   no dirty/untracked closure path. Bind the ordered list, its fixed path-list
+   hash and aggregation kind in manifest immutableClosure; bind the aggregate
+   of ALL twelve full-byte hashes in lineage immutableClosureSha256. Do not
+   embed a self-referential full aggregate in the manifest, omit either top-level
+   JSON file, or count eleven. Later calls/receipts/reports are excluded.
+   Bind the exact DES-M5-015 23-entry mutationTable into inputs.json and its
+   SHA into preflight.json. Require current source length/order/indices and
+   each caseName/canonical source hash/disposition/check to match the approved
+   registry; mismatch or uncovered entry blocks Red, never regenerates the
+   expected table. Source-array SHA is
+   a5ab48c352889f35f9902c0567c697337927452fc74fb7f953107d5674449543;
+   canonical table SHA is
+   dfacfa903da1da85ccb59c793a9d00060f7de1d015907978fbc0188f13ea09c0.
+   checks.json reports all entries: 20 exact named structural rejections and
+   three deferred registrations, not 23 rejections/passes. Indices 10/11/12
+   defer runtime kind/profile/runs checks to TEST-M5-TEST-CLOCK-EVIDENCE-001,
+   tests/test-runtime-evidence.test.ts activationCases.mutations[index].
+   Its actual validateLegacyRuntimeActivation Green loop must reject both
+   existing argument variants with
+   TEST_RUNTIME_BOOTSTRAP_INVALID.*phase-runtime-transition. No future
+   validator is emulated by preflight. Index 15 is generation 6; keep the
+   independent g7-foreign scenario separate. Any needed registry/source
+   revision requires design review before Red, not silent preparation edits.
+   Before mutation checks, require cases[g8-positive].checks to contain
+   exactly the 20 reject-row IDs in registry order, expected/observed true,
+   evaluated on valid by the identical pure evaluator used for rejections.
+   Missing/extra/duplicate IDs use PREFLIGHT_MUTATION_REGISTRY_MISMATCH;
+   false uses PREFLIGHT_ASSERTION_FAILED:<checkId> and fails preflight.
+   Keep other generic prerequisites in structuralChecks, not extra positive IDs.
+   Construct factory/changed/full mutations once in caseId=g8-mutations,
+   with one UUID counter initialized once and never reset per element.
+   The g7-foreign context is isolated. Bind evaluationRecipe in inputs and
+   UUID sequence/count/boundary in checks/preflight; require index 14's
+   cycleId differs from valid's or reject with the registry mismatch diagnostic.
+   No reseed/retry and no changes to the 23-row table or its two hashes.
+   Build g7-foreign only from its context's single extracted-factory output
+   using the exact ordered g7-foreign-rewrite-v1 recipe in DES-M5-015.
+   Pin old g7 approvals and requirements/design checkpoints 3786/3788;
+   preserve the selected design's g7:design:2 key and ordinal 2, not order 3787.
+   retarget all candidate identity generations and generationOrderPhase keys
+   to 7, retain cycle IDs and distinct fingerprints, and rehash in order:
+   synthetic order suffix, Red phase/chain, TDD snapshot, checkpoint journal,
+   activation references, final integrity/audit result. Do not borrow old
+   g7 Red/implementation results or perform unspecified harness rewrites.
+   inputs binds the step list/pins; checks/preflight binds g7RewriteResult.
+   Require the same 20 IDs with exactly design-approval-reference and
+   generation-eight expected/observed false (their exact named diagnostics),
+   and all other 18 true. Those two expected failures satisfy this negative
+   case; unexpected outcomes or failed journal/order/hash/reference integrity
+   fail preflight. Both unchanged-condition defect predicates must be false.
+   The g7 rewrite performs no UUID draws: finalCounter===factoryEndCounter.
+   Before factory evaluation, consume the immutable requirements source
+   `.musubix/cache/g8-requirements-approved/prior-approval/.musubix/evidence/approvals/requirements.json`
+   (byte SHA fd2a90bb4a65d09d924b7790195f10b51e7570a21c76ad77896e451f651157de)
+   and design source
+   `.musubix/cache/g7-worker-observation-red-20260929/design-approval-record.json`
+   (byte SHA 8f15732a02c49e5f6bb1d4692d042de5889427a46547cbb2c33aea9a2efb63f7).
+   Bind paths/hashes in inputs.fixtureBindings.g7.approvalSources, preserve
+   complete parsed objects and recompute their stored approval identity hashes.
+   Byte pins protect unhashed approver/approvedAt; no live approval fallback
+   or reconstruction. Failure: PREFLIGHT_ASSERTION_FAILED:g7-approval-source-binding.
+   Treat those cache files as initial sources only. Bind archivePath
+   `preflight/approval-sources/<byteSha256>` relative to F and
+   archiveSha256=byteSha256 in inputs, manifest historicalApprovalSources and
+   every receipt. After initial preflight determines F, atomically publish
+   the exact raw files there with no-replace/fsync/reopen/rehash, complete the
+   freeze closure, publish manifest last and commit before Red. Later
+   preflight/replay/receipt checks read archives only, never cache/live files.
+   Partial publication blocks reruns except the restartable sealed step-3
+   eleven-file/address-verified read-only consumer check, which does not apply
+   a committed guard; every other partial rerun is terminal.
+   Conflicting/corrupt immutable archives
+   or loss after publication is terminal abandon/reopen, not reconstruction.
+   If pre-Red preparation supersedes published F1 with F2, reopen BOTH raw
+   approval buffers only from F1's committed archives; verify bound byte hashes
+   and pinned commit blobs. Never reread cache/live approvals after F1's manifest.
+   Bind the unique predecessor root/manifest SHA/commit and source/destination
+   archive paths/hashes in F2 inputs.manifestCore.predecessorFreeze and manifest,
+   using DES-M5-015's closed schema and F2-relative destination paths.
+   Publish byte-identical copies under F2 with no-replace/fsync/reopen/rehash.
+   Missing/drifted sources, ambiguity, differing copies or failed/interrupted
+   partial replacement publication outside the ready-eleven/manifest-only states
+   remains fail-closed, not permission to backfill. Fresh-process sealed replay
+   is allowed; read-only interruption is incomplete, but write-window crashes
+   may leave terminal non-A/B/C snapshots.
+   Preserve F1/F2; this applies only before the first Red call/intent, never
+   as a post-Red baseline replacement.
+   Before preparing F2, scan ALL g8 freeze roots, not only F1/F2, and reject
+   any call intent/receipt anywhere with terminal abandon/reopen. Before
+   every call and every intent/receipt publication or recovery/republication
+   (ordinals 1-27), apply DES-M5-015's deterministic global lineage guard.
+   Require the chosen F to be the unique committed complete linear-chain tip,
+   with no competing/orphaned/cyclic/ambiguous/unfinished root and no intent/
+   receipt under any other root. Every intent/receipt binds activeFreezeRoot
+   and the full canonical lineageSha256, checked against ALL roots.
+   Violations use PREFLIGHT_ASSERTION_FAILED:g8-freeze-lineage-binding and
+   require abandon/reopen; this takes precedence for lineage failures and
+   cannot be bypassed by old-root recovery, partial completion or post-Red
+   supersession.
+   Enforce DES-M5-015's exact destination-derived temp grammar in all closure
+   directories: `.<destinationBasename>.tmp-<lowercase-v4-uuid>`. Temps are
+   never evidence. Only one at the committed active tip may match the current
+   independently bound target/operation/ordinal; calls/ temps block F2 even
+   without final intents. Other/multiple/unadmitted-non-tip/invalid/orphan temps and
+   unknown entries fail terminally. Precommit temps are allowed only during
+   uninterrupted preparation OR as B's single manifest.json temp in bounded
+   manifest-only finalization recovery, never generic unfinished-root recovery.
+   Remove the authorized temp only after target rehash/directory fsync,
+   then fsync removal; retain failures. Diagnose in fixed stages: entry/name/
+   temp, root manifest/completeness/hash, ranked graph kinds (or the sole
+   step-3 bounded guard), structural transport/approval/historical-phase checks,
+   native prefixes g7 then g8, consumer, then factory/mutation semantics, using
+   DES-M5-015's exact ranks and lexical ties.
+   The first structural violation selects the lineage diagnostic/details.
+   Recover temps using DES-M5-015's alias-safe branches: existing destination
+   means NEVER open/write/truncate temp; verify target bytes/hash and identities/
+   link counts, finish durability, unlink temp, fsync and rehash target.
+   Absent destination permits rewrite only after no-follow metadata/open/fstat
+   proves a regular correctly owned/mode single-link temp. Never rewrite after
+   hard-link publication; mismatches/alias anomalies are terminal lineage failures.
+   In uninterrupted preparation exclude ONLY context.root from stage-2
+   missing-manifest/missing-closure/uncommitted-closure and stage-3 graph
+   membership. Compare all present final files to independently prepared bytes;
+   defer prospective predecessor comparison until the committed graph passes,
+   using final kind prospective-predecessor-mismatch. Require exact root,
+   manifest SHA and approvalArchives, null only without committed roots; the
+   recorded commit must be an ancestor containing the exact closure, not
+   necessarily current HEAD. Other unfinished roots remain terminal.
+   Initial failure blocks only before ANY entry/root under B exists; after
+   creating a root/temp/destination, arbitrary incomplete creation cannot resume.
+   The specific content-derived ready-eleven replay/fixed-manifest finalization
+   exception and committed official-phase recovery remain available; a consumer
+   watchdog stop itself gives no semantic/terminal result.
+   Enforce exact euid-owned/no-symlink ancestors with no group/other writes,
+   and one-level non-recursive requested/effective 0700 mkdir for B/root/
+   descendants, immediate metadata/identity checks and parent fsync. Temps
+   are exclusive/no-follow regular euid-owned 0600 with verified link count;
+   destinations remain 0600. Reject unsafe umask/effective modes, no later
+   chmod/chown repair; unprovable platform invariants block before Red.
+   Begin preparation with ordinary all-root guard and no exception; genesis
+   B must be absent or verified-safe empty. Create safe ancestors, B, then
+   ENOENT-checked root by exclusive mkdir. Bind its exception only to volatile
+   process-local dev+inode/nonce and recheck every guard, never restore/reuse.
+   Empty B alone is safe infrastructure; crash does not restore a creation
+   lease. Fresh-process content-verified ready-eleven replay/fixed-manifest
+   finalization uses its separate bounded context. Read-only watchdog expiry is
+   incomplete; write-window crashes remain subject to terminal state classification.
+   Verify identifying ancestor commit
+   regular Git blobs and equality to HEAD/index/live closure; dirty or
+   uncommitted closure fails, but later commits preserving bytes are allowed.
+   Pin phase sources to the unique CHANGE-0017/generationHistory generation 7
+   entry in `.musubix/evidence/changes.json`, phases.requirements/design,
+   with the source/entry/object hashes in DES-M5-015 and embedded in inputs.
+   Before phase skips, require its exact seven-key requirements/design
+   schemas and four-key synthetic batch schemas; all fingerprints have exactly
+   impact, requirements, design, implementation, tests, tdd,
+   requirementImplementations. Historical maps use the fixed six requirement
+   keys; synthetic maps use only the two serial keys. Check complete historical
+   maps as closed `{paths,fingerprints}` entries, with digest-only leaves.
+   Synthetic entries use the pinned historical path inventories and DES-M5-015's
+   deterministic phase/requirement/path hash recipe, not discovered keys.
+   Check complete historical
+   object hashes and exact original-factory batch values (only orders change);
+   no discovered allowlists. Missing/extra keys or wrong values/hashes fail
+   PREFLIGHT_ASSERTION_FAILED:g7-phase-container-schema. Bind phase digests
+   in g7RewriteResult.phaseContainers and enforce before traversal skips.
+   After rewrite step 7, apply DES-M5-015's exact JSON Pointer traversal/skips:
+   28 generation locations equal 7; eight raw g7 phase keys and two wrapped
+   journal idempotency keys at their enumerated paths with exact full values.
+   Skip only the verified retained order prefix, pinned approval objects and
+   four separately validated phase containers; visit aliases at each path.
+   Missing/extra locations or wrong values fail
+   PREFLIGHT_ASSERTION_FAILED:g7-identity-location-closure. Keep its boolean
+   summary in structuralChecks; bind the observed lists in top-level
+   identityAudits in checks.json and parent preflight.json, not in the summary.
+   Use DES-M5-015's closed identityAudits.g7IdentityLocationClosure schema:
+   schemaVersion=1, checkId=g7-identity-location-closure, generation/rawPhase/
+   wrappedIdempotency arrays of {path,value}, counts exactly 28/8/2, and sha256
+   equal to H(the complete audit object excluding ONLY its own sha256).
+   Require exact observed sets, strictly increasing JSON-Pointer lexical order,
+   no duplicates or extra keys. The summary remains exactly
+   {id,expected,observed,diagnostic}, true/true/null iff the traversal and
+   schema/sets/counts/hash all pass. Successful checks has exactly cases,
+   structuralChecks, identityAudits, uuidContexts, g7RewriteResult,
+   nativeOrderReplay, consumerDecoder, mutationResults; the parent's closed
+   preflight fields also include identityAudits. Require canonical equality
+   of both audit copies, binding SHA/counts through checksSha256 and
+   preflightSha256 into the existing manifest. No new closure file or
+   output-derived input field; the fixed 20 checks/23 rows remain unchanged.
+   Failure emits no new checks/preflight or partial audit; stderr carries
+   the deterministic diagnostic and pointer, with nonzero exit. Observation
+   faults point into the traversed candidate; audit schema/order/count/
+   parent-copy/hash faults point to the ordinal-lexically first offending
+   `/identityAudits/g7IdentityLocationClosure/<field>` pointer. Use
+   `/identityAudits` for a non-object or extra sibling and
+   `/identityAudits/g7IdentityLocationClosure` for a missing/whole-object fault.
+   Retain old cache outputs unchanged but never credit them to that failure.
+   Watchdog interruption remains incomplete under the existing stage rules.
+   **Post-3805 schema-only correction:** Preserve checkpoint 3805/g8:design:2,
+   journal 940, the post-checkpoint decoder and all prepared inputs/harness/
+   caches. The earlier 3804-to-3805 instructions are history, not permission
+   to repeat them. During review do not edit tests/harness/evidence, prepare
+   approval, record checkpoint/workflow completion, publish freeze or run Red.
+   After renewed exact-hash design approval, record no g8:design:3 supersession:
+   checkpoint 3805 remains active. The renewed live approval gates only the
+   current-approval check in `tdd red`; manifestCore, designCheckpoint, the
+   fixture approval alias and fixtureBindings.g8.approvals.design remain bound
+   to artifact 28a2f554... from preserved 78b67d9d.../inputs.json, verified by
+   `H(identity) === artifactSha256`, not the replaced live approval file.
+   Preserve v2 preparation 78b67d9d.../harness 9ad86396... and generate the
+   corrected inputs/harness with v3 kind/recipe at a new cache address.
+   Resume after ordinary admission checks; never manufacture a new test
+   fingerprint or use a superseded baseline.
+   Any relevant pre-Red change invalidates preflight/manifest and requires new
+   artifacts before Red; after the first Red, no source or baseline change.
+   Do not waive writer semantics or manufacture evidence; no
+   void/source-supersession/repair/migrate/refactor is involved.
+   Run `npx musubix5 trace build --json` and
+   `npx musubix5 trace check --strict --json`, then
+   `npx musubix5 tdd red TEST-M5-RELEASE-002-TRUST-001 --requirement REQ-M5-COMPAT-013 --command test`.
+   Require only the bb4a.../327baa... assertion mismatch. No extra source
+   approval or maintenance step is required. The interim stale-source gate
+   must not be reported as successful.
+4. Execute the serial stable-runtime batch under LIFECYCLE-006/COMPAT-013:
+   finish the eleven individual genuine native TDD Reds using the prepared
+   sources (TRUST from step 3 makes twelve; do not record it twice) -> ONE
+   serial batch Red workspace checkpoint -> implementation/profile activation
+   -> same batch implementation checkpoint -> all twelve unchanged-test Greens
+   -> batch Green checkpoint. Never checkpoint TRUST as a separate batch first.
+   Green must execute the deferred registry checks through their exact
+   EVIDENCE-001 owner; mere preflight registration cannot satisfy their
+   native rejection assertions or replace any of the 23 existing Green cases.
+   For each cycle, evidence-order sequences must satisfy strictly
+   designCheckpointOrder < redOrder < redCheckpointOrder <
+   implementationCheckpointOrder < greenOrder. These are validated order
+   record sequences, not JournalRecord.order stream counters; equality rejects.
+   Recheck all five whole-file hashes before/after each official phase call,
+   throughout implementation, before EVERY Green and at batch Green.
+   Verify every predecessor receipt/archive before publishing the next
+   immutable call intent or executing its official phase call. Use the
+   fixed 27-call order in DES-M5-015. After persisted phase/checkpoint facts
+   verify, archive exact native bytes under the freeze store's
+   `reports/<reportSha256>`, then publish the receipt. Bind persisted phase
+   reportSha256 and archive path/hash; never validate an old Red through
+   the mutable live per-TEST report that Green overwrites.
+   Derive receipts only from persisted/recheckable facts and live hashes,
+   not transient CLI argv/exit. Preserve the distinction between stored
+   runner exit and checkpoint recorded status; do not invent a CLI exit.
+   Use unique same-directory temp/file fsync/atomic no-replace/directory
+   fsync where supported/reopen-rehash for all artifacts.
+   Exact missing-receipt recovery is allowed only before any later
+   call/intent; identical bytes may be reverified, never replaced.
+   Torn/different receipt, unreconstructible facts/report, hash drift or a
+   later call without its predecessor receipt makes g8 terminal. Preserve
+   all records and use the authorized official
+   `npx musubix5 change generation abandon CHANGE-0017 --reason <exact-failure-and-hash-bindings> --approver <authorized-human> --confirm --json`,
+   then `change-record CHANGE-0017 impact --reopen` with the same full six
+   requirements, retaining branches/dirty worktrees and requiring new human
+   requirements/design approvals. No source supersession, void/repair/
+   migrate/refactor, successful backfill or replacement baseline repairs g8.
+   Do not execute this recovery during the current design-only review.
+   Include the TDD logical-command/phase-local augmentation implementation in
+   this fresh batch, with EVIDENCE-001/AGGREGATE-001 integrity regressions.
+   Red executes with testRuntime absent; enable the fixed
+   stable-test-wall-clock-v1 profile only in implementation. Keep the existing
+   digest(JSON.stringify([command.command,logicalArgs])) after native adapter/
+   focused-user merge and before runtime augmentation, so old Red's hash equals
+   new Green's hash. Do not omit native options, selection or report semantics.
+   Only DES-M5-015's closed runtime additions are separate; fully bind canonical
+   augmentation digest and actual safe-resolved argv/runtime env/ack outputs
+   in request/dispatch/result blobs. Repository-relative tokens and typed run
+   slots preserve augmentation identity across roots; no shell evaluation.
+   Admit legacy Red only by DES-M5-015's closed six-condition AND:
+   valid enclosing schemaVersion:1/old phase shape with runtime fields absent
+   (not null/partial); the strict checkpoint order above; membership in the
+   enumerated TRUST + eleven-runtime-test activation set; identical old Red/
+   new logical command hash; exact absent -> stable-test-wall-clock-v1 with
+   complete Green runtime blobs/ack/provenance/augmentation; and the same
+   cycle/serial scope/CHANGE-0017/g8/repository bound to exact requirements/
+   design approval SHAs and both checkpoint journal/order identities.
+   The profile hash is f9fbe94729722eaaea1f1e49bbaf6c48053ea1ed6a8498a2287dbfe4a20bf06e.
+   Bind existing cycle.red.order, phase approvalManifestSha256 and batch payload
+   scopeId/orderPhaseKey through new Green-only activation metadata; never
+   add fields to legacy Red. Runtime absence is inferred from field absence,
+   persisted pre-activation order and closed TEST membership under all six
+   conditions, not observed config bytes. No Git/worktree/config raw
+   reconstruction or retroactive Red snapshot/ack is required or allowed.
+   EVIDENCE-001 covers the positive case and each missing/tampered conjunct.
+   Reject other structural transitions and unknown/missing augmentation.
+   Assert logical Red=Green, phase-local provenance and cross-root canonical
+   augmentation equality while retaining complete phase execution hashes.
+   Parent runner/adapter appends reporters to validated --describe-groups
+   native argv and prepares final dispatch; codegraph wrapper executes supplied
+   group argv unchanged.
+   Existing contention/expiry/SESSION blocks stay byte-identical. Implement
+   test-only bootstrap/config/evidence binding, not lease or source-ledger
+   semantics. Keep all shared CHANGE/projection/append leases runner-free.
+   No pre-Red skeleton/config implementation: assert through existing
+   config/runner/setup hooks, collect native test failures, and only load new
+   helpers after the feature-presence assertion. Missing-module Red is invalid.
+   Keep prepared TRUST byte/fingerprint-identical after its Red; implement the
+   missing runtime fingerprint derivation, then record its ordinary Green with
+   the same TEST ID, REQ-M5-COMPAT-013 and command test. No duplicate credit.
+   QUALITY-COMPLETENESS remains unchanged and is resolved separately through
+   current verified integration evidence, not an assertion edit.
+5. Under explicit base-persistence authorization, commit the runtime and
+   preserved implementation/evidence as the candidate base. This CONTROL
+   commit MUST include all parent-published runtime blobs and their referencing
+   journal/evidence before plan creation's clean-worktree check. It is not an
+   assignment commit; .musubix/** remains prohibited in assignment commits.
+   Reuse baseline
+   691ea3a5f239c996df423dd693ad9740f34f3759 (journal 579) if the existing
+   official ancestry check passes; no new baseline command is invented.
+6. Before any immutable plan, preflight detached npm-ci/tooling and verification
+   prerequisites without freezing a plan. Then create/validate/prepare a fresh
+   generation-8 plan with current approved
+   bindings, committed bootstrap and provisionCommandNames:["npm-ci"].
+   Provision only through repository-authorized commands. Include both
+   graph-defect batches and all helper/regression ownership paths before
+   plan freeze, in the workflow/EVIDENCE and GRAPH assignments as appropriate.
+   Use fresh TDD and official result submission/retry paths; complete those
+   batches before integration verification/rerun. If a genuine regression
+   cannot be reproduced in the authorized candidate, STOP rather than fake
+   Red. No old cycle/result credit is imported.
+7. Integrate deterministically #48 -> #46 -> #23 -> #8 while control HEAD
+   remains the immutable new plan base. Never reopen abandoned generations 6 or 7.
+   For a failed new ACTIVE plan use official integration reopen/retry,
+   preserving every failed attempt and provenance.
+8. After stable runtime and both graph fixes, execute exact full verification,
+   including one configured npx vitest run through the profile-aware
+   coordinator with timeoutMs 180000 and bound effective reporter argv. On completed pass
+   record duration and 180000-durationMs headroom. Timeout-only requires
+   reportedFailed=0, bootstrapErrors empty, timeout status, no other observed
+   command/provenance failure, valid acks for started workers and a persisted
+   selected-file completion inventory including unfinished files. Unknown or
+   missing observations are not zero, and unfinished files are not passed.
+   Only if those measured conditions hold,
+   STOP and prepare the minimal design-command timeout projection change
+   for human approval; do not pre-authorize an increase or mutate a plan.
+   If functional failures remain, fix them with genuine TDD.
+9. Only verified integration permits official handoff; persist control
+   evidence afterward. Verify every integration/handoff blob reference in the
+   control store before attempt cleanup or acceptance, then commit subsequent
+   control publications at the official persistence boundary without advancing
+   the frozen plan base early. Finish combined COMPAT-013 and required typecheck,
+   build, TDD/trace/graph/gate verification. Record implementation completion
+   exactly once only when actually complete; no quality/release approval
+   or sdd-change completion is authorized here.
+
+## Historical generation-5 design stage (retained context)
+
+Everything in this section, including its imperative commands, is a historical
+generation-5 quotation, not current approval or executable instructions.
+It ends at the next level-two heading, "Historical generation-8 batches and ownership".
+SESSION work described here has already completed; do not repeat it. Current
+execution is governed only by the generation-9 requirements boundary above,
+with later stages contingent on newly reviewed and approved g9 design.
+
+### Design after requirements supersession
 
 This continuation is design-only. Requirements approval is current at
 `accbd48fd23e273085aeb95c7f4885f33572cff314c66a2a210ea50f08ef5d68`
@@ -170,62 +2964,65 @@ or change the lifecycle API to bypass recording guards. New design approval,
 design checkpoint, TDD/source operations and downstream phase recording
 remain deferred; requirements approval/order 3384 are existing authority.
 
-## Parallel batches and integration order
+## Historical generation-8 batches and ownership
 
-| Issue | Requirement batch | Ownership |
+This retained table formerly replaced generation-5 batch instructions. It is
+not current approval or an instruction to create a g8 plan. G9 retains these
+batch scopes only subject to its own sequence, approvals and official plan;
+control remains the sole shared-file writer.
+
+| Order | Batch / requirements | Owner and boundary |
 |---|---|---|
-| #48 | `REQ-M5-APPROVAL-007` | Release-manifest identity extraction and focused tests. |
-| #46 | `REQ-M5-WORKTREE-004` | Workspace baseline analysis API/CLI contract and focused tests. |
-| #23 | `REQ-M5-EVIDENCE-007` | Re-run workflow transcript discovery/orchestration after the recovery prerequisite; do not retry generation 4. |
-| #8 | `REQ-M5-GRAPH-003` | CodeGraph benchmark model, fixtures, runner, and focused tests. |
-| Recovery prerequisite | `REQ-M5-LIFECYCLE-006` | Retain accepted foundation/finalization; serially migrate every TDD writer to runner-free shared leases and renew cascade-invalidated evidence. |
-| Test-source recovery gap | `REQ-M5-LIFECYCLE-006`, `REQ-M5-COMPAT-013` | Serial additive source protocol/CLI/fixtures, then reviewed SESSION completion and renewed currency, before the four issue batches. |
-| Integration owner | `REQ-M5-COMPAT-013` | After the four issue commits are integrated, record a dedicated Red/Implementation/Green batch for the combined CLI, package export, help, registry, migration-guide, and differential-compatibility surface before full-set quality. |
+| 1, serial before plan base | Stable runtime/fingerprint / REQ-M5-LIFECYCLE-006 + REQ-M5-COMPAT-013 | Control owner: after g8 approval/checkpoints, retain correct TRUST expectation/annotation and preflight corrected checkpoint-realizable activation fixtures, then trace build/check and all twelve fresh ordinary Reds. Record one serial Red checkpoint, implementation/checkpoint, twelve unchanged-test Greens and one batch Green. Bootstrap/setup/coordinator/reporter, top-level parser/instance and control publication/transfer remain in scope. No g7 credit, source approval or #48 ownership for TRUST; contention/expiry/SESSION stay unchanged. |
+| 2, after serial Green and committed base | #48 / REQ-M5-APPROVAL-007 | Release-manifest assignment: retained scope, fresh generation-8 evidence. |
+| 2, after serial Green and committed base | #46 / REQ-M5-WORKTREE-004 | Baseline API/CLI assignment: retained scope, immutable/dirty-path safety. |
+| 2, after serial Green and committed base | #23, WORKFLOW-FACADE / REQ-M5-EVIDENCE-007 | Workflow assignment: fresh TEST-M5-WORKFLOW-FACADE-ACYCLIC-001 against the actual workflow/current back-edge; lower-level helper and regression owned here, public API preserved. Do not deliberately recreate a removed bug for Red. |
+| 2, after serial Green and committed base | #8, GRAPH-SCOPE / REQ-M5-GRAPH-003 | Graph assignment: fresh TEST-M5-GRAPH-BENCHMARK-SCOPE-001; exact reserved-prefix input policy, caches/impact/gate, explicit corpus-root cycles and preserved alias fix/counters. |
+| 3 | Deterministic integration | Integration coordinator: official result order #48 -> #46 -> #23 -> #8; unchanged plan base until verified handoff, npm-ci provisioning, exact 180000 ms verification and measured timeout rule. |
+| 4, after verified handoff | Combined COMPAT integration / REQ-M5-COMPAT-013 | Control integration owner: dedicated genuine Red/Implementation/Green for remaining combined CLI/help/config/JSON/digests/package/migration compatibility gaps, then final trace/graph/gate verification. No pre-credit from serial profile work and no fabricated Red if already satisfied. |
 
-Generation 4 is abandoned without repairing or crediting its missing Green
-projection. After generation 5 requirements and design approval, the
-`REQ-M5-LIFECYCLE-006` batch executes and integrates serially. Only after that
-prerequisite and SESSION evidence currency are active may the four issue
-batches execute concurrently. Shared
-CLI registration, package exports, help fixtures, compatibility registry,
-README files, `.musubix/**`, and generated evidence remain integration-owned.
-After those parallel results are integrated, the integration owner records the
-`REQ-M5-COMPAT-013` batch before integration, trace, and full-set quality.
+Stage-2 assignments may overlap only after the serial prerequisite. Shared CLI
+registration, package exports/help, migration/compatibility registries,
+.musubix artifacts and generated projections remain integration-owned; scoped
+assignments do not become shared writers. New input changes require their
+ordinary current verification, never reuse an earlier snapshot's results.
 
-## Expected verification
+## Historical generation-8 expected verification
 
-- Each batch records a real focused Red followed by an unchanged-test Green.
-- Cross-CHANGE gate envelopes are excluded without weakening malformed-evidence
-  handling.
-- Public baseline creation preserves immutable commit and dirty-path safety.
-- Current-session workflow reconciliation reports every discovered input and
-  persists strict proof only after strict sanitization and verification.
-- CodeGraph benchmarks emit deterministic operation and accuracy metrics
-  without changing normal graph caches or quality evidence.
-- Concurrent workspace checkpoints cannot overwrite one another, and replay of
-  an order-persisted but unprojected batch phase restores exactly one phase
-  without appending another order record.
-- Generation 4 order 3274 remains immutable historical evidence, is reported as
-  an unprojected non-credit checkpoint, and is never rewritten or represented
-  as a generation 5 checkpoint.
-- DES-M5-023's explicit legacy/recovery fixture hashes order 3274 and its
-  linkage across generation-5 recovery, source completion and replay; it
-  never creates generation 4's missing Green. Abandoned/superseded source
-  resume/replay rejects CHANGE_GENERATION_PHASE with no suffix writes.
-- The explicit stale-waiver fixture keeps workflowWaivers exactly [] and
-  retained stale records byte-identical/inactive across success, pending,
-  rejection, recovery and abandon/reopen; no new waiver is recorded.
-- Source supersession leaves old cycle/order/chain records unchanged, retains
-  stale failure until verified completion, distinguishes reviewed test-only
-  changes from genuine new Red/Green behavior changes, and replays exactly once.
-- Crash diagnostics/status expose requestSha256, artifactSha256, approvalSha256
-  and active-pending resumeArgs, sufficient even before a CLI success response.
-- A paused runner holds no shared lease; other same-CHANGE tests, batch
-  checkpoints and parallel transitions can finish during the pause. SESSION
-  first drops its outside-block `vi` import and spy/assertion rewrite. No
-  fabricated Red or coverage credit is recorded for the already-satisfied
-  renewal assertion. The restored SESSION passes with declared rebuild/cache outputs
-  and stable input manifests, without installing/fetching. Completed source entries affect scoped
-  tddEvidenceSha256 and quality, not coverage count or historical bytes.
-- Focused tests, typecheck, build, full tests, strict trace, graph gate, changed
-  gate, and status pass after integration.
+These retained expectations are historical, not evidence that g8 completed.
+The g9 requirements boundary additionally requires twelve-pass scratch
+diagnostics and exact diagnostic-contract consistency before fresh g9 Reds.
+
+- Each new batch has real selected native Red -> Implementation -> unchanged
+  Green, journal-first checkpoints, and no shared lease while runners execute.
+  No helper skeleton, import failure or historical result substitutes for Red.
+- All eleven runtime regressions cover module order, monotonic clock, child
+  inheritance, mocks, timers, isolation, evidence, aggregate argv/reporting
+  host-wall boundaries, platform durability and gate fingerprint/constant.
+  K=8 calibration and coordinator NODE_OPTIONS validation are deterministic;
+  both/none/partial environment cases include nested and managed/source roots.
+- The three unchanged contention tests and two named explicit expiry controls
+  pass with production TTL/fencing intact. Ownerless mtime/new Date remain
+  host-wall boundaries; observed failures there are not suppressed.
+- Exact top-level policy/21-path inventory, fixed acknowledgment and durable
+  TDD/result/integration blobs reject tamper/stale/missing/deleted/untransferred
+  data. Approval projection and absent-extension legacy encoding remain
+  identical; new gate config binds the fixed policy. CLI JSON override cannot
+  remove the explicit runtime reporter; bind each effective invocation/result.
+  Clean-env consumers and tarball inspection prove
+  isolation; a marked descendant build is allowed to inherit the test clock.
+- WORKFLOW-FACADE removes the actual production cycle without API drift.
+  GRAPH-SCOPE excludes only benchmarks/codegraph/labeled/** in ordinary
+  repository indexing, registers its consumer impact, and preserves explicit
+  benchmark-root intentional cycles, metrics and production diagnostics.
+- Journal 929, failed integration and all prior evidence remain immutable;
+  order 3274 remains non-credit, stale waivers inactive and SESSION unchanged.
+  Ordinary source-supersession retains its existing contracts, with no new
+  test-edit operation or source approval required by this runtime work.
+- The exact 180000 ms full command runs after runtime/graph fixes. Record
+  measured headroom on pass; timeout-only STOP requires zero reported failures,
+  zero bootstrap errors, no other observed failure, valid started-worker acks
+  and the persisted file-completion inventory. Unfinished work is not passed.
+- TDD validation, typecheck/build, applicable compatibility checks, strict
+  trace, graph and changed gate use current inputs. Implementation completion
+  remains conditional on all batches; quality/release approval is separate.

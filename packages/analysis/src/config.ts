@@ -2,6 +2,34 @@ import { resolve } from 'node:path';
 import { error, type Diagnostic } from '../../domain/src/index.js';
 import { exists, files, isDirectory, readText, within } from './files.js';
 
+export interface TestRuntimeProfile {
+  calibration: { maxWidthMs: 1; samples: 8 };
+  commandNames: ['codegraph-tests', 'compatibility', 'test'];
+  inputs: string[];
+  kind: 'stable-test-wall-clock-v1';
+  reporterMode: 'append-after-native-v1';
+  schemaVersion: 1;
+}
+
+const testRuntimeProfile: TestRuntimeProfile = {
+  calibration: { maxWidthMs: 1, samples: 8 },
+  commandNames: ['codegraph-tests', 'compatibility', 'test'],
+  inputs: [
+    '.musubix/config.json', 'package-lock.json', 'package.json',
+    'packages/analysis/src/adapters.ts', 'packages/analysis/src/candidate-gate.ts',
+    'packages/analysis/src/canonical.ts', 'packages/analysis/src/config.ts',
+    'packages/analysis/src/gate.ts', 'packages/analysis/src/parallel-runtime.ts',
+    'packages/analysis/src/process.ts', 'packages/analysis/src/tdd-source-pair.ts',
+    'packages/analysis/src/tdd.ts', 'packages/analysis/src/test-runtime.ts',
+    'scripts/run-codegraph-tests.mjs', 'scripts/test-runtime/coordinator-reporter.mjs',
+    'scripts/test-runtime/stable-wall-clock.mjs', 'scripts/test-runtime/vitest-setup.mjs',
+    'tests/global-setup.ts', 'tsconfig.build.json', 'tsconfig.json', 'vitest.config.ts',
+  ],
+  kind: 'stable-test-wall-clock-v1',
+  reporterMode: 'append-after-native-v1',
+  schemaVersion: 1,
+};
+
 export interface CommandConfig {
   name: string;
   command: string;
@@ -91,6 +119,7 @@ export interface ApprovalConfig {
 export type QualityProfile = 'custom' | 'minimal' | 'recommended' | 'release';
 
 export interface Config {
+  testRuntime?: TestRuntimeProfile;
   schemaVersion: 1;
   language: 'auto' | 'en' | 'ja';
   qualityProfile: QualityProfile;
@@ -286,9 +315,25 @@ function parseApprovalDomains(rawDomains: unknown[]): DomainConfig[] {
   });
 }
 
+function parseTestRuntimeProfile(input: unknown): TestRuntimeProfile {
+  const value = object(input, 'testRuntime');
+  keys(value, ['calibration', 'commandNames', 'inputs', 'kind', 'reporterMode', 'schemaVersion'], 'testRuntime');
+  const calibration = object(value.calibration, 'testRuntime.calibration');
+  keys(calibration, ['maxWidthMs', 'samples'], 'testRuntime.calibration');
+  if (calibration.maxWidthMs !== 1 || calibration.samples !== 8
+    || value.kind !== testRuntimeProfile.kind
+    || value.reporterMode !== testRuntimeProfile.reporterMode
+    || value.schemaVersion !== testRuntimeProfile.schemaVersion
+    || JSON.stringify(value.commandNames) !== JSON.stringify(testRuntimeProfile.commandNames)
+    || JSON.stringify(value.inputs) !== JSON.stringify(testRuntimeProfile.inputs)) {
+    throw new Error('testRuntime must match the stable-test-wall-clock-v1 profile.');
+  }
+  return testRuntimeProfile;
+}
+
 export function parseConfig(input: unknown): Config {
   const value = object(input, 'config');
-  keys(value, ['schemaVersion', 'language', 'qualityProfile', 'commands', 'requiredChecks', 'thresholds', 'architecture', 'codeGraph', 'formal', 'mutation', 'tdd', 'approval', 'workflow', 'attestation'], 'config');
+  keys(value, ['schemaVersion', 'language', 'qualityProfile', 'commands', 'requiredChecks', 'thresholds', 'architecture', 'codeGraph', 'formal', 'mutation', 'tdd', 'approval', 'workflow', 'attestation', 'testRuntime'], 'config');
   if (value.schemaVersion !== 1) throw new Error('Unsupported config schemaVersion; expected 1.');
   const language = optional(value.language, 'auto');
   if (!['auto', 'en', 'ja'].includes(String(language))) throw new Error('language must be auto, en, or ja.');
@@ -596,6 +641,7 @@ export function parseConfig(input: unknown): Config {
         : { mode: 'off' },
     },
   };
+  if (Object.hasOwn(value, 'testRuntime')) config.testRuntime = parseTestRuntimeProfile(value.testRuntime);
   validateQualityProfile(config, value.approval !== undefined);
   return config;
 }
@@ -654,9 +700,10 @@ export async function loadConfig(root: string): Promise<Config> {
       throw new Error('candidateGate.attestation.githubOidc must use strict GitHub OIDC public-key binding.');
     }
   }
-  return parseConfig(Object.fromEntries(
+  const config = parseConfig(Object.fromEntries(
     Object.entries(extensions).filter(([key]) => !['approvalAutomation', 'candidateGate'].includes(key)),
   ));
+  return config;
 }
 
 export async function loadApprovalProjectionConfig(root: string): Promise<Config> {

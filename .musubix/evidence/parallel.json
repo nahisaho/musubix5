@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "nextOrder": 562,
+  "nextOrder": 590,
   "plans": [
     {
       "assignments": [
@@ -3162,6 +3162,447 @@
         "schemaVersion": 1
       },
       "schemaVersion": 1
+    },
+    {
+      "assignments": [
+        {
+          "dependsOn": [],
+          "focusedCommands": [
+            {
+              "args": [
+                "tests/release-manifest-scope.test.ts",
+                "-t",
+                "TEST-M5-APPROVAL-RELEASE-RESULT-CHANGE-001"
+              ],
+              "name": "test"
+            }
+          ],
+          "id": "01-release-manifest-filter",
+          "ownedPaths": [
+            "packages/analysis/src/release-manifest.ts",
+            "tests/release-manifest-scope.test.ts"
+          ],
+          "requirementIds": [
+            "REQ-M5-APPROVAL-007"
+          ],
+          "role": "implementation"
+        },
+        {
+          "dependsOn": [],
+          "focusedCommands": [
+            {
+              "args": [
+                "tests/parallel-baseline-cli.test.ts",
+                "-t",
+                "TEST-M5-WORKTREE-BASELINE-CLI-001"
+              ],
+              "name": "test"
+            }
+          ],
+          "id": "02-parallel-baseline-cli",
+          "ownedPaths": [
+            "packages/analysis/src/workspace-manager.ts",
+            "packages/analysis/src/parallel-runtime.ts",
+            "tests/workspace-isolation.test.ts",
+            "tests/parallel-baseline-cli.test.ts"
+          ],
+          "requirementIds": [
+            "REQ-M5-WORKTREE-004"
+          ],
+          "role": "implementation"
+        },
+        {
+          "dependsOn": [],
+          "focusedCommands": [
+            {
+              "args": [
+                "tests/workflow-current-verification.test.ts",
+                "-t",
+                "TEST-M5-WORKFLOW-CURRENT-001"
+              ],
+              "name": "test"
+            }
+          ],
+          "id": "03-workflow-verify-current",
+          "ownedPaths": [
+            "packages/analysis/src/workflow.ts",
+            "packages/analysis/src/workflow-current.ts",
+            "tests/workflow-current-verification.test.ts"
+          ],
+          "requirementIds": [
+            "REQ-M5-EVIDENCE-007"
+          ],
+          "role": "implementation"
+        },
+        {
+          "dependsOn": [],
+          "focusedCommands": [
+            {
+              "args": [
+                "--test-id",
+                "TEST-M5-GRAPH-BENCHMARK-DETERMINISM-001"
+              ],
+              "name": "codegraph-tests"
+            }
+          ],
+          "id": "04-codegraph-benchmark",
+          "ownedPaths": [
+            "packages/analysis/src/graph.ts",
+            "packages/analysis/src/codegraph-benchmark.ts",
+            "scripts/run-codegraph-tests.mjs",
+            "scripts/run-codegraph-benchmark.mjs",
+            "benchmarks/codegraph/**",
+            "tests/codegraph-benchmark.test.ts"
+          ],
+          "requirementIds": [
+            "REQ-M5-GRAPH-003"
+          ],
+          "role": "implementation"
+        }
+      ],
+      "authored": {
+        "assignments": [
+          {
+            "dependsOn": [],
+            "focusedCommands": [
+              {
+                "args": [
+                  "tests/release-manifest-scope.test.ts",
+                  "-t",
+                  "TEST-M5-APPROVAL-RELEASE-RESULT-CHANGE-001"
+                ],
+                "name": "test"
+              }
+            ],
+            "id": "01-release-manifest-filter",
+            "ownedPaths": [
+              "packages/analysis/src/release-manifest.ts",
+              "tests/release-manifest-scope.test.ts"
+            ],
+            "requirementIds": [
+              "REQ-M5-APPROVAL-007"
+            ],
+            "role": "implementation"
+          },
+          {
+            "dependsOn": [],
+            "focusedCommands": [
+              {
+                "args": [
+                  "tests/parallel-baseline-cli.test.ts",
+                  "-t",
+                  "TEST-M5-WORKTREE-BASELINE-CLI-001"
+                ],
+                "name": "test"
+              }
+            ],
+            "id": "02-parallel-baseline-cli",
+            "ownedPaths": [
+              "packages/analysis/src/workspace-manager.ts",
+              "packages/analysis/src/parallel-runtime.ts",
+              "tests/workspace-isolation.test.ts",
+              "tests/parallel-baseline-cli.test.ts"
+            ],
+            "requirementIds": [
+              "REQ-M5-WORKTREE-004"
+            ],
+            "role": "implementation"
+          },
+          {
+            "dependsOn": [],
+            "focusedCommands": [
+              {
+                "args": [
+                  "tests/workflow-current-verification.test.ts",
+                  "-t",
+                  "TEST-M5-WORKFLOW-CURRENT-001"
+                ],
+                "name": "test"
+              }
+            ],
+            "id": "03-workflow-verify-current",
+            "ownedPaths": [
+              "packages/analysis/src/workflow.ts",
+              "packages/analysis/src/workflow-current.ts",
+              "tests/workflow-current-verification.test.ts"
+            ],
+            "requirementIds": [
+              "REQ-M5-EVIDENCE-007"
+            ],
+            "role": "implementation"
+          },
+          {
+            "dependsOn": [],
+            "focusedCommands": [
+              {
+                "args": [
+                  "--test-id",
+                  "TEST-M5-GRAPH-BENCHMARK-DETERMINISM-001"
+                ],
+                "name": "codegraph-tests"
+              }
+            ],
+            "id": "04-codegraph-benchmark",
+            "ownedPaths": [
+              "packages/analysis/src/graph.ts",
+              "packages/analysis/src/codegraph-benchmark.ts",
+              "scripts/run-codegraph-tests.mjs",
+              "scripts/run-codegraph-benchmark.mjs",
+              "benchmarks/codegraph/**",
+              "tests/codegraph-benchmark.test.ts"
+            ],
+            "requirementIds": [
+              "REQ-M5-GRAPH-003"
+            ],
+            "role": "implementation"
+          }
+        ],
+        "concurrency": 4,
+        "integratorOwnedPaths": [
+          ".musubix/**",
+          "package.json",
+          "package-lock.json",
+          "README.md",
+          "README-ja.md",
+          "packages/cli/src/main.ts",
+          "packages/analysis/src/index.ts",
+          "tests/cli-help-contract.test.ts",
+          "tests/cli-json-error-contract.test.ts",
+          ".musubix/changes/**",
+          ".musubix/features/**",
+          ".musubix/decisions/**"
+        ],
+        "provisionCommandNames": [
+          "npm-ci"
+        ],
+        "schemaVersion": 1
+      },
+      "binding": {
+        "baseCommit": "9b2dc0170a5065a952a5cbe23fe68268325fbb30",
+        "changeId": "CHANGE-0017",
+        "commandSetSha256": "8c54618fc1bf3047a495e83df6d0a84d34adb250977bc01a405aa7f3055d76c8",
+        "configuredCommandNames": [
+          "typecheck",
+          "build",
+          "test",
+          "codegraph-tests",
+          "compatibility",
+          "pack-check",
+          "pack-smoke",
+          "npm-ci"
+        ],
+        "designApprovalSha256": "170f807073d5ac1402c28f375efe9012a4ce278f3c6f7bfb529c217e1eb12d0f",
+        "generation": 6,
+        "requirementIds": [
+          "REQ-M5-APPROVAL-007",
+          "REQ-M5-COMPAT-013",
+          "REQ-M5-EVIDENCE-007",
+          "REQ-M5-GRAPH-003",
+          "REQ-M5-LIFECYCLE-006",
+          "REQ-M5-WORKTREE-004"
+        ],
+        "requirementsApprovalSha256": "56960a86c87abe7751553fe3120d350abdaca8883010caa583b4da639c07ccad"
+      },
+      "concurrency": 4,
+      "createdOrder": 562,
+      "planId": "parallel-plan:2cfea773195eacf800437b39530f7374d40941c334a186988d738784b88c409d",
+      "policy": {
+        "agentCommitIdentity": {
+          "email": "musubix5-agent@localhost",
+          "name": "musubix5-agent"
+        },
+        "defaultConcurrency": 3,
+        "integratorOwnedDefaults": [
+          ".musubix/**"
+        ],
+        "maxConcurrency": 8,
+        "prohibitedAgentOperations": [
+          {
+            "argsPrefix": [
+              "push"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "pull"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "fetch"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "tag"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "branch"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "rebase"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "reset"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "restore"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "worktree"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "submodule"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "notes"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "replace"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "prune"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "gc"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "update-ref"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "reflog"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "config"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "remote"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "filter-branch"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "commit",
+              "--amend"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "checkout"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "switch"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "merge"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "cherry-pick"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "clean"
+            ],
+            "command": "git"
+          },
+          {
+            "argsPrefix": [
+              "stash"
+            ],
+            "command": "git"
+          }
+        ],
+        "provisionCommands": [
+          {
+            "args": [
+              "ci",
+              "--ignore-scripts"
+            ],
+            "command": "npm",
+            "name": "npm-ci",
+            "timeoutMs": 180000
+          }
+        ],
+        "runnerEnvironment": {
+          "fixed": {
+            "CI": "true"
+          },
+          "managedHome": true,
+          "passThrough": [
+            "PATH",
+            "SystemRoot",
+            "ComSpec",
+            "PATHEXT",
+            "TMP",
+            "TEMP"
+          ]
+        },
+        "schemaVersion": 1
+      },
+      "schemaVersion": 1
     }
   ],
   "prepared": [
@@ -3199,6 +3640,11 @@
       "gitCommonDirectory": "/home/nahisaho/GitHub/musubix5/.git",
       "planId": "parallel-plan:a61b4b3c8d05d3a6caa0da59d7f22845b88314337e5a5cf5d81a053a75144030",
       "preparedOrder": 534
+    },
+    {
+      "gitCommonDirectory": "/home/nahisaho/GitHub/musubix5/.git",
+      "planId": "parallel-plan:2cfea773195eacf800437b39530f7374d40941c334a186988d738784b88c409d",
+      "preparedOrder": 563
     }
   ],
   "attempts": [
@@ -6971,6 +7417,176 @@
       "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-a61b4b3c8d05d3a6caa0/assignments/codegraph-benchmark/attempt-2",
       "startCommit": "0f6a96049f85efe60a8a6be950f7183d0650288e",
       "reason": "Official detached result verification lacks node_modules/vitest/vitest.mjs; manifest provisionCommandNames is empty and operating on that verification worktree is prohibited. Genuine Red and unchanged Green plus workspace checkpoints succeeded; implementation is committed. Strict typecheck additionally reports number-or-undefined arguments at frozen tests/codegraph-benchmark.test.ts lines 26-27."
+    },
+    {
+      "planId": "parallel-plan:2cfea773195eacf800437b39530f7374d40941c334a186988d738784b88c409d",
+      "assignmentId": "01-release-manifest-filter",
+      "attempt": 1,
+      "state": "running",
+      "order": 564,
+      "branch": "musubix5/CHANGE-0017/parallel-plan-2cfea773195eacf80043/01-release-manifest-filter/attempt-1",
+      "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-2cfea773195eacf80043/assignments/01-release-manifest-filter/attempt-1",
+      "startCommit": "9b2dc0170a5065a952a5cbe23fe68268325fbb30"
+    },
+    {
+      "planId": "parallel-plan:2cfea773195eacf800437b39530f7374d40941c334a186988d738784b88c409d",
+      "assignmentId": "02-parallel-baseline-cli",
+      "attempt": 1,
+      "state": "running",
+      "order": 565,
+      "branch": "musubix5/CHANGE-0017/parallel-plan-2cfea773195eacf80043/02-parallel-baseline-cli/attempt-1",
+      "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-2cfea773195eacf80043/assignments/02-parallel-baseline-cli/attempt-1",
+      "startCommit": "9b2dc0170a5065a952a5cbe23fe68268325fbb30"
+    },
+    {
+      "planId": "parallel-plan:2cfea773195eacf800437b39530f7374d40941c334a186988d738784b88c409d",
+      "assignmentId": "03-workflow-verify-current",
+      "attempt": 1,
+      "state": "running",
+      "order": 566,
+      "branch": "musubix5/CHANGE-0017/parallel-plan-2cfea773195eacf80043/03-workflow-verify-current/attempt-1",
+      "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-2cfea773195eacf80043/assignments/03-workflow-verify-current/attempt-1",
+      "startCommit": "9b2dc0170a5065a952a5cbe23fe68268325fbb30"
+    },
+    {
+      "planId": "parallel-plan:2cfea773195eacf800437b39530f7374d40941c334a186988d738784b88c409d",
+      "assignmentId": "04-codegraph-benchmark",
+      "attempt": 1,
+      "state": "running",
+      "order": 567,
+      "branch": "musubix5/CHANGE-0017/parallel-plan-2cfea773195eacf80043/04-codegraph-benchmark/attempt-1",
+      "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-2cfea773195eacf80043/assignments/04-codegraph-benchmark/attempt-1",
+      "startCommit": "9b2dc0170a5065a952a5cbe23fe68268325fbb30"
+    },
+    {
+      "planId": "parallel-plan:2cfea773195eacf800437b39530f7374d40941c334a186988d738784b88c409d",
+      "assignmentId": "03-workflow-verify-current",
+      "attempt": 1,
+      "state": "failed",
+      "order": 568,
+      "branch": "musubix5/CHANGE-0017/parallel-plan-2cfea773195eacf80043/03-workflow-verify-current/attempt-1",
+      "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-2cfea773195eacf80043/assignments/03-workflow-verify-current/attempt-1",
+      "startCommit": "9b2dc0170a5065a952a5cbe23fe68268325fbb30",
+      "reason": "Frozen TEST-M5-WORKFLOW-CURRENT-001 fixture records declaration before generating Skill invocation timestamps. Official Green correctly fails WORKFLOW_SKILL_NOT_INVOKED and WORKFLOW_BINDING_MISSING at first strict verification. schemaVersion:1 was corrected before genuine fresh Red; timestamp setup was not. Cannot modify frozen test or weaken strict binding. Owned preservation commit dcb1bbf; typecheck/build and 18 related regression tests pass. No Green checkpoint or result admission claimed."
+    },
+    {
+      "planId": "parallel-plan:2cfea773195eacf800437b39530f7374d40941c334a186988d738784b88c409d",
+      "assignmentId": "02-parallel-baseline-cli",
+      "attempt": 1,
+      "state": "completed",
+      "order": 569,
+      "branch": "musubix5/CHANGE-0017/parallel-plan-2cfea773195eacf80043/02-parallel-baseline-cli/attempt-1",
+      "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-2cfea773195eacf80043/assignments/02-parallel-baseline-cli/attempt-1",
+      "startCommit": "9b2dc0170a5065a952a5cbe23fe68268325fbb30",
+      "head": "b2012e57caf264393a5e0a90ba4e011181b00581",
+      "commits": [
+        "b2012e57caf264393a5e0a90ba4e011181b00581"
+      ],
+      "tdd": [
+        {
+          "requirementId": "REQ-M5-WORKTREE-004",
+          "cycleId": "22e6d577-6ba2-4ceb-8cef-6063f5763209",
+          "testId": "TEST-M5-WORKTREE-BASELINE-CLI-001",
+          "batchTerminalOrder": 3765
+        }
+      ]
+    },
+    {
+      "planId": "parallel-plan:2cfea773195eacf800437b39530f7374d40941c334a186988d738784b88c409d",
+      "assignmentId": "01-release-manifest-filter",
+      "attempt": 1,
+      "state": "completed",
+      "order": 570,
+      "branch": "musubix5/CHANGE-0017/parallel-plan-2cfea773195eacf80043/01-release-manifest-filter/attempt-1",
+      "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-2cfea773195eacf80043/assignments/01-release-manifest-filter/attempt-1",
+      "startCommit": "9b2dc0170a5065a952a5cbe23fe68268325fbb30",
+      "head": "51b287412e6d0ccb711c399a29df6a161d8055ad",
+      "commits": [
+        "51b287412e6d0ccb711c399a29df6a161d8055ad"
+      ],
+      "tdd": [
+        {
+          "requirementId": "REQ-M5-APPROVAL-007",
+          "cycleId": "c8386e6f-e451-4c5d-a633-1d53cf512963",
+          "testId": "TEST-M5-APPROVAL-RELEASE-RESULT-CHANGE-001",
+          "batchTerminalOrder": 3763
+        }
+      ]
+    },
+    {
+      "planId": "parallel-plan:2cfea773195eacf800437b39530f7374d40941c334a186988d738784b88c409d",
+      "assignmentId": "04-codegraph-benchmark",
+      "attempt": 1,
+      "state": "completed",
+      "order": 571,
+      "branch": "musubix5/CHANGE-0017/parallel-plan-2cfea773195eacf80043/04-codegraph-benchmark/attempt-1",
+      "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-2cfea773195eacf80043/assignments/04-codegraph-benchmark/attempt-1",
+      "startCommit": "9b2dc0170a5065a952a5cbe23fe68268325fbb30",
+      "head": "4c762f07c494dc0da7e66197251b142c15a2c710",
+      "commits": [
+        "4c762f07c494dc0da7e66197251b142c15a2c710"
+      ],
+      "tdd": [
+        {
+          "requirementId": "REQ-M5-GRAPH-003",
+          "cycleId": "310f67af-23bd-458f-9bb4-76191a2ce2a5",
+          "testId": "TEST-M5-GRAPH-BENCHMARK-DETERMINISM-001",
+          "batchTerminalOrder": 3769
+        }
+      ]
+    },
+    {
+      "planId": "parallel-plan:2cfea773195eacf800437b39530f7374d40941c334a186988d738784b88c409d",
+      "assignmentId": "03-workflow-verify-current",
+      "attempt": 2,
+      "state": "running",
+      "order": 573,
+      "branch": "musubix5/CHANGE-0017/parallel-plan-2cfea773195eacf80043/03-workflow-verify-current/attempt-2",
+      "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-2cfea773195eacf80043/assignments/03-workflow-verify-current/attempt-2",
+      "startCommit": "9b2dc0170a5065a952a5cbe23fe68268325fbb30"
+    },
+    {
+      "planId": "parallel-plan:2cfea773195eacf800437b39530f7374d40941c334a186988d738784b88c409d",
+      "assignmentId": "03-workflow-verify-current",
+      "attempt": 2,
+      "state": "failed",
+      "order": 574,
+      "branch": "musubix5/CHANGE-0017/parallel-plan-2cfea773195eacf80043/03-workflow-verify-current/attempt-2",
+      "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-2cfea773195eacf80043/assignments/03-workflow-verify-current/attempt-2",
+      "startCommit": "9b2dc0170a5065a952a5cbe23fe68268325fbb30",
+      "reason": "Preserved owned commit 3e8244e5bbde2f06073f31916b427aa161650cf6. New attempt Red 3770 and Green 3771 pass with frozen test, but pending attempt1 batch rejected workspace change-record red as already recorded and implementation as missing preceding red. Workspace green recorded 3772; result rejected PARALLEL_RESULT_UNVERIFIED: REQ-M5-EVIDENCE-007 has no current complete Red/Implementation/Green TDD cycle. No historical-cycle credit or guard bypass authorized."
+    },
+    {
+      "planId": "parallel-plan:2cfea773195eacf800437b39530f7374d40941c334a186988d738784b88c409d",
+      "assignmentId": "03-workflow-verify-current",
+      "attempt": 3,
+      "state": "running",
+      "order": 576,
+      "branch": "musubix5/CHANGE-0017/parallel-plan-2cfea773195eacf80043/03-workflow-verify-current/attempt-3",
+      "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-2cfea773195eacf80043/assignments/03-workflow-verify-current/attempt-3",
+      "startCommit": "9b2dc0170a5065a952a5cbe23fe68268325fbb30"
+    },
+    {
+      "planId": "parallel-plan:2cfea773195eacf800437b39530f7374d40941c334a186988d738784b88c409d",
+      "assignmentId": "03-workflow-verify-current",
+      "attempt": 3,
+      "state": "completed",
+      "order": 577,
+      "branch": "musubix5/CHANGE-0017/parallel-plan-2cfea773195eacf80043/03-workflow-verify-current/attempt-3",
+      "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-2cfea773195eacf80043/assignments/03-workflow-verify-current/attempt-3",
+      "startCommit": "9b2dc0170a5065a952a5cbe23fe68268325fbb30",
+      "head": "fc38b33320ff4b8bd5a4de08c0bd3ef780c1edc0",
+      "commits": [
+        "fc38b33320ff4b8bd5a4de08c0bd3ef780c1edc0"
+      ],
+      "tdd": [
+        {
+          "requirementId": "REQ-M5-EVIDENCE-007",
+          "cycleId": "8036a693-8a0a-43d5-baeb-264cd0037cb4",
+          "testId": "TEST-M5-WORKFLOW-CURRENT-001",
+          "batchTerminalOrder": 3777
+        }
+      ]
     }
   ],
   "retries": [
@@ -7321,6 +7937,18 @@
       "attempt": 2,
       "order": 552,
       "planId": "parallel-plan:a61b4b3c8d05d3a6caa0da59d7f22845b88314337e5a5cf5d81a053a75144030"
+    },
+    {
+      "assignmentId": "03-workflow-verify-current",
+      "attempt": 2,
+      "order": 572,
+      "planId": "parallel-plan:2cfea773195eacf800437b39530f7374d40941c334a186988d738784b88c409d"
+    },
+    {
+      "assignmentId": "03-workflow-verify-current",
+      "attempt": 3,
+      "order": 575,
+      "planId": "parallel-plan:2cfea773195eacf800437b39530f7374d40941c334a186988d738784b88c409d"
     }
   ],
   "integrations": [
@@ -10759,6 +11387,120 @@
         "provisioning": []
       },
       "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-290f19111d024ad369bd/integration/attempt-7"
+    },
+    {
+      "attempt": 1,
+      "branch": "musubix5/CHANGE-0017/parallel-plan-2cfea773195eacf80043/integration/attempt-1",
+      "consumedAssignmentIds": [
+        "01-release-manifest-filter",
+        "02-parallel-baseline-cli",
+        "03-workflow-verify-current",
+        "04-codegraph-benchmark"
+      ],
+      "order": 584,
+      "planId": "parallel-plan:2cfea773195eacf800437b39530f7374d40941c334a186988d738784b88c409d",
+      "provenance": {
+        "assignments": [
+          {
+            "assignmentId": "01-release-manifest-filter",
+            "attempt": 1,
+            "commits": [
+              "51b287412e6d0ccb711c399a29df6a161d8055ad"
+            ],
+            "head": "51b287412e6d0ccb711c399a29df6a161d8055ad",
+            "startCommit": "9b2dc0170a5065a952a5cbe23fe68268325fbb30"
+          },
+          {
+            "assignmentId": "02-parallel-baseline-cli",
+            "attempt": 1,
+            "commits": [
+              "b2012e57caf264393a5e0a90ba4e011181b00581"
+            ],
+            "head": "b2012e57caf264393a5e0a90ba4e011181b00581",
+            "startCommit": "9b2dc0170a5065a952a5cbe23fe68268325fbb30"
+          },
+          {
+            "assignmentId": "03-workflow-verify-current",
+            "attempt": 3,
+            "commits": [
+              "fc38b33320ff4b8bd5a4de08c0bd3ef780c1edc0"
+            ],
+            "head": "fc38b33320ff4b8bd5a4de08c0bd3ef780c1edc0",
+            "startCommit": "9b2dc0170a5065a952a5cbe23fe68268325fbb30"
+          },
+          {
+            "assignmentId": "04-codegraph-benchmark",
+            "attempt": 1,
+            "commits": [
+              "4c762f07c494dc0da7e66197251b142c15a2c710"
+            ],
+            "head": "4c762f07c494dc0da7e66197251b142c15a2c710",
+            "startCommit": "9b2dc0170a5065a952a5cbe23fe68268325fbb30"
+          }
+        ],
+        "attempt": 1,
+        "integrationCommit": "f35dc5c364182f723da2581a7a7c6e5107aa1eef",
+        "planId": "parallel-plan:2cfea773195eacf800437b39530f7374d40941c334a186988d738784b88c409d",
+        "status": "provisional"
+      },
+      "reason": "PARALLEL_INTEGRATION_VERIFICATION_FAILED: npx vitest run failed: Preparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')",
+      "state": "verification-failed",
+      "verification": {
+        "checks": [],
+        "commands": [
+          {
+            "args": [
+              "run",
+              "typecheck"
+            ],
+            "command": "npm",
+            "durationMs": 4302,
+            "exitCode": 0,
+            "status": "completed",
+            "stderr": "",
+            "stdout": "\n> musubix5@0.2.0 typecheck\n> tsc --noEmit\n\n"
+          },
+          {
+            "args": [
+              "run",
+              "build"
+            ],
+            "command": "npm",
+            "durationMs": 3716,
+            "exitCode": 0,
+            "status": "completed",
+            "stderr": "",
+            "stdout": "\n> musubix5@0.2.0 build\n> tsc -p tsconfig.build.json\n\n"
+          },
+          {
+            "args": [
+              "vitest",
+              "run"
+            ],
+            "command": "npx",
+            "durationMs": 180028,
+            "exitCode": null,
+            "status": "timeout",
+            "stderr": "Preparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\n",
+            "stdout": "\n\u001b[1m\u001b[46m RUN \u001b[49m\u001b[22m \u001b[36mv3.2.7 \u001b[39m\u001b[90m/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-2cfea773195eacf80043/integration/attempt-1\u001b[39m\n\n \u001b[32m✓\u001b[39m tests/tdd-generation-scope.test.ts \u001b[2m(\u001b[22m\u001b[2m14 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 1070\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/tdd-source-supersession-recovery.test.ts \u001b[2m(\u001b[22m\u001b[2m29 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 31975\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-SOURCE-ARTIFACT-001 binds raw pair splice, exact hunks, selected reports and complete output inventories \u001b[33m 516\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-SOURCE-SUFFIX-001 resumes a durable journal into one order and atomic terminal with byte-neutral replay \u001b[33m 374\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-SOURCE-READ-MODELS-001 exposes scoped pending guidance and always-present gate, status and TDD source arrays \u001b[33m 328\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-SOURCE-WRITER-GUARD-001 applies source integrity before ordinary TDD mutations and preserves the typed CLI exit \u001b[33m 919\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-SOURCE-RESUME-001 completes archived admission without current source and replays identical immutable results \u001b[33m 508\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-SOURCE-PENDING-WRITER-001 blocks the pending test while a runner-free unrelated write and sealed resume remain viable \u001b[33m 11778\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-SOURCE-REPOSITORY-001 rejects completed source replay in a foreign repository without rebinding archived admission \u001b[33m 405\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-SOURCE-CLI-001 exposes closed source commands, generation-first admission and immutable completed replay JSON \u001b[33m 13449\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-SOURCE-QUALITY-001 binds quality to scoped completed source evidence but not preparation, pending or replay \u001b[33m 554\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-SOURCE-VOID-001 compares dangling work against completed source terminal order without rewriting history \u001b[33m 407\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-SOURCE-MATERIALIZE-001 requires prepared immutable source proof before supplied-handle ledger replacement \u001b[33m 736\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-SOURCE-STATUS-001 retains source errors alongside integration diagnostics and prints safely quoted recovery arguments \u001b[33m 510\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-SOURCE-TAIL-001 admits only verified journal-derived source suffixes during control refresh \u001b[33m 355\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/candidate-integration-orchestration.test.ts \u001b[2m(\u001b[22m\u001b[2m16 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 36691\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m candidate integration orchestration\u001b[2m > \u001b[22mTEST-M5-FINALIZATION-CONCURRENCY-SAME-001 serializes concurrent finalizers of the same selected set without duplicate transitions \u001b[33m 1605\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m candidate integration orchestration\u001b[2m > \u001b[22mTEST-M5-FINALIZATION-CONCURRENCY-DISJOINT-001 permits disjoint CHANGE holders but serializes finalization and rejects the losing default CAS \u001b[33m 1296\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m candidate integration orchestration\u001b[2m > \u001b[22mTEST-M5-FINALIZATION-TAIL-PREFIX-001 accepts independently interrupted selected projections when journal order differs from recovery order \u001b[33m 2201\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m candidate integration orchestration\u001b[2m > \u001b[22mTEST-M5-FINALIZATION-TAIL-PUBLIC-001 resumes through the public selector API after loss of derived registry and integration projection \u001b[33m 1428\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m candidate integration orchestration\u001b[2m > \u001b[22mTEST-M5-FINALIZATION-TAIL-RECOVERY-001 rebuilds journal-derived state across every finalization boundary without foreign credit or duplicate integrated records \u001b[33m 16682\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m candidate integration orchestration\u001b[2m > \u001b[22mTEST-M5-FINALIZATION-PRECAS-DRIFT-001 detects a legacy writer after marker creation before moving the default ref \u001b[33m 854\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m candidate integration orchestration\u001b[2m > \u001b[22mTEST-M5-FINALIZATION-AUTHORITY-001 reconstructs missing recovery projections from journals and never ignores a malformed terminal marker \u001b[33m 1478\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m candidate integration orchestration\u001b[2m > \u001b[22mTEST-M5-FINALIZATION-DRIFT-001 refuses operational drift after CAS without erasing the retained marker \u001b[33m 1230\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m candidate integration orchestration\u001b[2m > \u001b[22mTEST-M5-FINALIZATION-GENERATION-001 rejects selected CHANGE generation drift before context append or recovery \u001b[33m 427\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m candidate integration orchestration\u001b[2m > \u001b[22mTEST-M5-FINALIZATION-TAIL-001 preserves an already durable integrated tail across fenced projection interruption and resume \u001b[33m 1432\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m candidate integration orchestration\u001b[2m > \u001b[22mTEST-M5-FINALIZATION-FENCED-001 forbids fenced marker cleanup and reruns pre-CAS finalization in the same authorized resume \u001b[33m 3137\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m candidate integration orchestration\u001b[2m > \u001b[22mTEST-M5-FINALIZATION-JOURNAL-001 journals each scope before selected recovery and rejects malformed later context instead of falling back \u001b[33m 901\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m candidate integration orchestration\u001b[2m > \u001b[22mTEST-M5-FINALIZATION-RESUME-001 retains a post-CAS marker and resumes from the materialized context exactly once \u001b[33m 1533\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m candidate integration orchestration\u001b[2m > \u001b[22mTEST-M5-MULTI-CHANGE-INTEGRATION-ORCHESTRATION-006 applies and verifies candidates before atomic finalization \u001b[33m 1096\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m candidate integration orchestration\u001b[2m > \u001b[22mTEST-M5-MULTI-CHANGE-INTEGRATION-ORCHESTRATION-007 resumes the same set and safely tombstones cleanup \u001b[33m 1222\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/candidate-snapshot-lifecycle.test.ts \u001b[2m(\u001b[22m\u001b[2m16 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 2719\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m candidate snapshot lifecycle\u001b[2m > \u001b[22mTEST-M5-WORKTREE-SNAPSHOT-CLI-001 rejects a malformed create token before workspace access \u001b[33m 302\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m candidate snapshot lifecycle\u001b[2m > \u001b[22mTEST-M5-WORKTREE-SNAPSHOT-DELETE-001 appends an audited tombstone and replays by actor \u001b[33m 384\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m candidate snapshot lifecycle\u001b[2m > \u001b[22mTEST-M5-LIFECYCLE-SNAPSHOT-MAINTENANCE-001 replays a tombstone through its CHANGE selector \u001b[33m 305\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/candidate-gate.test.ts \u001b[2m(\u001b[22m\u001b[2m7 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 1799\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m candidate-bound matrix gates\u001b[2m > \u001b[22mTEST-M5-CI-HISTORICAL-GATES-001 preserves history while validating only current jobs \u001b[33m 1339\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/tdd-repair-safety.test.ts \u001b[2m(\u001b[22m\u001b[2m14 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 217\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/parallel-final-findings-generation5.test.ts \u001b[2m(\u001b[22m\u001b[2m5 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 28953\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE-0003 generation 5 final parallel findings\u001b[2m > \u001b[22mTEST-M5-PARALLEL-DETACHED-PROVISION-SELECTION-001 installs only plan-selected approved commands in a fresh verifier \u001b[33m 8967\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE-0003 generation 5 final parallel findings\u001b[2m > \u001b[22mTEST-M5-PARALLEL-REAL-GATE-SUCCESS-001 verifies provisional assignment TDD through the real integration gate \u001b[33m 7653\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE-0003 generation 5 final parallel findings\u001b[2m > \u001b[22mTEST-M5-PARALLEL-INTEGRATION-CONTROL-EVIDENCE-001 verifies integration source against control-root evidence \u001b[33m 4413\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE-0003 generation 5 final parallel findings\u001b[2m > \u001b[22mTEST-M5-PARALLEL-FULL-SUCCESS-001 completes real assignment TDD, detached result verification, integration, handoff and cleanup \u001b[33m 4530\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE-0003 generation 5 final parallel findings\u001b[2m > \u001b[22mTEST-M5-PARALLEL-RUNTIME-EIGHT-WRITERS-001 preserves eight concurrent idempotent runtime transitions \u001b[33m 3389\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/parallel-release-blockers-generation5.test.ts \u001b[2m(\u001b[22m\u001b[2m9 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 4380\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE-0003 generation 5 release blocker regressions\u001b[2m > \u001b[22mTEST-M5-PARALLEL-INTEGRATION-PRE-RELEASE-CONTEXT-001 resolves only authoritative pre-release evidence \u001b[33m 842\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE-0003 generation 5 release blocker regressions\u001b[2m > \u001b[22mTEST-M5-PARALLEL-WORKSPACE-OVERLAY-001 restores workspace state when TMPDIR is on another filesystem \u001b[33m 463\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE-0003 generation 5 release blocker regressions\u001b[2m > \u001b[22mTEST-M5-PARALLEL-WORKSPACE-PARTIAL-COPY-001 canonicalizes workspace aliases and restores state after overlay copy failure \u001b[33m 1098\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE-0003 generation 5 release blocker regressions\u001b[2m > \u001b[22mTEST-M5-PARALLEL-CONSUMER-CLI-001 uses the installed CLI when a consumer worktree has no self-hosted dist entry \u001b[33m 1085\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE-0003 generation 5 release blocker regressions\u001b[2m > \u001b[22mTEST-M5-PARALLEL-HANDOFF-EVIDENCE-DIRTY-001 permits tracked control evidence while rejecting source divergence \u001b[33m 674\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/tdd-batch-recording.test.ts \u001b[2m(\u001b[22m\u001b[2m5 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 930\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TDD batch recording\u001b[2m > \u001b[22mTEST-M5-CHECKPOINT-STATUS-001 exposes historical legacy gaps and fails closed for parseable invalid checkpoints without writing projections \u001b[33m 436\u001b[2mms\u001b[22m\u001b[39m\n \u001b[31m❯\u001b[39m tests/workspace-batch-checkpoint.test.ts \u001b[2m(\u001b[22m\u001b[2m12 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[31m1 failed\u001b[39m\u001b[2m)\u001b[22m\u001b[33m 27572\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-CHECKPOINT-RECOVERY-ORDER-001 rejects missing predecessor order and malformed order scopes before finalization recovery writes \u001b[33m 1644\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-CHECKPOINT-RELEVANT-PATHS-001 ignores unannotated unrelated edits but detects changes in unannotated implementation dependencies \u001b[33m 1266\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-CHECKPOINT-PREFLIGHT-READONLY-001 does not publish shared trace artifacts during concurrent lifecycle preparation \u001b[33m 519\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-CHECKPOINT-PHASE-BEFORE-DRIFT-001 preserves unrelated phase recovery while rejecting a drifted requested batch \u001b[33m 655\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-CHECKPOINT-WORKSPACE-CONCURRENCY-001 completes exactly four same-CHANGE writers and two different-CHANGE writers within ten seconds \u001b[33m 3766\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-CHECKPOINT-REPLAY-PREPARATION-001 prefers a persisted checkpoint even when current inputs drift during preparation \u001b[33m 1022\u001b[2mms\u001b[22m\u001b[39m\n\u001b[31m   \u001b[31m×\u001b[31m TEST-M5-CHECKPOINT-CLI-DIAGNOSTICS-001 maps projection timeout and workspace drift to exit one with stable JSON codes\u001b[39m\u001b[33m 9746\u001b[2mms\u001b[22m\u001b[39m\n\u001b[31m     → expected { error: { …(2) } } to match object { Object (error) }\n(1 matching property omitted from actual)\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-CHECKPOINT-PHASE-INVALID-001 reports malformed phase journals without throwing or dropping batch summaries \u001b[33m 996\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-CHECKPOINT-WORKSPACE-REPLAY-001 completes only persisted input before current-state validation and survives order/projection interruption \u001b[33m 2197\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-CHECKPOINT-WORKSPACE-SCOPE-001 reserves past legacy ordinals and rejects singular full-set legacy evidence \u001b[33m 1228\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-CHECKPOINT-WORKSPACE-DRIFT-001 rejects same-size, added, removed, HEAD and selected-TDD drift before persistence \u001b[33m 3377\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-CHECKPOINT-STATUS-BATCH-002 diagnoses duplicate batch orders before projection subtraction in both gate and status \u001b[33m 1154\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/codegraph-incremental-regressions.test.ts \u001b[2m(\u001b[22m\u001b[2m13 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 7624\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE-0005 incremental CodeGraph regressions\u001b[2m > \u001b[22mTEST-M5-GRAPH-INCREMENTAL-NOCHANGE-001 preserves an unchanged cache without rewriting it \u001b[33m 649\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE-0005 incremental CodeGraph regressions\u001b[2m > \u001b[22mTEST-M5-GRAPH-INCREMENTAL-FALLBACK-001 selects deterministic full rebuild reasons and precedence \u001b[33m 2418\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE-0005 incremental CodeGraph regressions\u001b[2m > \u001b[22mTEST-M5-GRAPH-INCREMENTAL-GIT-001 treats unavailable Git metadata as informational \u001b[33m 327\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE-0005 incremental CodeGraph regressions\u001b[2m > \u001b[22mTEST-M5-GRAPH-CACHE-WRITE-001 preserves the previous cache when the writer fails \u001b[33m 628\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE-0005 incremental CodeGraph regressions\u001b[2m > \u001b[22mdoes not execute source extraction for reused phase units \u001b[33m 661\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE-0005 incremental CodeGraph regressions\u001b[2m > \u001b[22mtreats a refused external manifest as CONFIG_CHANGED while preserving missing as absent \u001b[33m 618\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE-0005 incremental CodeGraph regressions\u001b[2m > \u001b[22mclassifies incomplete current-version phase units as CACHE_INVALID \u001b[33m 620\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE-0005 incremental CodeGraph regressions\u001b[2m > \u001b[22mclassifies malformed semantic entries as CACHE_INVALID \u001b[33m 656\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE-0005 incremental CodeGraph regressions\u001b[2m > \u001b[22mclassifies semantic and phase-unit inconsistencies as CACHE_INVALID \u001b[33m 628\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE-0005 incremental CodeGraph regressions\u001b[2m > \u001b[22mpreserves the legacy CodeGraph return shape for public callers \u001b[33m 315\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/workflow-current-verification.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 514\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-WORKFLOW-CURRENT-001 discovers native inputs and transactionally verifies current evidence \u001b[33m 512\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/parallel-runtime-regression.test.ts \u001b[2m(\u001b[22m\u001b[2m13 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 47\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/parallel-runtime-lifecycle-generation5.test.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 4797\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE-0003 generation 5 real parallel runtime lifecycle\u001b[2m > \u001b[22mTEST-M5-PARALLEL-RUNTIME-LIFECYCLE-001 executes plan, prepare, instruction, heartbeat, fail, retry, status, integration verify and reopen \u001b[33m 2259\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE-0003 generation 5 real parallel runtime lifecycle\u001b[2m > \u001b[22mTEST-M5-PARALLEL-RUNTIME-HANDOFF-CLEANUP-001 fast-forwards a verified integration and cleans real worktrees \u001b[33m 727\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE-0003 generation 5 real parallel runtime lifecycle\u001b[2m > \u001b[22mTEST-M5-PARALLEL-RUNTIME-DIAGNOSTICS-001 returns PLAN_INVALID, PLAN_EXISTS, STALE_WORKTREES_PRESENT and INTEGRATION_INCOMPLETE \u001b[33m 1189\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE-0003 generation 5 real parallel runtime lifecycle\u001b[2m > \u001b[22mTEST-M5-PARALLEL-CANDIDATE-DIVERGED-001 reports CANDIDATE_DIVERGED when the candidate advances before handoff \u001b[33m 621\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/release-review-fixes.test.ts \u001b[2m(\u001b[22m\u001b[2m10 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 376\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/parallel-review-regressions.test.ts \u001b[2m(\u001b[22m\u001b[2m9 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 1220\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m continued CHANGE-0003 generation 5 review regressions\u001b[2m > \u001b[22mTEST-M5-TDD-SPLIT-ROOT-FINGERPRINT-001 fingerprints Green source from the execution worktree \u001b[33m 646\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m continued CHANGE-0003 generation 5 review regressions\u001b[2m > \u001b[22mTEST-M5-PARALLEL-CLI-CONCURRENCY-002 reports CLI concurrency 9 as CLI_ERROR with exit 2 \u001b[33m 311\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/workflow-declaration-correction.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 998\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m workflow declaration correction\u001b[2m > \u001b[22mTEST-M5-WORKFLOW-DECLARATION-CORRECTION-CLI-001 records a correction with JSON exit 0 \u001b[33m 776\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/release-generation5.test.ts \u001b[2m(\u001b[22m\u001b[2m5 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 1170\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m release generation 5\u001b[2m > \u001b[22mTEST-M5-RELEASE-004-DOCS-001 validates exact tarball release documents \u001b[33m 551\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m release generation 5\u001b[2m > \u001b[22mTEST-M5-RELEASE-004-001 publishes the exact verified GitHub Release tarball \u001b[33m 304\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/cli-help-contract.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 521\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CLI help compatibility\u001b[2m > \u001b[22mTEST-M5-SOURCE-HELP-001 preserves the candidate-only parent and child help aggregate \u001b[33m 410\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/change-phase-checkpoint-operation.test.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 928\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m same-generation phase checkpoint operations\u001b[2m > \u001b[22mTEST-M5-LIFECYCLE-PHASE-CHECKPOINT-001 journals, projects, and replays one scoped operation \u001b[33m 412\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/active-change-context.test.ts \u001b[2m(\u001b[22m\u001b[2m7 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 107\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/trace-namespace.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 3977\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m trace evidence namespace\u001b[2m > \u001b[22mTEST-M5-EVIDENCE-TRACE-001 excludes inherited musubix3 trace declarations \u001b[33m 1812\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m trace evidence namespace\u001b[2m > \u001b[22mTEST-M5-EVIDENCE-SKILL-INPUT-001 selects and parses only repository-owned Skill declarations \u001b[33m 1154\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m trace evidence namespace\u001b[2m > \u001b[22mTEST-SESSION-SCOPED-DEVELOPMENT-001 traces the authoritative fresh-change and approval contracts \u001b[33m 1010\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/parallel-development.test.ts \u001b[2m(\u001b[22m\u001b[2m7 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 18\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/release-manifest-scope.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 878\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m release approval manifest scope\u001b[2m > \u001b[22mTEST-M5-RELEASE-MANIFEST-001 excludes historical and run-local artifacts \u001b[33m 861\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/codegraph-performance.test.ts \u001b[2m(\u001b[22m\u001b[2m5 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 1620\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE-0005 CodeGraph performance\u001b[2m > \u001b[22mTEST-M5-GRAPH-INCREMENTAL-001 reanalyzes only a modified leaf and its importer \u001b[33m 1616\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/workflow-generation-reconciliation.test.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 47\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/workflow-declaration-correction-regressions.test.ts \u001b[2m(\u001b[22m\u001b[2m6 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 410\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/change-lease.test.ts \u001b[2m(\u001b[22m\u001b[2m5 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 974\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE writer lease\u001b[2m > \u001b[22mTEST-M5-CHECKPOINT-SESSION-001 serializes four same-CHANGE and two cross-CHANGE writers and fences supplied sessions \u001b[33m 601\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/evidence-skill-inputs.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 853\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m repository Skill evidence inputs\u001b[2m > \u001b[22mTEST-M5-EVIDENCE-SKILL-FINGERPRINT-001 binds owned Skills to every non-trace fingerprint \u001b[33m 852\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/release-0-2-0.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 455\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m release 0.2.0\u001b[2m > \u001b[22mTEST-M5-REL020-VERSION-001 binds every release version surface to 0.2.0 \u001b[33m 353\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/codegraph-benchmark.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 6082\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m isolated CodeGraph benchmark\u001b[2m > \u001b[22mTEST-M5-GRAPH-BENCHMARK-DETERMINISM-001 separates reproducible metrics and validates thresholds \u001b[33m 5768\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m isolated CodeGraph benchmark\u001b[2m > \u001b[22mTEST-M5-GRAPH-BENCHMARK-ISOLATION-001 detects protected mutations without rewriting output \u001b[33m 311\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/evidence-selector-guards.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 4297\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m evidence selector guards\u001b[2m > \u001b[22mTEST-M5-WAVE1-EVIDENCE-GUARDS-001 enforces selector architecture and Skill-only staleness \u001b[33m 4296\u001b[2mms\u001b[22m\u001b[39m\n \u001b[31m❯\u001b[39m tests/tdd-writer-concurrency.test.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[31m1 failed\u001b[39m\u001b[2m)\u001b[22m\u001b[33m 11808\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-TDD-WRITER-MERGE-001 releases shared leases during runners and merges unrelated completed observations \u001b[33m 411\u001b[2mms\u001b[22m\u001b[39m\n\u001b[31m   \u001b[31m×\u001b[31m TEST-M5-TDD-WRITER-DIAGNOSTIC-001 reports ordinary append contention as TDD_EVIDENCE_LEASE_BUSY exit one without evidence writes\u001b[39m\u001b[33m 10253\u001b[2mms\u001b[22m\u001b[39m\n\u001b[31m     → expected { error: { …(2) } } to match object { Object (error) }\n(1 matching property omitted from actual)\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-TDD-WRITER-MAINTENANCE-001 excludes no-active void persistence while the shared projection lease is held \u001b[33m 929\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m TEST-M5-TDD-WRITER-INPUT-001 rejects runner-time production and configuration drift before recording an observation\u001b[32m 214\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/compatibility-oracle.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 352\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m compatibility oracle\u001b[2m > \u001b[22mTEST-M5-SOURCE-REGISTRY-001 binds candidate-only source commands to the approved registry and migration contract \u001b[33m 346\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/approval-normative-contract.test.ts \u001b[2m(\u001b[22m\u001b[2m6 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 955\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m approval normative contract\u001b[2m > \u001b[22mTEST-M5-WORKTREE-ACTIVE-CHANGE-001 refuses an ambiguous latest snapshot \u001b[33m 308\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/candidate-integration-review-regressions.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 240\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/parallel-baseline-cli.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 683\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-WORKTREE-BASELINE-CLI-001 enforces the public baseline boundary and exact replay \u001b[33m 682\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/candidate-workspace-lifecycle.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 446\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/tdd-cycle-resolver.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 6\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/candidate-state-refresh-cleanup.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 220\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/release-workflow-hardening.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 25\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/npm-registry-deadline.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 58\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/approval-effective-projection.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 371\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/candidate-finalization-state.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 564\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-FINALIZATION-MATERIALIZE-001 recovers only held active CHANGEs before baseline and copies non-selected pending journals verbatim \u001b[33m 457\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/candidate-finalization-durability.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 252\u001b[2mms\u001b[22m\u001b[39m\n \u001b[31m❯\u001b[39m tests/parallel-quality-regressions.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[31m1 failed\u001b[39m\u001b[2m)\u001b[22m\u001b[33m 4561\u001b[2mms\u001b[22m\u001b[39m\n\u001b[31m   \u001b[31m×\u001b[31m CHANGE-0003 quality regressions\u001b[2m > \u001b[22mTEST-M5-PARALLEL-GRAPH-ACYCLIC-001 keeps parallel TDD provenance dependencies acyclic\u001b[39m\u001b[33m 4500\u001b[2mms\u001b[22m\u001b[39m\n\u001b[31m     → expected false to be true // Object.is equality\u001b[39m\n   \u001b[32m✓\u001b[39m CHANGE-0003 quality regressions\u001b[2m > \u001b[22mTEST-M5-PARALLEL-RELEASE-NONPASS-001 classifies incomplete release approval as a non-pass diagnostic\u001b[32m 29\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m CHANGE-0003 quality regressions\u001b[2m > \u001b[22mvalidates performance evidence against matrix-isolated structured reports\u001b[32m 31\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/candidate-evidence-binding.test.ts \u001b[2m(\u001b[22m\u001b[2m5 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 36\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/cli-json-error-contract.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 3638\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CLI JSON failure compatibility\u001b[2m > \u001b[22mTEST-M5-SOURCE-JSON-001 preserves stdout envelopes and closed usage reasons before generation admission \u001b[33m 2752\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CLI JSON failure compatibility\u001b[2m > \u001b[22mTEST-M5-APPROVAL-GUIDANCE-001 names the published approval recovery command \u001b[33m 600\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/change-lease-sharing-violation.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 409\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/tdd-source-supersession-cli.test.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 285\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/trace-projection-stability.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 382\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m shared trace index persistence\u001b[2m > \u001b[22mTEST-M5-WAVE1-TRACE-STABILITY-001 keeps no-op shared publications byte and mtime stable \u001b[33m 348\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/short-unix-socket.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 21\u001b[2mms\u001b[22m\u001b[39m\n \u001b[31m❯\u001b[39m tests/concurrency-lease-contract.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m | \u001b[22m\u001b[31m1 failed\u001b[39m\u001b[2m)\u001b[22m\u001b[33m 8512\u001b[2mms\u001b[22m\u001b[39m\n\u001b[31m   \u001b[31m×\u001b[31m TEST-M5-CONCURRENCY-LEASE-CONTRACT-001 preserves real ten-second acquisition, lock order, renewal, TTL, retry and durable fencing\u001b[39m\u001b[33m 8511\u001b[2mms\u001b[22m\u001b[39m\n\u001b[31m     → expected 'LEASE_FENCED: the lease is expired, l…' to contain 'CHANGE_PROJECTION_LEASE_BUSY'\u001b[39m\n \u001b[32m✓\u001b[39m tests/approval-scope.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 393\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m approval manifest scope\u001b[2m > \u001b[22mTEST-M5-APPROVAL-007 applies stage projections and explicit release exclusions \u001b[33m 391\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/parallel-handoff-porcelain.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 1610\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m parallel handoff porcelain parsing\u001b[2m > \u001b[22mTEST-M5-WAVE0-HANDOFF-PORCELAIN-OWNED-001 permits a first unstaged integrator-owned record \u001b[33m 958\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m parallel handoff porcelain parsing\u001b[2m > \u001b[22mTEST-M5-WAVE0-HANDOFF-PORCELAIN-OUTSIDE-001 rejects a first unstaged outside-owned record \u001b[33m 648\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/product-name-guidance.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 138\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/candidate-state-context.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 25\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/change-generation-cli-status.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 969\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE generation CLI status\u001b[2m > \u001b[22mTEST-M5-LIFECYCLE-STATUS-EXIT-001 keeps mixed status diagnostic at exit zero \u001b[33m 316\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE generation CLI status\u001b[2m > \u001b[22mTEST-M5-LIFECYCLE-MIXED-ERROR-MAPPING-001 maps mixed gate failure to exit one and its domain code \u001b[33m 318\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE generation CLI status\u001b[2m > \u001b[22mTEST-M5-LIFECYCLE-STATUS-ABANDONED-001 reports an abandoned active document at exit zero \u001b[33m 334\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/candidate-integration-evidence-context.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 32\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/workflow-declaration-correction-cli-errors.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 743\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m workflow declaration correction CLI errors\u001b[2m > \u001b[22mTEST-M5-WORKFLOW-DECLARATION-CORRECTION-CLI-ERROR-001 maps unsupported codes and malformed timestamps to CLI_ERROR exit 2 \u001b[33m 742\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/release-operation-guard.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 311\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/release-candidate-tree.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 850\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m release candidate tree approval\u001b[2m > \u001b[22mTEST-M5-APPROVAL-CANDIDATE-TREE-001 binds the persisted commit instead of worktree bytes \u001b[33m 849\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/candidate-cleanup-policy.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 150\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/workflow-change-owner.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 36\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/checkpoint-clock.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 1271\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m TEST-M5-CHECKPOINT-MONOTONIC-WAIT-001 tolerates a wall-clock jump while sixteen callers wait within the unchanged acquisition budget \u001b[33m 1214\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/change-generation.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 267\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/release-repository-target-generation15.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 28\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/candidate-workspace-cli-lifecycle.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 319\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m candidate workspace CLI lifecycle\u001b[2m > \u001b[22mTEST-M5-MULTI-CHANGE-CLI-LIFECYCLE-001 exposes unambiguous lifecycle and integration commands \u001b[33m 312\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/bootstrap-runner.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 51\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/candidate-integration-dependencies.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 4\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/candidate-state-readiness.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 14\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/parallel-scaffold-policy-generation5.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 261\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/candidate-evidence-checkpoint.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 470\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m candidate worktree change checkpoints\u001b[2m > \u001b[22mTEST-M5-CANDIDATE-WORKSPACE-CHECKPOINT-001 fingerprints source while persisting control evidence \u001b[33m 470\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/approval-contract-diagnostics.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 470\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m approval contract diagnostics\u001b[2m > \u001b[22mTEST-M5-APPROVAL-RELEASE-DOMAIN-001 rejects a release domain option \u001b[33m 380\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/approval-normative-selection.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 101\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/change-generation-resume.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 380\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE generation reopen recovery\u001b[2m > \u001b[22mTEST-M5-LIFECYCLE-REOPEN-RESUME-001 resumes a persisted impact without allocating twice \u001b[33m 379\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/candidate-workspace-context.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 487\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m candidate workspace explicit context\u001b[2m > \u001b[22mTEST-M5-MULTI-CHANGE-CONTEXT-001 creates and reads one explicit candidate in a mixed repository \u001b[33m 486\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/candidate-integration-determinism.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 232\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/change-generation-binding.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 360\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m CHANGE generation evidence binding\u001b[2m > \u001b[22mTEST-M5-LIFECYCLE-GENERATION-BINDING-001 binds approvals and status to the active generation \u001b[33m 359\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/repository-identity.test.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 6\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/journal-order.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 668\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m repository-wide journal order\u001b[2m > \u001b[22mTEST-M5-LIFECYCLE-002 allocates unique increasing order across concurrent CHANGEs \u001b[33m 667\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/native-approval.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 110\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/source-blob-admission.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 94\u001b[2mms\u001b[22m\u001b[39m\n"
+          }
+        ],
+        "provisioning": [
+          {
+            "args": [
+              "ci",
+              "--ignore-scripts"
+            ],
+            "command": "npm",
+            "durationMs": 5270,
+            "exitCode": 0,
+            "status": "completed",
+            "stderr": "npm warn deprecated glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me\n",
+            "stdout": "\nadded 332 packages, and audited 336 packages in 5s\n\n64 packages are looking for funding\n  run `npm fund` for details\n\n2 moderate severity vulnerabilities\n\nTo address all issues (including breaking changes), run:\n  npm audit fix --force\n\nRun `npm audit` for details.\n"
+          }
+        ]
+      },
+      "worktree": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-2cfea773195eacf80043/integration/attempt-1"
     }
   ],
   "handoffs": [
@@ -10973,30 +11715,30 @@
       "retained": []
     },
     {
-      "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+      "maintenance": true,
       "order": 558,
-      "maintenance": true,
+      "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
       "removed": [],
       "retained": []
     },
     {
-      "planId": "parallel-plan:290f19111d024ad369bd79ff14e4098c6001410693a97a4afa5959469c7e52a2",
+      "maintenance": true,
       "order": 559,
-      "maintenance": true,
+      "planId": "parallel-plan:290f19111d024ad369bd79ff14e4098c6001410693a97a4afa5959469c7e52a2",
       "removed": [],
       "retained": []
     },
     {
-      "planId": "parallel-plan:d0a9440d0761ae3a60cf05c97ca65a04eaf934101a61307960372595db9434ff",
+      "maintenance": true,
       "order": 560,
-      "maintenance": true,
+      "planId": "parallel-plan:d0a9440d0761ae3a60cf05c97ca65a04eaf934101a61307960372595db9434ff",
       "removed": [],
       "retained": []
     },
     {
-      "planId": "parallel-plan:a61b4b3c8d05d3a6caa0da59d7f22845b88314337e5a5cf5d81a053a75144030",
-      "order": 561,
       "maintenance": true,
+      "order": 561,
+      "planId": "parallel-plan:a61b4b3c8d05d3a6caa0da59d7f22845b88314337e5a5cf5d81a053a75144030",
       "removed": [
         "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-a61b4b3c8d05d3a6caa0/assignments/release-manifest-filter/attempt-1",
         "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-a61b4b3c8d05d3a6caa0/assignments/parallel-baseline-cli/attempt-1",
@@ -11008,6 +11750,65 @@
         "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-a61b4b3c8d05d3a6caa0/assignments/codegraph-benchmark/attempt-2"
       ],
       "retained": []
+    },
+    {
+      "planId": "parallel-plan:1edba91e857fa502a3e35a58f10d32df71dc02698e97c1dee8e1040cd17057e6",
+      "order": 585,
+      "maintenance": true,
+      "removed": [],
+      "retained": []
+    },
+    {
+      "planId": "parallel-plan:290f19111d024ad369bd79ff14e4098c6001410693a97a4afa5959469c7e52a2",
+      "order": 586,
+      "maintenance": true,
+      "removed": [],
+      "retained": []
+    },
+    {
+      "planId": "parallel-plan:d0a9440d0761ae3a60cf05c97ca65a04eaf934101a61307960372595db9434ff",
+      "order": 587,
+      "maintenance": true,
+      "removed": [],
+      "retained": []
+    },
+    {
+      "planId": "parallel-plan:a61b4b3c8d05d3a6caa0da59d7f22845b88314337e5a5cf5d81a053a75144030",
+      "order": 588,
+      "maintenance": true,
+      "removed": [],
+      "retained": []
+    },
+    {
+      "planId": "parallel-plan:2cfea773195eacf800437b39530f7374d40941c334a186988d738784b88c409d",
+      "order": 589,
+      "maintenance": true,
+      "removed": [
+        "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-2cfea773195eacf80043/assignments/04-codegraph-benchmark/attempt-1",
+        "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-2cfea773195eacf80043/integration/attempt-1"
+      ],
+      "retained": [
+        {
+          "path": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-2cfea773195eacf80043/assignments/01-release-manifest-filter/attempt-1",
+          "reason": "dirty"
+        },
+        {
+          "path": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-2cfea773195eacf80043/assignments/02-parallel-baseline-cli/attempt-1",
+          "reason": "dirty"
+        },
+        {
+          "path": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-2cfea773195eacf80043/assignments/03-workflow-verify-current/attempt-1",
+          "reason": "dirty"
+        },
+        {
+          "path": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-2cfea773195eacf80043/assignments/03-workflow-verify-current/attempt-2",
+          "reason": "dirty"
+        },
+        {
+          "path": "/home/nahisaho/GitHub/musubix5/.git/musubix5/workspaces/CHANGE-0017/parallel/parallel-plan-2cfea773195eacf80043/assignments/03-workflow-verify-current/attempt-3",
+          "reason": "dirty"
+        }
+      ]
     }
   ]
 }

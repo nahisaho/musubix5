@@ -1,8 +1,11 @@
 import { spawn } from 'node:child_process';
-import { win32 } from 'node:path';
+import { join, win32 } from 'node:path';
 import { performance } from 'node:perf_hooks';
+import { pathToFileURL } from 'node:url';
+import type { TestRuntimeProvenance } from './test-runtime.js';
 
 export interface ProcessResult {
+  testRuntime?: TestRuntimeProvenance;
   status: 'completed' | 'missing' | 'timeout' | 'error';
   exitCode: number | null;
   stdout: string;
@@ -86,6 +89,32 @@ export function resolveBuildInvocationForEnvironment(
   nodeExecutable: string = process.execPath,
 ): { command: string; args: string[] } {
   return resolveNpmInvocationForEnvironment(['run', 'build'], matrixOs, platform, nodeExecutable);
+}
+
+/** @id CODE-M5-TEST-RUNTIME-BUILD-ISOLATION-001
+ * @implements REQ-M5-LIFECYCLE-006 REQ-M5-COMPAT-013
+ * @design DES-M5-015
+ */
+export function cleanTestRuntimeBuildEnvironment(root: string, environment = process.env): NodeJS.ProcessEnv {
+  const env = { ...environment }, options = env.NODE_OPTIONS ?? '';
+  const preload = `--import=${pathToFileURL(join(root, 'scripts/test-runtime/stable-wall-clock.mjs')).href}`;
+  const tokens = options.split(/[ \t]+/).filter(Boolean);
+  let memory: string | undefined;
+  if (/[^\S\t ]|["'\\\x00-\x08\x0e-\x1f\x7f]/.test(options)) throw new Error('TEST_RUNTIME_BOOTSTRAP_INVALID: node-options');
+  for (const token of tokens) {
+    if (token === preload || token === '--enable-source-maps') continue;
+    if (!/^--max-old-space-size=[1-9][0-9]*$/.test(token) || !Number.isSafeInteger(Number(token.split('=')[1]))
+      || memory !== undefined && memory !== token) throw new Error('TEST_RUNTIME_BOOTSTRAP_INVALID: node-options');
+    memory = token;
+  }
+  if (tokens.includes(preload) !== Boolean(env.MUSUBIX5_TEST_RUNTIME_CLOCK)) throw new Error('TEST_RUNTIME_BOOTSTRAP_INVALID: worker-scope');
+  delete env.MUSUBIX5_TEST_RUNTIME_CLOCK;
+  delete env.MUSUBIX5_TEST_RUNTIME_REQUEST;
+  delete env.MUSUBIX5_TEST_RUNTIME_DISPATCH;
+  const retained = tokens.filter((token) => token !== preload);
+  if (retained.length) env.NODE_OPTIONS = retained.join(' ');
+  else delete env.NODE_OPTIONS;
+  return env;
 }
 
 export const runProcess: Runner = async (command, args, options) => new Promise((resolve) => {

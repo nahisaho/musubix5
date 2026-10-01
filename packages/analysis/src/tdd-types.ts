@@ -1,10 +1,12 @@
 import type { Diagnostic } from '../../domain/src/index.js';
 import type { CandidateEvidenceBinding } from './approval.js';
 import type { SourceProjection } from './tdd-source-types.js';
+import type { TestRuntimeProvenance } from './test-runtime.js';
 
 export type TddPhase = 'red' | 'green' | 'refactor';
 
 export interface TddPhaseEvidence {
+  testRuntime?: TestRuntimeProvenance;
   phase: TddPhase;
   valid: boolean;
   scoped?: boolean;

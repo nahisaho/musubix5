@@ -16,7 +16,7 @@ afterEach(() => {
 describe('candidate gate trust contract', () => {
   /**
    * @id TEST-M5-RELEASE-002-TRUST-001
-   * @verifies REQ-M5-APPROVAL-007 REQ-M5-EVIDENCE-003 REQ-M5-RELEASE-002 REQ-M5-TDD-CURRENCY-001
+   * @verifies REQ-M5-APPROVAL-007 REQ-M5-EVIDENCE-003 REQ-M5-RELEASE-002 REQ-M5-TDD-CURRENCY-001 REQ-M5-COMPAT-013
    */
   it('TEST-M5-RELEASE-002-TRUST-001 materializes approved policy and rejects unsigned artifacts', async () => {
     const root = mkdtempSync(join(tmpdir(), 'musubix5-candidate-trust-'));
@@ -44,7 +44,7 @@ describe('candidate gate trust contract', () => {
       fileURLToPath(new URL('..', import.meta.url)),
     );
     expect(sha256(canonicalBytes(projection)))
-      .toBe('4024de812ec88cca469bc4e86825b742691c92f8f605c03d4b44b3294a1dfd2d');
+      .toBe('327baa0f399450fd6714f112e41bc23e13de79a9c1113499795ea76d87bcd03e');
 
     await expect(ingestCandidateGateEnvelopes(root, [{
       schemaVersion: 1,
