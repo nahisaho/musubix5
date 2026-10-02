@@ -258,7 +258,7 @@ export async function sanitizeWorkflowLogFile(
   mode: 'compatible' | 'strict' = 'strict',
 ): Promise<WorkflowSanitizationResult> {
   if (replacementSessionId && !uuid.test(replacementSessionId)) {
-    throw new Error('Replacement workflow session ID must be a UUID.');
+    throw new Error('WORKFLOW_SANITIZE_INVALID: Replacement workflow session ID must be a UUID.');
   }
   const maxBytes = maxTranscriptBytes ?? workflowVerificationLimits.maxBytes;
   const maxLineBytes = maxTranscriptLineBytes ?? workflowVerificationLimits.maxLineBytes;
@@ -302,10 +302,10 @@ export async function sanitizeWorkflowLogFile(
     const lineBytes = Buffer.byteLength(line);
     const recordBytes = lineBytes + 1;
     if (lineBytes > maxLineBytes) {
-      throw new Error(`Sanitized workflow event exceeds the maximum line size of ${maxLineBytes} bytes.`);
+      throw new Error(`WORKFLOW_TRANSCRIPT_SIZE: Sanitized workflow event exceeds the maximum line size of ${maxLineBytes} bytes.`);
     }
     if (outputBytes + recordBytes > maxBytes) {
-      throw new Error(`Sanitized workflow transcript exceeds the maximum total size of ${maxBytes} bytes.`);
+      throw new Error(`WORKFLOW_TRANSCRIPT_SIZE: Sanitized workflow transcript exceeds the maximum total size of ${maxBytes} bytes.`);
     }
     const record = `${line}\n`;
     await output.write(record);
@@ -319,21 +319,21 @@ export async function sanitizeWorkflowLogFile(
       try {
         line = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
       } catch {
-        throw new Error(`Workflow transcript line ${inputEvents + 1} must contain valid UTF-8 before sanitization.`);
+        throw new Error(`WORKFLOW_SANITIZE_INVALID: Workflow transcript line ${inputEvents + 1} must contain valid UTF-8 before sanitization.`);
       }
       if (!line.trim()) return;
       inputEvents += 1;
       if (inputEvents > workflowVerificationLimits.maxEvents) {
-        throw new Error(`Workflow transcript exceeds the maximum event count of ${workflowVerificationLimits.maxEvents}.`);
+        throw new Error(`WORKFLOW_TRANSCRIPT_SIZE: Workflow transcript exceeds the maximum event count of ${workflowVerificationLimits.maxEvents}.`);
       }
       if (Buffer.byteLength(line) > maxLineBytes) {
-        throw new Error(`Workflow transcript line ${inputEvents} exceeds the maximum size of ${maxLineBytes} bytes; raise workflow.maxTranscriptLineBytes in .musubix/config.json and protect it in the policy baseline.`);
+        throw new Error(`WORKFLOW_TRANSCRIPT_SIZE: Workflow transcript line ${inputEvents} exceeds the maximum size of ${maxLineBytes} bytes; raise workflow.maxTranscriptLineBytes in .musubix/config.json and protect it in the policy baseline.`);
       }
       let event: unknown;
       try {
         event = JSON.parse(line) as unknown;
       } catch {
-        throw new Error(`Workflow transcript line ${inputEvents} must contain valid JSON before sanitization.`);
+        throw new Error(`WORKFLOW_SANITIZE_INVALID: Workflow transcript line ${inputEvents} must contain valid JSON before sanitization.`);
       }
       if (!event || typeof event !== 'object' || Array.isArray(event)) return;
       const record = event as Record<string, unknown>;
@@ -363,7 +363,7 @@ export async function sanitizeWorkflowLogFile(
       } else if (completes.has(type) && typeof toolCallId === 'string' && skillCalls.has(toolCallId)) {
         const success = data.success ?? record.success;
         if (typeof success !== 'boolean') {
-          throw new Error(`Skill tool completion ${toolCallId} must declare boolean success before sanitization.`);
+          throw new Error(`WORKFLOW_SANITIZE_INVALID: Skill tool completion ${toolCallId} must declare boolean success before sanitization.`);
         }
         await emit({
           type: 'tool.execution_complete',
@@ -373,7 +373,7 @@ export async function sanitizeWorkflowLogFile(
       } else if (type === 'session.start') {
         const sessionId = data.sessionId ?? record.sessionId;
         if (typeof sessionId !== 'string' || !uuid.test(sessionId)) {
-          throw new Error('The workflow session start must declare a UUID sessionId before sanitization.');
+          throw new Error('WORKFLOW_SANITIZE_INVALID: The workflow session start must declare a UUID sessionId before sanitization.');
         }
         terminalSessionId = replacementSessionId ?? sessionId;
         await emit({
@@ -405,7 +405,7 @@ export async function sanitizeWorkflowLogFile(
       } else if (type === 'result') {
         const sessionId = record.sessionId;
         if (typeof sessionId !== 'string' || !uuid.test(sessionId)) {
-          throw new Error('The terminal workflow result must declare a UUID sessionId before sanitization.');
+          throw new Error('WORKFLOW_SANITIZE_INVALID: The terminal workflow result must declare a UUID sessionId before sanitization.');
         }
         terminalSessionId = replacementSessionId ?? sessionId;
         await emit({
@@ -422,14 +422,14 @@ export async function sanitizeWorkflowLogFile(
     for await (const value of createReadStream(inputPath)) {
       const chunk = Buffer.from(value);
       sourceBytes += chunk.byteLength;
-      if (sourceBytes > maxBytes) throw new Error(`Workflow transcript exceeds the maximum total size of ${maxBytes} bytes; raise workflow.maxTranscriptBytes in .musubix/config.json and protect it in the policy baseline.`);
+      if (sourceBytes > maxBytes) throw new Error(`WORKFLOW_TRANSCRIPT_SIZE: Workflow transcript exceeds the maximum total size of ${maxBytes} bytes; raise workflow.maxTranscriptBytes in .musubix/config.json and protect it in the policy baseline.`);
       sourceHash.update(chunk);
       let start = 0;
       for (let index = chunk.indexOf(0x0a); index !== -1; index = chunk.indexOf(0x0a, start)) {
         const part = chunk.subarray(start, index);
         lineBytes += part.byteLength;
         if (lineBytes > maxLineBytes) {
-          throw new Error(`Workflow transcript line ${inputEvents + 1} exceeds the maximum size of ${maxLineBytes} bytes; raise workflow.maxTranscriptLineBytes in .musubix/config.json and protect it in the policy baseline.`);
+          throw new Error(`WORKFLOW_TRANSCRIPT_SIZE: Workflow transcript line ${inputEvents + 1} exceeds the maximum size of ${maxLineBytes} bytes; raise workflow.maxTranscriptLineBytes in .musubix/config.json and protect it in the policy baseline.`);
         }
         if (part.byteLength) lineParts.push(part);
         await processSanitizedLine(Buffer.concat(lineParts, lineBytes));
@@ -440,7 +440,7 @@ export async function sanitizeWorkflowLogFile(
       const remainder = chunk.subarray(start);
       lineBytes += remainder.byteLength;
       if (lineBytes > maxLineBytes) {
-        throw new Error(`Workflow transcript line ${inputEvents + 1} exceeds the maximum size of ${maxLineBytes} bytes; raise workflow.maxTranscriptLineBytes in .musubix/config.json and protect it in the policy baseline.`);
+        throw new Error(`WORKFLOW_TRANSCRIPT_SIZE: Workflow transcript line ${inputEvents + 1} exceeds the maximum size of ${maxLineBytes} bytes; raise workflow.maxTranscriptLineBytes in .musubix/config.json and protect it in the policy baseline.`);
       }
       if (remainder.byteLength) lineParts.push(remainder);
     }

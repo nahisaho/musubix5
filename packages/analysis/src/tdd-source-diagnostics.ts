@@ -2,6 +2,12 @@ import type { Diagnostic } from '../../domain/src/index.js';
 import type { SourceScope, SourceTarget } from './tdd-source-types.js';
 
 export const sourceReasons = {
+  TDD_SOURCE_LFS_UNAVAILABLE: ['tool-missing', 'version-unsupported', 'authentication', 'quota', 'network', 'remote-object-missing'],
+  TDD_SOURCE_LFS_INVALID: ['pointer-schema', 'pointer-path-digest', 'pointer-size', 'logical-size', 'logical-digest', 'mode',
+    'attributes', 'cache-integrity', 'worktree-integrity', 'download-integrity'],
+  TDD_SOURCE_LFS_MIGRATION_CONFLICT: ['raw-object-binding', 'source-ref-drift', 'protected-ref-overlap',
+    'commit-map-divergence', 'receipt-divergence', 'actor-mismatch'],
+  TDD_SOURCE_LFS_MIGRATION_PENDING: ['migration-incomplete', 'adoption-incomplete', 'tombstone-incomplete', 'snapshot-incomplete'],
   TDD_SOURCE_LEDGER_INVALID: ['scope-unreadable', 'journal-schema', 'journal-chain', 'order-invalid',
     'order-multiple', 'chain-linkage', 'projection-mismatch', 'successor-self', 'successor-cycle', 'successor-branch'],
   TDD_SOURCE_PENDING: ['same-test-writer', 'explicit-target-conflict', 'resume-required', 'completion-required'],

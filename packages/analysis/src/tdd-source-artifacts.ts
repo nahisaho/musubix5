@@ -7,7 +7,7 @@ import { SourceOperationError } from './tdd-source-diagnostics.js';
 import { sourceHash, sourceObject, sourcePath, validateSourceReview } from './tdd-source-ledger.js';
 import { sourceOutputs, sourceSnapshotExclusions, sourceEnvironment, sourceEnvironmentFiles,
   type SourceSnapshotManifest } from './tdd-source-snapshot.js';
-import { readSourceBlob, type SourceBlobReader } from './tdd-source-storage.js';
+import { readSourceBlob, sourceBlobVerification, type SourceBlobReader } from './tdd-source-storage.js';
 import type { SourceSnapshotBinding, SourceReview, SourceRun } from './tdd-source-types.js';
 import { sourceAdmissionFailure, sourceReviewHunks, spliceCanonicalTestBlock } from './tdd-source-review.js';
 import { parseMusubixTestReport } from './test-report.js';
@@ -47,7 +47,9 @@ export async function readCanonicalSourceBlob(root: string, hash: string, reader
  * @design DES-M5-007 DES-M5-023
  */
 export async function verifySourceSnapshotBlobs(root: string, binding: SourceSnapshotBinding,
-  read: SourceBlobReader = (hash) => readSourceBlob(root, hash)): Promise<SourceSnapshotManifest> {
+  read?: SourceBlobReader): Promise<SourceSnapshotManifest> {
+  const references = read ? null : sourceBlobVerification(root);
+  read ??= references!.read;
   const value = await readCanonicalSourceBlob(root, binding.manifestSha256, read);
   if (!manifestGuard(value)) invalid();
   const manifest = value as SourceSnapshotManifest;
@@ -104,6 +106,7 @@ export async function verifySourceSnapshotBlobs(root: string, binding: SourceSna
     || !same(production, manifest.entries.filter((entry) => ['production', 'helper'].includes(entry.role)))) invalid();
   const { stateSha256, ...state } = binding;
   if (sha256(canonicalBytes({ schemaVersion: 1, ...state })) !== stateSha256) invalid();
+  await references?.recheck();
   return manifest;
 }
 

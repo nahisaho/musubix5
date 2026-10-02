@@ -131,7 +131,7 @@ interface GraphBuildOptions {
   onSourceExtraction?: CodeGraphIndexOptions['onSourceExtraction'];
 }
 
-const CODEGRAPH_ANALYZER_REVISION = 'm5-graph-001-phase-units-4';
+const CODEGRAPH_ANALYZER_REVISION = 'm5-graph-001-phase-units-5';
 const LOCKFILES = ['package-lock.json', 'npm-shrinkwrap.json', 'pnpm-lock.yaml', 'yarn.lock'] as const;
 const ANALYSIS_VERSION = `${CODEGRAPH_ANALYZER_REVISION}:typescript-${ts.version}`;
 
@@ -934,6 +934,32 @@ async function fullIndexGraph(root: string, buildOptions: GraphBuildOptions = {}
       unit.relationsPhase.diagnostics = graph.diagnostics.slice(diagnosticStart);
     });
   };
+  /** @id CODE-M5-GRAPH-COMPILER-OUTPUT-OWNERSHIP-001
+   * @implements REQ-M5-GRAPH-003
+   * @design DES-M5-GRAPH-002 DES-M5-GRAPH-004
+   */
+  const emittedOwners = new Map<string, Set<string>>();
+  for (const config of paths.filter((path) => /(?:^|\/)tsconfig[^/]*\.json$/.test(path))) {
+    const loaded = ts.readConfigFile(resolve(root, config), ts.sys.readFile);
+    if (loaded.error) {
+      diagnostics.push(error('GRAPH_TSCONFIG', ts.flattenDiagnosticMessageText(loaded.error.messageText, '\n'), config));
+      continue;
+    }
+    const parsed = ts.parseJsonConfigFileContent(loaded.config, ts.sys, resolve(root, dirname(config)),
+      undefined, resolve(root, config));
+    if (!parsed.options.outDir || parsed.options.noEmit) continue;
+    for (const source of parsed.fileNames) {
+      const owner = portable(relative(root, source));
+      if (!known.has(owner)) continue;
+      for (const output of ts.getOutputFileNames(parsed, source, !ts.sys.useCaseSensitiveFileNames)) {
+        const path = portable(relative(root, output));
+        if (path.startsWith('../') || isAbsolute(path)) continue;
+        const owners = emittedOwners.get(path) ?? new Set<string>();
+        owners.add(owner);
+        emittedOwners.set(path, owners);
+      }
+    }
+  }
   for (const manifest of paths.filter((candidate) => candidate.endsWith('package.json'))) {
     let value: Record<string, unknown>;
     try {
@@ -960,7 +986,12 @@ async function fullIndexGraph(root: string, buildOptions: GraphBuildOptions = {}
         `${base}/index.ts`,
         `${base}/index.js`,
       ];
-      const target = candidates.find((candidate) => known.has(candidate));
+      const owners = emittedOwners.get(base);
+      if (owners && owners.size > 1) {
+        diagnostics.push(error('GRAPH_MANIFEST', `Compiled entrypoint ${entry.value} has ambiguous source ownership.`, manifest));
+        continue;
+      }
+      const target = candidates.find((candidate) => known.has(candidate)) ?? owners?.values().next().value;
       if (target && !graph.entrypoints.some((candidate) => candidate.manifest === manifest && candidate.field === entry.field && candidate.path === target)) {
         graph.entrypoints.push({ manifest, field: entry.field, path: target });
       }

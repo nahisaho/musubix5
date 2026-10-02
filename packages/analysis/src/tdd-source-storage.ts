@@ -1,57 +1,51 @@
 import { randomUUID } from 'node:crypto';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
 import { link, lstat, mkdir, open, readFile, rm } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { sha256 } from './canonical.js';
 import { sourceHash, sourcePath } from './tdd-source-ledger.js';
 import { SourceOperationError, sourceIoFailure } from './tdd-source-diagnostics.js';
 import { mapWithConcurrency } from './files.js';
+import {
+  readSourceBlobStream, sourceBlobAttributes, validateSourceAttributes, verifySourceLfsPolicy,
+  sourceLfsThreshold, sourceLogicalLimit,
+  sourceGit, sourceBlobReadSession,
+  syncSourceDirectory as syncBlobDirectory,
+} from './tdd-source-lfs.js';
+export {
+  readSourceBlobStream, parseSourceLfsPointer, sourceLfsPointerBytes, materializeSourceEntry,
+  validateSourceLfsVersion, verifySourceLfsPolicy, sourceLfsMediaPath, sourceBlobAttributes,
+  fetchSourceLfsClosure,
+  resolveSourceBlobBinding, sourceLfsThreshold, sourceLogicalLimit,
+  type SourceBlobSink, type SourceReadOptions, type SourceLfsDependencies,
+} from './tdd-source-lfs.js';
 
 export const sourceEvidencePrefix = '.musubix/evidence/tdd-source/v1';
-const executeGit = promisify(execFile);
 
 /** @id CODE-M5-SOURCE-BLOB-ATTRIBUTE-ADMISSION-001
  * @implements REQ-M5-LIFECYCLE-006 REQ-M5-COMPAT-013
  * @design DES-M5-004 DES-M5-023
  */
-export async function verifySourceBlobGitAttributes(root: string, digests: readonly string[]): Promise<void> {
+export async function verifySourceBlobGitAttributes(
+  root: string, digests: readonly string[], sizes?: ReadonlyMap<string, number>,
+): Promise<void> {
   if (digests.some((digest) => !sourceHash(digest))) {
     throw new SourceOperationError('TDD_SOURCE_APPROVAL_INVALID', 'blob-hash');
   }
-  const attributes = ['text', 'filter', 'working-tree-encoding', 'ident'];
-  const paths = [...new Set(digests)].map((digest) => `${sourceEvidencePrefix}/blobs/${digest}`);
-  for (let start = 0; start < paths.length; start += 128) {
-    const batch = paths.slice(start, start + 128);
-    let stdout: string;
-    try {
-      ({ stdout } = await executeGit('git', ['-C', resolve(root), 'check-attr', '-z', ...attributes, '--', ...batch],
-        { encoding: 'utf8', timeout: 10_000, maxBuffer: 1024 * 1024 }));
-    } catch {
-      throw new SourceOperationError('TDD_SOURCE_IO_FAILED', 'execute', undefined, { path: root });
-    }
-    const fields = stdout.split('\0');
-    if (fields.pop() !== '' || fields.length !== batch.length * attributes.length * 3) {
-      throw new SourceOperationError('TDD_SOURCE_ADMISSION_INVALID', 'snapshot-unverifiable', undefined, { path: root });
-    }
-    for (const [index, path] of batch.entries()) {
-      for (const [offset, attribute] of attributes.entries()) {
-        const cursor = (index * attributes.length + offset) * 3;
-        const value = fields[cursor + 2];
-        if (fields[cursor] !== path || fields[cursor + 1] !== attribute
-          || (attribute === 'text' ? value !== 'unset' : value !== 'unset' && value !== 'unspecified')) {
-          throw new SourceOperationError('TDD_SOURCE_ADMISSION_INVALID', 'snapshot-unverifiable', undefined, { path });
-        }
-      }
-    }
+  for (const [digest, values] of await sourceBlobAttributes(root, digests)) {
+    const measured = sizes?.get(digest);
+    const lfs = measured === undefined ? values.get('filter') === 'lfs' : measured >= sourceLfsThreshold;
+    validateSourceAttributes(digest, values, lfs);
+    if (lfs) await verifySourceLfsPolicy(root);
   }
 }
 
 export async function publishSourceBlob(root: string, bytes: Uint8Array): Promise<string> {
   const digest = sha256(bytes);
-  await verifySourceBlobGitAttributes(root, [digest]);
+  if (bytes.length > sourceLogicalLimit) throw new SourceOperationError('TDD_SOURCE_LFS_INVALID', 'logical-size');
+  const sizes = new Map([[digest, bytes.length]]);
+  await verifySourceBlobGitAttributes(root, [digest], sizes);
   await publishSourceFile(root, `${sourceEvidencePrefix}/blobs/${digest}`, bytes,
-    () => verifySourceBlobGitAttributes(root, [digest]));
+    () => verifySourceBlobGitAttributes(root, [digest], sizes));
   return digest;
 }
 
@@ -78,16 +72,12 @@ export async function sourceSafePath(root: string, path: string): Promise<string
 }
 
 export async function syncSourceDirectory(path: string): Promise<void> {
-  let handle;
   try {
-    handle = await open(path, 'r');
-    await handle.sync();
+    await syncBlobDirectory(path);
   } catch (cause) {
     if (!['EINVAL', 'ENOTSUP', 'EISDIR', 'EBADF'].includes(errno(cause) ?? '')) {
       sourceIoFailure(cause, 'fsync', undefined, { path });
     }
-  } finally {
-    await handle?.close();
   }
 }
 
@@ -140,6 +130,20 @@ export async function publishSourceFile(
 }
 
 export async function storeSourceBlob(root: string, bytes: Uint8Array): Promise<string> {
+  if (bytes.length > sourceLogicalLimit) throw new SourceOperationError('TDD_SOURCE_LFS_INVALID', 'logical-size');
+  if (bytes.length >= sourceLfsThreshold) {
+    let repositoryRoot: string | null;
+    try { repositoryRoot = (await sourceGit(root, ['rev-parse', '--show-toplevel'])).toString().trim(); }
+    catch (error) {
+      if (errno(error) !== '128' || !error || typeof error !== 'object' ||
+        !('stderr' in error) || !/not a git repository/i.test(String(error.stderr))) {
+        throw new SourceOperationError('TDD_SOURCE_IO_FAILED', 'execute');
+      }
+      repositoryRoot = null;
+    }
+    // Isolated raw archives have no tracked distribution identity.
+    if (repositoryRoot !== null && resolve(repositoryRoot) === resolve(root)) return publishSourceBlob(root, bytes);
+  }
   const digest = sha256(bytes);
   await publishSourceFile(root, `${sourceEvidencePrefix}/blobs/${digest}`, bytes);
   return digest;
@@ -147,15 +151,15 @@ export async function storeSourceBlob(root: string, bytes: Uint8Array): Promise<
 
 export async function readSourceBlob(root: string, digest: string): Promise<Buffer> {
   if (!sourceHash(digest)) throw new SourceOperationError('TDD_SOURCE_APPROVAL_INVALID', 'blob-hash');
-  const path = await sourceSafePath(root, `${sourceEvidencePrefix}/blobs/${digest}`);
-  let bytes: Buffer;
-  try { bytes = await readFile(path); }
-  catch (cause) {
-    if (errno(cause) === 'ENOENT') throw new SourceOperationError('TDD_SOURCE_APPROVAL_INVALID', 'blob-hash');
-    throw new SourceOperationError('TDD_SOURCE_IO_FAILED', 'read', undefined, { path: `${sourceEvidencePrefix}/blobs/${digest}` });
-  }
-  if (sha256(bytes) !== digest) throw new SourceOperationError('TDD_SOURCE_APPROVAL_INVALID', 'blob-hash');
-  return bytes;
+  await sourceSafePath(root, `${sourceEvidencePrefix}/blobs/${digest}`);
+  const chunks: Buffer[] = [];
+  let length = 0;
+  await readSourceBlobStream(root, digest, (bytes) => {
+    length += bytes.length;
+    if (length > sourceLogicalLimit) throw new SourceOperationError('TDD_SOURCE_LFS_INVALID', 'logical-size');
+    chunks.push(bytes);
+  });
+  return Buffer.concat(chunks, length);
 }
 
 export type SourceBlobReader = (digest: string) => Promise<Buffer>;
@@ -168,7 +172,11 @@ export function sourceBlobVerification(root: string): {
   read: SourceBlobReader; recheck: () => Promise<void>; verifyGitAttributes: () => Promise<void>;
 } {
   const stamps = new Map<string, string>();
+  const session = sourceBlobReadSession(root);
+  const captured = new Map<string, { stamp: string; bytes: Buffer }>();
+  let capturedBytes = 0;
   let attributesAdmitted = false;
+  const bindings = new Map<string, { value: string; lfs: boolean }>();
   const verifyGitAttributes = async (): Promise<void> => {
     await verifySourceBlobGitAttributes(root, [...stamps.keys()]);
     attributesAdmitted = true;
@@ -186,18 +194,58 @@ export function sourceBlobVerification(root: string): {
   const read: SourceBlobReader = async (digest) => {
     if (!sourceHash(digest)) throw new SourceOperationError('TDD_SOURCE_APPROVAL_INVALID', 'blob-hash');
     const before = await stamp(digest);
-    const bytes = await readSourceBlob(root, digest);
+    await sourceSafePath(root, `${sourceEvidencePrefix}/blobs/${digest}`);
+    const cached = captured.get(digest);
+    if (cached?.stamp === before) return Buffer.from(cached.bytes);
+    if (cached) {
+      capturedBytes -= cached.bytes.length;
+      captured.delete(digest);
+    }
+    const binding = await session.binding(digest);
+    if (!Number.isSafeInteger(binding.size) || binding.size < 0 || binding.size > sourceLogicalLimit) {
+      await session.stream(digest, () => {});
+      throw new SourceOperationError('TDD_SOURCE_LFS_INVALID', 'logical-size');
+    }
+    let buffer: Buffer | undefined;
+    let length = 0;
+    await session.stream(digest, (bytes) => {
+      if (length + bytes.length > binding.size) {
+        throw new SourceOperationError('TDD_SOURCE_APPROVAL_INVALID', 'blob-hash');
+      }
+      buffer ??= Buffer.allocUnsafe(binding.size);
+      bytes.copy(buffer, length);
+      length += bytes.length;
+    });
+    if (length !== binding.size) throw new SourceOperationError('TDD_SOURCE_APPROVAL_INVALID', 'blob-hash');
+    const bytes = buffer ?? Buffer.alloc(0);
+    bindings.set(digest, { value: JSON.stringify(binding), lfs: binding.pointer !== null });
     const after = await stamp(digest);
     if (after !== before) throw new SourceOperationError('TDD_SOURCE_APPROVAL_INVALID', 'blob-hash');
     stamps.set(digest, after);
+    if (length <= 8 * 1024 * 1024 && capturedBytes + length <= 32 * 1024 * 1024) {
+      captured.set(digest, { stamp: after, bytes: Buffer.from(bytes) });
+      capturedBytes += length;
+    }
     return bytes;
   };
   return { read, verifyGitAttributes, recheck: async () => {
     if (!stamps.size) return;
     if (attributesAdmitted) await verifyGitAttributes();
     await sourceSafePath(root, `${sourceEvidencePrefix}/blobs`);
+    await session.recheck();
     await mapWithConcurrency([...stamps], 32, async ([digest, previous]) => {
+      const previousBinding = bindings.get(digest)!;
+      const currentBinding = await session.binding(digest);
+      if (previousBinding.value !== JSON.stringify(currentBinding)) {
+        if (!previousBinding.lfs && currentBinding.pointer === null) {
+          throw new SourceOperationError('TDD_SOURCE_APPROVAL_INVALID', 'blob-hash');
+        }
+        throw new SourceOperationError('TDD_SOURCE_LFS_INVALID', 'pointer-schema', undefined,
+          { path: `${sourceEvidencePrefix}/blobs/${digest}`, digest });
+      }
+      await session.stream(digest, () => {});
       if (await stamp(digest) !== previous) await read(digest);
     });
+    await session.recheck();
   } };
 }

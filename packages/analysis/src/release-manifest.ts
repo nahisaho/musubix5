@@ -1,6 +1,7 @@
 import { sha256 } from './canonical.js';
 import {
   listCandidateEntries, readCandidateBlob, resolveCandidateSnapshot,
+  verifyCandidateLfsClosure,
 } from './workspace-manager.js';
 
 export interface ReleaseExclusion {
@@ -28,10 +29,11 @@ export function evidenceChangeIdFromBytes(path: string, bytes: Uint8Array): stri
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const record = value as Record<string, unknown>;
   if (typeof record.changeId === 'string' && record.changeId.length > 0) return record.changeId;
-  const metadata = record.metadata;
-  if (metadata && typeof metadata === 'object' && !Array.isArray(metadata)) {
-    const nested = (metadata as Record<string, unknown>).changeId;
-    if (typeof nested === 'string' && nested.length > 0) return nested;
+  for (const candidate of [record.metadata, record.result]) {
+    if (candidate && typeof candidate === 'object' && !Array.isArray(candidate)) {
+      const nested = (candidate as Record<string, unknown>).changeId;
+      if (typeof nested === 'string' && nested.length > 0) return nested;
+    }
   }
   return null;
 }
@@ -88,6 +90,7 @@ export async function buildReleaseCandidateContent(
   requestedChangeId?: string,
 ): Promise<ReleaseCandidateContent> {
   const snapshot = await resolveCandidateSnapshot(root, requestedChangeId);
+  await verifyCandidateLfsClosure(root, snapshot.commit, 'local');
   const artifacts: Record<string, string> = {};
   const exclusions: ReleaseExclusion[] = [];
   for (const entry of await listCandidateEntries(root, snapshot.commit)) {

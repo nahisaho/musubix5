@@ -6,11 +6,62 @@ status: active
 ---
 # CHANGE-0017: establish-wave1-development-foundations
 
-Requirements: REQ-M5-APPROVAL-007 REQ-M5-COMPAT-013 REQ-M5-EVIDENCE-007 REQ-M5-GRAPH-003 REQ-M5-LIFECYCLE-006 REQ-M5-WORKTREE-004
+Requirements: REQ-M5-LIFECYCLE-006
 
-## Generation 10 recovery requirements
+## Generation 27 current release boundary
 
-Generation 9 is abandoned after its approved Epoch A and safe between-epochs
+Generation 27 claims only `REQ-M5-LIFECYCLE-006`. All broader requirement sets
+and batch instructions below are immutable historical context and grant no
+Generation-27 evidence credit.
+
+The current generation corrects the ordinary 300000-millisecond test-policy
+projection and removes duplicate current-cycle classification work. Its fresh
+authoritative TDD tests are `TEST-M5-FULL-TEST-TIMEOUT-001` and
+`TEST-M5-CHANGE-CURRENT-SELECTION-CACHE-001`; retained
+`TEST-M5-CONFIG-IMPLEMENTATION-FINGERPRINT-001` coverage continues to protect
+the shared config fingerprint behavior. The implementation changes the
+no-`testRuntime` trust digest to
+`2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd`,
+uses invocation-local current-cycle selection memoization, and reuses a
+selector-local parallel-cycle classification when fallback chooses the same
+cycle. It does not weaken the unchanged 60000-millisecond
+`TEST-M5-EVIDENCE-CURRENT-001` guard or the 300000-millisecond ordinary command
+ceiling.
+
+The final local changed gate completed 296 of 296 suites and 464 of 464 tests
+with zero native failures. `TEST-M5-EVIDENCE-CURRENT-001` completed in
+39510.025154 milliseconds. Requirements, design, constitution, trace, graph,
+formal, workflow, TDD, change history, completeness, all seven configured
+commands, test identities, deterministic performance, model correspondence and
+constitution rules passed. The gate remains non-ready only because current
+Generation-27 release approval has not been recorded.
+
+Local gate success is not remote release readiness. Before ref publication,
+the 126,595,440-byte logical source
+`.musubix/evidence/tdd-source/v1/blobs/7fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c`
+must no longer be reachable as raw Git object
+`6b14fea5e0b503ac671ae52eb4697477dbb44f64`; current attributes already require
+Git LFS for that path. The remaining release sequence is:
+
+1. create and verify the scoped `planSourceLfsMigration` plan;
+2. integrate only the approved descendant history, without `--everything` or a
+   force-push;
+3. upload the separately authorized LFS object;
+4. verify remote LFS availability from an empty cache before publishing a ref;
+5. renew candidate snapshot, commit-bound gate and other rewritten-commit
+   evidence, then run the GitHub Actions candidate checks; and
+6. prepare and explicitly approve the resulting exact release manifest.
+
+Residual evidence limits remain visible at release: mutation is compatible and
+skipped with zero mutation coverage, local attestation is explicitly unsigned,
+no trusted policy baseline is configured, and formal analysis models 4 of 121
+requirements. Historical stale-waiver diagnostics remain non-credit evidence.
+None of these skipped or warning surfaces is represented as a passing proof.
+
+## Historical Generation 10 recovery requirements
+
+The following Generation-10 text is historical and does not amend the current
+Generation-27 requirement set. Generation 9 is abandoned after its approved Epoch A and safe between-epochs
 abort. Its approval invocation, RecoveryAuthority29, release records, search
 evidence, historical allocation identity and absent P/claim/D1 state are
 immutable non-current history. Generation 10 shall not replay, amend, infer
@@ -1943,14 +1994,14 @@ or worktree removal was required; all branch tips and worktrees are retained.
 That recovery boundary ended with g8 requirements preparation, not approval;
 it is historical and does not describe the current g9 action.
 
-## Classification
+## Historical classification
 
 Defect correction, workflow UX improvement, public CLI completion, and
 benchmark infrastructure covering GitHub Issues #48, #23, #46, and #8.
 Generation 9 additionally corrects the diagnostic-contract requirements
 documented by #52 without adding an unrelated production behavior change.
 
-## Confirmed intent
+## Historical confirmed intent
 
 - Exclude foreign candidate-gate evidence when its effective CHANGE identity is
   stored in the nested gate result.
@@ -1965,7 +2016,12 @@ documented by #52 without adding an unrelated production behavior change.
 - Define a separate, approved test-source supersession path for the discovered
   post-Green `TDD_TEST_STALE` gap without weakening existing TDD maintenance.
 
-## Requirement impact
+## Historical requirement impact
+
+The following six-requirement impact statement belongs to earlier generations.
+For Generation 27, `REQ-M5-APPROVAL-007`, `REQ-M5-COMPAT-013`,
+`REQ-M5-EVIDENCE-007`, `REQ-M5-GRAPH-003`, and `REQ-M5-WORKTREE-004` are out of
+scope and receive no current evidence claim.
 
 - Amend `REQ-M5-APPROVAL-007` so release evidence identity falls back through
   top-level `changeId`, `metadata.changeId`, and `result.changeId`.
@@ -2837,8 +2893,8 @@ No test/config/implementation changes occur during this normative revision.
    control publications at the official persistence boundary without advancing
    the frozen plan base early. Finish combined COMPAT-013 and required typecheck,
    build, TDD/trace/graph/gate verification. Record implementation completion
-   exactly once only when actually complete; no quality/release approval
-   or sdd-change completion is authorized here.
+   exactly once only when actually complete; this is historical Generation-8
+   instruction and does not condition Generation-27 completion.
 
 ## Historical generation-5 design stage (retained context)
 
@@ -3025,4 +3081,6 @@ diagnostics and exact diagnostic-contract consistency before fresh g9 Reds.
   and the persisted file-completion inventory. Unfinished work is not passed.
 - TDD validation, typecheck/build, applicable compatibility checks, strict
   trace, graph and changed gate use current inputs. Implementation completion
-  remains conditional on all batches; quality/release approval is separate.
+  was conditional on all historical Generation-8 batches; this sentence does
+  not condition Generation-27 completion. Quality/release approval remains a
+  separate current boundary.

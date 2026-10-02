@@ -40,7 +40,7 @@ import { loadChangeEvidence } from './change-evidence.js';
 import { classifyParallelTddEvidence } from './parallel-tdd-evidence.js';
 import { loadTddEvidence } from './tdd.js';
 import { selectCurrentTddCycle } from './tdd-cycle-resolver.js';
-import { listCandidateSnapshotRecords } from './workspace-manager.js';
+import { compareTrackedTree, listCandidateSnapshotRecords } from './workspace-manager.js';
 import { parsePorcelainV1Z } from './git-status.js';
 import {
   acquireChangeLease,
@@ -1225,7 +1225,14 @@ async function withDetachedVerificationWorkspace<T>(
     if (!await isClean(workspace) || await git(workspace, ['rev-parse', 'HEAD']) !== head) {
       domain('PARALLEL_RESULT_UNVERIFIED', 'detached verification workspace is not clean at the reported head.');
     }
-    return await operation(workspace);
+    if (!await compareTrackedTree(workspace, head, 'pre')) {
+      domain('PARALLEL_RESULT_UNVERIFIED', 'detached verification logical tree differs from the reported head.');
+    }
+    const result = await operation(workspace);
+    if (!await compareTrackedTree(workspace, head, 'post')) {
+      domain('PARALLEL_RESULT_UNVERIFIED', 'detached verification changed protected tracked content.');
+    }
+    return result;
   } catch (cause) {
     validationFailure = cause instanceof Error ? cause : new Error(String(cause));
     throw validationFailure;
@@ -2166,6 +2173,11 @@ export async function verifyParallelIntegration(
   };
   integration.verification = verification;
   try {
+    const expectedHead = integration.provenance.integrationCommit;
+    if (await git(integration.worktree, ['rev-parse', 'HEAD']) !== expectedHead
+      || !await compareTrackedTree(integration.worktree, expectedHead, 'pre')) {
+      domain('PARALLEL_INTEGRATION_VERIFICATION_FAILED', 'integration logical tree differs from provisional provenance.');
+    }
     const workspaceRoot = managedRoot(binding!, plan);
     await runProvisioning(plan, integration.worktree, workspaceRoot, verification.provisioning);
     const env = await managedRunnerEnvironment(plan, integration.worktree, workspaceRoot);
@@ -2225,6 +2237,9 @@ export async function verifyParallelIntegration(
       );
     }
     const head = await git(integration.worktree, ['rev-parse', 'HEAD']);
+    if (!await compareTrackedTree(integration.worktree, expectedHead, 'post')) {
+      domain('PARALLEL_INTEGRATION_VERIFICATION_FAILED', 'integration changed protected tracked content.');
+    }
     return withPlanLease(root, planId, async ({ store: currentStore, plan: currentPlan }, lease) => {
       const current = currentStore.integrations.filter((entry) => entry.planId === planId)
         .sort((left, right) => right.attempt - left.attempt)[0];

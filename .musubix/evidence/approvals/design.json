@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "stage": "design",
   "changeId": "CHANGE-0017",
-  "generation": 11,
+  "generation": 27,
   "artifacts": {
     ".musubix/constitution.md": "f8b47fdc486f395bab05223a94821b145cf8df70ffde2c838a28f8d71fe0fa92",
     ".musubix/decisions/ADR-0002.md": "9f41d752530613cf6cc3ab6798709567e85650e5b97426dfca4147840eb35684",
@@ -42,6 +42,9 @@
     ".musubix/decisions/ADR-0036.md": "f71e78809568b910d396c9c53846ff736327e81aa5b0ab87f0653f5e310dc65b",
     ".musubix/decisions/ADR-0037.md": "20bce24b1dc74593843b551e2237c7a03d7d52d0ea2c2fa7deb0a6c046adf8a0",
     ".musubix/decisions/ADR-0038.md": "e59b6f0e18ecaa2db2ecdb36340fe205df42cec5b1c79dd81c3ea3b1d3232468",
+    ".musubix/decisions/ADR-0039.md": "8812a9eb461b474504c4e25552be222af3d012125dc6ccfa6a7faaadb1c411f2",
+    ".musubix/decisions/ADR-0040.md": "1f1a241b102a1d5dcb6282191ebc84fa873c14f3284e5dc4343b0e937d842836",
+    ".musubix/decisions/ADR-0041.md": "1919f12be4545b9199f1febed358527fcb0b5bc702887e6690eaefa6d63a0468",
     ".musubix/features/candidate-cleanup-policy/design.md": "54d32a6d446bbaed299860b164fe74d24362e0c5739862bc79df2e0acab20c1b",
     ".musubix/features/candidate-cleanup-policy/requirements.md": "253a36dbca0b76a81f452c845f2988e2b33163823095ee5ac1add81519dd5462",
     ".musubix/features/codegraph-performance/design.md": "a8461463b6c0a7e8ae11b9496ab5e724e5d98e2700dd32623e5fd6331187b175",
@@ -50,8 +53,8 @@
     ".musubix/features/evidence-selector-guards/requirements.md": "fdb70191e472f41e16eab793b2b2d86583587cd86a88db5627be59bf045ef601",
     ".musubix/features/multi-change-workspaces/design.md": "47b156ccad4d63e5ffa19bbc6296dedc0dc9973ec4d470b98edebf005e34a870",
     ".musubix/features/multi-change-workspaces/requirements.md": "9071c2c1f8a7ca49b9137cf074fe30b33343264536f41efcdddad0ab2a6cff4d",
-    ".musubix/features/musubix5-clean-foundation/design.md": "8255d716c2dd9e411c4397f22bfe73bc421e979761427f0744f5c9a55daa89e3",
-    ".musubix/features/musubix5-clean-foundation/requirements.md": "13f1aa9538b72655ee5d460de2782d4c90c279727b3cc9e936df78c3298bf0f5",
+    ".musubix/features/musubix5-clean-foundation/design.md": "9cee7263faa38fbc78b21cbba83e74e37ca08c0f510fe39e4a23883d7ee09531",
+    ".musubix/features/musubix5-clean-foundation/requirements.md": "47be4910318f7b52f53b46839c549a4081a928110d9347617686cf019df4e1df",
     ".musubix/features/node24-github-actions/design.md": "a51859b2653b1b1885c9280b8fbba0efdbbc2692e2b4cddb60b6dd75a7217cb5",
     ".musubix/features/node24-github-actions/requirements.md": "32e775df8d7bbe3336b657a2516b93e3ec5bf3ca202506b96e159569dfe95c5b",
     ".musubix/features/npm-registry-deadline/design.md": "a46582fe0fd7e2c64ea36fcf7a50d24f1b45e7789cd2e75634da0ebf4cc29195",
@@ -107,7 +110,7 @@
         ],
         "adapter": "vitest",
         "required": true,
-        "timeoutMs": 180000
+        "timeoutMs": 300000
       },
       {
         "name": "codegraph-tests",
@@ -213,7 +216,7 @@
     }
   },
   "exclusions": [],
-  "artifactSha256": "de078ece75680715e20767b966e1f013b8846191fc8e0bc2369eaca145a4f451",
+  "artifactSha256": "bb05c9abaf9595208ea55e84c93d4682d3abe1eb475017d3aeff774f75fe5b2a",
   "approver": "nahisaho",
-  "approvedAt": "2026-10-01T15:11:49.272Z"
+  "approvedAt": "2026-10-02T10:55:17.750Z"
 }

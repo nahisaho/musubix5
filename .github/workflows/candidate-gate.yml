@@ -57,14 +57,33 @@ jobs:
       MATRIX_NODE: ${{ matrix.node }}
       REPOSITORY_ID: ${{ inputs.repositoryId }}
     steps:
+      - name: Check Git LFS before checkout
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          // check-lfs-tool.mjs bootstrap: repository scripts are unavailable before checkout.
+          import { execFileSync } from 'node:child_process';
+          let text;
+          try { text = execFileSync('git', ['lfs', 'version'], {encoding:'utf8', stdio:['ignore','pipe','pipe']}); }
+          catch { throw new Error('TDD_SOURCE_LFS_UNAVAILABLE: tool-missing'); }
+          const v = /^git-lfs\/(\d+)\.(\d+)\.(\d+)(?:\s|$)/.exec(text);
+          if (!v || +v[1] < 3 || +v[1] === 3 && (+v[2] < 4 || +v[2] === 4 && +v[3] < 1))
+            throw new Error('TDD_SOURCE_LFS_UNAVAILABLE: version-unsupported');
+          NODE
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.candidateCommit }}
           persist-credentials: false
+          lfs: true
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
           cache: npm
+      - name: Fetch and independently verify exact candidate LFS closure
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/verify-lfs-checkout.mjs .
       - run: npm ci
       - run: npm run build
       - name: Run closed verification matrix
@@ -77,6 +96,7 @@ jobs:
           import { join } from 'node:path';
           import { requiredCandidateGateCommands } from './dist/packages/analysis/src/candidate-gate.js';
           import { canonicalRepositoryIdentity } from './dist/packages/analysis/src/canonical.js';
+          import { verifyCandidateLfsClosure, compareTrackedTree } from './dist/packages/analysis/src/workspace-manager.js';
 
           const canonical = (value) => Array.isArray(value)
             ? `[${value.map(canonical).join(',')}]`
@@ -87,7 +107,7 @@ jobs:
           const run = (command, args) => spawnSync(command, args, {
             cwd: process.cwd(),
             encoding: 'utf8',
-            shell: process.platform === 'win32',
+            shell: false,
           });
           const head = run('git', ['rev-parse', 'HEAD']).stdout.trim();
           const repositoryRoot = run('git', ['rev-parse', '--show-toplevel']).stdout.trim();
@@ -108,7 +128,10 @@ jobs:
             const status = run('git', ['status', '--porcelain=v1', '--untracked-files=no']);
             return status.status === 0 && status.stdout.length === 0;
           };
-          const preTreeMatchesCandidate = treeClean();
+          await verifyCandidateLfsClosure(process.cwd(), head, 'local');
+          const preHydration = spawnSync(process.execPath, ['scripts/verify-lfs-checkout.mjs', '.', '--verify-only'], { stdio: 'inherit' });
+          const preTreeMatchesCandidate = preHydration.status === 0 && await compareTrackedTree(process.cwd(), head, 'pre');
+          if (!preTreeMatchesCandidate) throw new Error('TDD_SOURCE_LFS_INVALID: worktree-integrity');
           const completed = spawnSync(process.execPath, [
             'dist/packages/cli/src/main.js',
             'gate',
@@ -159,7 +182,9 @@ jobs:
               status: check.status === 'pass' ? 'pass' : 'fail',
             };
           });
-          const postTreeMatchesCandidate = treeClean();
+          await verifyCandidateLfsClosure(process.cwd(), head, 'local');
+          const postHydration = spawnSync(process.execPath, ['scripts/verify-lfs-checkout.mjs', '.', '--verify-only'], { stdio: 'inherit' });
+          const postTreeMatchesCandidate = postHydration.status === 0 && await compareTrackedTree(process.cwd(), head, 'post');
           const commandNames = commands.map(({ name }) => name).sort();
           const expectedCommandNames = [...requiredCandidateGateCommands].sort();
           const commandsPassed = failedChecks.length === 0

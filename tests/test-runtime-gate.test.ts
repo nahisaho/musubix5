@@ -9,8 +9,8 @@ import { loadApprovalProjectionConfig, loadConfig } from '../packages/analysis/s
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const profileSha256 = 'f9fbe94729722eaaea1f1e49bbaf6c48053ea1ed6a8498a2287dbfe4a20bf06e';
-const gateSha256 = '327baa0f399450fd6714f112e41bc23e13de79a9c1113499795ea76d87bcd03e';
-const legacyGateSha256 = 'bb4a58c169b4e4f7357b608dc3b00028a613f907613b88d1540b3654ea600c8a';
+const gateSha256 = '414123c757dad57d01855bd408c1a3b9cf70044238df4156b2a1699bee30851f';
+const legacyGateSha256 = '2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd';
 const profile = {
   calibration: { maxWidthMs: 1, samples: 8 },
   commandNames: ['codegraph-tests', 'compatibility', 'test'],

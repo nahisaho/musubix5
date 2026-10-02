@@ -1,7 +1,7 @@
 ---
 schemaVersion: 1
 feature: musubix5-clean-foundation
-status: approval-pending
+status: generation-27-approval-pending
 ---
 # musubix5 clean foundation design
 
@@ -27,11 +27,11 @@ Canonical encoding is UTF-8 JSON with lexicographically sorted object keys, no
 insignificant whitespace, and exactly one trailing LF byte.
 
 ```json
-{"architecture":{"forbidCycles":true,"rules":[]},"attestation":{"githubOidc":{"mode":"off"},"maxAgeSeconds":3600,"maxFutureSkewSeconds":60,"mode":"local","trustedPublicKeys":[]},"codeGraph":{"mode":"compatible"},"commands":[{"args":["run","typecheck"],"command":"npm","name":"typecheck","required":true,"timeoutMs":120000},{"args":["run","build"],"command":"npm","name":"build","required":true,"timeoutMs":120000},{"adapter":"vitest","args":["vitest","run"],"command":"npx","name":"test","required":true,"timeoutMs":180000},{"args":["scripts/run-codegraph-tests.mjs","--report","{reportPath}"],"command":"node","name":"codegraph-tests","required":true,"tddArgs":["--test-id","{testId}"],"tddReport":{"format":"musubix-json","path":".musubix/cache/test-results/{testId}.json"},"testReport":{"format":"musubix-json","path":".musubix/cache/test-results/codegraph.json"},"timeoutMs":300000},{"args":["run","test:compat"],"command":"npm","name":"compatibility","required":true,"timeoutMs":180000},{"args":["run","pack:check"],"command":"npm","name":"pack-check","required":true,"timeoutMs":120000},{"args":["run","pack:smoke"],"command":"npm","name":"pack-smoke","required":true,"timeoutMs":180000}],"formal":{"minModeledFraction":0,"solver":"none","timeoutMs":12000},"mutation":{"mode":"compatible"},"requiredChecks":["requirements","design","constitution","trace","graph","commands"],"schemaVersion":1,"tdd":{"redPreflightCommands":[]},"thresholds":{"design":1,"implementation":1,"tests":1},"workflow":{"maxAgeSeconds":3600,"maxEventSkewMs":null,"maxFutureSkewSeconds":60,"maxTranscriptBytes":125000000,"maxTranscriptLineBytes":1000000,"mode":"compatible"}}
+{"approval":{"domains":[],"mode":"required"},"architecture":{"forbidCycles":true,"rules":[]},"attestation":{"githubOidc":{"mode":"off"},"maxAgeSeconds":3600,"maxFutureSkewSeconds":60,"mode":"local","trustedPublicKeys":[]},"codeGraph":{"mode":"compatible"},"commands":[{"args":["run","typecheck"],"command":"npm","name":"typecheck","required":true,"timeoutMs":120000},{"args":["run","build"],"command":"npm","name":"build","required":true,"timeoutMs":120000},{"adapter":"vitest","args":["vitest","run"],"command":"npx","name":"test","required":true,"timeoutMs":300000},{"args":["scripts/run-codegraph-tests.mjs","--report","{reportPath}"],"command":"node","name":"codegraph-tests","required":true,"tddArgs":["--test-id","{testId}"],"tddReport":{"format":"musubix-json","path":".musubix/cache/test-results/{testId}.json"},"testReport":{"format":"musubix-json","path":".musubix/cache/test-results/codegraph.json"},"timeoutMs":300000},{"args":["run","test:compat"],"command":"npm","name":"compatibility","required":true,"timeoutMs":180000},{"args":["run","pack:check"],"command":"npm","name":"pack-check","required":true,"timeoutMs":120000},{"args":["run","pack:smoke"],"command":"npm","name":"pack-smoke","required":true,"timeoutMs":180000}],"formal":{"minModeledFraction":0,"solver":"none","timeoutMs":12000},"language":"auto","mutation":{"mode":"compatible"},"qualityProfile":"custom","requiredChecks":["requirements","design","constitution","trace","graph","commands"],"schemaVersion":1,"tdd":{"redPreflightCommands":[]},"testRuntime":{"calibration":{"maxWidthMs":1,"samples":8},"commandNames":["codegraph-tests","compatibility","test"],"inputs":[".musubix/config.json","package-lock.json","package.json","packages/analysis/src/adapters.ts","packages/analysis/src/candidate-gate.ts","packages/analysis/src/canonical.ts","packages/analysis/src/config.ts","packages/analysis/src/gate.ts","packages/analysis/src/parallel-runtime.ts","packages/analysis/src/process.ts","packages/analysis/src/tdd-source-pair.ts","packages/analysis/src/tdd.ts","packages/analysis/src/test-runtime.ts","scripts/run-codegraph-tests.mjs","scripts/test-runtime/coordinator-reporter.mjs","scripts/test-runtime/stable-wall-clock.mjs","scripts/test-runtime/vitest-setup.mjs","tests/global-setup.ts","tsconfig.build.json","tsconfig.json","vitest.config.ts"],"kind":"stable-test-wall-clock-v1","reporterMode":"append-after-native-v1","schemaVersion":1},"thresholds":{"design":1,"implementation":1,"tests":1},"workflow":{"maxAgeSeconds":3600,"maxEventSkewMs":null,"maxFutureSkewSeconds":60,"maxTranscriptBytes":125000000,"maxTranscriptLineBytes":1000000,"mode":"compatible"}}
 ```
 
 SHA-256:
-`16bab50270b0ef4032ee9d4b148f31a04acade53aae56052b6b3a4d91273bfac`
+`7c7ce3ed0eb363e5d43161dcd04b0dc58c3587b2cf4be9db11cca39fd521e041`
 
 `qualityProfile` is excluded because the projection contains every effective
 policy field and the profile label has no independent enforcement effect.
@@ -139,11 +139,21 @@ no testRuntime member, null or default. Do not claim the current binary already
 produces the generation-8 fingerprint before implementation.
 
 ```json
-{"approval":{"domains":[],"mode":"required"},"approvalAutomation":{"design":{"mode":"manual","producerRepairLimit":3,"repairPlannerBudgetUnits":1000,"reviewerBudgetUnits":1000},"release":{"mode":"manual"},"requirements":{"mode":"manual","producerRepairLimit":3,"repairPlannerBudgetUnits":1000,"reviewerBudgetUnits":1000}},"candidateGate":{"attestation":{"githubOidc":{"audience":"https://github.com/nahisaho/musubix5/actions/musubix5-gate","issuer":"https://token.actions.githubusercontent.com","keyBinding":"public-key","mode":"strict","repository":"nahisaho/musubix5","workflow":".github/workflows/candidate-gate.yml"},"maxAgeSeconds":86400,"maxFutureSkewSeconds":60,"mode":"ci-required","repository":"nahisaho/musubix5","trustedPublicKeys":[]}},"executionPolicy":{"architecture":{"forbidCycles":true,"rules":[]},"attestation":{"githubOidc":{"mode":"off"},"maxAgeSeconds":3600,"maxFutureSkewSeconds":60,"mode":"local","trustedPublicKeys":[]},"codeGraph":{"mode":"compatible"},"commands":[{"args":["run","typecheck"],"command":"npm","name":"typecheck","required":true,"timeoutMs":120000},{"args":["run","build"],"command":"npm","name":"build","required":true,"timeoutMs":120000},{"adapter":"vitest","args":["vitest","run"],"command":"npx","name":"test","required":true,"timeoutMs":180000},{"args":["scripts/run-codegraph-tests.mjs","--report","{reportPath}"],"command":"node","name":"codegraph-tests","required":true,"tddArgs":["--test-id","{testId}"],"tddReport":{"format":"musubix-json","path":".musubix/cache/test-results/{testId}.json"},"testReport":{"format":"musubix-json","path":".musubix/cache/test-results/codegraph.json"},"timeoutMs":300000},{"args":["run","test:compat"],"command":"npm","name":"compatibility","required":true,"timeoutMs":180000},{"args":["run","pack:check"],"command":"npm","name":"pack-check","required":true,"timeoutMs":120000},{"args":["run","pack:smoke"],"command":"npm","name":"pack-smoke","required":true,"timeoutMs":180000}],"formal":{"minModeledFraction":0,"solver":"none","timeoutMs":12000},"mutation":{"mode":"compatible"},"requiredChecks":["requirements","design","constitution","trace","graph","commands"],"schemaVersion":1,"tdd":{"redPreflightCommands":[]},"thresholds":{"design":1,"implementation":1,"tests":1},"workflow":{"maxAgeSeconds":3600,"maxEventSkewMs":null,"maxFutureSkewSeconds":60,"maxTranscriptBytes":125000000,"maxTranscriptLineBytes":1000000,"mode":"compatible"}},"testRuntime":{"calibration":{"maxWidthMs":1,"samples":8},"commandNames":["codegraph-tests","compatibility","test"],"inputs":[".musubix/config.json","package-lock.json","package.json","packages/analysis/src/adapters.ts","packages/analysis/src/candidate-gate.ts","packages/analysis/src/canonical.ts","packages/analysis/src/config.ts","packages/analysis/src/gate.ts","packages/analysis/src/parallel-runtime.ts","packages/analysis/src/process.ts","packages/analysis/src/tdd-source-pair.ts","packages/analysis/src/tdd.ts","packages/analysis/src/test-runtime.ts","scripts/run-codegraph-tests.mjs","scripts/test-runtime/coordinator-reporter.mjs","scripts/test-runtime/stable-wall-clock.mjs","scripts/test-runtime/vitest-setup.mjs","tests/global-setup.ts","tsconfig.build.json","tsconfig.json","vitest.config.ts"],"kind":"stable-test-wall-clock-v1","reporterMode":"append-after-native-v1","schemaVersion":1}}
+{"approval":{"domains":[],"mode":"required"},"approvalAutomation":{"design":{"mode":"manual","producerRepairLimit":3,"repairPlannerBudgetUnits":1000,"reviewerBudgetUnits":1000},"release":{"mode":"manual"},"requirements":{"mode":"manual","producerRepairLimit":3,"repairPlannerBudgetUnits":1000,"reviewerBudgetUnits":1000}},"candidateGate":{"attestation":{"githubOidc":{"audience":"https://github.com/nahisaho/musubix5/actions/musubix5-gate","issuer":"https://token.actions.githubusercontent.com","keyBinding":"public-key","mode":"strict","repository":"nahisaho/musubix5","workflow":".github/workflows/candidate-gate.yml"},"maxAgeSeconds":86400,"maxFutureSkewSeconds":60,"mode":"ci-required","repository":"nahisaho/musubix5","trustedPublicKeys":[]}},"executionPolicy":{"architecture":{"forbidCycles":true,"rules":[]},"attestation":{"githubOidc":{"mode":"off"},"maxAgeSeconds":3600,"maxFutureSkewSeconds":60,"mode":"local","trustedPublicKeys":[]},"codeGraph":{"mode":"compatible"},"commands":[{"args":["run","typecheck"],"command":"npm","name":"typecheck","required":true,"timeoutMs":120000},{"args":["run","build"],"command":"npm","name":"build","required":true,"timeoutMs":120000},{"adapter":"vitest","args":["vitest","run"],"command":"npx","name":"test","required":true,"timeoutMs":300000},{"args":["scripts/run-codegraph-tests.mjs","--report","{reportPath}"],"command":"node","name":"codegraph-tests","required":true,"tddArgs":["--test-id","{testId}"],"tddReport":{"format":"musubix-json","path":".musubix/cache/test-results/{testId}.json"},"testReport":{"format":"musubix-json","path":".musubix/cache/test-results/codegraph.json"},"timeoutMs":300000},{"args":["run","test:compat"],"command":"npm","name":"compatibility","required":true,"timeoutMs":180000},{"args":["run","pack:check"],"command":"npm","name":"pack-check","required":true,"timeoutMs":120000},{"args":["run","pack:smoke"],"command":"npm","name":"pack-smoke","required":true,"timeoutMs":180000}],"formal":{"minModeledFraction":0,"solver":"none","timeoutMs":12000},"mutation":{"mode":"compatible"},"requiredChecks":["requirements","design","constitution","trace","graph","commands"],"schemaVersion":1,"tdd":{"redPreflightCommands":[]},"thresholds":{"design":1,"implementation":1,"tests":1},"workflow":{"maxAgeSeconds":3600,"maxEventSkewMs":null,"maxFutureSkewSeconds":60,"maxTranscriptBytes":125000000,"maxTranscriptLineBytes":1000000,"mode":"compatible"}},"testRuntime":{"calibration":{"maxWidthMs":1,"samples":8},"commandNames":["codegraph-tests","compatibility","test"],"inputs":[".musubix/config.json","package-lock.json","package.json","packages/analysis/src/adapters.ts","packages/analysis/src/candidate-gate.ts","packages/analysis/src/canonical.ts","packages/analysis/src/config.ts","packages/analysis/src/gate.ts","packages/analysis/src/parallel-runtime.ts","packages/analysis/src/process.ts","packages/analysis/src/tdd-source-pair.ts","packages/analysis/src/tdd.ts","packages/analysis/src/test-runtime.ts","scripts/run-codegraph-tests.mjs","scripts/test-runtime/coordinator-reporter.mjs","scripts/test-runtime/stable-wall-clock.mjs","scripts/test-runtime/vitest-setup.mjs","tests/global-setup.ts","tsconfig.build.json","tsconfig.json","vitest.config.ts"],"kind":"stable-test-wall-clock-v1","reporterMode":"append-after-native-v1","schemaVersion":1}}
 ```
 
 SHA-256:
+`414123c757dad57d01855bd408c1a3b9cf70044238df4156b2a1699bee30851f`
+
+Generation 25 introduced and Generation 26 retains only the execution-policy member's unique ordinary
+`test.timeoutMs` value and the resulting execution-policy/candidate-gate
+digests. The `testRuntime` object and its
+`f9fbe94729722eaaea1f1e49bbaf6c48053ea1ed6a8498a2287dbfe4a20bf06e`
+digest remain unchanged. Historical generation-8 and generation-9 references
+to candidate-gate digest
 `327baa0f399450fd6714f112e41bc23e13de79a9c1113499795ea76d87bcd03e`
+describe their immutable evidence only and are not the current approved
+projection.
 
 ## DES-M5-001: Compatibility oracle adapter
 Responsibilities: Build the pinned musubix3 v0.1.18 source, capture command contracts, execute the approved Node.js and operating-system matrix, normalize only approved package or executable tokens, and compare observable CLI, API, configuration, package, and filesystem behavior.
@@ -207,13 +217,30 @@ Depends-On: DES-M5-003
 ## DES-M5-005: Lifecycle state machine
 Responsibilities: Enforce predecessor rules, create/resume/abandon versioned CHANGE generations, parse CHANGE document status for repository-current selection, persist phase transitions, reject cross-generation evidence, and expose resumable CHANGE status.
 Interfaces: `transition(changeId, generation, requestedPhase, evidenceHeads)`, `recordApprovedPhase(changeId, phase, { operationId? })`, `reopen(changeId, requirementIds?, idempotencyKey): { generation, resumed }`, `abandon(changeId, { reason, approver, confirm })`, `activeGeneration(changeId)`, `resolveChangeContext(root, { changeId?, maintenance?, confirmationToken? })`, `projectPhaseCheckpoint(record): { semanticPhaseKey, orderPhaseKey, ordinal }`, `contemporaneousPredecessor(change, predecessorPhase, dependentOrder)`, `status(changeId)`, `resume(invocationId)`.
-Constraints: A transition commits only after validation and required evidence checks; reopen is lease-bound and idempotent, starts only at impact, resolves the exact current CHANGE requirement set, creates qualified order keys, and owns the cross-generation unchanged-fingerprint exemption while preserving `--allow-unchanged` for ordinary initial recording; every later transition revalidates the CHANGE requirement set and emits `CHANGE_GENERATION_REQUIREMENTS` on drift; abandoning requires nonblank reason/approver and confirmation, leaves no active generation, and permits only reopen plus non-credit targeted maintenance; within one CHANGE the greatest non-abandoned generation is active. Implicit repository context selects the sole explicit active document or status-less legacy document whose chronology has a positive generation without terminal full-set quality, a null generation after abandonment, or no chronology, counts it toward the one-active limit, and classifies a status-less chronology with terminal quality and no later active/abandoned generation as completed without rewriting it. Multiple active/legacy-active documents return `CHANGE_GENERATION_MIXED` and persist nothing; an explicit CHANGE ID never falls back to implicit selection; `maintenance: true` permits only the named read-only status, branch-retaining cleanup, and REQ-M5-LIFECYCLE-005 candidate-snapshot list/show/delete maintenance operations, including exact snapshot-ID maintenance for foreign or unknown CHANGE history, and grants no evidence credit. Per-requirement batch predecessor checks are independent; optional Refactor occurs only after Green; unsupported formal obligations are classified without proof credit. Malformed supplied operation IDs and unsupported phases fail before lease acquisition. Initial requirements/design use or missing supersession IDs are decided only after CHANGE-lease acquisition and pending recovery, may retain those recovery writes, and journal nothing for the rejected request. Under the CHANGE lease, DES-M5-005 invokes DES-M5-004 recovery and scoped replay lookup before checking whether the phase is currently valid. Exact replay returns exit 0 even after full projection; divergent reuse returns exit 1 `CHANGE_GENERATION_DUPLICATE`; a different operation ID against a current checkpoint also returns that diagnostic. With no scoped record and an invalidated checkpoint, the service validates the current approval manifest, computes fingerprints/requirements, derives the next phase-scoped ordinal, journals first, appends or reuses the ordinal-qualified order record, and atomically replaces `changes.json`. Supersession is exempt from unchanged-fingerprint rejection because approval head plus operation ID is the audited identity; `--allow-unchanged` is neither required nor replay-bound. Reopen and abandon first validate syntax and lifecycle eligibility without a lease, then acquire the CHANGE lease, revalidate eligibility, reconcile the departing active generation exactly once from journaled inputs, and only then snapshot or abandon it. The public semantic phase key remains `requirements` or `design`; the evidence-order phase is ordinal-qualified as `requirements:<n>` or `design:<n>` after ordinal 1, exactly as quality uses `quality:<n>`. The projection stores the current checkpoint in `phases.requirements` or `phases.design`, moves prior entries to `requirementsHistory[]` or `designHistory[]`, stores `requirementsOrdinal` or `designOrdinal` on every current and historical checkpoint, and stores operation ID on each superseding checkpoint. Validation resolves singular-phase order through the persisted ordinal-qualified evidence-order key and validates every history entry. Cross-phase ordering uses the contemporaneous predecessor: for a dependent record at order O, select from the predecessor phase's current plus history entries the greatest order strictly less than O; thus each design checkpoint binds the requirements checkpoint preceding it and each Red batch binds the design checkpoint preceding that Red, while later supersession never retroactively inverts historical phase order. Missing contemporaneous predecessors remain `CHANGE_PHASE_ORDER`. Each generation snapshot includes both named history arrays and ordinals; reopen copies them into `generationHistory`, clears them from the new active generation, and restarts requirements/design ordinals at 1. RecordedAt diagnostics use each entry's own distinct order. Other stale states re-enter through the approval cascade or a new generation.
+Constraints: A transition commits only after validation and required evidence checks; reopen is lease-bound and idempotent, starts only at impact, resolves the exact current CHANGE requirement set, creates qualified order keys, and owns the cross-generation unchanged-fingerprint exemption while preserving `--allow-unchanged` for ordinary initial recording; every later transition revalidates the CHANGE requirement set and emits `CHANGE_GENERATION_REQUIREMENTS` on drift; abandoning requires nonblank reason/approver and confirmation, leaves no active generation, and permits only reopen plus non-credit targeted maintenance; within one CHANGE the greatest non-abandoned generation is active. Implicit repository context selects the sole explicit active document or status-less legacy document whose chronology has a positive generation without terminal full-set quality, a null generation after abandonment, or no chronology, counts it toward the one-active limit, and classifies a status-less chronology with terminal quality and no later active/abandoned generation as completed without rewriting it. Multiple active/legacy-active documents return `CHANGE_GENERATION_MIXED` and persist nothing; an explicit CHANGE ID never falls back to implicit selection; `maintenance: true` permits only the named read-only status, branch-retaining cleanup, and REQ-M5-LIFECYCLE-005 candidate-snapshot list/show/delete maintenance operations, including exact snapshot-ID maintenance for foreign or unknown CHANGE history, and grants no evidence credit. Per-requirement batch predecessor checks are independent; optional Refactor occurs only after Green; unsupported formal obligations are classified without proof credit. `validateChangeEvidence()` owns one lazy invocation-local `Map<changeId + NUL + requirementId, Promise<CurrentCycleSelection>>`; both selected-batch and Red/Green-proof loops call one sequential helper, which inserts the Promise before awaiting it, preserves first-use and rejection order, and cannot escape the invocation. Malformed supplied operation IDs and unsupported phases fail before lease acquisition. Initial requirements/design use or missing supersession IDs are decided only after CHANGE-lease acquisition and pending recovery, may retain those recovery writes, and journal nothing for the rejected request. Under the CHANGE lease, DES-M5-005 invokes DES-M5-004 recovery and scoped replay lookup before checking whether the phase is currently valid. Exact replay returns exit 0 even after full projection; divergent reuse returns exit 1 `CHANGE_GENERATION_DUPLICATE`; a different operation ID against a current checkpoint also returns that diagnostic. With no scoped record and an invalidated checkpoint, the service validates the current approval manifest, computes fingerprints/requirements, derives the next phase-scoped ordinal, journals first, appends or reuses the ordinal-qualified order record, and atomically replaces `changes.json`. Supersession is exempt from unchanged-fingerprint rejection because approval head plus operation ID is the audited identity; `--allow-unchanged` is neither required nor replay-bound. Reopen and abandon first validate syntax and lifecycle eligibility without a lease, then acquire the CHANGE lease, revalidate eligibility, reconcile the departing active generation exactly once from journaled inputs, and only then snapshot or abandon it. The public semantic phase key remains `requirements` or `design`; the evidence-order phase is ordinal-qualified as `requirements:<n>` or `design:<n>` after ordinal 1, exactly as quality uses `quality:<n>`. The projection stores the current checkpoint in `phases.requirements` or `phases.design`, moves prior entries to `requirementsHistory[]` or `designHistory[]`, stores `requirementsOrdinal` or `designOrdinal` on every current and historical checkpoint, and stores operation ID on each superseding checkpoint. Validation resolves singular-phase order through the persisted ordinal-qualified evidence-order key and validates every history entry. Cross-phase ordering uses the contemporaneous predecessor: for a dependent record at order O, select from the predecessor phase's current plus history entries the greatest order strictly less than O; thus each design checkpoint binds the requirements checkpoint preceding it and each Red batch binds the design checkpoint preceding that Red, while later supersession never retroactively inverts historical phase order. Missing contemporaneous predecessors remain `CHANGE_PHASE_ORDER`. Each generation snapshot includes both named history arrays and ordinals; reopen copies them into `generationHistory`, clears them from the new active generation, and restarts requirements/design ordinals at 1. RecordedAt diagnostics use each entry's own distinct order. Other stale states re-enter through the approval cascade or a new generation.
 Projection-Serialization: The outermost coordinator for impact, requirements, design, full-set or batch Red/Implementation/Green, quality, abandon, reopen, and checkpoint recovery acquires CHANGE then change-projection leases exactly once, passes those handles to recovery and `writeChangeProjection()`, reloads `changes.json`, re-resolves sole-active or explicit CHANGE selection, and repeats generation, requirement-set, duplicate, predecessor, and unchanged-fingerprint validation against that locked projection before journal/order mutation. Every path persists through `writeChangeProjection(expectedLeases, evidence)` and never calls the generic JSON writer for `changes.json`.
 Projection-Shape: `requirementsOrdinal` or `designOrdinal` is present on every current and historical requirements/design checkpoint; persisted `operationId` is present only on superseding checkpoints at ordinal 2 or greater, and ordinal-1 checkpoints omit the key entirely rather than storing `null`, an empty string, or a generated value.
 Candidate-Maintenance: `candidate-snapshot create` is the sole explicit-ID confirmation-token exception and still requires the sole implicit active CHANGE. List/show are lease-free maintenance. Delete may target active, abandoned, completed, foreign, or unknown exact snapshot history under a persisted-ID lease; completed protected history must be made sole active and reopened before deletion.
 Requirements: REQ-M5-APPROVAL-008 REQ-M5-LIFECYCLE-001 REQ-M5-LIFECYCLE-002 REQ-M5-LIFECYCLE-003 REQ-M5-LIFECYCLE-005 REQ-M5-LIFECYCLE-006 REQ-M5-QUALITY-002 REQ-M5-WORKTREE-005 REQ-M5-WORKTREE-006 REQ-M5-WORKTREE-007
-ADRs: ADR-0003 ADR-0005 ADR-0010 ADR-0013 ADR-0014 ADR-0015 ADR-0035
+ADRs: ADR-0003 ADR-0005 ADR-0010 ADR-0013 ADR-0014 ADR-0015 ADR-0035 ADR-0041
 Depends-On: DES-M5-003 DES-M5-004 DES-M5-007
+
+Config-Implementation-Fingerprint: `currentChangeFingerprints()` derives
+`sharedImplementationPaths(root)` before hashing. The helper uses `lstat` on
+`.musubix/config.json`: `ENOENT` returns an empty list; a symbolic link,
+non-regular entry, or unreadable regular file throws exit-2
+`Change fingerprint input .musubix/config.json must be a readable regular
+file.` without following the entry. A readable regular config contributes one
+path to the sorted unique aggregate implementation path set and to every
+requested requirement's sorted unique implementation path set. Existing
+`snapshot()` supplies the path-keyed content hashes; the existing workspace
+state capture separately retains mode and size for drift detection. The same
+helper and union function are used by control-root and workspace-backed
+calculations so their fingerprint shape cannot diverge; the workspace-backed
+calculation reads the config from `sourceRoot`, while control-root TDD evidence
+continues to be selected from `controlRoot`. Persisted phase/journal
+fingerprints are opaque historical payloads and are never recomputed during
+replay, gate, or generation projection.
 
 ## DES-M5-006: Approval manifest service
 Responsibilities: Resolve domain-scoped normative paths and effective configuration projections, bind CHANGE generation, select the active or historical immutable candidate through DES-M5-012, read release blobs from that candidate commit, derive evidence CHANGE identity through a closed precedence selector, bind candidate gate projection, classify every included or excluded path including current and legacy generated trace locations, produce canonical schema-v1 manifests, record exact-hash approvals, classify release recovery, and propagate supersession.
@@ -260,10 +287,10 @@ Depends-On: DES-M5-003 DES-M5-004 DES-M5-009
 ## DES-M5-011: TDD cycle ledger
 Responsibilities: Execute configured test adapters, validate authoritative TEST IDs, record Red/Green/Refactor observations, separate batch scopes, and resolve canonical coverage. Expose the explicit additive source-supersession coordinator owned by DES-M5-023; compose its admission/recovery with ledger validation, without routing it through migrate, refactor, void, or repair.
 Interfaces: `recordRed(input)`, `recordImplementation(changeRecord)`, `recordGreen(input)`, `recordRefactor(input)`, `assignmentCycleComplete(binding)`, `selectCurrentCycle(generation, requirementId, integrationProvenance?)`, `validateTddEvidence(root, purpose)`, `migrateTddFingerprint(root, testId, approver)`, `voidTddCycle(root, testId, approver, reason)`, `sourceSupersession(operation, request, dependencies)`, `sourceSupersessionConflict(writerScope, explicitTarget?)`.
-Constraints: Red and Green come from `tdd` commands; Implementation comes from the matching generation-bound `change-record` checkpoint; all three bind one generation, requirement batch, and candidate lineage with strictly increasing order; per-batch predecessor checks are independent; assignment admission checks cycle completeness without provenance, while coverage selection requires consumed parallel commit-range provenance and classifies unconsumed cycles `PARALLEL_TDD_UNCONSUMED`. When `integrationProvenance` is omitted, the ledger reads the current provisional or verified consumed-range projection through DES-M5-007; this keeps gate/status independent of parallel implementation modules while still failing closed on absent or invalid provenance. Every candidate, cycle, and parallel-start commit parser accepts lowercase hexadecimal object IDs of length 40 through 64 and rejects shorter, longer, uppercase, or non-hexadecimal values. Coverage selection never crosses the active CHANGE scope or generation; `validateTddEvidence()` invokes DES-M5-TDD-005 outside its active-cycle loop for source-currency validation. `migrateTddFingerprint()` and `voidTddCycle()` own their public message strings, exit classes, and persistence behavior while using DES-M5-TDD-005 operation scoping, verified-event precedence, bounds, fallback, and structural-guard rules; a selected CHANGE with no active generation is treated as no active maintenance scope. Refactor follows current Green; legacy full-set and requirement batches never merge for coverage.
+Constraints: Red and Green come from `tdd` commands; Implementation comes from the matching generation-bound `change-record` checkpoint; all three bind one generation, requirement batch, and candidate lineage with strictly increasing order; per-batch predecessor checks are independent; assignment admission checks cycle completeness without provenance, while coverage selection requires consumed parallel commit-range provenance and classifies unconsumed cycles `PARALLEL_TDD_UNCONSUMED`. When `integrationProvenance` is omitted, the ledger reads the current provisional or verified consumed-range projection through DES-M5-007; this keeps gate/status independent of parallel implementation modules while still failing closed on absent or invalid provenance. Every candidate, cycle, and parallel-start commit parser accepts lowercase hexadecimal object IDs of length 40 through 64 and rejects shorter, longer, uppercase, or non-hexadecimal values. Coverage selection never crosses the active CHANGE scope or generation. The CHANGE-scoped selector records each authoritative parallel-cycle classification in a selector-local Map keyed by cycle ID; when fallback selects the same cycle it reuses the exact resolved classification, while a different or previously unseen cycle is classified sequentially at the original fallback point. The Map is newly created for each selector call and changes neither selected-cycle semantics nor classifier rejection order. `validateTddEvidence()` invokes DES-M5-TDD-005 outside its active-cycle loop for source-currency validation. `migrateTddFingerprint()` and `voidTddCycle()` own their public message strings, exit classes, and persistence behavior while using DES-M5-TDD-005 operation scoping, verified-event precedence, bounds, fallback, and structural-guard rules; a selected CHANGE with no active generation is treated as no active maintenance scope. Refactor follows current Green; legacy full-set and requirement batches never merge for coverage.
 Source-Supersession: Every TDD writer uses DES-M5-023's lease migration and source-aware integrity/prefix classifier, then the read-only scoped conflict check before requested writes; unrelated tests and ordinary change-record checkpoints continue. The classifier recognizes valid journal-backed prefixes before legacy orphan/repair checks, without bypassing genuine corruption or existing repair pending. Only a completed, verified additional terminal participates in source currency and void selection. Test-only retains its original cycle's eligible coverage exactly once; behavior-change evaluates only the independent replacement cycle's ordinary eligibility once. Neither operation manufactures Red/Implementation/Green, missing checkpoints, ownership adoption, or consumed-range provenance. The ledger passes approval, trace, runner, lifecycle, and candidate evaluators as typed callbacks supplied by the facade; the lower coordinator does not import those higher-level coordinators.
 Requirements: REQ-M5-TDD-001 REQ-M5-TDD-002 REQ-M5-TDD-003 REQ-M5-TDD-004 REQ-M5-LIFECYCLE-005 REQ-M5-LIFECYCLE-006 REQ-M5-COMPAT-013 REQ-M5-RELEASE-002 REQ-M5-WAVE1-TDD-001 REQ-M5-WAVE1-TDD-002
-ADRs: ADR-0005 ADR-0010 ADR-0012 ADR-0023 ADR-0036
+ADRs: ADR-0005 ADR-0010 ADR-0012 ADR-0023 ADR-0036 ADR-0040 ADR-0041
 Depends-On: DES-M5-003 DES-M5-004 DES-M5-007 DES-M5-TDD-005 DES-M5-023
 
 ## DES-M5-TDD-005: Effective source-currency cycle selector
@@ -279,12 +306,702 @@ Depends-On: DES-M5-003 DES-M5-004 DES-M5-007
 
 ## DES-M5-012: Workspace manager
 Responsibilities: Create and identify baseline, candidate, QA, parallel assignment-attempt, integration-attempt, and detached verification workspaces; validate and persist the public control-worktree baseline lifecycle; preserve unrelated dirty paths outside baseline creation; persist, inspect, select, and retire immutable candidate snapshots; project legacy and tombstoned history; enumerate candidate Git entries without reading the worktree; track generated-output ownership; materialize QA at the exact selected commit; and recover rejected candidates.
-Interfaces: `captureBaseline(root, changeId): BaselineWorkspace`, `createPublicBaseline(root, changeId): BaselineWorkspace`, `resolveControlWorkspace(root, changeId): ControlWorkspaceIdentity`, `currentBaseline(root, changeId): BaselineWorkspace | null`, `createCandidate(changeId)`, `createQa(candidateId, matrixJob)`, `createParallelAssignment(input)`, `createParallelIntegration(input)`, `createParallelVerification(input)`, `persistCandidateSnapshot(root, changeId, evaluators): CandidateSnapshotWriteResult`, `listCandidateSnapshotRecords(root): CandidateSnapshotStructuralProjection[]`, `showCandidateSnapshotRecord(root, selector): CandidateSnapshotStructuralProjection`, `deleteCandidateSnapshot(root, selector, deletedBy, evaluators): CandidateSnapshotDeleteResult`, `resolveCandidateSnapshot(root, context): CandidateSelection`, `projectCandidateSnapshot(record, context, evaluation): CandidateSnapshotProjection`, `candidateTreeManifest(commit): { entries, artifactManifestDigest }`, `listCandidateEntries(commit): { rawPath, nfcPath, objectId, gitMode, objectType }[]`, `readCandidateBlob(commit, objectId)`, `createQaAtCommit(commit, matrixJob)`, `compareTrackedTree(workspace, commit, phase: 'pre' | 'post')`, `collectOwnedChanges(changeId)`, `recover(candidateId)`.
-Constraints: `createPublicBaseline` executes the REQ-M5-WORKTREE-004 first-match validation order before entering `captureBaseline`: syntax, active-generation ownership, registered control-worktree identity, immutable HEAD, clean non-ignored state, then prior-baseline conflict. Control identity is derived from the Git common-directory workspace registry and exact branch/change/generation metadata, not path-name inference alone. It acquires the CHANGE lease, repeats context/head/clean/conflict checks under the lease, then uses idempotency key `workspace:<changeId>:baseline:<commitSha>`; exact replay returns the existing journal projection and no append. `assertPlanBaseDescendsFromBaseline` retains `PARALLEL_WORKTREE_CONFLICT` but appends argument-array-safe recovery guidance for the public baseline command. Candidate work requires an immutable baseline commit; each workspace role or attempt owns one branch or detached worktree under the Git common directory; parallel workspaces cannot modify baseline, QA, control, or another attempt; byte, mode, staged, unstaged, deleted, and untracked identities are preserved. Snapshot creation and resolution obtain repository identity only from DES-M5-003 `canonicalRepositoryIdentity`, discard the acquired raw origin before constructing any record or diagnostic, and verify exact commit existence plus required branch/ref reachability. Identity mismatch is `APPROVAL_CANDIDATE_UNAVAILABLE` for direct consumers and states the credential-free GitHub HTTPS origin requirement without exposing the raw origin; each affected generation must persist a repository-matching replacement snapshot and regenerate all candidate matrix gate records before readiness can recover. DES-M5-016 wraps non-current approval or snapshot failures as `RELEASE_OPERATION_NOT_AUTHORIZED`. New creation records use payload `recordVersion: 1`, generation, repository, branch, 40-to-64-character lowercase hexadecimal commit, SHA-256 `candidate-tree-manifest-v1`, and creation time; stable ID/path derive from journal order. Legacy records are absence-only `recordVersion: 0` projections with nullable generation/digest/time and remain listable/showable/deletable; they still participate in active/historical release selection and deletion protection. Repository-matching live records, not greatest order, define selection; one live candidate per CHANGE is enforced until append-only deletion. Creation idempotency binds CHANGE, generation, commit, digest, repository, and latest repository-matching tombstone epoch; replay precedes cleanliness, while divergent branch payload is `JOURNAL_IDEMPOTENCY_CONFLICT`. Create holds the CHANGE lease for authoritative workspace re-resolution and invokes injected approval/quality evaluators both before and under the lease; DES-M5-012 does not import DES-M5-006 or DES-M5-015. Structural projection owns record parsing, deletion, repository, commit reachability, conflict, and legacy facts; caller-supplied evaluation owns requirements/design approval, quality, candidate-gate, release-approval, protection, replacement, eligibility, and guidance composition. Historical multiple-record projection remains readable: exact-ID show/list return stale release approval, unprotected state, and conflict guidance rather than failing. Delete resolves exactly one record, revalidates journal selection and injected protection under the persisted CHANGE lease, refuses protected snapshots, and appends `workspace-candidate-snapshot-deleted` with actor/time, approval audit fields, and sorted invalidated states; same-actor replay returns the stored tombstone and different actor fails. Snapshot and tombstone journal defects use REQ-M5-WORKTREE-005 attribution; read-only inspection stays lease-free. QA and parallel verification workspaces disable checkout content conversion and smudge/clean filters; tracked comparison refreshes the index and compares Git object IDs rather than worktree byte hashes. Pre-gate comparison permits no tracked differences; post-gate comparison derives its allow-list internally from the closed `generated-trace` and `gate-self-reference` patterns, treating exact `.musubix/trace/index.json` and migration-era `.musubix/features/*/trace.json` as generated-trace, and otherwise emits `RELEASE_CANDIDATE_TREE_MISMATCH`; ignored/untracked caches are outside comparison. Entry enumeration and blob reads address immutable Git objects and never fall back to worktree paths. QA workspaces are materialized at the snapshot commit, so later journal commits are outside tree comparison.
+Interfaces: `captureBaseline(root, changeId): BaselineWorkspace`, `createPublicBaseline(root, changeId): BaselineWorkspace`, `resolveControlWorkspace(root, changeId): ControlWorkspaceIdentity`, `currentBaseline(root, changeId): BaselineWorkspace | null`, `createCandidate(changeId)`, `createQa(candidateId, matrixJob)`, `createParallelAssignment(input)`, `createParallelIntegration(input)`, `createParallelVerification(input)`, `persistCandidateSnapshot(root, changeId, evaluators): CandidateSnapshotWriteResult`, `listCandidateSnapshotRecords(root): CandidateSnapshotStructuralProjection[]`, `showCandidateSnapshotRecord(root, selector): CandidateSnapshotStructuralProjection`, `deleteCandidateSnapshot(root, selector, deletedBy, evaluators): CandidateSnapshotDeleteResult`, `resolveCandidateSnapshot(root, context): CandidateSelection`, `projectCandidateSnapshot(record, context, evaluation): CandidateSnapshotProjection`, `candidateTreeManifest(commit): { entries, artifactManifestDigest }`, `listCandidateEntries(commit): { rawPath, nfcPath, objectId, gitMode, objectType }[]`, `readCandidateBlob(commit, objectId)`, `readCandidateSourceBlobStream(commit, path, logicalSha256, sink)`, `verifyCandidateReachableObjectSizes(ref, maxExclusiveBytes)`, `verifyCandidateLfsClosure(ref, availability)`, `planSourceLfsMigration(request)`, `verifySourceLfsMigration(receipt)`, `createQaAtCommit(commit, matrixJob)`, `compareTrackedTree(workspace, commit, phase: 'pre' | 'post')`, `collectOwnedChanges(changeId)`, `recover(candidateId)`.
+Constraints: `createPublicBaseline` executes the REQ-M5-WORKTREE-004 first-match validation order before entering `captureBaseline`: syntax, active-generation ownership, registered control-worktree identity, immutable HEAD, clean non-ignored state, then prior-baseline conflict. Control identity is derived from the Git common-directory workspace registry and exact branch/change/generation metadata, not path-name inference alone. It acquires the CHANGE lease, repeats context/head/clean/conflict checks under the lease, then uses idempotency key `workspace:<changeId>:baseline:<commitSha>`; exact replay returns the existing journal projection and no append. `assertPlanBaseDescendsFromBaseline` retains `PARALLEL_WORKTREE_CONFLICT` but appends argument-array-safe recovery guidance for the public baseline command. Candidate work requires an immutable baseline commit; each workspace role or attempt owns one branch or detached worktree under the Git common directory; parallel workspaces cannot modify baseline, QA, control, or another attempt; byte, mode, staged, unstaged, deleted, and untracked identities are preserved. Snapshot creation and resolution obtain repository identity only from DES-M5-003 `canonicalRepositoryIdentity`, discard the acquired raw origin before constructing any record or diagnostic, and verify exact commit existence plus required branch/ref reachability. Identity mismatch is `APPROVAL_CANDIDATE_UNAVAILABLE` for direct consumers and states the credential-free GitHub HTTPS origin requirement without exposing the raw origin; each affected generation must persist a repository-matching replacement snapshot and regenerate all candidate matrix gate records before readiness can recover. DES-M5-016 wraps non-current approval or snapshot failures as `RELEASE_OPERATION_NOT_AUTHORIZED`. New creation records use payload `recordVersion: 1`, generation, repository, branch, 40-to-64-character lowercase hexadecimal commit, SHA-256 `candidate-tree-manifest-v1`, and creation time; stable ID/path derive from journal order. Legacy records are absence-only `recordVersion: 0` projections with nullable generation/digest/time and remain listable/showable/deletable; they still participate in active/historical release selection and deletion protection. Repository-matching live records, not greatest order, define selection; one live candidate per CHANGE is enforced until append-only deletion. Creation idempotency binds CHANGE, generation, commit, digest, repository, and latest repository-matching tombstone epoch; replay precedes cleanliness, while divergent branch payload is `JOURNAL_IDEMPOTENCY_CONFLICT`. Create holds the CHANGE lease for authoritative workspace re-resolution and invokes injected approval/quality evaluators both before and under the lease; DES-M5-012 does not import DES-M5-006 or DES-M5-015. Structural projection owns record parsing, deletion, repository, commit reachability, conflict, and legacy facts; caller-supplied evaluation owns requirements/design approval, quality, candidate-gate, release-approval, protection, replacement, eligibility, and guidance composition. Historical multiple-record projection remains readable: exact-ID show/list return stale release approval, unprotected state, and conflict guidance rather than failing. Delete resolves exactly one record, revalidates journal selection and injected protection under the persisted CHANGE lease, refuses protected snapshots, and appends `workspace-candidate-snapshot-deleted` with actor/time, approval audit fields, and sorted invalidated states; same-actor replay returns the stored tombstone and different actor fails. Snapshot and tombstone journal defects use REQ-M5-WORKTREE-005 attribution; read-only inspection stays lease-free. QA and parallel verification workspaces disable arbitrary checkout content conversion; only DES-M5-023's verified Git LFS source-path exception is permitted. Tracked comparison retains exact Git object IDs and additionally verifies hydrated logical LFS bytes/modes before and after gate; clean/smudge or git status alone is insufficient. Pre-gate comparison permits no tracked differences; post-gate comparison derives its allow-list internally from the closed `generated-trace` and `gate-self-reference` patterns, treating exact `.musubix/trace/index.json` and migration-era `.musubix/features/*/trace.json` as generated-trace, and otherwise emits `RELEASE_CANDIDATE_TREE_MISMATCH`; ignored/untracked caches are outside comparison but any source LFS object consumed from them is hash-verified. Entry enumeration and raw blob reads address immutable Git objects and never fall back to worktree paths; the explicit source-byte streaming reader verifies logical bytes against the candidate pointer. QA workspaces are materialized at the snapshot commit, so later journal commits are outside tree comparison. Dispatch preparation scans every reachable Git blob below 100,000,000 bytes and independently verifies the complete LFS pointer/object closure. Historical raw oversize requires approved scoped unpublished LFS migration, normal descendant candidate creation and fresh candidate bindings; no parentless commit or arbitrary immutable-target snapshot seam exists.
 Materialization-Support: DES-M5-012 supplies workspace and copy primitives to DES-M5-MULTI-CHANGE-002, which exclusively owns asynchronous `materializeOperationalState`, supplied-handle validation, recovery callback invocation, post-recovery baseline capture, and stable copying of candidates, evidence, and journal state; it never acquires leases. DES-M5-MULTI-CHANGE-003 exclusively owns finalization's byte-sorted CHANGE → change-projection → repository append lock ordering, acquisition, retention, and renewal and supplies those handles to materialization.
-Requirements: REQ-M5-COMPAT-013 REQ-M5-LIFECYCLE-005 REQ-M5-LIFECYCLE-006 REQ-M5-WORKTREE-001 REQ-M5-WORKTREE-002 REQ-M5-WORKTREE-003 REQ-M5-WORKTREE-004 REQ-M5-WORKTREE-005 REQ-M5-WORKTREE-006 REQ-M5-WORKTREE-007 REQ-M5-RELEASE-002
-ADRs: ADR-0006 ADR-0010 ADR-0012 ADR-0033 ADR-0035
+Requirements: REQ-M5-COMPAT-013 REQ-M5-LIFECYCLE-005 REQ-M5-LIFECYCLE-006 REQ-M5-WORKTREE-001 REQ-M5-WORKTREE-002 REQ-M5-WORKTREE-003 REQ-M5-WORKTREE-004 REQ-M5-WORKTREE-005 REQ-M5-WORKTREE-006 REQ-M5-WORKTREE-007 REQ-M5-RELEASE-002 REQ-M5-RELEASE-003 REQ-M5-RELEASE-004
+ADRs: ADR-0006 ADR-0010 ADR-0012 ADR-0033 ADR-0035 ADR-0039 ADR-0040 ADR-0041
 Depends-On: DES-M5-003 DES-M5-004 DES-M5-007
+
+### Generation-24 config fingerprint and full-test timeout projection
+
+Generation 19 completed a valid nine-requirement Red/Implementation/Green
+chronology but became immutable non-current evidence when the user changed the
+ordinary full-test ceiling before quality. Generation 20 then recorded a valid
+timeout Red at order 3993 and a full-set Red checkpoint at order 3994, but
+became immutable non-current evidence when its approved config-only
+implementation could not be checkpointed because `.musubix/config.json` was
+absent from implementation fingerprints.
+Generation 21 recorded both fresh Reds plus Red and Implementation checkpoints,
+but became immutable non-current evidence when its config-fingerprint Green
+revealed that the missing-config assertion compared against a config-present
+baseline.
+Generation 22 recorded fresh Reds and Implementation, but became immutable
+non-current evidence when the config-fingerprint Red was found to have failed
+during fixture bootstrap on a malformed sentinel journal rather than on the
+required unchanged fingerprints.
+Generation 23 completed genuine config-fingerprint and timeout Red/Green cycles,
+but became immutable non-current evidence because its active CHANGE retained
+eight unchanged requirement IDs and therefore demanded fresh coverage outside
+the approved normative delta. Generation 24 narrows the CHANGE requirement set
+to exactly REQ-M5-LIFECYCLE-006. Its recorded requirements checkpoint binds that
+single-ID scope; this post-requirements design revision supplies the fresh design
+fingerprint before approval.
+
+After Generation-24 design approval, create
+`tests/change-config-fingerprint.test.ts` with
+`TEST-M5-CONFIG-IMPLEMENTATION-FINGERPRINT-001` and recreate
+`tests/full-test-timeout.test.ts` with a Generation-24 source marker so its
+authoritative bytes differ from abandoned Generations 20 through 23. Both verify
+REQ-M5-LIFECYCLE-006. Freeze both files from their Reds through quality and
+candidate creation; preserve the existing Generation-19 Git LFS test hashes.
+
+The config-fingerprint test uses an isolated initialized fixture containing the
+minimum valid CHANGE, requirements, design and traced implementation inputs
+needed by `currentChangeFingerprints()`, with no initial `.musubix/config.json`.
+It captures the legacy code-only fingerprints, adds one readable regular fixture
+`.musubix/config.json` as the only changed project file, captures again, and expects aggregate
+`implementation` plus every requested
+`requirementImplementations[requirementId]` snapshot to change while
+requirements, design and tests stay equal. It also proves the config path occurs
+once in lexical order by comparing the exposed requirement paths and the
+aggregate digest against an independently computed
+`digest(JSON.stringify(snapshot(sortedUniquePaths)))` using the existing
+exported `files.ts` helpers; it does not import a new helper that is absent in
+Red. Missing config retains code-only results. Symlink and directory inputs use
+real fixture entries; unreadability is injected deterministically by mocking
+the existing `node:fs/promises` read for only the fixture config path, rather
+than relying on chmod behavior. Persisted pre-change phase/journal payloads
+remain byte-equal and are not recomputed. In Red, the new-behavior assertions
+for aggregate change, per-requirement change/path membership, exact aggregate
+digest, and symlink/non-regular/unreadable rejection may fail; missing-config
+compatibility, historical byte equality, unrelated-fingerprint stability and
+fixture bootstrap must pass.
+The workspace variant uses distinct control and source roots: the control root
+contains minimal active CHANGE/TDD evidence plus a different readable config,
+while the source root contains the traced fixture inputs and starts without a
+config. It repeats the missing/addition assertions through exported
+`workspaceChangeFingerprints(controlRoot, sourceRoot, changeId, requirementIds)`,
+adds the config only under `sourceRoot`, and proves that changing only the
+control-root config does not affect the result. This demonstrates that the
+`tdd.ts` path uses the shared helper against `sourceRoot`. Symlink,
+non-regular and injected-unreadable source-root cases alongside a valid
+control-root config assert the exact message
+`Change fingerprint input .musubix/config.json must be a readable regular
+file.` from both calculators and byte-equality of the pre-existing change and
+journal payloads, proving rejection occurs before persistence. The CLI's
+existing domain-error mapping supplies exit 2 for that exact thrown contract.
+In Red, the workspace addition/change/path/digest and invalid-source-config
+assertions are expected failures under the old algorithm, while its
+missing-source-config and control-root-isolation assertions must pass.
+Any preserved fixture journal is created with `appendJournalRecord()` and then
+successfully loaded with `loadJournalRecords(controlRoot)` before the first changed-behavior assertion; a malformed
+journal, setup or module-loading failure is inadmissible Red.
+
+The remainder of this Generation-24 subsection is immutable historical
+chronology and is superseded for current Red/Green behavior by the
+Generation-25 recovery subsection below. Before creating the Generation-24
+timeout test, require working-tree
+`.musubix/config.json` bytes to equal `git show HEAD:.musubix/config.json`.
+Bind the lowercase HEAD commit, config Git blob object ID, byte length and
+SHA-256 as constants in the reviewed test and Red evidence. The test executes
+`git show <boundHead>:.musubix/config.json`, verifies all four baseline
+bindings, parses that immutable blob and constructs the expected Green
+projection by selecting the unique command named `test` and changing only its
+`timeoutMs` from 180000 to 300000. It independently parses the live config. Red
+requires the complete live config to equal the baseline and reports only the
+exact mismatch `test.timeoutMs observed 180000, expected 300000`; no other
+assertion or bootstrap failure is admissible.
+
+Record both managed Reds, then one proper-subset Red checkpoint for exactly
+REQ-M5-LIFECYCLE-006. Implement the shared config fingerprint first in
+`packages/analysis/src/change.ts` and the workspace-backed calculation in
+`packages/analysis/src/tdd.ts`, including the common no-follow readable-regular
+guard. Then update only `.musubix/config.json` for the timeout projection. The
+config implementation evidence contains exactly one JSON Patch operation:
+
+```json
+{"op":"replace","path":"/commands/<test-index>/timeoutMs","from":180000,"value":300000}
+```
+
+`<test-index>` is derived from the unique command name, not a fixed ordinal.
+Run `npm run build` after these code/config edits and use the rebuilt
+repository-local CLI for the Implementation checkpoint; the intended
+cross-algorithm difference from the Red checkpoint is a new current
+fingerprint calculation, not historical replay recomputation.
+Green requires the live parsed config to deep-equal the expected projection from
+the bound test-creation HEAD blob, with `test.timeoutMs === 300000`,
+`compatibility.timeoutMs === 180000` and `pack-smoke.timeoutMs === 180000`.
+Record one proper-subset Implementation checkpoint for REQ-M5-LIFECYCLE-006.
+Run the unchanged config-fingerprint test Green first, then the unchanged
+timeout test Green, then one matching proper-subset Green checkpoint. The only
+new config change is this `.musubix/config.json` value; the only production
+changes are the shared fingerprint/guard implementation. Existing
+This historical Generation-24 wording rejected Generation-19 through
+Generation-23 evidence at that time. Current Generation-26 validation rejects
+Generation-19 through Generation-25 phase/TDD evidence as current credit; no
+new evidence or command-result schema is introduced.
+
+Quality runs the existing configured command path and accepts only completed
+success with its measured duration strictly below 300000 ms, zero reported
+failures and no bootstrap/provenance error. Equality with the ceiling, timeout,
+unfinished selected files or any other failure remain non-pass. No timeout
+beyond 300000 ms is authorized.
+
+The historical Generation-24/25 and current Generation-26 requirement-to-test
+mapping is:
+
+| Requirement | TEST ID |
+|---|---|
+| REQ-M5-LIFECYCLE-006 | TEST-M5-CONFIG-IMPLEMENTATION-FINGERPRINT-001 |
+| REQ-M5-LIFECYCLE-006 | TEST-M5-FULL-TEST-TIMEOUT-001 |
+
+### Generation-25 candidate-gate timeout binding recovery (historical)
+
+Generation 24 completed genuine config-fingerprint and timeout
+Red/Implementation/Green chronology but is immutable non-current evidence
+because quality found that the design-approved canonical execution-policy and
+candidate-gate projections, plus two trust-test constants, still bound the
+superseded 180000-millisecond ordinary test limit. Generation 25 retains exactly
+`REQ-M5-LIFECYCLE-006` and changes no production behavior beyond the already
+implemented Generation-24 projection.
+
+The canonical execution-policy JSON differs from the Generation-24 approved
+projection only at the unique command named `test`, whose `timeoutMs` is
+300000. Its SHA-256 is
+`7c7ce3ed0eb363e5d43161dcd04b0dc58c3587b2cf4be9db11cca39fd521e041`.
+The complete candidate-gate projection containing that execution policy has
+SHA-256
+`414123c757dad57d01855bd408c1a3b9cf70044238df4156b2a1699bee30851f`.
+Compatibility and pack-smoke remain 180000, and the versioned runtime profile
+remains byte-identical.
+
+After Generation-25 design approval, revise
+`tests/full-test-timeout.test.ts` under its existing globally unique
+`TEST-M5-FULL-TEST-TIMEOUT-001` annotation. Before Red it verifies the live
+config command values, parses the current normative candidate-gate JSON block,
+computes the live `candidateGateFingerprintConfig()` projection, and requires
+both hashes to equal the approved candidate-gate digest. It then reads
+`tests/candidate-gate-trust.test.ts` and `tests/test-runtime-gate.test.ts` and
+uses two soft equality assertions requiring each source to contain the approved
+digest instead of
+`327baa0f399450fd6714f112e41bc23e13de79a9c1113499795ea76d87bcd03e`.
+The admissible Red contains exactly those two assertion failures; any config,
+design, projection, journal, module, bootstrap, or additional assertion failure
+invalidates the Red.
+
+Freeze the Generation-25 timeout-test bytes after Red. Its approved
+implementation would replace
+only the two stale digest constants in the existing trust tests. Rebuild, record
+the proper-subset Implementation checkpoint, then record Green with the
+unchanged Generation-25 timeout test and the matching proper-subset Green
+checkpoint. In execution, that test-only correction left implementation
+fingerprints unchanged, so the Implementation checkpoint failed closed and
+Generation 25 became immutable non-current evidence before Green or quality.
+
+### Generation-26 authoritative gate-fingerprint trace recovery
+
+Generation 26 retains exactly `REQ-M5-LIFECYCLE-006`, the approved canonical
+execution-policy/candidate-gate bytes and digests, and the two-failure
+Generation-25 Red behavior. It additionally makes the directly affected
+config-to-gate function authoritative for requirement-scoped implementation
+fingerprints without changing executable behavior.
+
+Before Red, revise `tests/full-test-timeout.test.ts` so its bytes differ from
+Generation 25 and bind the complete SHA-256 of the Red
+`packages/analysis/src/candidate-gate.ts`. The test locates the single
+`export async function candidateGateFingerprintConfig` declaration and
+constructs the only authorized Green source by inserting immediately above it:
+
+```ts
+/** @id CODE-M5-CANDIDATE-GATE-FINGERPRINT-CONFIG-001
+ * @implements REQ-M5-LIFECYCLE-006
+ * @design DES-M5-015
+ */
+```
+
+The unchanged test accepts exactly two correlated states. When both trust-test
+digests are
+`327baa0f399450fd6714f112e41bc23e13de79a9c1113499795ea76d87bcd03e`,
+the candidate-gate source must equal the bound Red bytes and contain no approved
+block. When both digests are
+`414123c757dad57d01855bd408c1a3b9cf70044238df4156b2a1699bee30851f`,
+the source must byte-equal the exact insertion projection and contain the block
+once. Mixed digest state, another source state, duplicate declaration, or
+duplicate trace ID fails. The genuine Red therefore contains exactly the two
+soft digest-equality failures.
+
+Implementation changes only the two trust-test digest constants and inserts the
+exact block. After build and strict trace, the Implementation checkpoint must
+show a changed aggregate implementation fingerprint,
+`requirementImplementations['REQ-M5-LIFECYCLE-006'].paths` containing
+`packages/analysis/src/candidate-gate.ts`, and that path newly present or bound
+to a different path-keyed content hash relative to the Red requirement snapshot.
+Strict trace contains exactly one
+`CODE-M5-CANDIDATE-GATE-FINGERPRINT-CONFIG-001` node at that path with edges to
+`REQ-M5-LIFECYCLE-006` and `DES-M5-015`. Green runs the frozen test and cannot
+pass with the Red source. Quality then runs the complete configured gate; the
+ordinary test command passes only with completed status, zero native failures
+and duration strictly below 300000 milliseconds. No timeout increase,
+fingerprint exclusion, executable candidate-gate change, proxy trace entity, or
+historical evidence rewrite is authorized.
+
+### Generation-27 deterministic current-cycle selection recovery
+
+Generation 27 retains exactly `REQ-M5-LIFECYCLE-006` and all Generation-26
+canonical execution-policy and complete candidate-gate bytes. The current
+300000-millisecond candidate-gate projection with `testRuntime` remains
+`414123c757dad57d01855bd408c1a3b9cf70044238df4156b2a1699bee30851f`;
+the same projection without `testRuntime` is
+`2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd`.
+Generation 26 quality proved that the latter current digest, rather than
+historical 180000-millisecond digest
+`bb4a58c169b4e4f7357b608dc3b00028a613f907613b88d1540b3654ea600c8a`,
+is the value expected by `tests/test-runtime-gate.test.ts`.
+
+Before Red, revise `TEST-M5-FULL-TEST-TIMEOUT-001` to extract
+`legacyGateSha256` and require the current no-`testRuntime` digest while
+retaining every Generation-26 config, canonical projection, live projection,
+main trust digest, source-state and trace assertion. Its only admissible Red is
+the stale legacy digest constant.
+
+Also add `tests/change-current-selection-cache.test.ts` with authoritative
+`TEST-M5-CHANGE-CURRENT-SELECTION-CACHE-001` trace identity for
+REQ-M5-LIFECYCLE-006 and DES-M5-005/DES-M5-011. The test uses hoisted
+`vi.mock` plus `importOriginal` on exactly
+`../packages/analysis/src/parallel-tdd-evidence.js`; it records the real
+classifier result after incrementing a ledger keyed by canonical JSON of root,
+change ID, generation, requirement ID, cycle ID, purpose and evidence root.
+It imports `change.js` only after mock installation, resets the ledger
+immediately before calling `validateChangeEvidence()`, requires successful
+validation, and fails when any complete key count exceeds one. After Green it
+clears the ledger and repeats the complete validation, proving no cache survives
+the first invocation. Its explicit 180000-millisecond test watchdog is only a
+diagnostic completion bound; timeout, bootstrap, mock-resolution or validation
+failure is not an admissible Red. Existing `TEST-M5-EVIDENCE-CURRENT-001`
+remains byte-identical with its 60000-millisecond secondary quality guard.
+
+Implementation first changes only `legacyGateSha256` to
+`2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd`. In
+`selectCurrentChangeTddCycleFromEvidence()`, create one local classification
+Map, store each authoritative-loop result by cycle ID, and reuse it only when
+fallback resolves that same parallel cycle; otherwise invoke the classifier at
+the existing fallback point. In `validateChangeEvidence()`, create one local
+Map keyed by `changeId + "\\0" + requirementId` and one helper that inserts the
+selection Promise before its first await. Replace only the selected-batch and
+Red/Green-proof direct calls with that helper. Do not prepopulate, parallelize,
+catch, convert rejection to a value, or retain either Map outside its owning
+invocation. Selected cycles, diagnostic order, `PARALLEL_TDD_UNCONSUMED`
+behavior and evidence bytes remain unchanged.
+
+Freeze both Generation-27 Red test sources through Green. The cache test Red is
+valid only when validation completes and at least one complete classifier
+context count exceeds one. Green requires all counts at most one in each of two
+independent validations. Implementation fingerprints must change through
+`packages/analysis/src/change.ts`; the timeout-policy test constant change is
+independent test code. Full quality requires the unchanged 60000-millisecond
+current-evidence test, the deterministic operation ledger, and the ordinary
+configured command below 300000 milliseconds. ADR-0040 owns the corrected
+no-`testRuntime` digest; ADR-0041 owns both invocation-local reuse boundaries.
+
+### Generation-19 Git LFS distribution and migration
+
+User-directed replacement of the abandoned chunk-store/parentless design.
+Generations 13 through 18 are immutable non-credit history after, respectively,
+an invalid first distribution Red fixture, a batch Red checkpoint recorded before
+all Reds in that batch, unchanged authoritative test source after design, and an
+invalid passing Red probe followed by a duplicate valid Red, and fixed current
+LFS attributes rejecting a retained raw historical object before the first Red,
+and an incomplete isolation allow-list breaking the mandatory global build.
+The Generation-19 approval covers exactly
+REQ-M5-APPROVAL-007, REQ-M5-COMPAT-013, REQ-M5-EVIDENCE-007,
+REQ-M5-GRAPH-003, REQ-M5-LIFECYCLE-006, REQ-M5-RELEASE-002,
+REQ-M5-RELEASE-003, REQ-M5-RELEASE-004 and REQ-M5-WORKTREE-004; the five
+Generation-19-Review-Delta IDs are the subset with substantive LFS behavior
+changes. Generation-19 requirements approval is current and design approval is
+required. After design approval and before the first Red, verify each file contains exactly one
+Generation-18 marker and replace it with
+`// Generation-19 chronology replay marker; no executable tokens changed.`
+immediately after the import block in both `tests/git-lfs-distribution.test.ts`
+and `tests/git-lfs-generation14-coverage.test.ts`. Review must prove each diff
+changes only that comment line and preserves the ordered executable token stream, trace
+annotations, TEST IDs, test names, assertions and statement structure. Every Red,
+Green and full-set checkpoint binds the byte-identical two-file marker-bearing
+set; freeze both files from the first Red through the Green checkpoint. A
+missing, duplicated, moved or
+modified marker, or any other later test-source byte change, invalidates the
+Generation-19 Reds and requires append-only generation recovery rather than
+rewriting evidence. The single full-set Red checkpoint must follow all nine
+Reds, and the single full-set Green checkpoint must follow all nine Greens.
+Operational source-admission infrastructure is the complete implemented
+control-worktree `dist/` tree. Bind every relative path, mode, size and SHA-256
+before isolation and assert it before every Red. Add `package.json` to the
+Red-different set and change only its `build` script to
+`tsc -p tsconfig.build.json --outDir .test-work/g19-red-dist`; the mandatory
+global build and every Vitest global setup therefore write only to that named
+temporary tree and cannot overwrite the verifier. Require the directory absent
+before isolation; repeated Red builds may replace only its contents. Invoke
+`dist/packages/cli/src/main.js` from the fixed control tree with cwd set to the
+control worktree. Preserve those exact verifier bytes and every pre-existing
+retained source/LFS object across every Red and Green command while allowing
+append-only new evidence objects. The Red-different set is exactly:
+
+- `.github/workflows/candidate-gate.yml`
+- `.github/workflows/release.yml`
+- `.github/workflows/npm-publish.yml`
+- `.gitattributes`
+- `docs/migration-guide.md`
+- `package.json`
+- `packages/analysis/src/candidate-gate.ts`
+- `packages/analysis/src/candidate-integration.ts`
+- `packages/analysis/src/graph.ts`
+- `packages/analysis/src/index.ts`
+- `packages/analysis/src/parallel-runtime.ts`
+- `packages/analysis/src/release-manifest.ts`
+- `packages/analysis/src/tdd-source-lfs.ts`
+- `packages/analysis/src/workflow.ts`
+- `packages/analysis/src/workspace-manager.ts`
+- `packages/cli/src/main.ts`
+
+For each tracked Red-different path except `.gitattributes` and `package.json`,
+save exact implemented bytes/mode and restore the exact `HEAD:<path>` blob/mode.
+For `.gitattributes`, retain the raw source-blob
+wildcard and remove only the exact oversized-digest LFS line during Red; restore
+the exact implemented attributes after the Red checkpoint. No other attribute
+line, ordering, whitespace or final newline changes. The isolation manifest
+records both complete-file hashes and the removed exact line:
+`.musubix/evidence/tdd-source/v1/blobs/7fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c filter=lfs diff=lfs merge=lfs -text !eol !working-tree-encoding !ident`.
+For `package.json`, replace only the exact build-script value with
+`tsc -p tsconfig.build.json --outDir .test-work/g19-red-dist`; preserve all
+other bytes and the final newline.
+For `tdd-source-lfs.ts`, use the reviewed Red-only constant overlay
+`sourceLfsThreshold = 100_000_001` instead of deleting the module, so the exact
+100,000,000-byte boundary fails while imports and operational compiled admission
+remain available.
+
+Keep these files at implemented bytes across both states:
+`packages/analysis/src/candidate-git-distribution.ts`,
+`packages/analysis/src/source-lfs-migration.ts`,
+`packages/analysis/src/tdd-source-artifacts.ts`,
+`packages/analysis/src/tdd-source-diagnostics.ts`,
+`packages/analysis/src/tdd-source-pair.ts`,
+`packages/analysis/src/tdd-source-snapshot.ts`,
+`packages/analysis/src/tdd-source-storage.ts`,
+`packages/analysis/src/test-runtime.ts`, `scripts/check-lfs-tool.mjs`,
+`scripts/verify-lfs-checkout.mjs`, `scripts/run-codegraph-tests.mjs` and
+`vitest.config.ts`. Before isolation, create a manifest binding HEAD,
+implemented and isolated hashes/modes, both test hashes, `.gitattributes`, the
+separately launched CLI verifier and all fixed implemented dependencies, plus a
+sorted path/size/SHA-256 digest
+of every pre-existing retained source-evidence and LFS object. New evidence
+paths may be appended, but baseline paths may not change or disappear. Assert that manifest
+before every Red, after the ninth Red, before every Green and after the ninth
+Green; only allow the Red-different set to differ between Red and Green.
+Restore exact implemented bytes from the manifest after the Red checkpoint.
+Delete only `.test-work/g19-red-dist`, run the restored normal `npm run build`,
+and require the resulting complete `dist/` tree digest to equal the pre-Red
+verifier digest before the first Green.
+Run the mandatory global TypeScript build in the isolated state before the first
+Red using exactly `npm run build`; the Red package script expands to
+`tsc -p tsconfig.build.json --outDir .test-work/g19-red-dist`. Before design
+approval, reproduce the mixed state in a disposable copy, run that exact build,
+and bind its exit code and output SHA-256 in the design-review evidence. A build failure abandons the generation without
+recording a Red. `npm run typecheck` is not the Red feasibility command because
+the authoritative tests intentionally reference Green-only APIs.
+
+The six target TEST IDs and the complete nine-cycle map are closed:
+
+| Requirement | TEST ID |
+|---|---|
+| REQ-M5-LIFECYCLE-006 | TEST-M5-TDD-SOURCE-LFS-001 |
+| REQ-M5-COMPAT-013 | TEST-M5-TDD-SOURCE-LFS-001 |
+| REQ-M5-RELEASE-002 | TEST-M5-CANDIDATE-GIT-DISTRIBUTION-001 |
+| REQ-M5-RELEASE-003 | TEST-M5-CANDIDATE-GIT-DISTRIBUTION-001 |
+| REQ-M5-RELEASE-004 | TEST-M5-CANDIDATE-GIT-DISTRIBUTION-001 |
+| REQ-M5-APPROVAL-007 | TEST-M5-LFS-APPROVAL-BINDING-001 |
+| REQ-M5-EVIDENCE-007 | TEST-M5-LFS-WORKFLOW-INPUT-001 |
+| REQ-M5-GRAPH-003 | TEST-M5-LFS-GRAPH-OWNERSHIP-001 |
+| REQ-M5-WORKTREE-004 | TEST-M5-LFS-MIGRATION-WORKSPACE-001 |
+
+Record one Red per table row in table order, even where a TEST ID is shared by
+multiple requirements; a repeated TEST ID never creates a duplicate cycle for
+the same requirement.
+
+No source outside the closed allow-list may be isolated. Append-only paths under
+`.musubix/evidence/`, `.musubix/journal/`, `.musubix/cache/`, `.test-work/` and
+the Git LFS object store are evidence outputs, not isolated production. The marker check
+replaces the single exact Generation-18 line wherever it occurs immediately
+after the final contiguous import declaration; each file's diff must contain
+exactly one removed line and one added line.
+Production behavior is restored or changed only after the Red checkpoint. No actual attributes, workflow,
+Git configuration, ref, LFS object or history is changed by these documents.
+The `Proposed`/`not approved` labels retained inside the requirements artifact
+are historical reviewed bytes covered by the current Generation-19 requirements
+approval; the native approval record, not that prose label, is authoritative.
+
+#### Git object closure versus LFS logical closure
+
+The distribution policy is decimal 100,000,000 bytes: every reachable Git
+blob must be smaller, while source logical bytes at/above that threshold are
+stored in LFS. `readCandidateBlob` remains a raw immutable Git-object reader
+for manifests/audits: a pointer's Git object ID and pointer-byte SHA-256 must
+not be silently replaced by logical hashes. Add
+`readCandidateSourceBlobStream(commit, path, logicalSha256, sink)` only for
+the approved source prefix, delegating pointer resolution and independent
+logical verification to DES-M5-023. `candidate-tree-manifest-v1` stays unchanged;
+its Git OID binds pointer bytes, which bind the logical SHA-256/size already
+referenced by source evidence. Both halves are checked before gate/release.
+
+All Git scans use argument arrays and `shell:false`, with
+`GIT_NO_REPLACE_OBJECTS=1`, `GIT_NO_LAZY_FETCH=1`; reject grafts, shallow
+boundaries and promisor/partial repositories rather than omitting objects.
+The Git-size scanner disables system/global config and removes inherited
+GIT_* before setting no-replace/no-lazy-fetch and the platform null global
+config. Do not reuse that environment for LFS/config/attribute checks, which
+must inspect effective repository/global/system transport/filter policy.
+Resolve and freeze a validated full ref/OID using
+`['rev-parse', '--verify', '--end-of-options', ref + '^{commit}']`.
+Inspect its tree with `['ls-tree', '--full-tree', '-r', '-l', '-z', treeOid]`,
+then stream `['rev-list', '--objects', '--no-object-names', '--missing=error',
+commitOid, '--']` into
+`['cat-file', '--batch-check=%(objectname) %(objecttype) %(objectsize)']`.
+No bitmap shortcut, Git `--all`, path exclusion or missing-object allowance.
+At most 1,024 outstanding responses; bound lines to 4,096 bytes, tree records
+to 65,536 bytes, private stderr tails to 8,192 bytes and the scan to a
+120,000 ms monotonic deadline. Require matching OID/type/integer-size replies,
+drained EOF and zero child exits; do not buffer the closure or payloads.
+Input/ref failure, incomplete scan, current-tree oversize, historical oversize
+are first-match diagnostics with the existing CANDIDATE_GIT_* codes. Report
+the smallest offending OID/size only, never contents or raw stderr.
+
+Separately stream every reachable commit's source entries and attributes,
+inspect canonical pointer blobs (bounded to 1,024 bytes), and collect the
+logical OID/size inventory in an operation-owned disk-backed sorted file,
+not an unbounded in-memory set. Verify duplicate OIDs have identical sizes.
+Do not skip historical LFS pointers just because the current tree no longer
+references them. Every required object must be available and hash-verified
+locally and, before publishing the Git ref, independently from the repository's
+remote LFS service. Ref-tip drift restarts validation; a scan of an old tip
+cannot authorize a different push.
+
+#### Scoped migration of the existing executable
+
+The observed pre-migration HEAD contains Git blob `6b14fea5e0b503ac671ae52eb4697477dbb44f64`
+at `.musubix/evidence/tdd-source/v1/blobs/7fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c`,
+size 126,595,440. First stream/reverify that logical digest and size. Git LFS
+must be >=3.4.1, recorded with the Git version in the migration receipt.
+Freeze source tip U and the authenticated advertised published branch/tag tips;
+identify default D, require D ancestor of U, and protect every published
+closure. A separately authorized fetch establishes those tips; migration
+never assumes stale remote-tracking refs prove what is unpublished.
+
+Use an isolated complete local migration repository and a new owned branch,
+not a linked worktree or shared Git/common directory. Retain original
+refs/objects in the original repository; do not run migrate there.
+Git LFS import can also move local alias refs pointing at rewritten commits,
+so include-ref limits conversion scope, not an assurance that every other
+local ref stays unchanged. The isolated repository contains only the owned
+migration branch and frozen protected refs; review its full ref table after
+import. Backups remain exclusively in the original repository.
+An explicit tool array is
+`['lfs', 'migrate', 'import', '--include=' + sortedOversizedPaths.join(','),
+'--include-ref=' + migrationRef, ...protectedRefs.map(ref => '--exclude-ref=' + ref),
+'--object-map=' + mapPath]`, `shell:false`. Paths are exact validated source
+digest paths inventoried at >=100,000,000 bytes, not arbitrary user patterns.
+Do not use `--above=100MB` (strict-above/units differ from inclusive policy),
+`--everything`, `--no-rewrite`, `--yes`, or branch arguments that broaden scope.
+Run with clean migration HEAD/index and closed stdin; no discarded dirtiness.
+The installed tool documents that explicit include/exclude refs determine
+scope; `--skip-fetch` does not control that mode. Do not add it as a false
+network guarantee: use a migration clone with no network remotes after
+published tips are imported, so this operation cannot fetch/push externally.
+
+Validate the full OLD-SHA,NEW-SHA CSV: one unambiguous mapping for each changed
+commit, valid object IDs, mapped tip, and mapped parents preserving normal
+ancestry back to unchanged protected D. Git LFS may change only inventoried
+blob representation and associated `.gitattributes`; all other tree entries,
+modes and existing journal/TDD/order/approval bytes must match old commits.
+No historical evidence hash is replaced with its rewritten Git ID. Preserve
+the map/old refs as non-credit provenance; rewritten signed commits must not
+be represented as retaining valid original signatures. Validate tool output,
+then add a normal policy commit if generated attributes need the explicit
+eol/encoding/ident resets in DES-M5-023. Never manually mutate mapped history.
+Complete Git-size, pointer-binding, local LFS hash and protected-ref checks.
+Historical pointers generated by git-lfs migrate need canonical pointer,
+standard LFS attributes and `text=unset`; inherited `eol=lf` is allowed only
+in those rewritten ancestors because it is inert with `-text`. All current
+candidate/workflow reads require the final explicit resets in DES-M5-023;
+no ancestor encoding/ident/custom-filter exception is introduced.
+Import the rewritten Git objects and stream-copy each verified required LFS
+object into the original repository's approved LFS media root, via create-new
+temporary, full size/hash verification, file fsync, atomic publish and
+supported directory fsync. Existing objects must reverify identically;
+never copy a pointer as an LFS object, overwrite corrupt cache, or assume
+local Git fetch transfers LFS media. Only then create-only pin verified R
+before old snapshot tombstone or active-workspace adoption.
+
+Local receipts below common-dir
+`musubix5/lfs-migrations/<changeId>/g<generation>/<operationId>/`
+are canonical, fsynced/atomically create-new published, and non-credit.
+`plan.json` freezes inputs before migration; `migration.json` seals map/R/media
+verification before adoption; `adoption.json` seals the tombstone child;
+`snapshot.json` binds final C and its ordinary snapshot result. Each has
+schemaVersion 1, its explicit phase kind, operation ownership and a self-hash.
+Bind version,
+CHANGE/generation/repository/operation/actor, source/protected ref tips,
+source workspace and journal-prefix digests, exact path/OID/size inventory,
+tool versions, map path/hash, R/tree, adoption branch and old snapshot ID;
+Phase receipts additionally bind predecessor receipt hash and exact
+adoption/tombstone/candidate/snapshot IDs rather than rewriting completed
+receipts. Existing same-phase identical bytes replay; divergent values or
+invalid hash/chain are migration-conflict. Each self-hash covers canonical
+bytes without that hash. Hold live CHANGE fencing around original-repository
+ref/journal/adoption mutations; use existing order lease for journal writes.
+
+#### Ordinary candidate lifecycle and replay
+
+The actual snapshot API requires clean current branch HEAD and appends its
+journal after C; deletion leaves a dirty tombstone. Keep that contract, not
+the abandoned separate-root immutable-target helper. Adopt verified R only
+into a clean registered owned workspace with its unchanged journal prefix;
+no forced checkout/reset or overwriting concurrent control edits. Any new
+nonconflicting journal suffix must be reconciled byte-for-byte before
+adoption; divergence or concurrent same-CHANGE state is conflict, not repair.
+Use exact-ID/same-actor public deletion after existing protection/reopen
+checks, then commit the valid tombstone as a normal child of R. Revalidate
+requirements/design/current full-set quality under the approved lifecycle;
+rewritten historic commits alone do not establish new Green/quality credit.
+The resulting clean normal HEAD is candidate C. Pin its existing
+`refs/heads/candidate/<lowercase-changeId>-g<generation>-<first12-C>` at C
+with create-only compare-and-set, then call ordinary snapshot create.
+Commit its new journal on an evidence branch descending from C, without
+amending/moving the candidate or changing the public command's JSON/key.
+
+| Failure/crash boundary | Pending cause | Replay authority |
+| --- | --- | --- |
+| Before completed verified migration | `migration-incomplete` | Original refs/bytes stay intact; discard only owned incomplete scratch and rerun frozen inputs |
+| After R pin, before adoption/tombstone | `adoption-incomplete` | Receipt + map + pin are reverified; original snapshot not deleted |
+| After tombstone, before its normal commit | `tombstone-incomplete` | Same actor reuses exact journal tombstone; commit only verified pending files, never duplicate/delete history |
+| After tombstone commit, before candidate snapshot | `snapshot-incomplete` | Resolve persisted branch/tree/journal and current lifecycle; keep non-ready until ordinary create succeeds |
+| After snapshot append, before response | none; exact replay is complete | Existing tombstone epoch/live exact C snapshot returns stored timestamp/ID, zero new append |
+
+Receipt/map/ref/actor/journal divergence is TDD_SOURCE_LFS_MIGRATION_CONFLICT.
+Missing phase receipts after a crash are reconstructed only from frozen plan,
+verified map/objects, pinned refs and exact valid journal records, never retry
+arguments; before committing an already-journaled tombstone, check whether
+the owned branch already contains its exact child/tree and reuse that commit.
+Pending migration/adoption cannot satisfy candidate-bound gate/release;
+ordinary lifecycle/quality checks remain permitted on the verified adopted
+branch after the tombstone commit, before snapshot creation. Read-only status/list
+must offer recovery rather than false readiness. Do not auto-abandon unknown
+pending state. Retained R/C pins protect verified migration output; retain
+original raw history locally and never push those backup refs.
+
+#### Workflow checkout and remote availability
+
+Inspection found no `lfs:true` in the three workflows. Candidate-gate currently
+has default shallow depth, `persist-credentials:false`, and only `git status`
+pre/post checks. Release has six full-history checkouts; npm-publish has two
+plus a later detached release-evidence worktree. Future implementation must:
+
+| Workflow surface | Required checkout/materialization |
+| --- | --- |
+| candidate-gate.yml exact candidate | `lfs:true`, `fetch-depth:0`, keep `persist-credentials:false`; exact-C closure fetch and verified hydration before install/gate, logical checks before/after gate |
+| release.yml validation candidate/evidence | Both `lfs:true`, existing full history; verify each exact commit before install, approval/authorization or packaging |
+| release.yml build-a/build-b | Both `lfs:true`, existing full history; independently verify C's LFS objects in both reproducibility builds |
+| release.yml release-job candidate/evidence | Both `lfs:true`, existing full history; reverify before trust/authorization/side effects |
+| npm-publish.yml candidate/evidence | Both `lfs:true`, full history; verify tag C and publish P before approval/token use |
+| npm-publish.yml detached release-evidence | Explicit exact-E LFS fetch + checkout + logical verification immediately after worktree add and before digest derivation |
+
+Check the Git LFS prerequisite/version before the first Actions checkout in
+each job; lfs:true itself cannot run without that tool. Bootstrap standard
+local filters only in the owned checkout, fail if unavailable. At each root invoke
+`['-c', 'lfs.fetchrecentalways=false', 'lfs', 'fetch', '--all', 'origin', commitOid]`
+(LFS `--all` here is explicitly scoped to one exact commit closure, unlike
+forbidden all-ref Git pushes), then `['lfs', 'checkout',
+'.musubix/evidence/tdd-source/v1/blobs/*']`, passing the glob as one literal
+argument rather than shell-expanding it. Checkout only uses local cache and
+may leave pointers without failing; independently verify every expected
+logical file/size/digest and mode. Never treat command zero exit as proof.
+GitHub checkout's authenticated `lfs:true` step may populate current objects;
+later complete-closure fetches require step-scoped repository-read auth,
+not persistent checkout credentials or credentials embedded in origin.
+Keep credentials out of args, logs, artifacts and source fingerprints.
+
+Before Git ref publication, separately authorized upload uses
+`['lfs', 'push', '--object-id', '--stdin', 'origin']` with the exact verified
+OID inventory on stdin. Then use an independent verification repository/cache
+with the proposed pointer commits locally present, trusted canonical origin,
+empty effective LFS storage and no alternate/shared cache. Fetch the exact
+commit closure from that remote using the array above and stream-verify every
+OID/size. Only this proves remote availability at that time; it does not
+promise indefinite availability, so workflows/release recheck independently.
+Quota/per-object-account limits, auth, network, tool, missing or unsupported
+endpoint failure is TDD_SOURCE_LFS_UNAVAILABLE; pointer/size/hash/hydration
+failure is TDD_SOURCE_LFS_INVALID. Local `fsck`/dry-run is optional diagnostic,
+not authority: fsck can honor excludes and move corrupt objects. No automatic
+prune, cache repair, download fallback to raw Git, or success-shaped failure.
+Negotiated storage downloads may use signed URLs; independently verify bytes
+and never disclose those URLs or forward repository credentials to them.
+
+Credential-free tests use a test-owned loopback HTTP Git LFS batch/storage
+server and isolated temporary repositories. The fixture implements only the
+Git LFS v1 batch download/upload actions required by these tests and can
+deterministically return authentication rejection, quota rejection, network
+disconnect, missing object, incorrect size, corrupt bytes and valid signed-URL
+style storage responses. Production endpoint validation rejects loopback,
+local-path, custom-transfer and test-certificate overrides; only the test
+dependency injection seam may admit this fixture, and no production config,
+`.lfsconfig`, remote or credential is modified. The fixture covers empty-cache
+remote verification and every unavailable/invalid cause without live
+credentials or external uploads.
+
+LFS diagnostics use the approved closed causes exactly:
+
+- `TDD_SOURCE_LFS_UNAVAILABLE`:
+  `tool-missing | version-unsupported | authentication | quota | network | remote-object-missing`.
+- `TDD_SOURCE_LFS_INVALID`:
+  `pointer-schema | pointer-path-digest | pointer-size | logical-size | logical-digest | mode | attributes | cache-integrity | worktree-integrity | download-integrity`.
+- `TDD_SOURCE_LFS_MIGRATION_CONFLICT`:
+  `raw-object-binding | source-ref-drift | protected-ref-overlap | commit-map-divergence | receipt-divergence | actor-mismatch`.
+- `TDD_SOURCE_LFS_MIGRATION_PENDING`:
+  `migration-incomplete | adoption-incomplete | tombstone-incomplete | snapshot-incomplete`.
+
+Tool discovery and `git lfs version` produce `tool-missing` or
+`version-unsupported`. Effective attribute verification produces `attributes`;
+local object verification produces `cache-integrity`; hydrated worktree
+verification produces `worktree-integrity`; independent empty-cache remote
+download verification produces `download-integrity`. First-match precedence is
+migration conflict, LFS invalid, LFS unavailable, then a valid persisted pending
+migration. A valid pending receipt suppresses the expected
+`CANDIDATE_GIT_HISTORY_OVERSIZE` duplicate diagnosis until completion. Without
+that receipt, Git ref/scan/tree/history diagnostics retain their approved
+precedence. No raw subprocess message, object bytes, endpoint or credential is
+included.
+
+Admission-time source snapshot checks retain the existing
+`TDD_SOURCE_ADMISSION_INVALID` cause `snapshot-unverifiable` for forbidden or
+ambiguous attributes before an LFS entry is selected. After a commit-bound LFS
+pointer has been selected, candidate/workflow/release verification of missing or
+wrong effective `filter=lfs` attributes uses `TDD_SOURCE_LFS_INVALID` cause
+`attributes`; the two diagnostics never classify the same stage.
+
+#### Normal publication ancestry and remaining authorization boundary
+
+Protected published D remains ancestor of rewritten R and normal C. Evidence
+E descends from C; fast-forward E or verified ordinary merge into default,
+without reintroducing raw U as a merge parent. Tag C, not an unrelated root;
+publish P descends from E and is default-reachable. The existing release
+predicates C->E->default and npm E->P->default remain intact. Preserve the
+additional multi-CHANGE integration-current-candidate rules: an integration
+that changes C needs fresh gate/snapshot/approval bindings. Stop if protected
+history already contains oversized raw Git blobs; converting it would need a
+separate explicit published-history rewrite proposal, not this migration.
+
+LFS upload, Git push, tag, release and publish still need their existing
+separate authorization. The prior staging bootstrap remains unresolved:
+release approval is required for a push, but GitHub gate evidence first
+needs C's remote branch. LFS does not grant a preapproval staging exception.
+Do not upload or dispatch until a compliant authorized QA route or separately
+approved staging requirement resolves that dependency.
+
+DES-M5-012 owns TEST-M5-CANDIDATE-GIT-DISTRIBUTION-001: complete Git/LFS closure,
+tracked pointer versus logical size, historic raw rejection, protected-ref
+scoped migration/map, all adoption crash boundaries, fresh-cache remote
+verification/auth/quota failure, all nine Actions checkouts plus the detached
+worktree, native-runner logical pre/post checks and actual ancestry predicates.
+DES-M5-023 owns TEST-M5-TDD-SOURCE-LFS-001. The abandoned chunk test is not
+required and is not implementation evidence.
 
 ## DES-M5-013: Bootstrap runner
 Responsibilities: Start independently of normal orchestrator state, validate explicit authority, execute bounded operations in a candidate workspace, and persist bootstrap history in bootstrap-scoped ledgers.
@@ -308,7 +1025,7 @@ Interfaces: `runGate(scope, persistenceMode?)`, `getStatus(scope)`, `refreshEvid
 Constraints: Required commands cannot be empty; only the active generation contributes; no active generation or an active generation without terminal quality produces `CHANGE_GENERATION_INCOMPLETE`, gate exit 1, status exit 0, and `ready: false`, without blocking requirements/design approval; `CHANGE_GENERATION_REQUIREMENTS` is re-evaluated on every status/gate call; configuration cannot remove mandatory evidence kinds. Gate and status validate but never reconcile checkpoint journal records, always expose DES-M5-007 `unprojectedPhaseCheckpoints` and `unprojectedBatchCheckpoints` on active, superseded, and abandoned summaries, continue evaluating the current projection for informational phase/interrupted/legacy entries, and treat historical entries as non-current. Invalid requirements/design checkpoint journal evidence reported by DES-M5-007, or any batch entry labeled `invalid`, including duplicate order identities detected before subtraction, emits non-waivable `CHANGE_CHECKPOINT_JOURNAL_INVALID`; gate exits 1 and status exits 0 with `ready: false`. Unaddressable journal corruption uses the same repository-level diagnostic without inventing an entry. A valid workflow correction suppresses only its target declaration's reused/missing pair, emits informational `WORKFLOW_DECLARATION_SUPERSEDED`, grants no credit, and never suppresses a canonical or unrelated diagnostic; malformed correction evidence emits `WORKFLOW_DECLARATION_CORRECTION_INVALID`. Normal mode journals only its owned quality/check result records under CHANGE/order leases and does not invoke phase-checkpoint recovery. Matrix mode is explicitly non-journaling, acquires no shared repository lease, writes its authoritative canonical result artifact outside the QA worktree, and keeps any informational caches in ignored scratch storage; only later DES-M5-019 control-worktree ingestion creates normal evidence. Release readiness reads candidate matrix records only through DES-M5-007 projections, preventing an ESM import cycle with DES-M5-019. DES-M5-015 consumes DES-M5-012 structural records plus release classification supplied by DES-M5-002, produces quality/gate/replacement/eligibility/guidance evaluation, and never imports or calls DES-M5-006. Its injected pure/read-only evaluator never calls DES-M5-012 while DES-M5-012 holds a lease. Domain requirements/design and approval/quality recovery always precede snapshot actions. With no live repository-matching record, including foreign-only and tombstoned-only history, it inserts exact create before release actions only when create preconditions are current. A sole `replacementRequired` record inserts protected reopen recovery when needed, then delete, and inserts create only after current preconditions. A sole valid basis with non-pass gates emits gate-run guidance and never delete/create. Multiple live repository-matching records emit list plus one ascending-order delete command per record, never create in the same response. Gate/status classify every shared chain defect as `CHANGE_CHECKPOINT_JOURNAL_INVALID`; list/show retain their uniform read-only candidate-journal classification.
 Requirements: REQ-M5-COMPAT-013 REQ-M5-EVIDENCE-004 REQ-M5-EVIDENCE-006 REQ-M5-LIFECYCLE-005 REQ-M5-LIFECYCLE-006 REQ-M5-QUALITY-001 REQ-M5-QUALITY-002 REQ-M5-QUALITY-003 REQ-M5-QUALITY-004 REQ-M5-QUALITY-005 REQ-M5-RELEASE-002 REQ-M5-WORKTREE-005 REQ-M5-WORKTREE-006 REQ-M5-WORKTREE-007
 Source-Supersession-Readiness: Consume the registry/ledger's read-only `sourceSupersessions` and copyable `sourceTerminalSelectors` summaries specified by DES-M5-023 without recovering or writing them. Always show operation, exact target, old/new fingerprint and selection reason. Pending in the evaluated CHANGE/generation is non-ready with gate exit 1 and status exit 0; unrelated or abandoned/superseded valid pending is informational, while global corruption remains non-pass. Only completed verified terminal selection can clear its source stale result. Ordinary configured-runner failures, general approval cascades, implementation currency, coverage, parallel provenance and candidate checks remain independent. No snapshot/helper/runner/config/production/HEAD/candidate equality test is added to completed terminal source currency.
-ADRs: ADR-0005 ADR-0007 ADR-0009 ADR-0010 ADR-0014 ADR-0015 ADR-0035 ADR-0036
+ADRs: ADR-0005 ADR-0007 ADR-0009 ADR-0010 ADR-0014 ADR-0015 ADR-0035 ADR-0036 ADR-0040
 Depends-On: DES-M5-005 DES-M5-007 DES-M5-011 DES-M5-012 DES-M5-014
 
 ### Generation-9 recovery contract (historical; abandoned before P/claim/D1)
@@ -11549,8 +12266,12 @@ fields. Implement constants in the existing inventoried test-runtime.ts and
 three .mjs files; use no additional runtime inputs. Actual input raw hashes
 bind their bytes, the design approval binds this normative contract, and
 EVIDENCE-001 verifies exact constants/schema/packet bindings. Thus recompute but
-retain the canonical profile f9fbe947... and gate 327baa... digests when JSON
-bytes are unchanged; TRUST's intended digest remains 327baa0f399450fd6714f112e41bc23e13de79a9c1113499795ea76d87bcd03e.
+retain the canonical profile f9fbe947... and historical generation-8 gate
+327baa... digests when those historical JSON bytes are unchanged; that
+generation's TRUST digest is
+327baa0f399450fd6714f112e41bc23e13de79a9c1113499795ea76d87bcd03e.
+Generation 25 supersedes the current approved gate digest with
+414123c757dad57d01855bd408c1a3b9cf70044238df4156b2a1699bee30851f.
 This does not authorize changing the fixed policy under its existing kind.
 
 This is NOT a replacement for every host-wall source. new Date() remains
@@ -11688,7 +12409,7 @@ fails reporter-missing, never falls back to a config reporter or stdout parsing.
 
 | Execution path | Final invocation and binding |
 | --- | --- |
-| Ordinary full test through configured runner | Config stays npx ["vitest","run"], timeout 180000; effective args append --reporter=default and the runtime reporter. These intentional profile-derived argv additions are recorded, not described as byte-identical effective argv. |
+| Ordinary full test through configured runner | Generation 24 introduced and Generation 26 retains only this row's timeout change: config stays npx ["vitest","run"], timeout 300000; effective args append --reporter=default and the runtime reporter. These intentional profile-derived argv additions are recorded, not described as byte-identical effective argv. Compatibility and pack-smoke retain 180000. |
 | Focused TDD / gate aggregate / matrix | First retain native selected-file/-t and --reporter=json/--outputFile arguments from adapters.ts and gate.ts (including matrix-native paths); then append the runtime reporter. Bind the native result path/bytes, actual exit/status and separate acknowledgment to that exact effective invocation. |
 | compatibility | Config stays npm ["run","test:compat"]; the coordinator forwards the default/runtime reporter arguments after npm's -- boundary to the existing package script. Verify/bind the resulting Vitest invocation without changing its file selection. |
 | codegraph-tests | Keep the outer Node wrapper invocation and native group selection, --maxWorkers=1, --reporter=json and --outputFile. The parent runner/adapter validates --describe-groups output, appends the runtime reporter to each described native group argv and prepares final argv/request/dispatch/env. The wrapper executes those supplied group argv unchanged; bind distinct request/result/ack for every group, preserving operation counters and aggregate tests. |
@@ -11739,8 +12460,10 @@ their existing command hash semantics and additionally bind the full runtime
 execution. A success exit or valid native report
 without a matching ack cannot pass. Conversely, an ack cannot override a
 nonzero exit, missing native result required by an adapter, or native failures.
-The configured full command/180000 ms limit is unchanged; its profile-derived
-effective argv is now explicit. A bare unmanaged Vitest call without the
+Generation 24 introduced and Generation 26 retains the ordinary full command
+limit at exactly 300000 ms;
+its profile-derived effective argv remains explicit. Compatibility and
+pack-smoke retain 180000 ms. A bare unmanaged Vitest call without the
 explicit runtime reporter cannot claim this profile or official evidence:
 fail reporter-missing when the policy is required. Standalone diagnostics
 must explicitly supply the reporter and receive a standalone request.
@@ -12375,14 +13098,20 @@ verified terminal; older cycles are older-terminal history, not transferred
 credit. Their maintenance selectors being outside-scope is irrelevant to
 recording this fresh cycle.
 
-The approved policy gate digest is
-327baa0f399450fd6714f112e41bc23e13de79a9c1113499795ea76d87bcd03e.
-Removing ONLY the testRuntime member from that canonical design object yields
+The historical generation-8 approved policy gate digest was
+327baa0f399450fd6714f112e41bc23e13de79a9c1113499795ea76d87bcd03e;
+Generation 25 supersedes the current digest with
+414123c757dad57d01855bd408c1a3b9cf70044238df4156b2a1699bee30851f.
+Removing only the `testRuntime` member from the historical generation-8
+180000-millisecond object yields
 bb4a58c169b4e4f7357b608dc3b00028a613f907613b88d1540b3654ea600c8a,
-matching the recorded current implementation result. Before implementation,
+matching that generation's recorded implementation result. The corresponding
+Generation-25 300000-millisecond projection without `testRuntime` is
+2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd.
+Before generation-8 implementation,
 candidateGateFingerprintConfig ignores testRuntime; the missing derivation is
 therefore a genuine observable behavior gap, independently of the old 4024...
-literal. Neither the policy digest nor the 21 input paths changes here.
+literal. The 21 input paths did not change in that historical cycle.
 
 After g8 requirements/design approval and their checkpoints, verify BEFORE Red
 that TRUST's archived g7 bytes already contain the exact approved 327baa...
@@ -12448,10 +13177,12 @@ Both fixes use fresh TDD in their authorized owner scopes before integration
 verification/rerun; no deliberately reintroduced bug or missing-module proxy
 may manufacture Red.
 
-After runtime and both graph fixes, run the configured test command
-(`npx vitest run`) once through the profile-aware coordinator with timeoutMs
-180000, binding its declared effective reporter argv. Completed success records measured duration and
-180000-durationMs headroom. "Only timeout remains" means recorded process status
+After runtime, both graph fixes, the Generation-24 implementation, and the
+Generation-26 gate-digest Green, Generation 26 runs the configured test
+command (`npx vitest run`) once through the profile-aware coordinator with
+timeoutMs 300000, binding its declared effective reporter argv. Completed
+success records measured duration strictly below 300000. "Only timeout remains"
+means recorded process status
 timeout, reportedFailed=0, bootstrapErrors empty, no other observed command or
 provenance failure, and a valid persisted partial acknowledgment with the entire
 selected-file completion inventory (including not-started/running entries).
@@ -12491,8 +13222,9 @@ Depends-On: DES-M5-003 DES-M5-004 DES-M5-005 DES-M5-007
 Responsibilities: Derive `gate-input-fingerprint-v1` from candidate blobs, create isolated QA workspaces, run every musubix5 verification-matrix job, verify pre/post tracked trees, persist external candidate-bound gate records, and project release manifest bindings.
 Interfaces: `fingerprintCandidateGate(changeId, generation, commit)`, `runCandidateMatrix(changeId, generation, commit)`, `emitJobResult(context): CandidateGateJobResult`, `ingestJobResults(changeId, generation, results)`, `validateCandidateGateSet(changeId, generation, commit)`, `releaseProjection(changeId, generation, commit)`.
 Constraints: Current `matrix-job-identity-v1` membership is delegated to DES-M5-CI-001 and is exactly `ubuntu-node24`, `windows-node24`, and `macos-node24`; the historical parse set and retired-record validation rules are also owned by DES-M5-CI-001. Every candidate/evidence/workflow commit parser accepts lowercase hexadecimal object IDs of length 40 through 64 and rejects shorter, longer, uppercase, or non-hexadecimal values. Fingerprint inputs come only from candidate blobs and the DES-M5-003 canonical persisted repository identity; its `config` member is exactly the derived canonical object and SHA-256 specified above, excluding only display fields `language` and `qualityProfile`, and runtime identity is bound job-result data but not fingerprint input. Matrix runners receive the candidate commit through a clean checkout on their native runner, independently derive their checkout identity through DES-M5-003 `canonicalRepositoryIdentity`, require it to equal the supplied persisted identity before gate execution, invoke DES-M5-015 matrix mode, emit self-contained canonical artifacts bound to repository, CHANGE, generation, candidate, fingerprint, producer, job identity, command results, and pre/post tree checks, and write no tracked QA path except the closed gate output allow-list. A runner-side or ingestion-side canonical repository-identity mismatch emits `RELEASE_GATE_CANDIDATE_MISMATCH`, states the credential-free GitHub HTTPS precondition, and never emits the raw origin. Each artifact is transported as an opaque CI artifact inside a GitHub OIDC strict attestation envelope verified by DES-M5-014 against the candidate-gate transport policy above; ingestion rejects an untrusted producer, altered payload digest, or mismatched repository/candidate/job identity before interpreting self-declared result fields. Envelope identity is repository, candidate, fingerprint, job identity, CI provider/run ID, and payload digest; resubmitting the identical envelope is idempotent and cannot append a new record, while conflicting reuse of the same CI provider/run ID is stale evidence reported as `RELEASE_GATE_EVIDENCE_STALE`. One control-worktree ingestion holds the CHANGE/order leases, validates every artifact, derives its canonical artifact digest, and appends with idempotency key `change:<id>:g<N>:gate:<candidate>:<fingerprint>:<jobId>:<artifactDigest>`; byte-identical retry artifacts are idempotent while a changed terminal result appends history, and the greatest ordered record per current job is authoritative only if current and pass. All three current jobs must be present and pass. External records are normal generation-bound evidence stored in the control worktree outside the candidate tree; in-tree gate outputs are informational. Candidate-gate schema marks repository/change/generation/candidate/fingerprint/producer/job identity, command digests/status, tree-check results, CI provider/run ID, attestation payload digest, and artifact digest as bound; human-readable timestamps and durations are display-only. Missing, stale, wrong-candidate, wrong-fingerprint, duplicate-job within one ingestion set, or tree-mismatch records fail with the registered `RELEASE_GATE_EVIDENCE_MISSING`, `RELEASE_GATE_EVIDENCE_STALE`, `RELEASE_GATE_CANDIDATE_MISMATCH`, or `RELEASE_CANDIDATE_TREE_MISMATCH`.
-Requirements: REQ-M5-APPROVAL-007 REQ-M5-COMPAT-013 REQ-M5-EVIDENCE-003 REQ-M5-EVIDENCE-004 REQ-M5-LIFECYCLE-005 REQ-M5-QUALITY-001 REQ-M5-QUALITY-003 REQ-M5-RELEASE-002
-ADRs: ADR-0006 ADR-0008 ADR-0010
+Generation-19-LFS: Enforce DES-M5-012/023's candidate checkout/availability and logical-byte pre/post checks in every native matrix runner, before commands and attested result construction. Tree/fingerprint inputs remain exact Git pointer objects; bound preTreeMatchesCandidate/postTreeMatchesCandidate are true only if both Git and logical checks pass. No pointer-only or missing-object job grants pass evidence.
+Requirements: REQ-M5-APPROVAL-007 REQ-M5-COMPAT-013 REQ-M5-EVIDENCE-003 REQ-M5-EVIDENCE-004 REQ-M5-LIFECYCLE-005 REQ-M5-LIFECYCLE-006 REQ-M5-QUALITY-001 REQ-M5-QUALITY-003 REQ-M5-RELEASE-002
+ADRs: ADR-0006 ADR-0008 ADR-0010 ADR-0039
 Depends-On: DES-M5-003 DES-M5-004 DES-M5-005 DES-M5-007 DES-M5-012 DES-M5-014 DES-M5-015 DES-M5-CI-001
 
 ## DES-M5-020: Candidate-bound release workflow coordinator
@@ -12503,7 +13235,8 @@ Generation 13 verification refinement: The tag-push bundle step derives expected
 Generation 15 repository-targeting refinement: Structural regression assertions scope their inspection to the Release target lookup and creation/upload commands, require the canonical event-repository equality guard in the same side-effect step, require each GitHub Release CLI/API invocation to identify the verified event repository explicitly through `--repo "$GITHUB_REPOSITORY"` or the exact `repos/$GITHUB_REPOSITORY/...` API path, and forbid bare repository-inferred `gh release` invocations. The target lookup assertion additionally requires separate `gh api --include` exact lookup and `gh api --paginate --slurp` draft-inclusive enumeration, requires the parsed enumeration object to be passed into the pure neutral classifier before creation, requires complete pagination and machine-readable HTTP-status classification, and forbids human-readable stderr matching as evidence of authoritative absence. Behavioral coverage exercises exact-tag 200 stable, exact-tag 200 prerelease, 404 plus no draft match, 404 plus draft match, enumeration-free 404 blocked from creation, non-404 failure, incomplete pagination, and malformed status/JSON.
 Object-ID-Width: Workflow inputs, shell guards, tag-resolved commits, candidate/evidence ancestry checks, authorization comparison, context validation, and attestation identity accept lowercase hexadecimal object IDs of length 40 through 64 and reject shorter, longer, uppercase, or non-hexadecimal values; `full-SHA` means this bounded full object ID, not exactly 40 characters.
 Requirements: REQ-M5-COMPAT-013 REQ-M5-RELEASE-001 REQ-M5-RELEASE-002 REQ-M5-RELEASE-003
-ADRs: ADR-0008 ADR-0010 ADR-0011
+ADRs: ADR-0008 ADR-0010 ADR-0011 ADR-0039
+Generation-19-LFS: Apply DES-M5-012's six-checkout release table and DES-M5-023 reconstruction checks in validation, both reproducible builds and the side-effect job, including tag-push mode. Candidate-built validators read Git pointers for tree identity and verified logical bytes for source evidence; failed object availability/integrity precedes install, trust and side effects.
 Depends-On: DES-M5-003 DES-M5-006 DES-M5-012 DES-M5-014 DES-M5-015 DES-M5-016 DES-M5-019
 
 ## DES-M5-021: Immutable GitHub Release npm publisher
@@ -12520,16 +13253,17 @@ Registry verification computes local SHA-512 SRI and classifies a nonzero `npm v
 Generation 13 verification refinement: The publisher requires the exact downloaded bytes to equal `releaseContextBytes(validateReleaseContext(parse(downloadedBytes)))`, and the attested canonical-context digest to equal SHA-256 over those same exact bytes. It derives the canonical repository digest from the tagged candidate checkout. DES-M5-020 `releaseTransportPolicy()` is the sole source for the verified release-workflow identity; `npmPublishTransportPolicy()` supplies only npm/runtime/retry parameters.
 Object-ID-Width: Dispatch inputs, shell guards, tag/candidate/evidence resolution, ancestry checks, authorization comparison, release-context validation, and attestation identity accept lowercase hexadecimal object IDs of length 40 through 64 and reject shorter, longer, uppercase, or non-hexadecimal values; `full-SHA` means this bounded full object ID.
 Requirements: REQ-M5-COMPAT-013 REQ-M5-RELEASE-001 REQ-M5-RELEASE-002 REQ-M5-RELEASE-004 REQ-M5-WAVE1-PUBLISH-001
-ADRs: ADR-0008 ADR-0010 ADR-0011
+ADRs: ADR-0008 ADR-0010 ADR-0011 ADR-0039
+Generation-19-LFS: Apply DES-M5-012's two-checkout plus detached-release-evidence hydration table at exact C/P/E. Verify DES-M5-023 logical closure before approval derivation/trust/token use; retain exact immutable Release-tarball publication and no rebuild/repack.
 Depends-On: DES-M5-003 DES-M5-006 DES-M5-012 DES-M5-014 DES-M5-016 DES-M5-020 DES-M5-WAVE1-PUBLISH-001
 
 ## DES-M5-022: Journaled workspace batch checkpoint coordinator
 Responsibilities: Record workspace-backed Red, Implementation, and Green CHANGE checkpoints without lost updates; resume interrupted journal/order/projection writes; and expose historical order-only gaps without granting lifecycle credit.
 Interfaces: `recordChangePhaseFromWorkspace(controlRoot, sourceRoot, changeId, phase, requirementIds)`, `workspaceStateDigest(sourceRoot, fingerprintPaths)`, `appendBatchCheckpoint(input, session?)`, `batchCheckpointOperation(changeId, generation, phase, scopeId)`, `loadBatchCheckpointRecords(root)`, `recoverBatchCheckpoints(controlRoot, changeId, expectedLeases: ChangeProjectionAppendLeaseSet): Promise<{ recoveredBatchCheckpoints }>`, `unprojectedBatchCheckpointSummaries(change, records, order)` (read-only and lease-free).
-Constraints: The coordinator validates repository identity and the requested requirement subset, then calculates canonical fingerprints, a workspace-state digest, a reusable per-path hash table containing mode, size, inode, nanosecond mtime, nanosecond ctime, and content hash, and a canonical hash of only fingerprint-relevant control-root TDD entries before acquiring either lease. Dirty files are valid inputs. As the outermost ordinary command coordinator it acquires the target CHANGE lease followed by the DES-M5-004 `change-projection` lease exactly once; integration recovery instead receives the already-held CHANGE, projection, and append handles. In both cases it passes handles to inner recovery and projection helpers, reloads `changes.json`, and re-resolves sole-active or explicit CHANGE selection. It performs active-generation replay lookup before new-checkpoint duplicate, predecessor, and unchanged-fingerprint checks; replay validates and uses the exact schema-v1 persisted payload, completes only that checkpoint, and exits 0. Proper-subset current caller state may use a later scope, while a full-set phase is singular and later recording is duplicate. Canonical scopes use the sorted requirement key and optional `#<n>` with `n >= 2` and no leading zero. Red allocation consumes DES-M5-007's canonical read-only gap projection plus active-generation projected and journaled scopes, treats unsuffixed as ordinal 1, and chooses maximum ordinal plus one. Noncanonical journal scope is `CHANGE_CHECKPOINT_JOURNAL_INVALID`; noncanonical order generation/scope is `EVIDENCE_ORDER_SCHEMA`. For a new checkpoint, before any requested-checkpoint journal, order, or projection write it re-enumerates the fingerprint-relevant path set, treats additions/removals as drift candidates, rechecks workspace HEAD and cached metadata, re-hashes every path whose mode, size, inode, mtime, or ctime changed, recomputes the selected TDD-entry hash, and explicitly checks lease-loss state; same-size edits change mtime or ctime and are re-hashed, drift writes no requested checkpoint and exits `CHANGE_WORKSPACE_DRIFT`, and prior phase recovery may remain persisted. Replay ignores unrelated current source/TDD changes. The new operation journals the exact `change-batch-checkpoint` envelope and payload before order allocation. A replay order lookup uses exact CHANGE, generation, and `orderPhaseKey`: zero appends once through the supplied append session when present, one reuses, and multiple fail `CHANGE_CHECKPOINT_JOURNAL_INVALID`; no recovery path reacquires any supplied lease. New proper subsets append fresh orders and never adopt legacy orders. Full sets permit one order per generation/phase: valid journal replays it, journal absence rejects with `CHANGE_GENERATION_DUPLICATE` plus abandon/reopen guidance, and duplicates are invalid. Proper subsets project into `tddBatches`; full sets project into singular phases. Projection replacement checks CHANGE, projection, and any supplied append fence before mutation. DES-M5-007 exclusively owns canonical gap parsing, grouping, duplicate classification, generation-specific subtraction, and `interrupted|legacy|invalid` rendering; `unprojectedBatchCheckpointSummaries` is a thin read-only delegation to that registry service, and historical interrupted gaps remain non-current while generation 4 order 3274 remains the legacy fixture. Tests inject an expired lease, use exactly four same-CHANGE and two different-CHANGE writers with at most 100-millisecond critical-section delays, exercise direct append idempotency, all crash boundaries, added/removed/same-size drift, renewal/takeover fencing, and require completion within the acquisition budget without lost projection.
+Constraints: The coordinator validates repository identity and the requested requirement subset, then calculates canonical fingerprints from `sourceRoot`, including the same shared `.musubix/config.json` classification used by DES-M5-005, a workspace-state digest, a reusable per-path hash table containing mode, size, inode, nanosecond mtime, nanosecond ctime, and content hash, and a canonical hash of only fingerprint-relevant control-root TDD entries before acquiring either lease. Dirty files are valid inputs. As the outermost ordinary command coordinator it acquires the target CHANGE lease followed by the DES-M5-004 `change-projection` lease exactly once; integration recovery instead receives the already-held CHANGE, projection, and append handles. In both cases it passes handles to inner recovery and projection helpers, reloads `changes.json`, and re-resolves sole-active or explicit CHANGE selection. It performs active-generation replay lookup before new-checkpoint duplicate, predecessor, and unchanged-fingerprint checks; replay validates and uses the exact schema-v1 persisted payload, completes only that checkpoint, and exits 0. Proper-subset current caller state may use a later scope, while a full-set phase is singular and later recording is duplicate. Canonical scopes use the sorted requirement key and optional `#<n>` with `n >= 2` and no leading zero. Red allocation consumes DES-M5-007's canonical read-only gap projection plus active-generation projected and journaled scopes, treats unsuffixed as ordinal 1, and chooses maximum ordinal plus one. Noncanonical journal scope is `CHANGE_CHECKPOINT_JOURNAL_INVALID`; noncanonical order generation/scope is `EVIDENCE_ORDER_SCHEMA`. For a new checkpoint, before any requested-checkpoint journal, order, or projection write it re-enumerates the fingerprint-relevant path set, treats additions/removals as drift candidates, rechecks workspace HEAD and cached metadata, re-hashes every path whose mode, size, inode, mtime, or ctime changed, recomputes the selected TDD-entry hash, and explicitly checks lease-loss state; same-size edits change mtime or ctime and are re-hashed, drift writes no requested checkpoint and exits `CHANGE_WORKSPACE_DRIFT`, and prior phase recovery may remain persisted. Replay ignores unrelated current source/TDD changes. The new operation journals the exact `change-batch-checkpoint` envelope and payload before order allocation. A replay order lookup uses exact CHANGE, generation, and `orderPhaseKey`: zero appends once through the supplied append session when present, one reuses, and multiple fail `CHANGE_CHECKPOINT_JOURNAL_INVALID`; no recovery path reacquires any supplied lease. New proper subsets append fresh orders and never adopt legacy orders. Full sets permit one order per generation/phase: valid journal replays it, journal absence rejects with `CHANGE_GENERATION_DUPLICATE` plus abandon/reopen guidance, and duplicates are invalid. Proper subsets project into `tddBatches`; full sets project into singular phases. Projection replacement checks CHANGE, projection, and any supplied append fence before mutation. DES-M5-007 exclusively owns canonical gap parsing, grouping, duplicate classification, generation-specific subtraction, and `interrupted|legacy|invalid` rendering; `unprojectedBatchCheckpointSummaries` is a thin read-only delegation to that registry service, and historical interrupted gaps remain non-current while generation 4 order 3274 remains the legacy fixture. Tests inject an expired lease, use exactly four same-CHANGE and two different-CHANGE writers with at most 100-millisecond critical-section delays, exercise direct append idempotency, all crash boundaries, added/removed/same-size drift, renewal/takeover fencing, and require completion within the acquisition budget without lost projection.
 Batch-Checkpoint-Journal: DES-M5-022 owns `appendBatchCheckpoint()` and batch-scoped lookup, composing DES-M5-004's generic `loadByIdempotencyKey(key)` and `append(record, session?)` with DES-M5-007 `validateBatchCheckpointJournal(records)`. The journal envelope uses `kind: change-batch-checkpoint` and the exact schema-v1 envelope/payload fields from REQ-M5-LIFECYCLE-006 `Batch-Checkpoint-Journal`. Validation covers canonical subset/full-set keys, canonical generation and scope ordinals, derived semantic/order keys, repository and workspace bindings, source/TDD digests, positive audit fences, predecessor/hash chain, and scoped idempotency uniqueness. Lookup, validation, and append share the same append session: when absent the helper acquires it once through DES-M5-004, otherwise it validates and reuses the supplied session. The defensive direct-append conflict path compares caller-bound repository identity, workspace HEAD, sorted requirement IDs, fingerprints, and both input digests; equality returns the persisted record without appending or replacing its timestamp, derived keys, or audit fences, divergence is `CHANGE_GENERATION_DUPLICATE`, and malformed or multiply persisted keys are `CHANGE_CHECKPOINT_JOURNAL_INVALID`.
 Requirements: REQ-M5-COMPAT-013 REQ-M5-LIFECYCLE-004 REQ-M5-LIFECYCLE-006 REQ-M5-MULTI-CHANGE-003 REQ-M5-MULTI-CHANGE-008
-ADRs: ADR-0010 ADR-0015 ADR-0035
+ADRs: ADR-0010 ADR-0015 ADR-0035 ADR-0041
 Depends-On: DES-M5-003 DES-M5-004 DES-M5-005 DES-M5-007
 
 ## Lifecycle transitions
@@ -12703,6 +13437,7 @@ producer identity. Bootstrap never writes that record directly.
 | parallel diagnostics | `PARALLEL_PLAN_EXISTS`, `PARALLEL_PLAN_STALE`, `PARALLEL_STALE_WORKTREES_PRESENT`, `PARALLEL_PLAN_INVALID`, `PARALLEL_PLAN_OWNERSHIP_OVERLAP`, `PARALLEL_CONCURRENCY_INVALID`, `PARALLEL_CONCURRENCY_LIMIT`, `PARALLEL_WORKTREE_CONFLICT`, `PARALLEL_RESULT_OWNERSHIP`, `PARALLEL_RESULT_UNVERIFIED`, `PARALLEL_VERIFICATION_ENVIRONMENT`, `PARALLEL_TDD_UNCONSUMED`, `PARALLEL_INTEGRATION_INCOMPLETE`, `PARALLEL_INTEGRATION_CONFLICT`, `PARALLEL_INTEGRATION_VERIFICATION_FAILED`, `PARALLEL_ASSIGNMENT_STATE`, `PARALLEL_LEASE_BUSY`, and `PARALLEL_CANDIDATE_DIVERGED` | Intentional classified failure surface governed by REQ-M5-PARALLEL-013 and ADR-0012 |
 | parallel evidence/state/workspaces | requirement-batch plan and DAG projection, branch-retaining stale-maintenance records, integration consumed-range provenance/evidence, assignment/integration/verification workspace roles, and parallel TDD provenance classification | Additive extensions to REQ-M5-WORKTREE-001, REQ-M5-TDD-003, and REQ-M5-EVIDENCE-006 governed by REQ-M5-PARALLEL-013, ADR-0012, and ADR-0013 |
 | TDD source-currency and maintenance selection | verified-order effective source-currency selection across scopes; active-scope-only work suppression during an active CHANGE plus no-active unscoped/same-terminal-scope work qualification fixed before a void bound; active-scope migration/void targeting and void fallback; active-scope applicability of retained migration `No TDD cycle found for <testId>.` versus `<testId> has no valid Green phase to migrate.` exit-2 messages, migration missing-cycle-ID applicability change, and retained already-migrated exit-2 message after verified selection; operation-scoped missing-cycle-ID/missing-chain structural guards with precedence over valid-Green/already-voided selection; selected-CHANGE/null-generation maintenance treated as no active scope; exact foreign-only or unverified-void `{ voided: false }` reason `<testId> has no verifiable dangling TDD cycle in the current operation scope.` with exit 1; trimmed migration-approver exit-2 rejection and diagnostic reuse; retained `tdd void` exit classes with order-based message applicability; active-scope fallback exclusion with unchanged no-fallback reason text; and compatibility-registration source assertions | Intentional behavioral correction governed by REQ-M5-TDD-003, REQ-M5-COMPAT-013, and ADR-0023 |
+| TDD source blob distribution | Git LFS at >=100,000,000 logical bytes with canonical pointer/logical dual binding, independently verified reconstruction and remote availability, exact per-digest attributes, scoped unpublished-history migration, normal fresh candidate bindings and all workflow checkouts | Intentional evidence-storage/QA/workflow extension governed by REQ-M5-LIFECYCLE-006, REQ-M5-COMPAT-013, REQ-M5-RELEASE-002/003/004 and ADR-0039; chunk/parentless direction withdrawn |
 | release manifest projection | candidate `repositoryId`, `candidateCommit`, `gateInputFingerprint`, `gate-input-fingerprint-v1`, generation, and changed aggregate | Intentional candidate-bound release extension governed by REQ-M5-RELEASE-002 and ADR-0010 |
 | candidate gate JSON | `matrix-job-identity-v1`, runtime identity, generation, candidate, fingerprint, tracked-tree checks, `RELEASE_GATE_EVIDENCE_MISSING`, `RELEASE_GATE_EVIDENCE_STALE`, `RELEASE_GATE_CANDIDATE_MISMATCH`, and `RELEASE_CANDIDATE_TREE_MISMATCH` | Intentional external gate evidence governed by REQ-M5-RELEASE-002 and ADR-0010 |
 | release-operation CLI/JSON | `release-operation authorize\|validate\|status`, schema version 2, full 40-to-64-character lowercase hexadecimal `candidateCommit`, `releaseTag`, `release` scope, and read-only workflow validation | Intentional candidate-bound release extension governed by REQ-M5-RELEASE-001, REQ-M5-COMPAT-013, ADR-0010, and ADR-0011 |
@@ -12731,7 +13466,7 @@ Responsibilities: Own the explicit additive maintenance lifecycle, dedicated rev
 Interfaces: `prepareSourceReview(request, dependencies)`, `approveSourceReview(scope, artifactSha256, approver, confirm)`, `recordSourceSupersession(scope, artifactSha256, approvalSha256, dependencies)`, `resumeSourceSupersession(scope, requestSha256, dependencies)`, `replaySourceSupersession(scope, requestSha256)`, `captureSourceSnapshot(inputs)`, `spliceCanonicalTestBlock(node, currentFile, oldBlock)`, `verifySyntheticPair(snapshot, pair, runner)`, `deriveSourceRequestDigest(review, approval)`, `completeSourceSuffix(journal, liveLeases)`, `sourceSupersessionSummary(ledger)`. Implementation responsibility belongs to `packages/analysis/src/tdd-source-supersession.ts`; DES-M5-011 exposes it, DES-M5-002 supplies typed current approval/lifecycle/trace/runner/candidate evaluators, and DES-M5-007 owns pure schema and linkage validators.
 Constraints: No general repair, adoption, waiver, force, skip-verification, direct projection editing, or historical chain regeneration option exists. Unknown/invalid pending data is never deleted or abandoned automatically. Admission requires current requirements/design approval; this proposed design is not authorization to execute the operation.
 Requirements: REQ-M5-COMPAT-013 REQ-M5-LIFECYCLE-006 REQ-M5-TDD-003
-ADRs: ADR-0003 ADR-0023 ADR-0035 ADR-0036
+ADRs: ADR-0003 ADR-0023 ADR-0035 ADR-0036 ADR-0039
 Depends-On: DES-M5-003 DES-M5-004 DES-M5-007 DES-M5-TDD-005
 
 ### Source review and manifest boundary
@@ -12755,6 +13490,129 @@ existing normalized test fingerprint. Store:
   Scratch roots are below the repository common Git directory at
   `musubix5/scratch/tdd-source/<operationKeySha256>/<invocationId>/old|new`,
   outside the scanned worktree, never an OS temporary directory.
+
+Git LFS uses the same logical source path and existing digest references.
+`publishSourceBlob`/`storeSourceBlob` stream-count/hash logical bytes before
+publication, retain the logical SHA-256 return value, and publish the logical
+worktree file durably. For bytes >=100,000,000, require the exact per-digest
+attribute below and standard LFS clean to stage a pointer; verify the
+staged pointer and matching local LFS object before claiming distributability.
+For smaller bytes, require raw representation. No clean result alone is
+authority and no chunk/manifests layout is introduced.
+Attribute preparation is an explicit tracked-source step before a frozen
+review/snapshot invocation, not a hidden mutation inside publish/read/fence.
+If a newly measured oversized digest is not declared, reject admission with
+the source path and attribute-preparation guidance; add/commit reviewed
+attributes, reevaluate currency and restart affected preparation as required.
+Do not silently change `.gitattributes` after an approved snapshot is frozen.
+
+The existing root `.gitattributes` is currently `* text=auto eol=lf` plus a
+source `-text` wildcard. Future approved implementation replaces the source
+default and adds sorted exact oversized digest lines after it, for example:
+
+```gitattributes
+.musubix/evidence/tdd-source/v1/blobs/* -text !filter !eol !working-tree-encoding !ident
+.musubix/evidence/tdd-source/v1/blobs/7fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c filter=lfs diff=lfs merge=lfs -text !eol !working-tree-encoding !ident
+```
+
+Do not use an all-blob LFS wildcard: it would convert small inputs and does
+not implement a size threshold. Run `['lfs','install','--local','--skip-repo']`
+only after inspecting effective config; never `--force` or overwrite an
+existing hook. Required LFS configuration is standard
+`filter.lfs.process=git-lfs filter-process`,
+`filter.lfs.clean=git-lfs clean -- %f`,
+`filter.lfs.smudge=git-lfs smudge -- %f`, `filter.lfs.required=true`.
+Verify the invoked Git LFS tool/version, not an arbitrary filter named lfs.
+Retain existing hooks; explicit verified LFS upload/remote verification is
+mandatory even if no pre-push hook is installed. Disallow custom transfers,
+pointer extensions and unreviewed `lfs.url`, `lfs.pushurl`,
+`remote.origin.lfsurl`/`lfspushurl` or `.lfsconfig` endpoint overrides.
+The batch/upload service must belong to the credential-free canonical
+repository origin; separately negotiated signed storage URLs are transport,
+not byte authority. No credential or raw endpoint is persisted in evidence.
+
+`verifySourceBlobGitAttributes` queries effective `text`, `filter`, `diff`,
+`merge`, `eol`, `working-tree-encoding`, `ident` with
+`['check-attr','-z','--stdin','text','filter','diff','merge','eol',
+'working-tree-encoding','ident']`, NUL-separated validated source paths and
+exactly seven response triplets per path. Both forms require `text=unset`,
+`eol/working-tree-encoding/ident=unspecified`; raw requires
+`filter=unspecified`, whereas LFS requires `filter/diff/merge=lfs`.
+Smaller new files may not have LFS attributes.
+System/global defaults are lower precedence than repo rules; deeper rules
+and common-dir info/attributes can override them, so inspect actual effective
+configuration including core.attributesFile. For immutable C, use a private
+temporary directory with initially absent index, `['read-tree',treeOid]`
+under its GIT_INDEX_FILE, then check-attr with `--cached`; do not read dirty
+worktree attributes or mutate the user's index. Unknown/duplicate/malformed
+triplets or forbidden effective values retain
+`TDD_SOURCE_ADMISSION_INVALID`/`snapshot-unverifiable`; failed query retains
+`TDD_SOURCE_IO_FAILED`/`execute`, matching actual storage implementation.
+Expose only source path and attribute name, never filter/config command text.
+
+Canonical pointer bytes are exactly:
+
+```text
+version https://git-lfs.github.com/spec/v1
+oid sha256:7fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c
+size 126595440
+```
+
+Include the final LF. The pointer parser accepts only these three lines with
+the requested lowercase 64-hex digest and decimal canonical size within
+100,000,000..1,073,741,824; maximum pointer input is 1,024 bytes.
+`['lfs','pointer','--check','--strict','--stdin']` may confirm tool conformance,
+but neither that command nor sniffing arbitrary raw bytes selects storage.
+Resolve storage through the exact commit/index entry plus effective attributes.
+A raw file whose bytes resemble a pointer remains raw when its path/attributes
+say raw; an LFS entry missing its canonical pointer is invalid.
+
+`readSourceBlobStream(root,digest,sink,{commit?})` uses immutable pointer/OID
+when commit-bound, or the validated current index for ordinary tracked reads.
+For not-yet-staged publisher inputs, verify the directly published regular
+logical file by size/digest and do not claim it is a committed LFS object.
+Resolve a regular no-symlink local media object under the verified effective
+LFS storage root and stream it, checking size and SHA-256 before accepting
+results. Default linked-worktree cache is common-dir
+`lfs/objects/<first2>/<next2>/<oid>`; discover/validate any approved lfs.storage
+override rather than assuming each worktree has its own cache. If hydrated
+worktree bytes are also used, stream-verify against the immutable pointer and
+reject disagreement; never prefer a corrupt worktree over verified cache.
+Missing local object is explicit unavailable until the separately permitted
+fetch step succeeds; read-only validation cannot silently download or execute
+arbitrary smudge. Strict pointer, cache and hydrated size/hash checks are
+independent of `git status` and LFS checkout exit.
+
+`readSourceBlob` remains the Buffer compatibility adapter, verifying the
+1,073,741,824-byte cap before allocation. Immutable candidate source readers
+and large executable materialization use streaming, not buffered cat-file
+of logical bytes. `sourceBlobVerification` fences immutable pointer/attribute
+identity plus both cache/hydrated file stamps and rechecks their full logical
+hashes at the verification boundary. Raw legacy reads retain existing
+logical-digest behavior; no pointer SHA is passed off as a logical digest.
+`materializeSourceEntry` streams verified logical bytes to a create-new
+sibling temporary, fsyncs, applies recorded original executable mode, and
+atomically renames only after full verification; failure removes only that
+temporary and never publishes/executes partial output.
+
+TDD source snapshot entries, source review hashes and immutable historical
+journal/TDD/approval bytes remain logical/audit evidence. Git candidate
+manifests and excluded-blob audit hashes remain exact Git bytes (pointers for
+LFS paths); DES-M5-012 verifies the pointer-to-logical closure explicitly.
+The Git and logical namespaces are never conflated or retroactively rehashed.
+Scoped historical migration belongs to DES-M5-012, not a storage reader.
+It requires new candidate bindings; no storage operation manufactures
+source terminal, Red/Green, order or approval credit.
+
+TEST-M5-TDD-SOURCE-LFS-001 covers raw/LFS boundary selection, exact pointer
+bytes, pointer-looking raw input, pointer-only and hydrated/cached modes,
+the real executable digest/size, unchanged logical snapshots, corruption
+and wrong-size/path/OID rejection, partial-output cleanup, executable mode,
+global/info/nested/config/endpoint conflicts, missing tool/object/auth/quota,
+native QA pre/post mutations hidden by metadata-only checks, and production
+rejection of loopback, local-path or custom-transfer endpoints when the explicit
+test dependency-injection seam is absent. These are
+planned tests, not existing implementation evidence.
 
 `artifact.json` has exactly `schemaVersion:1`, `kind:"tdd-source-review"`, `changeId`, `operationId`, `scope`,
 `mode`, `target`, `source`, `snapshot`, `reason`, `hunks`, `pair`, `replacement`,

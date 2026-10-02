@@ -5,7 +5,7 @@ import {
 } from './change-phase-checkpoint.js';
 export { reconcilePendingPhaseCheckpoints, unprojectedPhaseCheckpointSummaries } from './change-phase-checkpoint.js';
 import { error, ids, validateDesign, validateRequirements, type Diagnostic, type Requirement } from '../../domain/src/index.js';
-import { digest, exists, files, snapshot, within, readText } from './files.js';
+import { digest, exists, files, snapshot, within, readText, sharedImplementationPaths } from './files.js';
 import { loadTddEvidence, type TddEvidence } from './tdd.js';
 import { selectCurrentTddCycle } from './tdd-cycle-resolver.js';
 import { buildTrace } from './trace.js';
@@ -55,6 +55,10 @@ async function selectCurrentChangeTddCycleFromEvidence(
 }> {
   const generation = change.activeGeneration ?? change.generation ?? 1;
   const authoritativeCycles: TddEvidence['cycles'] = [];
+  const parallelStatuses = new Map<
+    string | null,
+    Awaited<ReturnType<typeof classifyParallelTddEvidence>>
+  >();
   for (const cycle of tdd.cycles) {
     if (!cycle.parallel) {
       authoritativeCycles.push(cycle);
@@ -71,6 +75,7 @@ async function selectCurrentChangeTddCycleFromEvidence(
       purpose,
       evidenceRoot,
     });
+    parallelStatuses.set(cycle.cycleId ?? null, status);
     if (status === 'pass') authoritativeCycles.push(cycle);
   }
   const authoritative = selectCurrentTddCycle(change, requirementId, {
@@ -81,14 +86,17 @@ async function selectCurrentChangeTddCycleFromEvidence(
 
   const resolution = selectCurrentTddCycle(change, requirementId, tdd);
   if (!resolution.selected) return { ...resolution, parallelStatus: null };
-  const parallelStatus = await classifyParallelTddEvidence(root, {
-    changeId: change.changeId,
-    generation,
-    requirementId,
-    cycleId: resolution.selected.cycle.cycleId ?? null,
-    purpose,
-    evidenceRoot,
-  });
+  const selectedCycleId = resolution.selected.cycle.cycleId ?? null;
+  const parallelStatus = parallelStatuses.has(selectedCycleId)
+    ? parallelStatuses.get(selectedCycleId)!
+    : await classifyParallelTddEvidence(root, {
+        changeId: change.changeId,
+        generation,
+        requirementId,
+        cycleId: selectedCycleId,
+        purpose,
+        evidenceRoot,
+      });
   return parallelStatus === 'PARALLEL_TDD_UNCONSUMED'
     ? { ...resolution, selected: null, parallelStatus }
     : { ...resolution, parallelStatus };
@@ -110,6 +118,7 @@ async function requirementImplementationFingerprints(
   requirementIds: string[],
   trace: Awaited<ReturnType<typeof buildTrace>>,
 ): Promise<NonNullable<ChangeFingerprints['requirementImplementations']>> {
+  const sharedPaths = await sharedImplementationPaths(root);
   const { graph } = await indexGraph(root, { persist: false, refresh: false });
   const adjacency = prepareGraphAdjacency(graph);
   const nodes = new Map(trace.nodes.map((node) => [node.id, node]));
@@ -134,7 +143,7 @@ async function requirementImplementationFingerprints(
         queue.push(dependency);
       }
     }
-    const paths = [...relevant].sort();
+    const paths = [...new Set([...relevant, ...sharedPaths])].sort();
     result[requirementId] = { paths, fingerprints: await snapshot(root, paths) };
   }
   return result;
@@ -148,7 +157,10 @@ async function currentFingerprints(
 ): Promise<ChangeFingerprints> {
   const paths = await files(root);
   const trace = await buildTrace(root, persistTrace);
-  const codePaths = trace.nodes.filter((node) => node.kind === 'code').map((node) => node.path);
+  const codePaths = [...new Set([
+    ...trace.nodes.filter((node) => node.kind === 'code').map((node) => node.path),
+    ...await sharedImplementationPaths(root),
+  ])].sort();
   const testPaths = trace.nodes.filter((node) => node.kind === 'test').map((node) => node.path);
   const tddPath = '.musubix/evidence/tdd.json';
   return {
@@ -781,8 +793,8 @@ export function recordedAtIntegrityDiagnostics(
 }
 
 /** @id CODE-M5-CHANGE-CURRENT-001
- * @implements REQ-M5-EVIDENCE-005 REQ-M5-TDD-001 REQ-M5-TDD-002 REQ-M5-TDD-003 REQ-M5-TDD-004 REQ-M5-BOOTSTRAP-001 REQ-M5-BOOTSTRAP-002 REQ-M5-BOOTSTRAP-003 REQ-M5-BOOTSTRAP-004 REQ-M5-COMPAT-001 REQ-M5-COMPAT-013
- * @design DES-M5-007 DES-M5-011 DES-M5-013
+ * @implements REQ-M5-EVIDENCE-005 REQ-M5-LIFECYCLE-006 REQ-M5-TDD-001 REQ-M5-TDD-002 REQ-M5-TDD-003 REQ-M5-TDD-004 REQ-M5-BOOTSTRAP-001 REQ-M5-BOOTSTRAP-002 REQ-M5-BOOTSTRAP-003 REQ-M5-BOOTSTRAP-004 REQ-M5-COMPAT-001 REQ-M5-COMPAT-013
+ * @design DES-M5-005 DES-M5-007 DES-M5-011 DES-M5-013
  */
 export async function validateChangeEvidence(
   root: string,
@@ -818,6 +830,29 @@ export async function validateChangeEvidence(
     };
   }
   const diagnostics: Diagnostic[] = [...waiverDiagnostics];
+  const currentCycleSelections = new Map<
+    string,
+    ReturnType<typeof selectCurrentChangeTddCycleFromEvidence>
+  >();
+  const currentCycleFor = (
+    change: ChangeRecord,
+    requirementId: string,
+    currentTdd: TddEvidence,
+  ): ReturnType<typeof selectCurrentChangeTddCycleFromEvidence> => {
+    const key = `${change.changeId}\0${requirementId}`;
+    const existing = currentCycleSelections.get(key);
+    if (existing) return existing;
+    const selection = selectCurrentChangeTddCycleFromEvidence(
+      root,
+      authoritativeEvidenceRoot,
+      change,
+      requirementId,
+      currentTdd,
+      purpose,
+    );
+    currentCycleSelections.set(key, selection);
+    return selection;
+  };
   for (const change of evidence.changes) {
     diagnostics.push(...(await inspectChangeBatchCheckpoints(authoritativeEvidenceRoot, change)).diagnostics);
   }
@@ -1000,9 +1035,7 @@ export async function validateChangeEvidence(
     const selectedBatchScopes = new Set<string>();
     if (tdd) {
       for (const requirementId of change.requirementIds) {
-        const selected = (await selectCurrentChangeTddCycleFromEvidence(
-          root, authoritativeEvidenceRoot, change, requirementId, tdd, purpose,
-        )).selected?.batch;
+        const selected = (await currentCycleFor(change, requirementId, tdd)).selected?.batch;
         if (selected) selectedBatchScopes.add(selected.scopeId ?? batchKey(selected.requirementIds));
       }
     }
@@ -1044,9 +1077,7 @@ export async function validateChangeEvidence(
     diagnostics.push(...recordedAtIntegrityDiagnostics(change.changeId, collectRecordedAtEntries(change)));
     for (const requirementId of change.requirementIds) {
       const resolution = tdd
-        ? await selectCurrentChangeTddCycleFromEvidence(
-            root, authoritativeEvidenceRoot, change, requirementId, tdd, purpose,
-          )
+        ? await currentCycleFor(change, requirementId, tdd)
         : { selected: null };
       const batch = resolution.selected?.batch ?? batchFor(batches, requirementId);
       const red = batch?.red;

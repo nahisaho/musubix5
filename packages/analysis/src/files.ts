@@ -38,6 +38,31 @@ export async function exists(path: string): Promise<boolean> {
   }
 }
 
+/** @id CODE-M5-SHARED-IMPLEMENTATION-PATHS-001
+ * @implements REQ-M5-LIFECYCLE-006
+ * @design DES-M5-005 DES-M5-011 DES-M5-022
+ */
+export async function sharedImplementationPaths(root: string): Promise<string[]> {
+  const path = '.musubix/config.json';
+  const absolute = within(root, path);
+  let status;
+  try {
+    status = await lstat(absolute);
+  } catch (cause) {
+    if ((cause as NodeJS.ErrnoException).code === 'ENOENT') return [];
+    throw cause;
+  }
+  if (!status.isFile() || status.isSymbolicLink()) {
+    throw new Error('Change fingerprint input .musubix/config.json must be a readable regular file.');
+  }
+  try {
+    await readFile(absolute);
+  } catch {
+    throw new Error('Change fingerprint input .musubix/config.json must be a readable regular file.');
+  }
+  return [path];
+}
+
 async function isRegularFile(path: string): Promise<boolean> {
   try {
     return (await lstat(path)).isFile();

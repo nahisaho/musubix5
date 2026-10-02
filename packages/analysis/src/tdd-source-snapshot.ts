@@ -113,10 +113,30 @@ export async function captureSourceSnapshot(
   const manifestBytes = new Map<string, Buffer>();
   const cachedFiles = previous ? snapshotFiles.get(previous) : undefined;
   const capturedFiles = new Map<string, CachedSourceFile>();
-  const persist = async (bytes: Buffer): Promise<string> => {
+  let activeFiles = 0;
+  const waitingFiles: Array<() => void> = [];
+  const boundedFile = async <T>(operation: () => Promise<T>): Promise<T> => {
+    if (activeFiles === 32) await new Promise<void>((accept) => waitingFiles.push(accept));
+    else activeFiles++;
+    try { return await operation(); }
+    finally {
+      const next = waitingFiles.shift();
+      if (next) next();
+      else activeFiles--;
+    }
+  };
+  const publications = new Map<string, Promise<string>>();
+  const persist = (bytes: Buffer): Promise<string> => {
     const expected = sha256(bytes);
-    if (await store(bytes) !== expected) sourceAdmissionFailure('snapshot-unverifiable');
-    return expected;
+    let publication = publications.get(expected);
+    if (!publication) {
+      publication = (async () => {
+        if (await store(bytes) !== expected) sourceAdmissionFailure('snapshot-unverifiable');
+        return expected;
+      })();
+      publications.set(expected, publication);
+    }
+    return publication;
   };
   const include = async (path: string, physical: string, role: SourceEntryRole, runtime = false): Promise<void> => {
     if (!sourcePath(path)) sourceAdmissionFailure('snapshot-unverifiable');
@@ -158,15 +178,17 @@ export async function captureSourceSnapshot(
       if (cached.manifestBytes) manifestBytes.set(path, cached.manifestBytes);
       return;
     }
-    const bytes = await readFile(physical);
-    const after = await lstat(physical, { bigint: true });
-    if (stat.ino !== after.ino || stat.size !== after.size || stat.mtimeNs !== after.mtimeNs
-      || stat.ctimeNs !== after.ctimeNs) sourceAdmissionFailure('input-drift');
-    const digest = await persist(bytes);
-    entries.set(path, { path, mode: stat.mode & 0o111n ? '100755' : '100644', sha256: digest, role });
-    const packageInput = path.endsWith('/package.json') || ['package.json', 'package-lock.json'].includes(path);
-    capturedFiles.set(physical, { stamp, sha256: digest, ...(packageInput ? { manifestBytes: bytes } : {}) });
-    if (packageInput) manifestBytes.set(path, bytes);
+    await boundedFile(async () => {
+      const bytes = await readFile(physical);
+      const after = await lstat(physical, { bigint: true });
+      if (stat.ino !== after.ino || stat.size !== after.size || stat.mtimeNs !== after.mtimeNs
+        || stat.ctimeNs !== after.ctimeNs) sourceAdmissionFailure('input-drift');
+      const digest = await persist(bytes);
+      entries.set(path, { path, mode: stat.mode & 0o111n ? '100755' : '100644', sha256: digest, role });
+      const packageInput = path.endsWith('/package.json') || ['package.json', 'package-lock.json'].includes(path);
+      capturedFiles.set(physical, { stamp, sha256: digest, ...(packageInput ? { manifestBytes: bytes } : {}) });
+      if (packageInput) manifestBytes.set(path, bytes);
+    });
   };
   for (const path of [...paths].sort(byteSort)) {
     if (excludedSourcePath(path)) continue;

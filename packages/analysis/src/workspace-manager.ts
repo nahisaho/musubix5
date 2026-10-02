@@ -1,7 +1,20 @@
 import { execFile } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { createReadStream } from 'node:fs';
 import { lstat, mkdir, open, readFile, readlink, rename } from 'node:fs/promises';
 import { dirname, relative, resolve, sep } from 'node:path';
 import { promisify } from 'node:util';
+import { verifyCandidateReachableObjectSizes, verifyCandidateLfsClosure } from './candidate-git-distribution.js';
+import { sourceBlobAttributes, readSourceBlobStream, parseSourceLfsPointer } from './tdd-source-lfs.js';
+export {
+  verifyCandidateReachableObjectSizes, readCandidateSourceBlobStream, verifyCandidateLfsClosure,
+  type CandidateLfsClosureDependencies,
+} from './candidate-git-distribution.js';
+export {
+  planSourceLfsMigration, verifySourceLfsMigration, canonicalSourceLfsMigrationReceipt,
+  verifySourceLfsMigrationReceipt, publishSourceLfsMigrationReceipt,
+  type SourceLfsMigrationRequest, type SourceLfsMigrationPlan, type SourceLfsMigrationVerificationReceipt,
+} from './source-lfs-migration.js';
 import { canonicalBytes, canonicalRepositoryIdentity, sha256 } from './canonical.js';
 import { resolveChangeContext, type ChangeContextSelection } from './change-generation.js';
 import { parsePorcelainV1Z } from './git-status.js';
@@ -459,6 +472,8 @@ export async function createRegisteredCandidateWorkspace(
   if (!/^[a-f0-9]{40,64}$/.test(baseCommit)) {
     throw new Error('CANDIDATE_COMMIT_UNREACHABLE: candidate creation requires an immutable HEAD.');
   }
+  await verifyCandidateReachableObjectSizes(root, baseCommit);
+  await verifyCandidateLfsClosure(root, baseCommit, 'local');
   const journal = await verifyJournal(root);
   const priorCreationEpochs = journal.flatMap((record) => {
     if (record.stream !== 'normal'
@@ -616,6 +631,8 @@ export async function createQaWorkspace(root: string, input: CandidateWorkspace 
   if (await gitRaw(input.path, ['status', '--porcelain=v1', '-z', '--untracked-files=all'])) {
     throw new Error('WORKSPACE_CANDIDATE_DIRTY: QA requires a committed candidate snapshot.');
   }
+  await verifyCandidateReachableObjectSizes(root, input.candidateCommit);
+  await verifyCandidateLfsClosure(root, input.candidateCommit, 'local');
   const commonDirectory = await gitCommonDirectory(root);
   const relativePath = `musubix5/workspaces/${input.changeId}/qa-${input.candidateCommit.slice(0, 12)}`;
   const path = resolve(commonDirectory, relativePath);
@@ -627,6 +644,9 @@ export async function createQaWorkspace(root: string, input: CandidateWorkspace 
     }
   } else {
     await git(root, ['worktree', 'add', '--quiet', '--detach', path, input.candidateCommit]);
+  }
+  if (!await compareTrackedTree(path, input.candidateCommit, 'pre')) {
+    throw new Error('RELEASE_CANDIDATE_TREE_MISMATCH: QA checkout differs from its immutable candidate.');
   }
   const candidateId = `candidate:${input.candidateCommit}`;
   const record = await appendJournalRecord(root, {
@@ -695,6 +715,8 @@ export async function persistCandidateSnapshot(
       throw new Error('APPROVAL_CANDIDATE_UNAVAILABLE: candidate commit is not reachable from its branch.');
     }
     const repositoryId = await repositoryIdentity(root);
+    await verifyCandidateReachableObjectSizes(root, commit);
+    await verifyCandidateLfsClosure(root, commit, 'local');
     const manifest = await candidateTreeManifest(root, commit);
     return { commit, branch, repositoryId, manifest };
   };
@@ -1233,6 +1255,77 @@ export async function readCandidateBlob(
 ): Promise<Buffer> {
   await git(root, ['cat-file', '-e', `${commit}^{commit}`]);
   return gitBuffer(root, ['cat-file', 'blob', objectId]);
+}
+
+/** @id CODE-M5-CANDIDATE-LOGICAL-TREE-COMPARISON-001
+ * @implements REQ-M5-LIFECYCLE-006 REQ-M5-RELEASE-002
+ * @design DES-M5-012 DES-M5-023
+ */
+export async function compareTrackedTree(
+  root: string, commit: string, phase: 'pre' | 'post',
+): Promise<boolean> {
+  if (!/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(commit) || !['pre', 'post'].includes(phase)) {
+    throw new Error('CANDIDATE_GIT_REF_INVALID: invalid tree comparison.');
+  }
+  const prefix = '.musubix/evidence/tdd-source/v1/blobs/';
+  const entries = await listCandidateEntries(root, commit);
+  const digests = entries.filter((entry) => entry.nfcPath.startsWith(prefix))
+    .map((entry) => entry.nfcPath.slice(prefix.length));
+  const attributes = await sourceBlobAttributes(root, digests, commit);
+  const allowed = (path: string) => path === '.musubix/trace/index.json'
+    || /^\.musubix\/features\/[^/]+\/trace\.json$/.test(path)
+    || /^\.musubix\/evidence\/(?:formal|model-correspondence|mutation|performance|quality)\.json$/.test(path)
+    || path.startsWith('.musubix/evidence/native/test/');
+  for (const entry of entries) {
+    if (phase === 'post' && allowed(entry.nfcPath)) continue;
+    const path = resolve(root, entry.nfcPath);
+    let stat;
+    try { stat = await lstat(path); }
+    catch (error) {
+      if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') return false;
+      throw error;
+    }
+    const digest = entry.nfcPath.slice(prefix.length);
+    if (entry.nfcPath.startsWith(prefix) && attributes.get(digest)?.get('filter') === 'lfs') {
+      const pointer = parseSourceLfsPointer(await readCandidateBlob(root, commit, entry.objectId), digest);
+      if (!stat.isFile() || stat.isSymbolicLink() || stat.size !== pointer.size ||
+        (stat.mode & 0o111 ? '100755' : '100644') !== entry.gitMode) return false;
+      await readSourceBlobStream(root, digest, () => {}, { commit });
+      continue;
+    }
+    if (entry.objectType !== 'blob') throw new Error('APPROVAL_GITLINK_UNSUPPORTED: candidate tree entry.');
+    const hash = createHash(entry.objectId.length === 64 ? 'sha256' : 'sha1');
+    if (entry.gitMode === '120000') {
+      if (!stat.isSymbolicLink()) return false;
+      const bytes = Buffer.from(await readlink(path));
+      hash.update(`blob ${bytes.length}\0`).update(bytes);
+    } else {
+      if (!stat.isFile() || stat.isSymbolicLink() ||
+        (stat.mode & 0o111 ? '100755' : '100644') !== entry.gitMode) return false;
+      hash.update(`blob ${stat.size}\0`);
+      for await (const bytes of createReadStream(path)) hash.update(bytes);
+      const after = await lstat(path);
+      if (after.ino !== stat.ino || after.size !== stat.size ||
+        after.mtimeMs !== stat.mtimeMs || after.ctimeMs !== stat.ctimeMs) return false;
+    }
+    if (hash.digest('hex') !== entry.objectId) return false;
+  }
+  const expected = new Map(entries.map((entry) => [entry.nfcPath, entry]));
+  const index = await gitRaw(root, ['ls-files', '--stage', '-z']);
+  for (const row of index.split('\0').filter(Boolean)) {
+    const match = /^([0-7]{6}) ([a-f0-9]{40}|[a-f0-9]{64}) 0\t(.+)$/.exec(row);
+    if (!match) return false;
+    const path = match[3]!;
+    const entry = expected.get(path);
+    if (!entry) {
+      if (phase !== 'post' || !allowed(path)) return false;
+      continue;
+    }
+    expected.delete(path);
+    if (phase === 'post' && allowed(path)) continue;
+    if (entry.gitMode !== match[1] || entry.objectId !== match[2]) return false;
+  }
+  return [...expected.keys()].every((path) => phase === 'post' && allowed(path));
 }
 
 /** @id CODE-M5-WORKTREE-003

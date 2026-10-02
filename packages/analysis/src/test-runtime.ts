@@ -1031,6 +1031,9 @@ export async function runTestRuntimeCommand(
     execution = await runner(entry.executionBinding.resolvedInvocation.command,
       entry.executionBinding.resolvedInvocation.args, { ...options, env: entry.env });
   }
+  if (execution.status !== 'completed') {
+    invalid('acknowledgment-binding', `incomplete command (${execution.status}); exit code ${execution.exitCode}; duration ${execution.durationMs} ms`);
+  }
   const runs: TestRuntimeProvenance['runs'] = [];
   for (const entry of prepared) {
     let native = execution;
@@ -1038,9 +1041,10 @@ export async function runTestRuntimeCommand(
     if (command.name === 'codegraph-tests') {
       const result = object(JSON.parse((await regular(entry.resultPath)).toString('utf8')), 'acknowledgment-binding',
         ['status', 'exitCode', 'durationMs', 'nativeReportBase64']);
-      if (!['completed', 'missing', 'timeout', 'error'].includes(String(result.status))
+      const status = result.status;
+      if (status !== 'completed' && status !== 'missing' && status !== 'timeout' && status !== 'error'
         || !Number.isSafeInteger(result.durationMs)) invalid('acknowledgment-binding');
-      native = { ...execution, status: result.status === 'completed' ? 'completed' : 'error',
+      native = { ...execution, status,
         exitCode: result.exitCode === null ? null : Number(result.exitCode), durationMs: Number(result.durationMs) };
       report = result.nativeReportBase64 === null ? null : base64(result.nativeReportBase64);
     } else {
@@ -1051,9 +1055,18 @@ export async function runTestRuntimeCommand(
         }
       }
     }
-    const ackBytes = await regular(join(entry.run, 'ack.json'));
+    if (native.status !== 'completed') {
+      invalid('acknowledgment-binding', `incomplete command (${native.status}); exit code ${native.exitCode}; duration ${native.durationMs} ms`);
+    }
+    let ackBytes: Buffer;
+    try {
+      ackBytes = await regular(join(entry.run, 'ack.json'));
+    } catch (cause) {
+      if (errno(cause, 'ENOENT')) invalid('acknowledgment-binding', 'missing acknowledgment');
+      throw cause;
+    }
     const ack = blobSchema(JSON.parse(ackBytes.toString('utf8')));
-    if (ack.complete !== true || native.status !== 'completed') invalid('acknowledgment-binding', 'incomplete command');
+    if (ack.complete !== true) invalid('acknowledgment-binding', 'incomplete command');
     const acknowledgmentSha256 = await durableBlob(transport, ackBytes, process.platform);
     const resultSha256 = await durableBlob(transport, canonicalBytes({
       schemaVersion: 1, kind: 'test-runtime-result-v1', runId: entry.runId, requestSha256: entry.requestSha256,

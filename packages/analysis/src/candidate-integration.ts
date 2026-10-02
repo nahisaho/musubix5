@@ -24,6 +24,7 @@ import {
   sourceMaterializationTailValid, readSourceReview, readSourceApproval, type VerifiedSourceEvidence,
 } from './tdd-source-supersession.js';
 import { sourceEvidencePrefix } from './tdd-source-storage.js';
+import { verifyCandidateReachableObjectSizes, verifyCandidateLfsClosure } from './candidate-git-distribution.js';
 import type { TddEvidence } from './tdd-types.js';
 import {
   integrationWorktreeRelativePath,
@@ -1911,6 +1912,8 @@ export async function finalizeCandidateIntegration(
     };
     const finish = async (recovered: PersistedIntegrationAttempt, resumed: boolean) => {
       const commit = recovered.integrationCommit!;
+      await verifyCandidateReachableObjectSizes(root, commit);
+      await verifyCandidateLfsClosure(root, commit, 'local');
       await refreshControlPreservingJournal(root, recovered.startingDefaultCommit, commit, authorize,
         recovered.changeIds, preparedSource);
       for (const changeId of recovered.changeIds) {

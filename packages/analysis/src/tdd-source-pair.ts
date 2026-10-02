@@ -13,6 +13,7 @@ import { parseMusubixTestReport } from './test-report.js';
 import { sourceAdmissionFailure, type spliceCanonicalTestBlock } from './tdd-source-review.js';
 import { recheckSourceSnapshot, sourceOutputs, type CapturedSourceSnapshot, type SourceSnapshotEntry } from './tdd-source-snapshot.js';
 import { readSourceBlob, storeSourceBlob } from './tdd-source-storage.js';
+import { sourceBlobReadSession } from './tdd-source-lfs.js';
 import type { SourcePair, SourceRun } from './tdd-source-types.js';
 import { sourcePath } from './tdd-source-ledger.js';
 import { SourceOperationError } from './tdd-source-diagnostics.js';
@@ -67,17 +68,17 @@ async function verifyInputs(root: string, expected: SourceSnapshotEntry[], runti
 
 async function materialize(root: string, blobs: string, entries: SourceSnapshotEntry[]): Promise<void> {
   await mkdir(root, { recursive: false });
+  const source = sourceBlobReadSession(blobs);
   await mapWithConcurrency(entries, 32, async (entry) => {
     if (entry.mode === 'missing') return;
     const path = resolve(root, entry.path);
     await mkdir(dirname(path), { recursive: true });
-    const bytes = await readSourceBlob(blobs, entry.sha256!);
-    if (entry.mode === '120000') await symlink(bytes.toString('utf8'), path);
+    if (entry.mode === '120000') await symlink((await readSourceBlob(blobs, entry.sha256!)).toString('utf8'), path);
     else {
-      await writeFile(path, bytes, { flag: 'wx' });
-      await chmod(path, entry.mode === '100755' ? 0o755 : 0o644);
+      await source.materialize(entry.sha256!, path, entry.mode);
     }
   });
+  await source.recheck();
   for (const directory of ['home', 'config', 'cache', 'tmp', 'git-template']) {
     await mkdir(resolve(root, '.run-tmp', directory), { recursive: true });
   }

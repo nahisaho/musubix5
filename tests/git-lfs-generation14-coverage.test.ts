@@ -1,0 +1,182 @@
+import { execFileSync } from 'node:child_process';
+import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
+import { afterEach, expect, it, vi } from 'vitest';
+import { sha256 } from '../packages/analysis/src/canonical.js';
+import { cycles, indexGraph } from '../packages/analysis/src/graph.js';
+import { buildReleaseCandidateContent } from '../packages/analysis/src/release-manifest.js';
+import { sourceLfsPointerBytes } from '../packages/analysis/src/tdd-source-storage.js';
+import { sanitizeWorkflowLogFile } from '../packages/analysis/src/workflow.js';
+import * as workspace from '../packages/analysis/src/workspace-manager.js';
+// Generation-19 chronology replay marker; no executable tokens changed.
+
+const project = process.cwd();
+const prefix = '.musubix/evidence/tdd-source/v1/blobs/';
+const digest = '7fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c';
+const size = 126_595_440;
+const owned: string[] = [];
+const git = (root: string, args: string[]) => execFileSync('git', ['-C', root, ...args], {
+  encoding: 'utf8', shell: false, stdio: ['ignore', 'pipe', 'pipe'],
+}).trim();
+
+afterEach(async () => {
+  vi.restoreAllMocks();
+  for (const root of owned.splice(0)) await rm(root, { recursive: true, force: true });
+});
+
+async function fixture(): Promise<string> {
+  const parent = await mkdtemp(join(tmpdir(), 'musubix5-g14-lfs-coverage-'));
+  owned.push(parent);
+  const root = join(parent, 'repository');
+  await mkdir(root);
+  git(root, ['init', '--quiet']);
+  git(root, ['config', 'user.name', 'LFS fixture']);
+  git(root, ['config', 'user.email', 'lfs-fixture@example.invalid']);
+  await writeFile(join(root, 'README.txt'), 'isolated fixture\n');
+  git(root, ['add', '--', 'README.txt']);
+  git(root, ['commit', '--quiet', '-m', 'protected fixture baseline']);
+  return root;
+}
+
+/** @id TEST-M5-LFS-APPROVAL-BINDING-001
+ * @verifies REQ-M5-APPROVAL-007
+ * @design DES-M5-006 DES-M5-012 DES-M5-023
+ */
+it('TEST-M5-LFS-APPROVAL-BINDING-001 binds pointer Git bytes and excludes foreign logical-source result envelopes', async () => {
+  const root = await fixture();
+  git(root, ['remote', 'add', 'origin', 'https://github.com/fixture/source.git']);
+  git(root, ['lfs', 'install', '--local', '--skip-repo']);
+  await mkdir(join(root, prefix), { recursive: true });
+  await copyFile(resolve(project, prefix + digest), join(root, prefix + digest));
+  await writeFile(join(root, '.gitattributes'),
+    `${prefix}${digest} filter=lfs diff=lfs merge=lfs -text !eol !working-tree-encoding !ident\n`);
+  const foreign = '.musubix/evidence/lfs-result.json';
+  await writeFile(join(root, foreign), JSON.stringify({ result: { changeId: 'CHANGE-9999', sourceDigest: digest } }));
+  git(root, ['add', '--', '.gitattributes', prefix + digest, foreign]);
+  git(root, ['commit', '--quiet', '-m', 'immutable pointer and source envelope']);
+  const commit = git(root, ['rev-parse', 'HEAD']);
+  // Only candidate selection is injected; no snapshot, approval or release is created.
+  vi.spyOn(workspace, 'resolveCandidateSnapshot').mockResolvedValue({
+    snapshotId: 'fixture-selection', changeId: 'CHANGE-0017', generation: 14,
+    repositoryId: 'repository:fixture', branch: 'fixture', commit,
+    artifactManifestDigest: null, createdAt: null, order: 1, journalPath: '', replayed: false, guidance: 'fixture',
+  });
+  const pointer = sourceLfsPointerBytes(digest, size);
+  const entry = (await workspace.listCandidateEntries(root, commit)).find((value) => value.nfcPath === prefix + digest)!;
+  expect(await workspace.readCandidateBlob(root, commit, entry.objectId)).toEqual(pointer);
+  const manifest = await buildReleaseCandidateContent(root, 'CHANGE-0017');
+  expect(manifest.artifacts[prefix + digest]).toBe(sha256(pointer));
+  expect(manifest.artifacts[prefix + digest]).not.toBe(digest);
+  expect(manifest.artifacts).not.toHaveProperty(foreign);
+  expect(manifest.exclusions).toContainEqual({
+    path: foreign, reason: 'foreign-change-evidence',
+    sha256: sha256(await readFile(join(root, foreign))),
+  });
+  await writeFile(join(root, prefix + digest), 'mutable worktree is not manifest authority\n');
+  expect(await buildReleaseCandidateContent(root, 'CHANGE-0017')).toEqual(manifest);
+  const cache = join(root, '.git/lfs/objects', digest.slice(0, 2), digest.slice(2, 4), digest);
+  await writeFile(cache, 'corrupt logical source\n');
+  await expect(buildReleaseCandidateContent(root, 'CHANGE-0017')).rejects.toThrow(/cache-integrity/);
+}, 180_000);
+
+/** @id TEST-M5-LFS-WORKFLOW-INPUT-001
+ * @verifies REQ-M5-EVIDENCE-007
+ * @design DES-M5-018
+ */
+it('TEST-M5-LFS-WORKFLOW-INPUT-001 sanitizes tracked LFS-related inputs without deriving terminal proof from pointers', async () => {
+  const root = await fixture();
+  await mkdir(join(root, '.musubix/evidence'), { recursive: true });
+  const input = join(root, '.musubix/evidence/lfs-workflow-source.jsonl');
+  const raw = Buffer.from([
+    { type: 'session.resume', timestamp: '2026-01-01T00:00:00.000Z' },
+    { type: 'assistant.message', timestamp: '2026-01-01T00:00:01.000Z',
+      data: { content: sourceLfsPointerBytes(digest, size).toString() } },
+    { type: 'tool.execution_start', timestamp: '2026-01-01T00:00:02.000Z',
+      data: { toolCallId: 'fixture-skill', toolName: 'skill', arguments: { skill: 'sdd-change', sourceDigest: digest } } },
+    { type: 'tool.execution_complete', timestamp: '2026-01-01T00:00:03.000Z',
+      data: { toolCallId: 'fixture-skill', success: true, output: { sourceDigest: digest } } },
+  ].map((value) => JSON.stringify(value)).join('\n') + '\n');
+  await writeFile(input, raw);
+  git(root, ['add', '--', '.musubix/evidence/lfs-workflow-source.jsonl']);
+  git(root, ['commit', '--quiet', '-m', 'tracked source fixture']);
+  const output = '.musubix/cache/fixture.safe.jsonl';
+  const result = await sanitizeWorkflowLogFile(root, input, output, undefined, undefined, undefined, undefined, 'compatible');
+  const safe = await readFile(join(root, output));
+  expect(result).toMatchObject({
+    mode: 'compatible', rawSourceSha256: sha256(raw), safeTranscriptSha256: sha256(safe),
+    inputEvents: 4, outputEvents: 3, eligibleEvents: 3, retainedEligibleEvents: 3,
+  });
+  expect(result.sessionId).toBeUndefined();
+  expect(safe.toString()).not.toContain(digest);
+  expect(safe.toString()).not.toContain('"type":"result"');
+  await writeFile(join(root, '.musubix/evidence/workflow.json'), '{"schemaVersion":1,"events":[]}\n');
+  const evidence = await readFile(join(root, '.musubix/evidence/workflow.json'));
+  await writeFile(input, sourceLfsPointerBytes(digest, size));
+  await expect(sanitizeWorkflowLogFile(root, input, output, undefined, undefined, undefined, undefined, 'compatible'))
+    .rejects.toThrow(/WORKFLOW_SANITIZE_INVALID/);
+  expect(await readFile(join(root, output))).toEqual(safe);
+  expect(await readFile(join(root, '.musubix/evidence/workflow.json'))).toEqual(evidence);
+  await writeFile(input, Buffer.from([0xff, 0x0a]));
+  await expect(sanitizeWorkflowLogFile(root, input, output, undefined, undefined, undefined, undefined, 'compatible'))
+    .rejects.toThrow(/WORKFLOW_SANITIZE_INVALID/);
+  await writeFile(input, raw);
+  await expect(sanitizeWorkflowLogFile(root, input, output, undefined, undefined, 32, undefined, 'compatible'))
+    .rejects.toThrow(/WORKFLOW_TRANSCRIPT_SIZE/);
+  expect(await readFile(join(root, output))).toEqual(safe);
+});
+
+/** @id TEST-M5-LFS-GRAPH-OWNERSHIP-001
+ * @verifies REQ-M5-GRAPH-003
+ * @design DES-M5-GRAPH-002 DES-M5-GRAPH-004
+ */
+it('TEST-M5-LFS-GRAPH-OWNERSHIP-001 labels compiled analysis exports and LFS declaration ownership without a cycle', async () => {
+  const before = await readFile(resolve(project, '.musubix/cache/codegraph.json'));
+  const graph = await indexGraph(project, false);
+  expect(graph.entrypoints).toContainEqual({
+    manifest: 'package.json', field: 'exports../analysis', path: 'packages/analysis/src/index.ts',
+  });
+  const labels = [
+    ['parseSourceLfsPointer', 'packages/analysis/src/tdd-source-lfs.ts'],
+    ['verifyCandidateLfsClosure', 'packages/analysis/src/candidate-git-distribution.ts'],
+    ['planSourceLfsMigration', 'packages/analysis/src/source-lfs-migration.ts'],
+  ];
+  for (const [name, path] of labels) {
+    expect(graph.symbols.filter((symbol) => symbol.name === name && symbol.path === path)).toHaveLength(1);
+    expect(graph.calls.some((call) => call.target?.startsWith(`${path}#${name}@`))).toBe(true);
+  }
+  expect(cycles(graph)).toEqual([]);
+  expect(await readFile(resolve(project, '.musubix/cache/codegraph.json'))).toEqual(before);
+}, 180_000);
+
+/** @id TEST-M5-LFS-MIGRATION-WORKSPACE-001
+ * @verifies REQ-M5-WORKTREE-004
+ * @design DES-M5-012
+ */
+it('TEST-M5-LFS-MIGRATION-WORKSPACE-001 refuses a linked migration workspace without changing the immutable baseline', async () => {
+  const root = await fixture();
+  const baseline = git(root, ['rev-parse', 'HEAD']);
+  git(root, ['branch', 'published', baseline]);
+  await mkdir(join(root, prefix), { recursive: true });
+  await copyFile(resolve(project, prefix + digest), join(root, prefix + digest));
+  git(root, ['add', '--', prefix + digest]);
+  git(root, ['commit', '--quiet', '-m', 'unpublished raw fixture']);
+  const sourceTip = git(root, ['rev-parse', 'HEAD']);
+  const linked = join(dirname(root), 'linked');
+  git(root, ['worktree', 'add', '--quiet', '--detach', linked, sourceTip]);
+  const request = {
+    changeId: 'CHANGE-0017', generation: 14, operationId: 'isolated-fixture', actor: 'fixture',
+    sourceTip, protectedRefs: [{ ref: 'refs/heads/published', commit: baseline }],
+    migrationRef: 'refs/heads/owned-migration',
+    paths: [{ path: prefix + digest, digest, size }], mapPath: 'owned-map.csv',
+  };
+  const before = git(root, ['show-ref']);
+  await expect(workspace.planSourceLfsMigration(linked, request))
+    .rejects.toThrow(/TDD_SOURCE_LFS_MIGRATION_CONFLICT: raw-object-binding/);
+  expect(git(root, ['show-ref'])).toBe(before);
+  expect(git(linked, ['rev-parse', 'HEAD'])).toBe(sourceTip);
+  expect(git(root, ['rev-parse', 'published'])).toBe(baseline);
+  const plan = await workspace.planSourceLfsMigration(root, request);
+  expect(plan).toMatchObject({ sourceTip, credit: false, generation: 14 });
+  expect(git(root, ['show-ref'])).toBe(before);
+}, 180_000);

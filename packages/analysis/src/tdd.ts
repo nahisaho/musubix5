@@ -3,7 +3,10 @@ import { resolve } from 'node:path';
 import ts from 'typescript';
 import { error, type Diagnostic } from '../../domain/src/index.js';
 import { loadConfig, commandCwd } from './config.js';
-import { digest, evidenceInputs, exists, files, isArtifact, isSource, readText, safePath, snapshot, within, writeJson } from './files.js';
+import {
+  digest, evidenceInputs, exists, files, isArtifact, isSource, readText, safePath,
+  sharedImplementationPaths, snapshot, within, writeJson,
+} from './files.js';
 import { runProcess, type Runner } from './process.js';
 import { runTestRuntimeCommand, testRuntimeExecutionContext, validateTestRuntimeOutcome } from './test-runtime.js';
 import { buildTrace, hasTraceSourceEntity, traceInputs, type TraceNode } from './trace.js';
@@ -291,7 +294,11 @@ export async function workspaceChangeFingerprints(
 ): Promise<ChangeFingerprints> {
   const paths = await files(sourceRoot);
   const trace = await buildTrace(sourceRoot, false);
-  const codePaths = trace.nodes.filter((node) => node.kind === 'code').map((node) => node.path);
+  const sharedPaths = await sharedImplementationPaths(sourceRoot);
+  const codePaths = [...new Set([
+    ...trace.nodes.filter((node) => node.kind === 'code').map((node) => node.path),
+    ...sharedPaths,
+  ])].sort();
   const testPaths = new Set(trace.nodes.filter((node) => node.kind === 'test').map((node) => node.path));
   const { graph } = await indexGraph(sourceRoot, { persist: false, refresh: false });
   const adjacency = prepareGraphAdjacency(graph);
@@ -317,7 +324,7 @@ export async function workspaceChangeFingerprints(
         queue.push(dependency);
       }
     }
-    const implementationPaths = [...relevant].sort();
+    const implementationPaths = [...new Set([...relevant, ...sharedPaths])].sort();
     requirementImplementations[requirementId] = {
       paths: implementationPaths,
       fingerprints: await snapshot(sourceRoot, implementationPaths),

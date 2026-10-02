@@ -7,7 +7,7 @@ import { activeChangeContext } from './change-generation.js';
 import { appendEvidence } from './evidence-registry.js';
 import { files, readText, writeJson } from './files.js';
 import { verifyJournal } from './journal.js';
-import { resolveCandidateSnapshot } from './workspace-manager.js';
+import { resolveCandidateSnapshot, verifyCandidateReachableObjectSizes, verifyCandidateLfsClosure } from './workspace-manager.js';
 import {
   preserveEvidenceDiagnostics,
   validateCandidateBinding,
@@ -531,6 +531,10 @@ export function validateCandidateGateSet(
   return { valid: diagnostics.length === 0, diagnostics };
 }
 
+/** @id CODE-M5-CANDIDATE-GATE-FINGERPRINT-CONFIG-001
+ * @implements REQ-M5-LIFECYCLE-006
+ * @design DES-M5-015
+ */
 export async function candidateGateFingerprintConfig(root: string): Promise<Record<string, unknown>> {
   const config = await loadConfig(root);
   const path = '.musubix/config.json';
@@ -562,6 +566,8 @@ export async function candidateGateContext(
   if (expectedCommit && snapshot.commit !== expectedCommit) {
     throw new Error('RELEASE_GATE_CANDIDATE_MISMATCH: persisted candidate commit changed.');
   }
+  await verifyCandidateReachableObjectSizes(root, snapshot.commit);
+  await verifyCandidateLfsClosure(root, snapshot.commit, 'local');
   const config = await candidateGateFingerprintConfig(root);
   const identity = {
     schemaVersion: 'gate-input-fingerprint-v1',

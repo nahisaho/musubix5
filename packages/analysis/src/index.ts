@@ -41,6 +41,7 @@ export * from './formal.js';
 export * from './workflow.js';
 export * from './test-report.js';
 export * from './tdd.js';
+export * from './tdd-source-storage.js';
 export { resumeSourceSupersession, replaySourceSupersession } from './tdd-source-supersession.js';
 export type {
   SourceOperationScope, SourcePreparationRequest, SourcePreparationResult, SourceApprovalResult, SourceResult,

@@ -6,6 +6,6 @@ export default defineConfig({
     setupFiles: ['./scripts/test-runtime/vitest-setup.mjs'],
     include: ['tests/**/*.test.ts'],
     testTimeout: 60_000,
-    maxWorkers: 4,
+    maxWorkers: 8,
   },
 });

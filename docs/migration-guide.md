@@ -53,13 +53,96 @@ Parent and child `--help` list the closed option sets; no force or waiver
 mode exists.
 
 Repository blob publication and admission verify effective Git attributes
-with argv-based `git check-attr`: blob paths must have `text: unset` (`-text`)
-and no active filter, working-tree encoding, or ident conversion. Rejected
+with argv-based `git check-attr`: blob paths must have `text: unset` (`-text`).
+Raw paths have no active filter; exact oversized paths admit only verified
+standard Git LFS. Both require explicit eol, working-tree encoding and ident
+resets. Rejected
 attributes fail closed with `TDD_SOURCE_ADMISSION_INVALID` /
 `snapshot-unverifiable`; Git execution failures, including non-Git roots,
 use `TDD_SOURCE_IO_FAILED` / `execute`. Keep the `-text` rule in committed
 `.gitattributes`. Low-level isolated archive storage still verifies raw
 content hashes; it does not itself constitute repository admission.
+
+## Git LFS source distribution (ADR-0039)
+
+Source evidence keeps its logical SHA-256 filename and identity. New logical
+files below **100,000,000 decimal bytes** remain raw. Files at or above that
+threshold, through **1,073,741,824 bytes**, require canonical three-line Git
+LFS v1 pointers in Git and complete verified logical objects in LFS. Declare
+each measured oversized digest explicitly in `.gitattributes`; publication
+does not silently edit attributes or stage files. Git LFS **3.4.1 or newer**
+and its standard filter configuration are required. Local installation uses
+`git lfs install --local --skip-repo`, preserving existing hooks.
+
+`readSourceBlobStream` resolves the immutable commit or current index entry,
+not pointer-looking raw input. It independently verifies cache and hydrated
+size, digest and mode. `readSourceBlob` is the bounded Buffer adapter; legacy
+raw local evidence remains readable. Executable materialization streams to
+a verified, fsynced temporary and atomically publishes the recorded mode.
+Raw Git readers and candidate manifests still bind pointer Git bytes/OIDs.
+Manifest evidence ownership uses the first nonempty `changeId` in the top-level
+record, `metadata`, then `result`; foreign-change result envelopes remain
+excluded. Hydrated worktree bytes never replace immutable pointer hashes.
+
+Compatible workflow sanitization removes unrelated pointer payloads without
+inventing a session identity or terminal proof. Invalid UTF-8/JSON uses
+`WORKFLOW_SANITIZE_INVALID`; byte/line/event bounds use
+`WORKFLOW_TRANSCRIPT_SIZE`. Failed sanitization preserves the prior output and
+workflow evidence, and does not relax the configured transcript policy.
+
+Source verification reuses immutable Git object bindings only within one read
+session, while rechecking the complete index/attribute frame and hashing logical
+bytes at the closing fence. Raw ancestor admission is scoped and rechecked;
+individual file identity, mode, size and digest checks remain mandatory. Small
+verified raw buffers use a 32 MiB session cache with an 8 MiB per-blob limit,
+stat-identity invalidation and defensive copies.
+
+Snapshot capture bounds active file reads/publications to 32 and deduplicates
+identical content within that capture. Directory flush cohorts contain at most
+64 already-published links/renames; every caller still waits for its covering
+directory fsync. No completed metadata result or durability acknowledgment is
+reused across operations. These optimizations do not change logical limits,
+test selection, configured timeouts or transcript policy.
+
+Candidate preparation scans the complete reachable Git closure, rejecting
+current-tree and historical raw blobs at the threshold. Historical source
+pointers are inventoried separately in bounded disk-backed runs. Local media
+verification is **not remote availability proof**: independently fetch into
+an initially empty repository/cache after separately authorized LFS upload
+and before Git ref publication. The workflows fetch the exact commit closure,
+hydrate, and independently verify logical bytes before dependency installation
+and trust; candidate QA repeats verification after its gate.
+
+`planSourceLfsMigration` only freezes a scoped import plan; it does not migrate,
+upload, adopt or create a snapshot. Receipt/map verification never grants TDD
+or lifecycle credit. Planning requires a standalone non-bare repository:
+linked worktrees sharing a Git common directory reject with
+`TDD_SOURCE_LFS_MIGRATION_CONFLICT: raw-object-binding`, without changing HEAD
+or refs. Actual integration must preserve published protected refs,
+normal ancestry and immutable journal/TDD/approval bytes, retain the original
+local history and verified commit map, and pin verified migrated output before
+same-actor tombstone/adoption and ordinary clean-HEAD snapshot creation.
+Do not use `--everything`, `--no-rewrite`, force-push, or backup/raw refs in a
+published closure. Renew all candidate-bound evidence after migration.
+
+Exit-1 diagnostics expose only safe identities, never credentials, endpoints,
+object contents or subprocess stderr:
+
+| Code | Closed causes |
+| --- | --- |
+| `TDD_SOURCE_LFS_UNAVAILABLE` | `tool-missing`, `version-unsupported`, `authentication`, `quota`, `network`, `remote-object-missing` |
+| `TDD_SOURCE_LFS_INVALID` | `pointer-schema`, `pointer-path-digest`, `pointer-size`, `logical-size`, `logical-digest`, `mode`, `attributes`, `cache-integrity`, `worktree-integrity`, `download-integrity` |
+| `TDD_SOURCE_LFS_MIGRATION_CONFLICT` | `raw-object-binding`, `source-ref-drift`, `protected-ref-overlap`, `commit-map-divergence`, `receipt-divergence`, `actor-mismatch` |
+| `TDD_SOURCE_LFS_MIGRATION_PENDING` | `migration-incomplete`, `adoption-incomplete`, `tombstone-incomplete`, `snapshot-incomplete` |
+
+Git ref/incomplete-scan/current-tree/history failures use respectively
+`CANDIDATE_GIT_REF_INVALID`, `CANDIDATE_GIT_OBJECT_SCAN_FAILED`,
+`CANDIDATE_GIT_TREE_OVERSIZE`, and `CANDIDATE_GIT_HISTORY_OVERSIZE`.
+Attribute admission/query failures retain their existing source classes;
+raw hash failure remains `TDD_SOURCE_APPROVAL_INVALID` / `blob-hash`.
+Production rejects local/loopback origins, endpoint overrides and custom
+transfers. Credential-free fixture admission exists only through explicit
+dependency injection, never a configuration or environment bypass.
 
 `prepare --mode test-only --old-block FILE --hunk-review FILE --reason TEXT`
 validates the historical canonical block and exact reviewed hunks, then runs
@@ -2212,8 +2295,15 @@ approval. No approval transfer or projection exception is added.
 Parser/config-instance/candidate-gate changes follow fresh Red, not this proposal.
 DES-M5-015 defines the closed inventory, coordinator-only
 `.musubix/cache/test-runtime/<runId>/ack.json` (`test-runtime-ack-v1`),
-and command-provenance hashes for TDD/result/integration. Durable schemaVersion:1
-authoritative objects live in journal-root CONTROL at
+and command-provenance hashes for TDD/result/integration.
+
+Incomplete native commands are rejected before acknowledgment lookup with
+`TEST_RUNTIME_BOOTSTRAP_INVALID: acknowledgment-binding`, preserving the actual
+timeout/missing/error status and duration. A missing acknowledgment after a
+completed command is also a closed failure; neither case fabricates provenance.
+The configured command timeout remains unchanged.
+
+Durable schemaVersion:1 authoritative objects live in journal-root CONTROL at
 `.musubix/evidence/test-runtime/v1/blobs/<sha256>`: policy,
 requests, input inventory/file snapshots, anchors, worker packets, dispatch,
 acks and results. Before child/detached/source-pair cleanup, the parent

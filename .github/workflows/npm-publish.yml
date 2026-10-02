@@ -34,22 +34,42 @@ jobs:
       contents: read
       id-token: write
     steps:
+      - name: Check Git LFS before checkout
+        run: |
+          node --input-type=module <<'NODE'
+          // check-lfs-tool.mjs bootstrap before repository checkout.
+          import { execFileSync } from 'node:child_process';
+          let text;
+          try { text = execFileSync('git', ['lfs', 'version'], {encoding:'utf8', stdio:['ignore','pipe','pipe']}); }
+          catch { throw new Error('TDD_SOURCE_LFS_UNAVAILABLE: tool-missing'); }
+          const v = /^git-lfs\/(\d+)\.(\d+)\.(\d+)(?:\s|$)/.exec(text);
+          if (!v || +v[1] < 3 || +v[1] === 3 && (+v[2] < 4 || +v[2] === 4 && +v[3] < 1))
+            throw new Error('TDD_SOURCE_LFS_UNAVAILABLE: version-unsupported');
+          NODE
       - name: Checkout tagged candidate with full history
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.release_tag }}
           fetch-depth: 0
+          lfs: true
           path: candidate
       - name: Checkout publish evidence with full history
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.evidence_commit }}
           fetch-depth: 0
+          lfs: true
           path: evidence
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
+      - name: Verify exact candidate and publish evidence before install
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node candidate/scripts/verify-lfs-checkout.mjs candidate
+          node candidate/scripts/verify-lfs-checkout.mjs evidence
       - name: Pin npm
         run: npm install --global npm@11.6.0
       - name: Install and build candidate validator
@@ -274,6 +294,7 @@ jobs:
             exit 1
           }
           git -C candidate worktree add --quiet --detach ../release-evidence "$RELEASE_EVIDENCE_COMMIT"
+          node candidate/scripts/verify-lfs-checkout.mjs release-evidence
           RELEASE_APPROVAL_AT_RELEASE="$(node --input-type=module <<'NODE'
           const { readReleaseApprovalDigest } =
             await import('./candidate/dist/packages/analysis/src/approval.js');

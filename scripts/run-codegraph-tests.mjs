@@ -4,6 +4,13 @@ import { spawnSync } from 'node:child_process';
 import { performance } from 'node:perf_hooks';
 
 const testIds = [
+  'TEST-M5-TEST-RUNTIME-INCOMPLETE-COMMAND-001',
+  'TEST-M5-LFS-APPROVAL-BINDING-001',
+  'TEST-M5-LFS-WORKFLOW-INPUT-001',
+  'TEST-M5-LFS-GRAPH-OWNERSHIP-001',
+  'TEST-M5-LFS-MIGRATION-WORKSPACE-001',
+  'TEST-M5-TDD-SOURCE-LFS-001',
+  'TEST-M5-CANDIDATE-GIT-DISTRIBUTION-001',
   'TEST-M5-CONCURRENCY-LEASE-CONTRACT-001',
   'TEST-M5-FINALIZATION-CONCURRENCY-SAME-001',
   'TEST-M5-FINALIZATION-CONCURRENCY-DISJOINT-001',
@@ -67,6 +74,9 @@ if (targetTestId && !testIds.includes(targetTestId)) throw new Error(`Unknown Co
 
 const selected = targetTestId ? [targetTestId] : testIds;
 const testFiles = [
+  'tests/test-runtime-incomplete-command.test.ts',
+  'tests/git-lfs-generation14-coverage.test.ts',
+  'tests/git-lfs-distribution.test.ts',
   'tests/concurrency-lease-contract.test.ts',
   'tests/codegraph-performance.test.ts',
   'tests/codegraph-incremental-regressions.test.ts',
