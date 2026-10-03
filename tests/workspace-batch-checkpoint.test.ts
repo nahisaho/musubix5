@@ -8,7 +8,17 @@ import * as journal from '../packages/analysis/src/journal.js';
 import { appendEvidenceOrder, loadEvidenceOrder } from '../packages/analysis/src/order.js';
 import { loadChangeEvidence, type BatchCheckpointPayload, type ChangeFingerprints } from '../packages/analysis/src/change-evidence.js';
 import { appendBatchCheckpoint, recordChangePhaseFromWorkspace, recoverBatchCheckpoints, workspaceChangeFingerprints } from '../packages/analysis/src/tdd.js';
-import { projectStatus, runGate } from '../packages/analysis/src/gate.js';
+import { projectStatus, runGate as runProductionGate } from '../packages/analysis/src/gate.js';
+
+function runGate(root: string, options: Parameters<typeof runProductionGate>[1] = {}) {
+  return runProductionGate(root, {
+    ...options,
+    environment: {
+      ...process.env, REPOSITORY_ID: `repository:${'a'.repeat(64)}`,
+      CANDIDATE_COMMIT: 'b'.repeat(40), MATRIX_OS: 'ubuntu', MATRIX_NODE: '24',
+    },
+  });
+}
 
 const roots: string[] = [];
 const req = 'REQ-M5-LIFECYCLE-006';

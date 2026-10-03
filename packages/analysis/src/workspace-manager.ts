@@ -1,11 +1,12 @@
 import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { createReadStream } from 'node:fs';
-import { lstat, mkdir, open, readFile, readlink, rename } from 'node:fs/promises';
+import { lstat, mkdir, mkdtemp, open, readFile, readlink, rename, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { dirname, relative, resolve, sep } from 'node:path';
 import { promisify } from 'node:util';
 import { verifyCandidateReachableObjectSizes, verifyCandidateLfsClosure } from './candidate-git-distribution.js';
-import { sourceBlobAttributes, readSourceBlobStream, parseSourceLfsPointer } from './tdd-source-lfs.js';
+import { sourceBlobAttributes, readSourceBlobStream, parseSourceLfsPointer, sourceGit } from './tdd-source-lfs.js';
 export {
   verifyCandidateReachableObjectSizes, readCandidateSourceBlobStream, verifyCandidateLfsClosure,
   type CandidateLfsClosureDependencies,
@@ -28,6 +29,18 @@ import {
 } from './journal.js';
 
 const execFileAsync = promisify(execFile);
+
+/** @id CODE-M5-CI-CHECKOUT-CONFIG-001
+ * @implements REQ-M5-CI-006
+ * @design DES-M5-CI-006
+ */
+export async function prepareCandidateCheckout(root: string): Promise<void> {
+  await git(root, ['config', 'core.autocrlf', 'false']);
+  if (process.platform === 'win32') await git(root, ['config', 'core.fileMode', 'false']);
+  if (!/\sfalse$/.test(await git(root, ['config', '--show-origin', '--get', 'core.autocrlf']))) {
+    throw new Error('RELEASE_CANDIDATE_TREE_MISMATCH: effective core.autocrlf is not false.');
+  }
+}
 const generatedStatePrefixes = [
   '.musubix/candidates/',
   '.musubix/evidence/',
@@ -417,10 +430,12 @@ export async function createCandidateWorkspace(
     if (branchCommit && branchCommit !== baseline.commitSha) {
       throw new Error('WORKSPACE_CANDIDATE_CONFLICT: candidate branch points to another baseline.');
     }
+    await prepareCandidateCheckout(root);
     await git(root, branchCommit
-      ? ['worktree', 'add', '--quiet', path, branch]
-      : ['worktree', 'add', '--quiet', '-b', branch, path, baseline.commitSha]);
+      ? ['-c', 'core.autocrlf=false', 'worktree', 'add', '--quiet', path, branch]
+      : ['-c', 'core.autocrlf=false', 'worktree', 'add', '--quiet', '-b', branch, path, baseline.commitSha]);
   }
+  await prepareCandidateCheckout(path);
   const candidateId = `candidate:${baseline.commitSha}`;
   await appendJournalRecord(root, {
     stream: 'normal',
@@ -541,10 +556,12 @@ export async function createRegisteredCandidateWorkspace(
         'CANDIDATE_STATE_OWNERSHIP: existing candidate branch has another identity.',
       );
     }
+    await prepareCandidateCheckout(root);
     await git(root, branchCommit
-      ? ['worktree', 'add', '--quiet', absoluteWorktreePath, branch]
-      : ['worktree', 'add', '--quiet', '-b', branch, absoluteWorktreePath, baseCommit]);
+      ? ['-c', 'core.autocrlf=false', 'worktree', 'add', '--quiet', absoluteWorktreePath, branch]
+      : ['-c', 'core.autocrlf=false', 'worktree', 'add', '--quiet', '-b', branch, absoluteWorktreePath, baseCommit]);
   }
+  await prepareCandidateCheckout(absoluteWorktreePath);
   const active = await appendJournalRecord(root, {
     stream: 'normal',
     changeId,
@@ -643,8 +660,10 @@ export async function createQaWorkspace(root: string, input: CandidateWorkspace 
       throw new Error('WORKSPACE_QA_CONFLICT: existing QA workspace has another candidate identity.');
     }
   } else {
-    await git(root, ['worktree', 'add', '--quiet', '--detach', path, input.candidateCommit]);
+    await prepareCandidateCheckout(root);
+    await git(root, ['-c', 'core.autocrlf=false', 'worktree', 'add', '--quiet', '--detach', path, input.candidateCommit]);
   }
+  await prepareCandidateCheckout(path);
   if (!await compareTrackedTree(path, input.candidateCommit, 'pre')) {
     throw new Error('RELEASE_CANDIDATE_TREE_MISMATCH: QA checkout differs from its immutable candidate.');
   }
@@ -1261,6 +1280,10 @@ export async function readCandidateBlob(
  * @implements REQ-M5-LIFECYCLE-006 REQ-M5-RELEASE-002
  * @design DES-M5-012 DES-M5-023
  */
+/** @id CODE-M5-CI-TREE-PORTABILITY-001
+ * @implements REQ-M5-CI-006
+ * @design DES-M5-CI-006
+ */
 export async function compareTrackedTree(
   root: string, commit: string, phase: 'pre' | 'post',
 ): Promise<boolean> {
@@ -1269,51 +1292,15 @@ export async function compareTrackedTree(
   }
   const prefix = '.musubix/evidence/tdd-source/v1/blobs/';
   const entries = await listCandidateEntries(root, commit);
-  const digests = entries.filter((entry) => entry.nfcPath.startsWith(prefix))
-    .map((entry) => entry.nfcPath.slice(prefix.length));
-  const attributes = await sourceBlobAttributes(root, digests, commit);
+  if (!/\sfalse$/.test(await git(root, ['config', '--show-origin', '--get', 'core.autocrlf'], true))) return false;
   const allowed = (path: string) => path === '.musubix/trace/index.json'
     || /^\.musubix\/features\/[^/]+\/trace\.json$/.test(path)
     || /^\.musubix\/evidence\/(?:formal|model-correspondence|mutation|performance|quality)\.json$/.test(path)
     || path.startsWith('.musubix/evidence/native/test/');
-  for (const entry of entries) {
-    if (phase === 'post' && allowed(entry.nfcPath)) continue;
-    const path = resolve(root, entry.nfcPath);
-    let stat;
-    try { stat = await lstat(path); }
-    catch (error) {
-      if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') return false;
-      throw error;
-    }
-    const digest = entry.nfcPath.slice(prefix.length);
-    if (entry.nfcPath.startsWith(prefix) && attributes.get(digest)?.get('filter') === 'lfs') {
-      const pointer = parseSourceLfsPointer(await readCandidateBlob(root, commit, entry.objectId), digest);
-      if (!stat.isFile() || stat.isSymbolicLink() || stat.size !== pointer.size ||
-        (stat.mode & 0o111 ? '100755' : '100644') !== entry.gitMode) return false;
-      await readSourceBlobStream(root, digest, () => {}, { commit });
-      continue;
-    }
-    if (entry.objectType !== 'blob') throw new Error('APPROVAL_GITLINK_UNSUPPORTED: candidate tree entry.');
-    const hash = createHash(entry.objectId.length === 64 ? 'sha256' : 'sha1');
-    if (entry.gitMode === '120000') {
-      if (!stat.isSymbolicLink()) return false;
-      const bytes = Buffer.from(await readlink(path));
-      hash.update(`blob ${bytes.length}\0`).update(bytes);
-    } else {
-      if (!stat.isFile() || stat.isSymbolicLink() ||
-        (stat.mode & 0o111 ? '100755' : '100644') !== entry.gitMode) return false;
-      hash.update(`blob ${stat.size}\0`);
-      for await (const bytes of createReadStream(path)) hash.update(bytes);
-      const after = await lstat(path);
-      if (after.ino !== stat.ino || after.size !== stat.size ||
-        after.mtimeMs !== stat.mtimeMs || after.ctimeMs !== stat.ctimeMs) return false;
-    }
-    if (hash.digest('hex') !== entry.objectId) return false;
-  }
   const expected = new Map(entries.map((entry) => [entry.nfcPath, entry]));
   const index = await gitRaw(root, ['ls-files', '--stage', '-z']);
   for (const row of index.split('\0').filter(Boolean)) {
-    const match = /^([0-7]{6}) ([a-f0-9]{40}|[a-f0-9]{64}) 0\t(.+)$/.exec(row);
+    const match = /^([0-7]{6}) ([a-f0-9]{40}|[a-f0-9]{64}) 0\t([\s\S]+)$/.exec(row);
     if (!match) return false;
     const path = match[3]!;
     const entry = expected.get(path);
@@ -1325,7 +1312,117 @@ export async function compareTrackedTree(
     if (phase === 'post' && allowed(path)) continue;
     if (entry.gitMode !== match[1] || entry.objectId !== match[2]) return false;
   }
-  return [...expected.keys()].every((path) => phase === 'post' && allowed(path));
+  if (![...expected.keys()].every((path) => phase === 'post' && allowed(path))) return false;
+  for (const entry of entries.filter((item) => /(?:^|\/)\.gitattributes$/.test(item.nfcPath))) {
+    const path = resolve(root, entry.nfcPath);
+    const stat = await lstat(path);
+    if (!stat.isFile() || stat.isSymbolicLink()) return false;
+    const bytes = await readFile(path);
+    if (createHash(entry.objectId.length === 64 ? 'sha256' : 'sha1')
+      .update(`blob ${bytes.length}\0`).update(bytes).digest('hex') !== entry.objectId) return false;
+  }
+  const info = resolve(root, await git(root, ['rev-parse', '--git-path', 'info/attributes']));
+  try {
+    const stat = await lstat(info);
+    if (!stat.isFile() || stat.isSymbolicLink() || !(stat.mode & 0o444) || (await readFile(info, 'utf8')).trim()) return false;
+  } catch (cause) {
+    if (!(cause instanceof Error && 'code' in cause && cause.code === 'ENOENT')) return false;
+  }
+  const temporaryRoot = relative(resolve(root), resolve(tmpdir())).startsWith('..') ? tmpdir() : dirname(resolve(root));
+  const scratch = await mkdtemp(resolve(temporaryRoot, 'musubix5-candidate-attrs-'));
+  const empty = resolve(scratch, 'empty');
+  await writeFile(empty, '', { flag: 'wx', mode: 0o600 });
+  const env: NodeJS.ProcessEnv = { ...process.env, GIT_ATTR_NOSYSTEM: '1' };
+  delete env.GIT_ATTR_SOURCE;
+  const isolatedArgs = ['-c', `core.attributesFile=${empty}`, '-c', 'attr.tree='];
+  try {
+    const attributes = new Map<string, Map<string, string>>();
+    const attrFields = (await sourceGit(root, [...isolatedArgs, 'check-attr', '--cached', '-z', '-a', '--stdin'],
+      Buffer.from(entries.map((entry) => entry.nfcPath + '\0').join('')), env, 16 * 1024 * 1024)).toString().split('\0');
+    if (attrFields.pop() !== '' || attrFields.length % 3) return false;
+    for (let i = 0; i < attrFields.length; i += 3) {
+      const values = attributes.get(attrFields[i]!) ?? new Map<string, string>();
+      values.set(attrFields[i + 1]!, attrFields[i + 2]!);
+      attributes.set(attrFields[i]!, values);
+    }
+    const eol = new Map<string, string>();
+    for (const row of (await sourceGit(root, [...isolatedArgs, 'ls-files', '--eol', '-z'], undefined, env,
+      16 * 1024 * 1024)).toString().split('\0').filter(Boolean)) {
+      const tab = row.indexOf('\t');
+      if (tab < 0) return false;
+      eol.set(row.slice(tab + 1), row.slice(0, tab).trim().split(/\s+/).slice(0, 2).join(' '));
+    }
+  for (const entry of entries) {
+    if (phase === 'post' && allowed(entry.nfcPath)) continue;
+    const path = resolve(root, entry.nfcPath);
+    for (let parent = dirname(path); parent !== resolve(root); parent = dirname(parent)) {
+      const ancestor = await lstat(parent);
+      if (!ancestor.isDirectory() || ancestor.isSymbolicLink() || parent === dirname(parent)) return false;
+    }
+    let stat;
+    try { stat = await lstat(path); }
+    catch (error) {
+      if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') return false;
+      throw error;
+    }
+    const digest = entry.nfcPath.slice(prefix.length);
+    const values = attributes.get(entry.nfcPath);
+    const filter = values?.get('filter');
+    const isLfs = entry.nfcPath.startsWith(prefix) && /^[a-f0-9]{64}$/.test(digest) && filter === 'lfs';
+    if (filter && !isLfs) return false;
+    if (isLfs) {
+      const pointer = parseSourceLfsPointer(await readCandidateBlob(root, commit, entry.objectId), digest);
+      if (!stat.isFile() || stat.isSymbolicLink() || stat.size !== pointer.size ||
+        !['100644', '100755'].includes(entry.gitMode) ||
+        (process.platform !== 'win32' && (stat.mode & 0o111 ? '100755' : '100644') !== entry.gitMode)) return false;
+      const logicalHash = createHash('sha256');
+      for await (const bytes of createReadStream(path)) logicalHash.update(bytes);
+      const after = await lstat(path);
+      if (logicalHash.digest('hex') !== pointer.oid || after.ino !== stat.ino || after.size !== stat.size
+        || after.mtimeMs !== stat.mtimeMs || after.ctimeMs !== stat.ctimeMs) return false;
+      continue;
+    }
+    if (entry.objectType === 'commit' && entry.gitMode === '160000') {
+      if (!stat.isDirectory() || await git(path, ['rev-parse', 'HEAD'], true) !== entry.objectId) return false;
+      continue;
+    }
+    if (entry.objectType !== 'blob') return false;
+    const hash = createHash(entry.objectId.length === 64 ? 'sha256' : 'sha1');
+    if (entry.gitMode === '120000') {
+      if (!stat.isSymbolicLink()) return false;
+      const bytes = Buffer.from(await readlink(path));
+      hash.update(`blob ${bytes.length}\0`).update(bytes);
+    } else {
+      if (!stat.isFile() || stat.isSymbolicLink() ||
+        !['100644', '100755'].includes(entry.gitMode) ||
+        (process.platform !== 'win32' && (stat.mode & 0o111 ? '100755' : '100644') !== entry.gitMode)) return false;
+      if (values?.get('text') !== 'unset') {
+        if (!['set', 'auto'].includes(values?.get('text') ?? '') || values?.get('eol') !== 'lf') return false;
+        const candidate = await readCandidateBlob(root, commit, entry.objectId);
+        const candidateHasLf = candidate.includes(10);
+        let worktreeHasLf = false, worktreeHasCr = false, worktreeHasNul = false;
+        for await (const chunk of createReadStream(path)) {
+          const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+          worktreeHasLf ||= bytes.includes(10);
+          worktreeHasCr ||= bytes.includes(13);
+          worktreeHasNul ||= bytes.includes(0);
+        }
+        if (candidate.includes(13) || candidate.includes(0) || worktreeHasCr || worktreeHasNul
+          || candidateHasLf !== worktreeHasLf
+          || eol.get(entry.nfcPath) !== (candidateHasLf ? 'i/lf w/lf' : 'i/none w/none')) return false;
+      }
+      hash.update(`blob ${stat.size}\0`);
+      for await (const bytes of createReadStream(path)) hash.update(bytes);
+      const after = await lstat(path);
+      if (after.ino !== stat.ino || after.size !== stat.size ||
+        after.mtimeMs !== stat.mtimeMs || after.ctimeMs !== stat.ctimeMs) return false;
+    }
+    if (hash.digest('hex') !== entry.objectId) return false;
+  }
+  return true;
+  } finally {
+    await rm(scratch, { recursive: true, force: true });
+  }
 }
 
 /** @id CODE-M5-WORKTREE-003

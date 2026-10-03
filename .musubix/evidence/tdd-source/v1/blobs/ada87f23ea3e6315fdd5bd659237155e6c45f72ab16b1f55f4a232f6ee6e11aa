@@ -1,0 +1,278 @@
+import { execFile } from 'node:child_process';
+import { lstat, readFile, readdir, readlink, realpath } from 'node:fs/promises';
+import { dirname, delimiter, join, relative, resolve } from 'node:path';
+import { promisify } from 'node:util';
+import { canonicalBytes, sha256 } from './canonical.js';
+import type { CommandConfig } from './config.js';
+import { mapWithConcurrency } from './files.js';
+import { sourcePath } from './tdd-source-ledger.js';
+import { sourceAdmissionFailure } from './tdd-source-review.js';
+import type { SourceSnapshotBinding } from './tdd-source-types.js';
+
+const execute = promisify(execFile);
+const byteSort = (a: string, b: string): number => Buffer.compare(Buffer.from(a), Buffer.from(b));
+export type SourceEntryRole = 'test' | 'dependency' | 'helper' | 'runner' | 'config' | 'production' | 'environment';
+/** @id CODE-M5-SOURCE-ENVIRONMENT-001
+ * @implements REQ-M5-LIFECYCLE-006 REQ-M5-COMPAT-013
+ * @design DES-M5-007 DES-M5-023
+ */
+export const sourceEnvironment = {
+  PATH: '$ROOT/.musubix-runtime/bin:$ROOT/node_modules/.bin',
+  HOME: '$ROOT/.run-tmp/home', USERPROFILE: '$ROOT/.run-tmp/home',
+  XDG_CONFIG_HOME: '$ROOT/.run-tmp/config', XDG_CACHE_HOME: '$ROOT/.run-tmp/cache',
+  TMPDIR: '$ROOT/.run-tmp/tmp', TMP: '$ROOT/.run-tmp/tmp', TEMP: '$ROOT/.run-tmp/tmp',
+  TZ: 'UTC', LANG: 'C.UTF-8', LC_ALL: 'C.UTF-8',
+  GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '$ROOT/.run-tmp/gitconfig',
+  GIT_TEMPLATE_DIR: '$ROOT/.run-tmp/git-template',
+  npm_config_userconfig: '$ROOT/.run-tmp/npm-user', npm_config_globalconfig: '$ROOT/.run-tmp/npm-global',
+  npm_config_offline: 'true', npm_config_update_notifier: 'false', npm_config_audit: 'false',
+  npm_config_fund: 'false',
+} as const;
+export const sourceEnvironmentFiles = ['.run-tmp/gitconfig', '.run-tmp/npm-user', '.run-tmp/npm-global'] as const;
+export interface SourceSnapshotEntry {
+  path: string; mode: '100644' | '100755' | '120000' | 'missing'; sha256: string | null; role: SourceEntryRole;
+}
+export const sourceOutputs = [
+  { path: 'dist/**', kind: 'build', producer: 'tests/global-setup.ts -> npm run build -> tsc -p tsconfig.build.json', comparison: 'pair-byte-equal' },
+  ...['.musubix/cache/**', '.test-work/**', 'node_modules/.vite/**', 'node_modules/.vite-temp/**', '.run-tmp/**']
+    .map((path) => ({ path, kind: 'ephemeral', producer: 'selected-run', comparison: 'inventory-only' })),
+];
+export const sourceSnapshotExclusions = [
+  { path: '.git', reason: 'git-metadata' },
+  { path: '.musubix/evidence/**', reason: 'evidence' },
+  { path: '.musubix/cache/**', reason: 'cache' },
+  { path: '.musubix/journal/**', reason: 'journal' },
+  { path: '.musubix/candidates/**', reason: 'candidate-metadata' },
+  { path: '.musubix/trace/index.json', reason: 'generated-trace' },
+  { path: '.musubix/features/*/trace.json', reason: 'generated-trace' },
+  ...sourceOutputs.filter((entry) => entry.path !== '.musubix/cache/**')
+    .map((entry) => ({ path: entry.path, reason: 'declared-output' })),
+].sort((a, b) => byteSort(a.path, b.path));
+const exclusions = sourceSnapshotExclusions;
+export function excludedSourcePath(path: string): boolean {
+  return exclusions.some((entry) => entry.path.endsWith('/**')
+    ? path === entry.path.slice(0, -3) || path.startsWith(entry.path.slice(0, -2))
+    : entry.path === '.musubix/features/*/trace.json'
+      ? /^\.musubix\/features\/[^/]+\/trace\.json$/.test(path)
+      : path === entry.path || (entry.path === '.git' && path.startsWith('.git/')));
+}
+export interface SourceSnapshotManifest {
+  schemaVersion: 1; kind: 'tdd-source-snapshot'; entries: SourceSnapshotEntry[];
+  excludedPaths: typeof exclusions; outputs: typeof sourceOutputs;
+  packages: Array<{ path: string; name: string; version: string; manifestSha256: string;
+    lockfileSha256: string | null; integrity: string | null; resolved: string | null; treeSha256: string }>;
+  runtime: { node: string; versions: NodeJS.ProcessVersions; platform: NodeJS.Platform; architecture: string;
+    executables: Array<{ name: string; path: string; sha256: string }>; npmVersion: string; gitVersion: string };
+  environment: Record<string, string>;
+}
+export interface CapturedSourceSnapshot {
+  manifest: SourceSnapshotManifest; binding: SourceSnapshotBinding;
+}
+export type SourceBlobWriter = (bytes: Uint8Array) => Promise<string>;
+interface CachedSourceFile { stamp: string; sha256: string; manifestBytes?: Buffer }
+const snapshotFiles = new WeakMap<CapturedSourceSnapshot, Map<string, CachedSourceFile>>();
+
+async function localExecutable(name: string): Promise<string> {
+  for (const directory of (process.env.PATH ?? '').split(delimiter)) {
+    if (!directory) continue;
+    try {
+      const path = resolve(directory, name);
+      const resolved = await realpath(path);
+      if ((await lstat(resolved)).isFile()) return resolved;
+    } catch (cause) {
+      if (!(cause && typeof cause === 'object' && 'code' in cause && cause.code === 'ENOENT')) throw cause;
+    }
+  }
+  return sourceAdmissionFailure('snapshot-unverifiable');
+}
+
+/** @id CODE-M5-SOURCE-SNAPSHOT-001
+ * @implements REQ-M5-LIFECYCLE-006 REQ-M5-COMPAT-013
+ * @design DES-M5-007 DES-M5-023
+ */
+export async function captureSourceSnapshot(
+  root: string, command: CommandConfig, testPath: string,
+  store: SourceBlobWriter = async (bytes) => sha256(bytes),
+  previous?: CapturedSourceSnapshot,
+): Promise<CapturedSourceSnapshot> {
+  root = await realpath(root);
+  const git = await localExecutable('git');
+  const gitOutput = async (args: string[]): Promise<Buffer> =>
+    (await execute(git, ['-C', root, ...args], { encoding: 'buffer', maxBuffer: 64 * 1024 * 1024 })).stdout;
+  const decode = (bytes: Buffer): string => new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+  const head = decode(await gitOutput(['rev-parse', 'HEAD'])).trim();
+  if (!/^[a-f0-9]{40,64}$/.test(head)) sourceAdmissionFailure('snapshot-unverifiable');
+  if ((await gitOutput(['ls-files', '--unmerged', '-z'])).length) sourceAdmissionFailure('snapshot-unverifiable');
+  const staged = decode(await gitOutput(['ls-files', '--stage', '-z']));
+  if (staged.split('\0').some((line) => line.startsWith('160000 '))) sourceAdmissionFailure('snapshot-unverifiable');
+  const paths = new Set([
+    ...decode(await gitOutput(['ls-files', '--cached', '-z'])).split('\0'),
+    ...decode(await gitOutput(['ls-files', '--others', '--exclude-standard', '-z'])).split('\0'),
+  ].filter(Boolean));
+  const entries = new Map<string, SourceSnapshotEntry>();
+  const manifestBytes = new Map<string, Buffer>();
+  const cachedFiles = previous ? snapshotFiles.get(previous) : undefined;
+  const capturedFiles = new Map<string, CachedSourceFile>();
+  let activeFiles = 0;
+  const waitingFiles: Array<() => void> = [];
+  const boundedFile = async <T>(operation: () => Promise<T>): Promise<T> => {
+    if (activeFiles === 32) await new Promise<void>((accept) => waitingFiles.push(accept));
+    else activeFiles++;
+    try { return await operation(); }
+    finally {
+      const next = waitingFiles.shift();
+      if (next) next();
+      else activeFiles--;
+    }
+  };
+  const publications = new Map<string, Promise<string>>();
+  const persist = (bytes: Buffer): Promise<string> => {
+    const expected = sha256(bytes);
+    let publication = publications.get(expected);
+    if (!publication) {
+      publication = (async () => {
+        if (await store(bytes) !== expected) sourceAdmissionFailure('snapshot-unverifiable');
+        return expected;
+      })();
+      publications.set(expected, publication);
+    }
+    return publication;
+  };
+  const include = async (path: string, physical: string, role: SourceEntryRole, runtime = false): Promise<void> => {
+    if (!sourcePath(path)) sourceAdmissionFailure('snapshot-unverifiable');
+    if (entries.has(path)) return;
+    let stat;
+    try { stat = await lstat(physical, { bigint: true }); }
+    catch (cause) {
+      if (cause && typeof cause === 'object' && 'code' in cause && cause.code === 'ENOENT' && !runtime) {
+        entries.set(path, { path, mode: 'missing', sha256: null, role }); return;
+      }
+      throw cause;
+    }
+    if (stat.isDirectory()) {
+      await mapWithConcurrency((await readdir(physical)).sort(byteSort), 8, async (name) => {
+        const nested = `${path}/${name}`;
+        if (!excludedSourcePath(nested)) await include(nested, join(physical, name), role, runtime);
+      });
+      return;
+    }
+    if (stat.isSymbolicLink()) {
+      const target = await readlink(physical);
+      const destination = await realpath(physical);
+      if (!runtime && (relative(root, destination).startsWith('..') || relative(root, destination) === '')) {
+        sourceAdmissionFailure('snapshot-unverifiable');
+      }
+      if (runtime) sourceAdmissionFailure('snapshot-unverifiable');
+      entries.set(path, { path, mode: '120000', sha256: await persist(Buffer.from(target)), role });
+      const targetPath = relative(root, destination).replaceAll('\\', '/');
+      if (excludedSourcePath(targetPath)) sourceAdmissionFailure('snapshot-unverifiable');
+      await include(targetPath, destination, role);
+      return;
+    }
+    if (!stat.isFile()) sourceAdmissionFailure('snapshot-unverifiable');
+    const stamp = [stat.dev, stat.ino, stat.mode, stat.size, stat.mtimeNs, stat.ctimeNs].join(':');
+    const cached = cachedFiles?.get(physical);
+    if (cached?.stamp === stamp) {
+      entries.set(path, { path, mode: stat.mode & 0o111n ? '100755' : '100644', sha256: cached.sha256, role });
+      capturedFiles.set(physical, cached);
+      if (cached.manifestBytes) manifestBytes.set(path, cached.manifestBytes);
+      return;
+    }
+    await boundedFile(async () => {
+      const bytes = await readFile(physical);
+      const after = await lstat(physical, { bigint: true });
+      if (stat.ino !== after.ino || stat.size !== after.size || stat.mtimeNs !== after.mtimeNs
+        || stat.ctimeNs !== after.ctimeNs) sourceAdmissionFailure('input-drift');
+      const digest = await persist(bytes);
+      entries.set(path, { path, mode: stat.mode & 0o111n ? '100755' : '100644', sha256: digest, role });
+      const packageInput = path.endsWith('/package.json') || ['package.json', 'package-lock.json'].includes(path);
+      capturedFiles.set(physical, { stamp, sha256: digest, ...(packageInput ? { manifestBytes: bytes } : {}) });
+      if (packageInput) manifestBytes.set(path, bytes);
+    });
+  };
+  for (const path of [...paths].sort(byteSort)) {
+    if (excludedSourcePath(path)) continue;
+    if (!sourcePath(path) || path.startsWith('.musubix-runtime/')) sourceAdmissionFailure('snapshot-unverifiable');
+    const role: SourceEntryRole = path === testPath ? 'test'
+      : path.startsWith('node_modules/') ? 'dependency'
+        : /(?:^|\/)(?:package(?:-lock)?\.json|tsconfig[^/]*\.json|vitest[^/]*\.[cm]?ts)$/.test(path)
+          || path === '.musubix/config.json' ? 'config' : 'production';
+    await include(path, resolve(root, path), role);
+  }
+  await include('node_modules', resolve(root, 'node_modules'), 'dependency');
+  for (const name of ['typescript', 'vitest']) {
+    const bytes = manifestBytes.get(`node_modules/${name}/package.json`);
+    if (!bytes) sourceAdmissionFailure('snapshot-unverifiable');
+  }
+  const node = await realpath(process.execPath);
+  const npm = await localExecutable('npm');
+  const npmRoot = dirname(dirname(npm));
+  const shell = await localExecutable('sh');
+  const executables = [];
+  for (const [name, physical] of [['node', node], ['git', git], ['sh', shell]] as const) {
+    const path = `.musubix-runtime/bin/${name}`;
+    await include(path, physical, 'runner', true);
+    executables.push({ name, path, sha256: entries.get(path)!.sha256! });
+  }
+  await include('.musubix-runtime/npm', npmRoot, 'dependency', true);
+  for (const name of ['npm', 'npx']) {
+    const path = `.musubix-runtime/bin/${name}`;
+    entries.set(path, {
+      path, mode: '120000', role: 'runner',
+      sha256: await persist(Buffer.from(`../npm/bin/${name === 'npm' ? 'npm' : 'npx'}-cli.js`)),
+    });
+  }
+  const environment = { ...sourceEnvironment };
+  for (const path of sourceEnvironmentFiles) {
+    entries.set(path, { path, mode: '100644', role: 'environment', sha256: await persist(Buffer.alloc(0)) });
+  }
+  const sorted = [...entries.values()].sort((a, b) => byteSort(a.path, b.path));
+  const lock = manifestBytes.get('package-lock.json');
+  const lockData = lock ? JSON.parse(lock.toString('utf8')) as { packages?: Record<string, { integrity?: string; resolved?: string }> } : null;
+  const packages: SourceSnapshotManifest['packages'] = [];
+  for (const [path, bytes] of [...manifestBytes].sort(([a], [b]) => byteSort(a, b))) {
+    if (!path.endsWith('package.json')) continue;
+    const data: unknown = JSON.parse(bytes.toString('utf8'));
+    if (!data || typeof data !== 'object' || !('name' in data) || typeof data.name !== 'string'
+      || !('version' in data) || typeof data.version !== 'string') continue;
+    const directory = path === 'package.json' ? '' : path.slice(0, -'/package.json'.length);
+    packages.push({
+      path, name: data.name, version: data.version, manifestSha256: sha256(bytes),
+      lockfileSha256: lock ? sha256(lock) : null,
+      integrity: lockData?.packages?.[directory]?.integrity ?? null,
+      resolved: lockData?.packages?.[directory]?.resolved ?? null,
+      treeSha256: sha256(canonicalBytes(sorted.filter((entry) => directory === '' || entry.path.startsWith(`${directory}/`)))),
+    });
+  }
+  const runtime = {
+    node: process.version, versions: process.versions, platform: process.platform, architecture: process.arch,
+    executables, npmVersion: (await execute(node, [npm, '--version'])).stdout.trim(),
+    gitVersion: (await execute(git, ['--version'])).stdout.trim(),
+  };
+  const manifest: SourceSnapshotManifest = {
+    schemaVersion: 1, kind: 'tdd-source-snapshot', entries: sorted, excludedPaths: exclusions,
+    outputs: sourceOutputs, packages, runtime, environment,
+  };
+  const manifestSha256 = await persist(canonicalBytes(manifest));
+  const environmentSha256 = await persist(canonicalBytes(environment));
+  const runnerSha256 = await persist(canonicalBytes({ executable: executables[0], command, runtime }));
+  const configSha256 = await persist(canonicalBytes({ command, entries: sorted.filter((entry) => entry.role === 'config') }));
+  const productionSha256 = await persist(canonicalBytes(sorted.filter((entry) => ['production', 'helper'].includes(entry.role))));
+  const stateSha256 = sha256(canonicalBytes({
+    schemaVersion: 1, head, manifestSha256, environmentSha256, runnerSha256, configSha256, productionSha256,
+  }));
+  if (decode(await gitOutput(['rev-parse', 'HEAD'])).trim() !== head) sourceAdmissionFailure('input-drift');
+  const captured = { manifest, binding: { manifestSha256, environmentSha256, runnerSha256, configSha256, productionSha256, head, stateSha256 } };
+  snapshotFiles.set(captured, capturedFiles);
+  return captured;
+}
+
+/** @id CODE-M5-SOURCE-RECHECK-001
+ * @implements REQ-M5-LIFECYCLE-006 REQ-M5-COMPAT-013
+ * @design DES-M5-007 DES-M5-023
+ */
+export function recheckSourceSnapshot(
+  root: string, command: CommandConfig, testPath: string, prepared: CapturedSourceSnapshot,
+): Promise<CapturedSourceSnapshot> {
+  return captureSourceSnapshot(root, command, testPath, undefined, prepared);
+}

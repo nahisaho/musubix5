@@ -38,7 +38,6 @@ describe('CHANGE-0003 quality regressions', () => {
     const root = await mkdtemp(join(tmpdir(), 'musubix5-matrix-performance-'));
     await mkdir(join(root, '.musubix/features/performance'), { recursive: true });
     await mkdir(join(root, '.musubix/evidence'), { recursive: true });
-    await mkdir(join(root, '.musubix/cache/matrix-native/codegraph-tests'), { recursive: true });
     await writeFile(join(root, '.musubix/features/performance/requirements.md'), [
       '---',
       'schemaVersion: 1',
@@ -94,22 +93,27 @@ describe('CHANGE-0003 quality regressions', () => {
         operations: { visits: 1 },
       }],
     }, null, 2)}\n`;
-    await writeFile(
-      join(root, '.musubix/cache/matrix-native/codegraph-tests/aggregate.json'),
-      report,
-    );
     const performance = await import('../packages/analysis/src/performance.js');
     const runId = randomUUID();
+    const matrix = {
+      repositoryId: `repository:${'a'.repeat(64)}`, candidateCommit: 'b'.repeat(40),
+      platform: 'ubuntu', nodeMajor: 24, runId,
+    };
+    const reportRoot = performance.matrixPerformanceReportRoot(matrix);
+    const reportPath = `${reportRoot}/codegraph-tests/aggregate.json`;
+    await mkdir(join(root, reportRoot, 'codegraph-tests'), { recursive: true });
+    await writeFile(join(root, reportPath), report);
     const execution = performance.createPerformanceExecution({
       runId,
+      matrix,
       executionId: createHash('sha256').update('execution').digest('hex'),
       commandName: 'codegraph-tests',
       commandSha256: performance.performanceCommandSha256(process.execPath, [
         'runner.mjs',
         '--report',
-        '.musubix/cache/test-results/codegraph.json',
+        reportPath,
       ]),
-      reportPath: '.musubix/cache/test-results/codegraph.json',
+      reportPath,
       sourceKind: 'file',
       reportSha256: createHash('sha256').update(report).digest('hex'),
       processStatus: 'completed',
@@ -123,14 +127,15 @@ describe('CHANGE-0003 quality regressions', () => {
     const requirements = await performance.requirementsWithBudgets(root);
     const evidence = performance.performanceEvidence(requirements, [execution], runId);
     await writeFile(
-      join(root, '.musubix/evidence/performance.json'),
+      join(root, reportRoot, 'performance.json'),
       `${JSON.stringify(evidence, null, 2)}\n`,
     );
 
     expect((await performance.validatePerformanceEvidence(root)).valid).toBe(false);
     expect((await performance.validatePerformanceEvidence(
       root,
-      '.musubix/cache/matrix-native',
+      reportRoot,
+      matrix,
     )).valid).toBe(true);
   });
 });

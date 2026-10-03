@@ -1,0 +1,21 @@
+import { isAbsolute, resolve } from 'node:path';
+
+/** @id CODE-M5-CI-PORTABLE-FIXTURE-001
+ * @implements REQ-M5-CI-007
+ * @design DES-M5-CI-007
+ */
+export function assertPortableFixturePath(root: string, path: string, seen?: Set<string>): void {
+  const invalid = () => { throw new Error(`PORTABLE_FIXTURE_PATH_INVALID: ${JSON.stringify(path)}`); };
+  if (!path || isAbsolute(path) || path.includes('\\')) invalid();
+  const components = path.split('/');
+  for (const component of components) {
+    if (!component || component === '.' || component === '..'
+      || /[\p{Cc}<>:"|?*]/u.test(component) || /[. ]$/.test(component)
+      || /^(?:CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\.|$)/i.test(component)
+      || component.normalize('NFC') !== component || Buffer.byteLength(component, 'utf8') > 120) invalid();
+  }
+  if (Buffer.byteLength(resolve(root, path), 'utf8') >= 240) invalid();
+  const key = path.normalize('NFC').toLowerCase();
+  if (seen?.has(key)) invalid();
+  seen?.add(key);
+}

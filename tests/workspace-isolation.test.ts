@@ -7,7 +7,12 @@ import { afterEach, describe, expect, it } from 'vitest';
 const temporaryDirectories: string[] = [];
 
 function git(root: string, args: string[]): string {
-  return execFileSync('git', ['-C', root, ...args], { encoding: 'utf8' }).trim();
+  const output = execFileSync('git', ['-C', root, ...args], { encoding: 'utf8' }).trim();
+  if (args[0] === 'init') {
+    writeFileSync(join(root, '.gitattributes'), '* -text\n');
+    execFileSync('git', ['-C', root, 'add', '.gitattributes']);
+  }
+  return output;
 }
 
 afterEach(() => {

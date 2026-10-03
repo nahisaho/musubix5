@@ -183,6 +183,7 @@ export async function createParallelFixture(options: FixtureOptions = {}): Promi
   });
   writeFixtureFile(root, 'parallel-plan.json', plan);
   writeFixtureFile(root, 'packages/core/value.txt', 'base\n');
+  writeFixtureFile(root, '.gitattributes', '* -text\n');
 
   git(root, ['init', '--quiet']);
   git(root, ['config', 'user.name', 'Parallel Fixture']);

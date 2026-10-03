@@ -1,0 +1,23 @@
+/** @id CODE-M5-CI-CANDIDATE-RUNNER-FALLBACK-001
+ * @implements REQ-M5-CI-008
+ * @design DES-M5-CI-008
+ */
+import { createHash } from 'node:crypto';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+const directory = process.env.RUNNER_TEMP;
+if (!directory) throw new Error('GATE_RUNNER_UNAVAILABLE: missing runner temporary directory.');
+mkdirSync(directory, { recursive: true });
+const emptyDigest = createHash('sha256').update('').digest('hex');
+const result = {
+  schemaVersion: 1, status: 'fail', commands: [], commandsPassed: false,
+  preTreeMatchesCandidate: false, postTreeMatchesCandidate: false,
+  stdoutSha256: emptyDigest, stderrSha256: emptyDigest,
+  exitCode: 1, signal: null, timedOut: false, tailsDropped: true, resultTextDropped: true,
+  error: { code: 'CANDIDATE_GATE_REPORT_INVALID', originalCode: 'GATE_RUNNER_UNAVAILABLE' },
+};
+writeFileSync(join(directory, 'candidate-gate-result.json'), JSON.stringify(result) + '\n', { mode: 0o600 });
+writeFileSync(join(directory, 'candidate-gate-envelope.json'),
+  JSON.stringify({ schemaVersion: 1, result, attestation: null }) + '\n', { mode: 0o600 });
+process.exitCode = 1;

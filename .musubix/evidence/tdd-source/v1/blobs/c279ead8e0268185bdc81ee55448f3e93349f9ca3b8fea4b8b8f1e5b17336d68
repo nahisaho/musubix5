@@ -1,0 +1,163 @@
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { existsSync,mkdtempSync,readFileSync,rmSync,statSync,writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath,pathToFileURL } from 'node:url';
+import { expect,it } from 'vitest';
+import * as candidate from '../packages/analysis/src/candidate-gate.js';
+
+interface Outcome {
+  stdoutPath: string; stderrPath: string; stdoutTail: string; stderrTail: string;
+  stdoutSha256: string; stderrSha256: string; tailsDropped: boolean; resultTextDropped: boolean;
+  exitCode: number|null; signal: string|null; timedOut: boolean;
+}
+interface Result {
+  status: string; stdoutTail?: string; stderrTail?: string; stdoutSha256: string; stderrSha256: string;
+  tailsDropped: boolean; resultTextDropped: boolean;
+  error?: { code: string; originalCode?: string; originalMessage?: string; case: string };
+  exitCode: number|null; signal: string|null; timedOut: boolean;
+}
+
+/** @id TEST-M5-CI-MATRIX-ERROR-001
+ * @verifies REQ-M5-CI-008
+ */
+it('TEST-M5-CI-MATRIX-ERROR-001 captures bounded raw streams and normalizes ordered failures without persisted secrets or secondary errors',async () => {
+  const api: unknown=candidate;
+  if(!api||typeof api!=='object'||!('runCandidateGateCommand' in api)||typeof api.runCandidateGateCommand!=='function'
+    ||!('normalizeCandidateGateReport' in api)||typeof api.normalizeCandidateGateReport!=='function') {
+    throw new Error('Missing typed candidate workflow normalizer');
+  }
+  const run=api.runCandidateGateCommand;
+  const normalize=api.normalizeCandidateGateReport;
+  const root=mkdtempSync(join(tmpdir(),'gate-errors-'));
+  const resultPath=join(root,'candidate-gate-result.json');
+  const context={
+    repositoryId: 'repository:'+'a'.repeat(64),changeId: 'CHANGE-0017',generation: 29,
+    candidateCommit: 'b'.repeat(40),gateInputFingerprint: 'c'.repeat(64),job: { os: 'ubuntu',nodeMajor: 24 }
+  };
+  const commands=candidate.requiredCandidateGateCommands.map((name) => ({
+    name: 'command:'+name,required: true,status: 'pass',summary: 'passed',exitCode: 0,stdout: '',stderr: '',
+  }));
+  const report=(extra: unknown[]=[]) => JSON.stringify({ checks: [...commands,...extra] });
+  const sha=(text: string) => createHash('sha256').update(text).digest('hex');
+  const execute=async (stdout: string,stderr='',exit=0,secrets: string[]=[]) => {
+    const outcome: Outcome=await run({
+      command: process.execPath,
+      args: ['-e',`process.stdout.write(${JSON.stringify(stdout)});process.stderr.write(${JSON.stringify(stderr)});process.exitCode=${exit}`],
+      cwd: root,temporaryDirectory: root,timeoutMs: 300000,secrets
+    });
+    expect(outcome.stdoutSha256).toBe(sha(stdout));
+    expect(outcome.stderrSha256).toBe(sha(stderr));
+    const result: Result=await normalize(outcome,{ resultPath,context,preTreeMatchesCandidate: true,postTreeMatchesCandidate: true,secrets });
+    expect(existsSync(outcome.stdoutPath)).toBe(false);
+    expect(existsSync(outcome.stderrPath)).toBe(false);
+    expect(JSON.parse(readFileSync(resultPath,'utf8')).status).toBe(result.status);
+    return result;
+  };
+  try {
+    expect((await execute(report())).status).toBe('pass');
+    expect((await execute(report([{ name: 'approval',required: true,status: 'fail',summary: 'release pending' }]))).status).toBe('pass');
+    const failed=await execute(report([{
+      name: 'trace',required: true,status: 'fail',summary: 'primary failure',
+      diagnostics: [{ code: 'TRACE_FAILED',severity: 'error',message: 'primary diagnostic' }]
+    }]),'',2);
+    expect(failed.status).toBe('fail');
+    expect(readFileSync(resultPath,'utf8')).toContain('primary diagnostic');
+    const abnormalCases: Array<[string,string]>=[
+      ['','empty-stdout'],['{','malformed-json'],['{}','missing-checks'],['{"checks":{}}','non-array-checks'],
+      ['null','invalid-root'],['{"checks":[{"name":"bad","required":"true","status":"pass","summary":"bad"}]}','invalid-check'],
+      [JSON.stringify({ error: { code: 'TEST_RUNTIME_BOOTSTRAP_INVALID',message: 'acknowledgment-binding: incomplete command' } }),'cli-error'],
+    ];
+    for(const [stdout,caseName] of abnormalCases) {
+      const result=await execute(stdout,'runner diagnostic',1);
+      expect(result.status).toBe('fail');
+      expect(result.error?.code).toBe('CANDIDATE_GATE_REPORT_INVALID');
+      expect(result.error?.case).toBe(caseName);
+      if(caseName==='cli-error') {
+        expect(result.error?.originalCode).toBe('TEST_RUNTIME_BOOTSTRAP_INVALID');
+        expect(result.error?.originalMessage).toContain('incomplete command');
+      }
+    }
+    const nonzero=await execute(report(),'',7);
+    expect(nonzero.status).toBe('fail');
+    expect(nonzero.exitCode).toBe(7);
+    const timed: Outcome=await run({
+      command: process.execPath,args: ['-e','setTimeout(()=>{},10000)'],
+      cwd: root,temporaryDirectory: root,timeoutMs: 30,secrets: []
+    });
+    const timedResult: Result=await normalize(timed,{ resultPath,context,secrets: [] });
+    expect(timedResult.error?.case).toBe('timeout');
+    expect(timedResult.status).toBe('fail');
+    const signaled: Outcome=await run({
+      command: process.execPath,args: ['-e','process.kill(process.pid,"SIGTERM")'],
+      cwd: root,temporaryDirectory: root,timeoutMs: 300000,secrets: []
+    });
+    const signalResult: Result=await normalize(signaled,{ resultPath,context,secrets: [] });
+    expect(signalResult.error?.case).toBe('signal');
+    expect(signalResult.status).toBe('fail');
+    const secret='configured-"secret"\nvalue';
+    const escaped=JSON.stringify(secret).slice(1,-1);
+    const token='ghp_'+'x'.repeat(40);
+    const ansiSecret=secret.split('').join('\u001b[31m');
+    const text=report([{ name: 'long',required: false,status: 'pass',summary: secret+'x'.repeat(25000) }]);
+    const validSecret=await execute(text,`${secret}\n${token}\nAuthorization: Bearer private-value\n${ansiSecret}`,0,[secret]);
+    expect(validSecret.status).toBe('pass');
+    const persisted=readFileSync(resultPath,'utf8');
+    for(const representation of [secret,escaped,token,ansiSecret,'private-value']) expect(persisted).not.toContain(representation);
+    expect(validSecret.stdoutSha256).toBe(sha(text));
+    expect(validSecret.stdoutTail!.length).toBeLessThanOrEqual(20000);
+    const chunkText=report([{ name: 'chunk',required: false,status: 'pass',summary: 'x'.repeat(19000)+secret+'y'.repeat(19000) }]);
+    const chunks=[chunkText.slice(0,19090),chunkText.slice(19090,19102),chunkText.slice(19102)];
+    const chunked: Outcome=await run({
+      command: process.execPath,
+      args: ['-e',`const parts=${JSON.stringify(chunks)};let i=0;const t=setInterval(()=>{if(i<parts.length)process.stdout.write(parts[i++]);else clearInterval(t)},5)`],
+      cwd: root,temporaryDirectory: root,timeoutMs: 300000,secrets: [secret]
+    });
+    expect((await normalize(chunked,{ resultPath,context,preTreeMatchesCandidate: true,postTreeMatchesCandidate: true,secrets: [secret] })).status).toBe('pass');
+    expect(readFileSync(resultPath,'utf8')).not.toContain(escaped);
+    const omitted=await execute(report(),'diagnostic',0,['z'.repeat(8193)]);
+    expect(omitted.status).toBe('fail');
+    expect(omitted.tailsDropped).toBe(true);
+    expect(omitted.resultTextDropped).toBe(true);
+    expect(omitted.stdoutTail).toBeUndefined();
+    expect(omitted.stderrTail).toBeUndefined();
+    const longToken=await execute('{}','ghp_'+'a'.repeat(9000));
+    expect(longToken.resultTextDropped).toBe(true);
+    expect(longToken.stdoutTail).toBeUndefined();
+    const unknownEncoding=Buffer.from(secret).toString('base64');
+    const outsideClaim=await execute('{}',unknownEncoding,1,[secret]);
+    expect(outsideClaim.stderrTail).toContain(unknownEncoding);
+    const capped: Outcome=await run({
+      command: process.execPath,
+      args: ['-e','const block="x".repeat(1000000);for(let i=0;i<110;i++)process.stdout.write(block)'],
+      cwd: root,temporaryDirectory: root,timeoutMs: 300000,secrets: []
+    });
+    expect(statSync(capped.stdoutPath).size).toBeLessThanOrEqual(100000000);
+    const capResult: Result=await normalize(capped,{ resultPath,context,secrets: [] });
+    expect(capResult.status).toBe('fail');
+    expect(capResult.exitCode).not.toBe(0);
+    const fallback=fileURLToPath(new URL('../.github/scripts/write-candidate-gate-runner-failure.mjs',import.meta.url));
+    const modulePath=join(root,'candidate-gate.mjs');
+    for(const content of [undefined,'not javascript !!!']) {
+      if(content!==undefined) writeFileSync(modulePath,content);
+      try {
+        execFileSync(process.execPath,['--input-type=module','-e',
+          `try{await import(${JSON.stringify(pathToFileURL(modulePath).href)})}catch{await import(${JSON.stringify(pathToFileURL(fallback).href)})}`],
+          { env: { ...process.env,RUNNER_TEMP: root,GH_TOKEN: token },stdio: 'pipe' });
+        throw new Error('Fallback must exit non-zero');
+      } catch(cause) {
+        expect(cause).toHaveProperty('status',1);
+      }
+      const failureText=readFileSync(resultPath,'utf8');
+      expect(failureText).toContain('GATE_RUNNER_UNAVAILABLE');
+      expect(failureText).not.toContain(token);
+      expect(JSON.parse(failureText).status).toBe('fail');
+    }
+    const workflow=readFileSync(fileURLToPath(new URL('../.github/workflows/candidate-gate.yml',import.meta.url)),'utf8');
+    expect(workflow).toContain('runCandidateGateCommand');
+    expect(workflow).toContain('normalizeCandidateGateReport');
+    expect(workflow).toContain('write-candidate-gate-runner-failure.mjs');
+    expect(workflow).not.toContain('const failedChecks = report.checks');
+  } finally { rmSync(root,{ recursive: true,force: true }); }
+},60000);

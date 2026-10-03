@@ -5505,40 +5505,363 @@
       "phase": "complete",
       "status": "completed",
       "recordedAt": "2026-10-02T11:20:11.947Z"
+    },
+    {
+      "skill": "sdd-requirements",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0017",
+      "generation": 29,
+      "requirementIds": [
+        "REQ-M5-CI-003",
+        "REQ-M5-CI-004",
+        "REQ-M5-CI-005",
+        "REQ-M5-CI-006",
+        "REQ-M5-CI-007",
+        "REQ-M5-CI-008"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-10-02T13:10:57.467Z"
+    },
+    {
+      "skill": "sdd-design",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0017",
+      "generation": 29,
+      "requirementIds": [
+        "REQ-M5-CI-003",
+        "REQ-M5-CI-004",
+        "REQ-M5-CI-005",
+        "REQ-M5-CI-006",
+        "REQ-M5-CI-007",
+        "REQ-M5-CI-008"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-10-02T13:19:00.816Z"
+    },
+    {
+      "skill": "sdd-implementation",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0017",
+      "generation": 29,
+      "requirementIds": [
+        "REQ-M5-CI-003",
+        "REQ-M5-CI-004",
+        "REQ-M5-CI-005",
+        "REQ-M5-CI-006",
+        "REQ-M5-CI-007",
+        "REQ-M5-CI-008"
+      ],
+      "phase": "complete",
+      "status": "failed",
+      "reason": "Stopped on verified DES-M5-CI-006 contradiction: Git reports i/none w/none for empty text and binary files, and i/lf w/lf for -text JSON blobs, while the approved design permits only i/lf w/lf for text and i/-text w/-text for binary, including empty files.",
+      "recordedAt": "2026-10-02T13:51:38.844Z"
+    },
+    {
+      "skill": "sdd-change",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0017",
+      "generation": 29,
+      "requirementIds": [
+        "REQ-M5-CI-003",
+        "REQ-M5-CI-004",
+        "REQ-M5-CI-005",
+        "REQ-M5-CI-006",
+        "REQ-M5-CI-007",
+        "REQ-M5-CI-008"
+      ],
+      "phase": "complete",
+      "status": "failed",
+      "reason": "Generation 29 blocked by verified DES-M5-CI-006 EOL contradiction; requirements/design/ADR unchanged; three managed Red/Green batches recorded; no commit or push.",
+      "recordedAt": "2026-10-02T13:51:40.193Z"
+    },
+    {
+      "skill": "sdd-design",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0017",
+      "generation": 29,
+      "requirementIds": [
+        "REQ-M5-CI-003",
+        "REQ-M5-CI-004",
+        "REQ-M5-CI-005",
+        "REQ-M5-CI-006",
+        "REQ-M5-CI-007",
+        "REQ-M5-CI-008"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-10-02T14:03:29.767Z"
+    },
+    {
+      "skill": "sdd-change",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0017",
+      "generation": 29,
+      "requirementIds": [
+        "REQ-M5-CI-003",
+        "REQ-M5-CI-004",
+        "REQ-M5-CI-005",
+        "REQ-M5-CI-006",
+        "REQ-M5-CI-007",
+        "REQ-M5-CI-008"
+      ],
+      "phase": "complete",
+      "status": "skipped",
+      "reason": "Generation 29 implementation and requested verification completed. Full gate and release stages are explicitly deferred; sdd-implementation completion declaration was not recorded as requested.",
+      "recordedAt": "2026-10-02T22:10:15.985Z"
+    },
+    {
+      "skill": "sdd-requirements",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0017",
+      "generation": 29,
+      "requirementIds": [
+        "REQ-M5-CI-003",
+        "REQ-M5-CI-004",
+        "REQ-M5-CI-005",
+        "REQ-M5-CI-006",
+        "REQ-M5-CI-007",
+        "REQ-M5-CI-008"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-10-02T22:36:07.436Z"
+    },
+    {
+      "skill": "sdd-design",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0017",
+      "generation": 29,
+      "requirementIds": [
+        "REQ-M5-CI-003",
+        "REQ-M5-CI-004",
+        "REQ-M5-CI-005",
+        "REQ-M5-CI-006",
+        "REQ-M5-CI-007",
+        "REQ-M5-CI-008"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-10-02T22:45:08.192Z"
+    },
+    {
+      "skill": "sdd-implementation",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0017",
+      "generation": 29,
+      "requirementIds": [
+        "REQ-M5-CI-003",
+        "REQ-M5-CI-004",
+        "REQ-M5-CI-005",
+        "REQ-M5-CI-006",
+        "REQ-M5-CI-007",
+        "REQ-M5-CI-008"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-10-03T01:21:38.635Z"
+    },
+    {
+      "skill": "sdd-quality",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0017",
+      "generation": 29,
+      "requirementIds": [
+        "REQ-M5-CI-003",
+        "REQ-M5-CI-004",
+        "REQ-M5-CI-005",
+        "REQ-M5-CI-006",
+        "REQ-M5-CI-007",
+        "REQ-M5-CI-008"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-10-03T01:50:49.288Z"
     }
   ],
   "verification": {
     "mode": "compatible",
-    "sourceSha256": "d8b1e566c23f53c13de1960ac6bc330c4b7ec89ed9794f3634980f2c7d09669a",
-    "eventsSha256": "5935ab8eb46197f855b55dd3118451e0f15091fe718cb924fe8fba57a2fa6e5e",
-    "verifiedAt": "2026-10-02T11:20:12.864Z",
+    "sourceSha256": "f843368ed3872abbd721354fad644086a6fe4bfc02724b02bda125aa6391b605",
+    "eventsSha256": "44564d17033d8ba672ba144b57d7f99e4d59e0fcb4925c885f98f5a8e0c2079e",
+    "verifiedAt": "2026-10-03T01:51:36.227Z",
     "invocations": [
       {
         "skill": "sdd-requirements",
-        "toolCallId": "call_DTikQbU1d9mrwOqJU0LRCaZT",
-        "invokedAt": "2026-10-02T10:15:08.847Z",
-        "completedAt": "2026-10-02T10:15:08.854Z",
+        "toolCallId": "call_74eMYzvM699wr1HEubgasXR0",
+        "invokedAt": "2026-10-02T13:04:18.578Z",
+        "completedAt": "2026-10-02T13:04:18.585Z",
         "status": "completed"
       },
       {
         "skill": "sdd-design",
-        "toolCallId": "call_Lr6aHjRAbjBg7PF6dG4I2DQw",
-        "invokedAt": "2026-10-02T10:17:30.717Z",
-        "completedAt": "2026-10-02T10:17:30.733Z",
+        "toolCallId": "call_iCEepiVqojqEW23m0USLvKVu",
+        "invokedAt": "2026-10-02T13:12:02.143Z",
+        "completedAt": "2026-10-02T13:12:02.155Z",
         "status": "completed"
       },
       {
         "skill": "sdd-implementation",
-        "toolCallId": "call_INTXt973Wc83Rub0JO7nUs0n",
-        "invokedAt": "2026-10-02T10:55:32.226Z",
-        "completedAt": "2026-10-02T10:55:32.238Z",
+        "toolCallId": "call_YSZIXOe7r8uH59uXDGfKHChn",
+        "invokedAt": "2026-10-02T13:23:28.515Z",
+        "completedAt": "2026-10-02T13:23:28.526Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-change",
+        "toolCallId": "call_CuYZpnFo1s0PZIR04b2UDsW4",
+        "invokedAt": "2026-10-02T13:23:55.591Z",
+        "completedAt": "2026-10-02T13:23:55.595Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-implementation",
+        "toolCallId": "call_wjiLTnAizjNdrtB6b6IVQpkB",
+        "invokedAt": "2026-10-02T13:24:03.606Z",
+        "completedAt": "2026-10-02T13:24:03.609Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-design",
+        "toolCallId": "call_GNu90JZBf2u5OlTGDnEd8wzA",
+        "invokedAt": "2026-10-02T13:53:32.738Z",
+        "completedAt": "2026-10-02T13:53:32.746Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-design",
+        "toolCallId": "call_ehDREAUFnkUM9OLNt239NONo",
+        "invokedAt": "2026-10-02T13:54:35.717Z",
+        "completedAt": "2026-10-02T13:54:35.726Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-change",
+        "toolCallId": "call_z64th5GHj1PolA5zye0gKVMA",
+        "invokedAt": "2026-10-02T13:57:21.086Z",
+        "completedAt": "2026-10-02T13:57:21.092Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-design",
+        "toolCallId": "call_kihrCSrG9H6oCjdTIxfwjZxp",
+        "invokedAt": "2026-10-02T13:57:26.329Z",
+        "completedAt": "2026-10-02T13:57:26.339Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-implementation",
+        "toolCallId": "call_3l9OmAtCCFiiZJNCAaSkjMno",
+        "invokedAt": "2026-10-02T21:16:37.854Z",
+        "completedAt": "2026-10-02T21:16:37.869Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-change",
+        "toolCallId": "call_YNCESJzmXYIiuFsbTicxOOiJ",
+        "invokedAt": "2026-10-02T21:16:53.542Z",
+        "completedAt": "2026-10-02T21:16:53.544Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-implementation",
+        "toolCallId": "call_VqyMNtDemf3d92KKX70Z9VwE",
+        "invokedAt": "2026-10-02T21:16:57.598Z",
+        "completedAt": "2026-10-02T21:16:57.706Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-change",
+        "toolCallId": "call_yVzfSjuIOcRm2hrqVThyu6UJ",
+        "invokedAt": "2026-10-02T22:22:20.642Z",
+        "completedAt": "2026-10-02T22:22:20.645Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-implementation",
+        "toolCallId": "call_Dih9zo9X3vBITDEeK5tB3qr9",
+        "invokedAt": "2026-10-02T22:22:25.706Z",
+        "completedAt": "2026-10-02T22:22:25.709Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-change",
+        "toolCallId": "call_hTsEwm1ZEkRmGKMC8owk3Roi",
+        "invokedAt": "2026-10-02T22:25:08.674Z",
+        "completedAt": "2026-10-02T22:25:08.685Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-design",
+        "toolCallId": "call_ipGJvAA1g0cKDVEzuADfigD9",
+        "invokedAt": "2026-10-02T22:25:11.060Z",
+        "completedAt": "2026-10-02T22:25:11.075Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-requirements",
+        "toolCallId": "call_k365YTWwrqaelWAhMHEMQcRQ",
+        "invokedAt": "2026-10-02T22:27:23.249Z",
+        "completedAt": "2026-10-02T22:27:23.259Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-implementation",
+        "toolCallId": "call_ZKa9D2UBHZXVaeq4B6XPua23",
+        "invokedAt": "2026-10-02T22:46:36.695Z",
+        "completedAt": "2026-10-02T22:46:36.705Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-change",
+        "toolCallId": "call_NWOcWSrgBstXJL8T5JHeDphp",
+        "invokedAt": "2026-10-02T22:46:50.715Z",
+        "completedAt": "2026-10-02T22:46:50.718Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-implementation",
+        "toolCallId": "call_alERVMZMqVSkaL7eIsm3DntT",
+        "invokedAt": "2026-10-02T22:46:54.434Z",
+        "completedAt": "2026-10-02T22:46:54.557Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-change",
+        "toolCallId": "call_JntTiCpBWit91ikZdhT77eMc",
+        "invokedAt": "2026-10-02T22:48:42.181Z",
+        "completedAt": "2026-10-02T22:48:42.288Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-change",
+        "toolCallId": "call_m7HcWICgmFre4uaIqIA8mNcc",
+        "invokedAt": "2026-10-03T00:26:20.133Z",
+        "completedAt": "2026-10-03T00:26:20.141Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-traceability",
+        "toolCallId": "call_roxfSdjE5HAElCrVDUEB7wqR",
+        "invokedAt": "2026-10-03T01:14:30.566Z",
+        "completedAt": "2026-10-03T01:14:30.571Z",
         "status": "completed"
       },
       {
         "skill": "sdd-quality",
-        "toolCallId": "call_rKl5ymaGFktz96naIAU5CPrA",
-        "invokedAt": "2026-10-02T11:08:15.628Z",
-        "completedAt": "2026-10-02T11:08:15.638Z",
+        "toolCallId": "call_jmG8eeTsVCp3ccADzyRK716Y",
+        "invokedAt": "2026-10-03T01:21:17.967Z",
+        "completedAt": "2026-10-03T01:21:18.095Z",
         "status": "completed"
       }
     ]

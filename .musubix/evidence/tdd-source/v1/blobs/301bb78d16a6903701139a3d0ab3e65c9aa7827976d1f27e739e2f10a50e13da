@@ -1,0 +1,1786 @@
+import { constants } from 'node:fs';
+import { lstat, mkdir, open, rename, unlink } from 'node:fs/promises';
+import { dirname, isAbsolute, join, normalize } from 'node:path';
+import { canonicalBytes, sha256 } from './canonical.js';
+
+const GAP_KEY = '604514880a44924d56a8f0f3177a62540de526f7101b356271be67fc33977af9';
+const AUTHORITY_KEY = '9dc882e33a5b453757c4b3a5ca16593aac43fc8375cde648c74e8e50553c482b';
+const P_ID = 'fe27129bcb82de2245c321e2a8af1e01704a87101fb6013e497881b4c77cd690';
+const FENCE_PREFIX = `git-common/musubix5/g10-recovery-v1/campaigns/${GAP_KEY}/fence`;
+const PREPARATION_ROOT = `.musubix/cache/g10-recovery-v1/campaigns/${GAP_KEY}/p/${P_ID}`;
+const HARD_LIMIT_BYTES = 536_870_912;
+const CHARGED_MAXIMUM_BYTES = 534_118_400;
+const publicationBoundaries = [
+  'before-writing',
+  'writing-before-fsync',
+  'writing-fsynced',
+  'pending-before-directory-fsync',
+  'pending-fsynced',
+  'final-before-directory-fsync',
+] as const;
+
+export const generation10PublicationFiles = [
+  'preparation/codec.json',
+  'preparation/budget-spec.json',
+  'header/P.json',
+  'table/slots.json',
+  'charge/genesis.json',
+  'owner/genesis.json',
+  'registry/fence.json',
+  'registry/genesis.json',
+  'header/seal.json',
+  'control/p-sealed.json',
+  'control/claim-dispatch.json',
+  'registry/journal/000000000001.json',
+  'registry/claim.json',
+  'control/release.json',
+  'control/no-credit.json',
+  'control/D1-expected-delta.json',
+  'control/D1-admission.json',
+  'control/credit-invalidation.json',
+] as const;
+
+const publishSteps = [
+  'publish-codec',
+  'publish-budget',
+  'publish-reservation',
+  'publish-slots',
+  'publish-attempt-genesis',
+  'publish-owner-genesis',
+  'publish-fence',
+  'publish-registry',
+  'publish-seal',
+  'publish-p-sealed',
+  'publish-dispatch',
+  'publish-claim-journal',
+  'publish-claim',
+  'publish-release',
+  'publish-no-credit',
+  'publish-d1-expected-delta',
+  'publish-d1-admission',
+  'publish-credit-invalidation',
+] as const;
+
+export interface RecoveryRef10 {
+  path: string;
+  sha256: string;
+  size: number;
+}
+
+export interface RecoveryAuthority10 {
+  schemaVersion: 1;
+  kind: 'change0017-g10-recovery-authority-v1';
+  changeId: 'CHANGE-0017';
+  generation: 10;
+  requirementsApproval: RecoveryRef10;
+  designApproval: RecoveryRef10;
+  consent: RecoveryRef10;
+  repositoryId: string;
+  controlRoot: string;
+  baselineHead: string;
+  gapKey: typeof GAP_KEY;
+  authorityKey: typeof AUTHORITY_KEY;
+  pId: typeof P_ID;
+  recoveryAuthority29: RecoveryRef10;
+  abortRelease29: RecoveryRef10;
+  writerResume29: RecoveryRef10;
+}
+
+export interface RecoveryContext10 {
+  controlRoot: string;
+  gitCommonRoot: string;
+  repositoryId: string;
+  baselineHead: string;
+  requirementsApproval: RecoveryRef10;
+  designApproval: RecoveryRef10;
+  consent: RecoveryRef10;
+  recoveryAuthority29: RecoveryRef10;
+  abortRelease29: RecoveryRef10;
+  writerResume29: RecoveryRef10;
+  designManifestSha256: string;
+}
+
+export interface RecoveryPlan10 {
+  roots: { control: string; fence: string; preparation: typeof PREPARATION_ROOT };
+  authority: RecoveryAuthority10;
+  authorityRef: RecoveryRef10;
+  designManifestSha256: string;
+  publicationFiles: typeof generation10PublicationFiles;
+  accounting: {
+    chargedMaximumBytes: typeof CHARGED_MAXIMUM_BYTES;
+    hardLimitBytes: typeof HARD_LIMIT_BYTES;
+    unwritableMarginBytes: 2_752_512;
+  };
+}
+
+export interface RecoveryFenceCounter10 {
+  schemaVersion: 1;
+  kind: 'change0017-g10-fence-counter-v1';
+  gapKey: typeof GAP_KEY;
+  sequence: number;
+  previousSha256: string | null;
+}
+
+export interface CampaignFence10 {
+  schemaVersion: 1;
+  kind: 'change0017-g10-campaign-fence-v1';
+  gapKey: typeof GAP_KEY;
+  campaignFence: number;
+  counter: RecoveryRef10;
+  designManifestSha256: string;
+}
+
+export interface FenceHolder10 {
+  schemaVersion: 1;
+  kind: 'change0017-g10-fence-holder-v1';
+  pid: number;
+  startTicks: number;
+  bootId: string;
+  lockDevice: number;
+  lockInode: number;
+  holderFence: number;
+  counter: RecoveryRef10;
+}
+
+export interface RecoveryFenceRecord10 {
+  schemaVersion: 1;
+  kind: 'change0017-g10-recovery-fence-v1';
+  campaign: RecoveryRef10;
+  holder: RecoveryRef10;
+  counter: RecoveryRef10;
+  campaignFence: number;
+  holderFence: number;
+}
+
+export interface RecoveryFence10 {
+  campaignFence: number;
+  holderFence: number;
+  counter: RecoveryFenceCounter10;
+  campaign: CampaignFence10;
+  holder: FenceHolder10;
+  recoveryFence: RecoveryFenceRecord10;
+}
+
+export interface RecoveryFenceInput10 {
+  previousCounter: RecoveryFenceCounter10 | null;
+  campaign: CampaignFence10 | null;
+  pid: number;
+  startTicks: number;
+  bootId: string;
+  lockDevice: number;
+  lockInode: number;
+  seenSequences?: number[];
+  recoverCampaignFromCounter?: boolean;
+}
+
+export interface RecoveryPreparation10 {
+  attemptLedgerGenesis: {
+    schemaVersion: 1;
+    kind: 'change0017-g10-attempt-ledger-genesis-v1';
+    gapKey: typeof GAP_KEY;
+    pId: typeof P_ID;
+    entries: [];
+    previousSha256: null;
+  };
+  ownerLedgerGenesis: {
+    schemaVersion: 1;
+    kind: 'change0017-g10-owner-ledger-genesis-v1';
+    gapKey: typeof GAP_KEY;
+    pId: typeof P_ID;
+    owners: [];
+    previousSha256: null;
+  };
+  reservation: {
+    schemaVersion: 1;
+    kind: 'change0017-g10-preparation-reservation-v5';
+    slotCount: 266;
+    maximumBytes: 287_178_752;
+    sharedMaximumBytes: 25_165_824;
+    allocatedMaximumBytes: 286_654_464;
+    recoveryAuthority: RecoveryRef10;
+    fence: RecoveryRef10;
+    codec: RecoveryRef10;
+    budgetSpec: RecoveryRef10;
+    slotsRoot: string;
+    slotsSha256: string;
+  };
+  slots: Array<{ id: string; owner: 'P-budget'; maximumBytes: number }>;
+  codec: Record<string, unknown>;
+  budgetSpec: Record<string, unknown>;
+  registryFence: Record<string, unknown>;
+  registryFenceRef: RecoveryRef10;
+}
+
+export type RecoveryAction10 =
+  | { kind: 'resume'; step: typeof publishSteps[number] }
+  | { kind: 'abort-before-dispatch' }
+  | { kind: 'release-only-verify'; step?: 'publish-release' }
+  | { kind: 'terminal-no-credit-stop' }
+  | { kind: 'complete' };
+
+export interface RecoveryObservation10 {
+  classification: string;
+  action: RecoveryAction10;
+}
+
+export interface Generation10BoundaryRow {
+  id: string;
+  family: 'P10' | 'F10' | 'D1';
+  boundary: string;
+}
+
+export interface RecoveryAccountingEntry10 {
+  path: string;
+  owner: 'preparation' | 'post';
+  mode: '100644' | '100755';
+  maximumBytes: number;
+}
+
+export interface RecoveryAccountingManifest10 {
+  schemaVersion: 1;
+  kind: 'change0017-g10-recovery-accounting-manifest-v1';
+  entries: RecoveryAccountingEntry10[];
+  preparationEntries: 266;
+  postEntries: 102;
+  preparationMaximumBytes: 287_178_752;
+  postSlotBytes: 240_648_192;
+  postSharedBytes: 6_291_456;
+  chargedMaximumBytes: 534_118_400;
+  hardLimitBytes: 536_870_912;
+  unwritableMarginBytes: 2_752_512;
+}
+
+export interface D1ExpectedDeltaMutation10 {
+  path: string;
+  writingPath: string;
+  beforeSha256: string;
+  afterSha256: string;
+}
+
+export interface D1ExpectedDeltaInput10 {
+  designSourcePrecondition: RecoveryRef10;
+  traceIndexPrecondition: RecoveryRef10;
+  resolvedJournalPath: string;
+  mutations: D1ExpectedDeltaMutation10[];
+}
+
+export interface D1ExpectedDelta10 extends D1ExpectedDeltaInput10 {
+  schemaVersion: 1;
+  kind: 'change0017-g10-d1-expected-delta-v1';
+}
+
+function assertSha(value: unknown, name: string): asserts value is string {
+  if (typeof value !== 'string' || !/^[0-9a-f]{64}$/.test(value)) {
+    throw new Error(`${name} must be a lowercase SHA-256.`);
+  }
+}
+
+function assertPositiveInteger(value: unknown, name: string): asserts value is number {
+  if (!Number.isSafeInteger(value) || (value as number) <= 0) {
+    throw new Error(`${name} must be a positive integer.`);
+  }
+}
+
+function assertRef(value: RecoveryRef10, name: string): void {
+  if (!value || Object.keys(value).sort().join(',') !== 'path,sha256,size') {
+    throw new Error(`${name} must contain exactly path, sha256 and size.`);
+  }
+  if (!value.path || value.path.startsWith('/') || value.path.includes('\\') || value.path.includes('//')) {
+    throw new Error(`${name}.path must be a safe relative path.`);
+  }
+  assertSha(value.sha256, `${name}.sha256`);
+  if (!Number.isSafeInteger(value.size) || value.size < 0) {
+    throw new Error(`${name}.size must be a nonnegative integer.`);
+  }
+}
+
+function assertClosed(value: object, expected: readonly string[], name: string): void {
+  const actual = Object.keys(value).sort();
+  const required = [...expected].sort();
+  if (actual.length !== required.length || actual.some((key, index) => key !== required[index])) {
+    throw new Error(`${name} must have exact closed properties.`);
+  }
+}
+
+function artifactRef(path: string, value: unknown): RecoveryRef10 {
+  const bytes = canonicalBytes(value);
+  return { path, sha256: sha256(bytes), size: bytes.length };
+}
+
+function assertCounter(counter: RecoveryFenceCounter10): void {
+  assertClosed(counter, ['schemaVersion', 'kind', 'gapKey', 'sequence', 'previousSha256'], 'Counter');
+  if (counter.schemaVersion !== 1
+    || counter.kind !== 'change0017-g10-fence-counter-v1'
+    || counter.gapKey !== GAP_KEY) {
+    throw new Error('Counter schema or authority binding is invalid.');
+  }
+  assertPositiveInteger(counter.sequence, 'Counter sequence');
+  if (counter.sequence === 1 ? counter.previousSha256 !== null : counter.previousSha256 === null) {
+    throw new Error('Counter predecessor does not match its sequence.');
+  }
+  if (counter.previousSha256 !== null) assertSha(counter.previousSha256, 'Counter previousSha256');
+}
+
+function assertCampaign(campaign: CampaignFence10, plan: RecoveryPlan10): void {
+  assertClosed(
+    campaign,
+    ['schemaVersion', 'kind', 'gapKey', 'campaignFence', 'counter', 'designManifestSha256'],
+    'Campaign fence',
+  );
+  if (campaign.schemaVersion !== 1
+    || campaign.kind !== 'change0017-g10-campaign-fence-v1'
+    || campaign.gapKey !== GAP_KEY
+    || campaign.designManifestSha256 !== plan.designManifestSha256) {
+    throw new Error('Campaign fence binding is invalid.');
+  }
+  assertPositiveInteger(campaign.campaignFence, 'Campaign fence sequence');
+  if (campaign.campaignFence !== 1) throw new Error('Campaign fence must bind the first sequence.');
+  assertRef(campaign.counter, 'Campaign counter');
+}
+
+/** @id CODE-M5-G10-RECOVERY-AUTHORITY-VALIDATE-001
+   * @implements REQ-M5-APPROVAL-007 REQ-M5-EVIDENCE-007
+   * @design DES-M5-024
+   */
+  export function validateRecoveryAuthority10(authority: RecoveryAuthority10): RecoveryAuthority10 {
+    assertClosed(authority, [
+      'schemaVersion',
+      'kind',
+      'changeId',
+      'generation',
+      'requirementsApproval',
+      'designApproval',
+      'consent',
+      'repositoryId',
+      'controlRoot',
+      'baselineHead',
+      'gapKey',
+      'authorityKey',
+      'pId',
+      'recoveryAuthority29',
+      'abortRelease29',
+      'writerResume29',
+    ], 'RecoveryAuthority10');
+    if (authority.schemaVersion !== 1
+      || authority.kind !== 'change0017-g10-recovery-authority-v1'
+      || authority.changeId !== 'CHANGE-0017'
+      || authority.generation !== 10
+      || authority.gapKey !== GAP_KEY
+      || authority.authorityKey !== AUTHORITY_KEY
+      || authority.pId !== P_ID) {
+      throw new Error('RecoveryAuthority10 authority binding is invalid.');
+    }
+    assertSha(authority.repositoryId, 'RecoveryAuthority10.repositoryId');
+    assertSha(authority.baselineHead, 'RecoveryAuthority10.baselineHead');
+    if (!isAbsolute(authority.controlRoot) || normalize(authority.controlRoot) !== authority.controlRoot) {
+      throw new Error('RecoveryAuthority10 control root must be canonical.');
+    }
+    for (const [name, value] of Object.entries({
+      requirementsApproval: authority.requirementsApproval,
+      designApproval: authority.designApproval,
+      consent: authority.consent,
+      recoveryAuthority29: authority.recoveryAuthority29,
+      abortRelease29: authority.abortRelease29,
+      writerResume29: authority.writerResume29,
+    })) assertRef(value, `RecoveryAuthority10.${name}`);
+    return authority;
+  }
+
+  /** @id CODE-M5-G10-RECOVERY-COMPATIBILITY-001
+   * @implements REQ-M5-COMPAT-013
+   * @design DES-M5-024
+   */
+  export function recoveryCompatibilityBinding10(_plan: RecoveryPlan10): {
+    generation: 10;
+    gapKey: typeof GAP_KEY;
+    authorityKey: typeof AUTHORITY_KEY;
+    pId: typeof P_ID;
+    historicalAuthority: false;
+  } {
+    return {
+      generation: 10,
+      gapKey: GAP_KEY,
+      authorityKey: AUTHORITY_KEY,
+      pId: P_ID,
+      historicalAuthority: false,
+    };
+  }
+
+  /** @id CODE-M5-G10-RECOVERY-GRAPH-001
+   * @implements REQ-M5-GRAPH-003
+   * @design DES-M5-024
+   */
+  export function generation10DependencyGraph(): {
+    node: 'DES-M5-024';
+    dependsOn: string[];
+    cyclic: false;
+  } {
+    return {
+      node: 'DES-M5-024',
+      dependsOn: [
+        'DES-M5-005',
+        'DES-M5-006',
+        'DES-M5-007',
+        'DES-M5-012',
+        'DES-M5-015',
+        'DES-M5-018',
+      ],
+      cyclic: false,
+    };
+  }
+function merkleRoot(values: unknown[]): string {
+  if (values.length === 0) throw new Error('Merkle input must not be empty.');
+  let level = values.map((value) => sha256(Buffer.concat([
+    Buffer.from('leaf\0'),
+    canonicalBytes(value),
+  ])));
+  let width = 1;
+  while (width < level.length) width *= 2;
+  while (level.length < width) level.push(level.at(-1)!);
+  while (level.length > 1) {
+    const next: string[] = [];
+    for (let index = 0; index < level.length; index += 2) {
+      next.push(sha256(Buffer.concat([
+        Buffer.from('node\0'),
+        Buffer.from(level[index]!, 'hex'),
+        Buffer.from(level[index + 1]!, 'hex'),
+      ])));
+    }
+    level = next;
+  }
+  return level[0]!;
+}
+
+function safePublicationPath(root: string, relativePath: string): string {
+      if (!root || !isAbsolute(root) || !relativePath || isAbsolute(relativePath) || relativePath.includes('\\')) {
+        throw new Error('Publication path must use an absolute root and safe relative path.');
+      }
+      const segments = relativePath.split('/');
+      if (segments.some((segment) => !segment || segment === '.' || segment === '..')) {
+        throw new Error('Publication path contains an unsafe segment.');
+      }
+      return join(root, ...segments);
+    }
+
+    async function ensurePublicationDirectory(root: string, relativePath: string): Promise<string> {
+      const rootStat = await lstat(root);
+      if (!rootStat.isDirectory() || rootStat.isSymbolicLink()) {
+        throw new Error('Publication root must be a no-follow directory.');
+      }
+      const segments = dirname(relativePath).split('/').filter((segment) => segment !== '.');
+      let current = root;
+      for (const segment of segments) {
+        const parent = current;
+        current = join(current, segment);
+        let created = false;
+        try {
+          await mkdir(current, { mode: 0o700 });
+          created = true;
+        } catch (cause) {
+          if (!(cause instanceof Error && 'code' in cause && cause.code === 'EEXIST')) throw cause;
+        }
+        const observed = await lstat(current);
+        if (!observed.isDirectory() || observed.isSymbolicLink()) {
+          throw new Error('Publication directory traversal encountered a non-directory or symlink.');
+        }
+        if (created) await syncDirectory(parent);
+      }
+      return dirname(safePublicationPath(root, relativePath));
+    }
+
+    async function syncDirectory(path: string): Promise<void> {
+      const handle = await open(
+        path,
+        constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW,
+      );
+      try {
+        await handle.sync();
+      } finally {
+        await handle.close();
+      }
+    }
+
+    async function writeExclusive(path: string, bytes: Buffer, synchronize: boolean): Promise<void> {
+      const handle = await open(
+        path,
+        constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW,
+        0o600,
+      );
+      try {
+        await handle.writeFile(bytes);
+        if (synchronize) await handle.sync();
+      } finally {
+        await handle.close();
+      }
+    }
+
+    async function publicationMember(path: string): Promise<'missing' | 'file'> {
+      try {
+        const observed = await lstat(path);
+        if (!observed.isFile() || observed.isSymbolicLink() || observed.nlink !== 1) {
+          throw new Error('Publication member must be a single-link regular file.');
+        }
+        return 'file';
+      } catch (cause) {
+        if (cause instanceof Error && 'code' in cause && cause.code === 'ENOENT') return 'missing';
+        throw cause;
+      }
+    }
+
+    async function readRegularNoFollow(path: string): Promise<Buffer> {
+      const handle = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW);
+      try {
+        const before = await handle.stat();
+        if (!before.isFile() || before.nlink !== 1) {
+          throw new Error('Publication member must remain a single-link regular file.');
+        }
+        const bytes = await handle.readFile();
+        const after = await handle.stat();
+        if (before.dev !== after.dev
+          || before.ino !== after.ino
+          || before.size !== after.size
+          || before.mtimeMs !== after.mtimeMs
+          || before.ctimeMs !== after.ctimeMs
+          || bytes.length !== after.size) {
+          throw new Error('Publication member changed during no-follow read.');
+        }
+        return bytes;
+      } finally {
+        await handle.close();
+      }
+    }
+
+    /** @id CODE-M5-G10-RECOVERY-MATRIX-001
+     * @implements REQ-M5-EVIDENCE-007 REQ-M5-LIFECYCLE-006
+     * @design DES-M5-024
+     */
+    export function generation10BoundaryMatrix(): Generation10BoundaryRow[] {
+      const rows: Generation10BoundaryRow[] = [];
+      for (let file = 1; file <= 18; file += 1) {
+        for (let boundary = 1; boundary <= 6; boundary += 1) {
+          rows.push({
+            id: `P10-${String(file).padStart(2, '0')}-${String(boundary).padStart(2, '0')}`,
+            family: 'P10',
+            boundary: publicationBoundaries[boundary - 1]!,
+          });
+        }
+      }
+      for (let boundary = 1; boundary <= 12; boundary += 1) {
+        rows.push({
+          id: `F10-${String(boundary).padStart(2, '0')}`,
+          family: 'F10',
+          boundary: publicationBoundaries[(boundary - 1) % 6]!,
+        });
+      }
+      for (let boundary = 1; boundary <= 6; boundary += 1) {
+        rows.push({
+          id: `F10-H-${String(boundary).padStart(2, '0')}`,
+          family: 'F10',
+          boundary: publicationBoundaries[boundary - 1]!,
+        });
+      }
+      for (let path = 1; path <= 4; path += 1) {
+        for (const [index, boundary] of [
+          'before', 'writing-fsynced', 'final-replaced', 'directory-fsynced',
+        ].entries()) {
+          rows.push({
+            id: `D1-${String(path).padStart(2, '0')}-${String(index + 1).padStart(2, '0')}`,
+            family: 'D1',
+            boundary,
+          });
+        }
+      }
+      return rows;
+    }
+
+    /** @id CODE-M5-G10-RECOVERY-PUBLISH-FILE-001
+     * @implements REQ-M5-EVIDENCE-007 REQ-M5-LIFECYCLE-006 REQ-M5-WORKTREE-004
+     * @design DES-M5-024
+     */
+    export async function publishCanonicalFile10(
+      root: string,
+      relativePath: string,
+      value: unknown,
+      stopAfter: typeof publicationBoundaries[number],
+    ): Promise<{ state: 'absent' | 'writing' | 'pending' | 'final'; sha256: string }> {
+      if (!publicationBoundaries.includes(stopAfter)) throw new Error('Unknown publication boundary.');
+      const directory = await ensurePublicationDirectory(root, relativePath);
+      const finalPath = safePublicationPath(root, relativePath);
+      const writingPath = `${finalPath}.writing`;
+      const pendingPath = `${finalPath}.pending`;
+      const bytes = canonicalBytes(value);
+      const digest = sha256(bytes);
+      if (stopAfter === 'before-writing') return { state: 'absent', sha256: digest };
+      await writeExclusive(writingPath, bytes, stopAfter !== 'writing-before-fsync');
+      if (stopAfter === 'writing-before-fsync' || stopAfter === 'writing-fsynced') {
+        return { state: 'writing', sha256: digest };
+      }
+      await rename(writingPath, pendingPath);
+      if (stopAfter === 'pending-before-directory-fsync') return { state: 'pending', sha256: digest };
+      await syncDirectory(directory);
+      if (stopAfter === 'pending-fsynced') return { state: 'pending', sha256: digest };
+      await rename(pendingPath, finalPath);
+      return { state: 'final', sha256: digest };
+    }
+
+    /** @id CODE-M5-G11-CANONICAL-VERIFY-001
+     * @implements REQ-M5-EVIDENCE-007 REQ-M5-WORKTREE-004
+     * @design DES-M5-025
+     */
+    export async function verifyCanonicalFile10(
+      root: string,
+      relativePath: string,
+      value: unknown,
+    ): Promise<{ path: string; sha256: string; size: number }> {
+      const path = safePublicationPath(root, relativePath);
+      const bytes = canonicalBytes(value);
+      if (!(await readRegularNoFollow(path)).equals(bytes)) {
+        throw new Error(`Canonical publication differs at ${relativePath}.`);
+      }
+      return { path: relativePath, sha256: sha256(bytes), size: bytes.length };
+    }
+
+    /** @id CODE-M5-G10-RECOVERY-RECOVER-FILE-001
+     * @implements REQ-M5-EVIDENCE-007 REQ-M5-LIFECYCLE-006 REQ-M5-WORKTREE-004
+     * @design DES-M5-024
+     */
+    export async function recoverCanonicalFile10(
+      root: string,
+      relativePath: string,
+      value: unknown,
+    ): Promise<{ state: 'final'; sha256: string }> {
+      const directory = await ensurePublicationDirectory(root, relativePath);
+      const finalPath = safePublicationPath(root, relativePath);
+      const writingPath = `${finalPath}.writing`;
+      const pendingPath = `${finalPath}.pending`;
+      const bytes = canonicalBytes(value);
+      const digest = sha256(bytes);
+      const members = await Promise.all([
+        publicationMember(finalPath),
+        publicationMember(pendingPath),
+        publicationMember(writingPath),
+      ]);
+      if (members.filter((member) => member === 'file').length > 1) {
+        throw new Error('Publication conflict: multiple final/pending/writing members exist.');
+      }
+      if (members[0] === 'file') {
+        if (!(await readRegularNoFollow(finalPath)).equals(bytes)) {
+          throw new Error('Final publication bytes conflict.');
+        }
+        await syncDirectory(directory);
+        return { state: 'final', sha256: digest };
+      }
+      if (members[1] === 'file') {
+        if (!(await readRegularNoFollow(pendingPath)).equals(bytes)) {
+          throw new Error('Pending publication bytes conflict.');
+        }
+        await syncDirectory(directory);
+        await rename(pendingPath, finalPath);
+        await syncDirectory(directory);
+        return { state: 'final', sha256: digest };
+      }
+      if (members[2] === 'file') {
+        const observed = await readRegularNoFollow(writingPath);
+        if (!bytes.subarray(0, observed.length).equals(observed)) {
+          throw new Error('Writing publication bytes conflict.');
+        }
+        if (!observed.equals(bytes)) {
+          await unlink(writingPath);
+          await writeExclusive(writingPath, bytes, true);
+        } else {
+          const handle = await open(writingPath, constants.O_RDONLY | constants.O_NOFOLLOW);
+          try {
+            await handle.sync();
+          } finally {
+            await handle.close();
+          }
+        }
+        await rename(writingPath, pendingPath);
+        await syncDirectory(directory);
+        await rename(pendingPath, finalPath);
+        await syncDirectory(directory);
+        return { state: 'final', sha256: digest };
+      }
+      await publishCanonicalFile10(root, relativePath, value, 'final-before-directory-fsync');
+      await syncDirectory(directory);
+      return { state: 'final', sha256: digest };
+}
+
+/** @id CODE-M5-G10-RECOVERY-PREPARE-001
+ * @implements REQ-M5-APPROVAL-007 REQ-M5-COMPAT-013 REQ-M5-EVIDENCE-007 REQ-M5-GRAPH-003 REQ-M5-LIFECYCLE-006 REQ-M5-WORKTREE-004
+ * @design DES-M5-024
+ */
+export function prepareRecovery10(context: RecoveryContext10): RecoveryPlan10 {
+  if (!isAbsolute(context.controlRoot)
+    || !isAbsolute(context.gitCommonRoot)
+    || normalize(context.controlRoot) !== context.controlRoot
+    || normalize(context.gitCommonRoot) !== context.gitCommonRoot) {
+    throw new Error('Recovery roots must be absolute canonical paths without traversal.');
+  }
+  assertSha(context.repositoryId, 'repositoryId');
+  assertSha(context.baselineHead, 'baselineHead');
+  assertSha(context.designManifestSha256, 'designManifestSha256');
+  for (const [name, value] of Object.entries({
+    requirementsApproval: context.requirementsApproval,
+    designApproval: context.designApproval,
+    consent: context.consent,
+    recoveryAuthority29: context.recoveryAuthority29,
+    abortRelease29: context.abortRelease29,
+    writerResume29: context.writerResume29,
+  })) assertRef(value, name);
+  if (context.designApproval.path.startsWith('files/g9-online-design-r29/')
+    || context.consent.path.startsWith('files/g9-online-design-r29/')) {
+    throw new Error('Generation-9 authority reuse is forbidden; fresh Generation-10 approval and consent are required.');
+  }
+  const authority: RecoveryAuthority10 = {
+    schemaVersion: 1,
+    kind: 'change0017-g10-recovery-authority-v1',
+    changeId: 'CHANGE-0017',
+    generation: 10,
+    requirementsApproval: context.requirementsApproval,
+    designApproval: context.designApproval,
+    consent: context.consent,
+    repositoryId: context.repositoryId,
+    controlRoot: context.controlRoot,
+    baselineHead: context.baselineHead,
+    gapKey: GAP_KEY,
+    authorityKey: AUTHORITY_KEY,
+    pId: P_ID,
+    recoveryAuthority29: context.recoveryAuthority29,
+    abortRelease29: context.abortRelease29,
+    writerResume29: context.writerResume29,
+  };
+  validateRecoveryAuthority10(authority);
+  return {
+    roots: {
+      control: context.controlRoot,
+      fence: join(context.gitCommonRoot, 'musubix5/g10-recovery-v1/campaigns', GAP_KEY, 'fence'),
+      preparation: PREPARATION_ROOT,
+    },
+    authority,
+    authorityRef: artifactRef('files/g10-recovery-authority.json', authority),
+    designManifestSha256: context.designManifestSha256,
+    publicationFiles: generation10PublicationFiles,
+    accounting: {
+      chargedMaximumBytes: CHARGED_MAXIMUM_BYTES,
+      hardLimitBytes: HARD_LIMIT_BYTES,
+      unwritableMarginBytes: 2_752_512,
+    },
+  };
+}
+
+/** @id CODE-M5-G10-RECOVERY-FENCE-001
+ * @implements REQ-M5-EVIDENCE-007 REQ-M5-LIFECYCLE-006 REQ-M5-WORKTREE-004
+ * @design DES-M5-024
+ */
+export function acquireFence10(plan: RecoveryPlan10, input: RecoveryFenceInput10): RecoveryFence10 {
+  for (const [name, value] of Object.entries({
+    pid: input.pid,
+    startTicks: input.startTicks,
+    lockDevice: input.lockDevice,
+    lockInode: input.lockInode,
+  })) assertPositiveInteger(value, name);
+  if (!input.bootId) throw new Error('bootId must be nonempty.');
+  if (input.seenSequences && (!Array.isArray(input.seenSequences)
+    || input.seenSequences.some((sequence) => !Number.isSafeInteger(sequence) || sequence <= 0)
+    || new Set(input.seenSequences).size !== input.seenSequences.length)) {
+    throw new Error('seenSequences must contain unique positive sequences.');
+  }
+  if (input.previousCounter) assertCounter(input.previousCounter);
+  if (input.campaign) assertCampaign(input.campaign, plan);
+  const recoverCampaign = input.recoverCampaignFromCounter === true;
+  if (recoverCampaign) {
+    if (!input.previousCounter || input.previousCounter.sequence !== 1 || input.campaign !== null) {
+      throw new Error('Campaign recovery requires the exact sequence-1 counter and no campaign.');
+    }
+  }
+  if ((input.previousCounter === null) !== (input.campaign === null)) {
+    if (!recoverCampaign) throw new Error('The first counter and campaign fence must be created together.');
+  }
+  const sequence = recoverCampaign ? 1 : (input.previousCounter?.sequence ?? 0) + 1;
+  if (!recoverCampaign && input.seenSequences?.includes(sequence)) {
+    throw new Error(`Fence sequence reuse is forbidden: ${sequence}.`);
+  }
+  const counter: RecoveryFenceCounter10 = recoverCampaign
+    ? input.previousCounter!
+    : {
+      schemaVersion: 1,
+      kind: 'change0017-g10-fence-counter-v1',
+      gapKey: GAP_KEY,
+      sequence,
+      previousSha256: input.previousCounter ? sha256(canonicalBytes(input.previousCounter)) : null,
+    };
+  const counterRef = artifactRef(`${FENCE_PREFIX}/counter.json`, counter);
+  const campaign: CampaignFence10 = input.campaign ?? {
+    schemaVersion: 1,
+    kind: 'change0017-g10-campaign-fence-v1',
+    gapKey: GAP_KEY,
+    campaignFence: sequence,
+    counter: counterRef,
+    designManifestSha256: plan.designManifestSha256,
+  };
+  if (campaign.campaignFence > sequence) throw new Error('Campaign fence cannot exceed holder sequence.');
+  const holder: FenceHolder10 = {
+    schemaVersion: 1,
+    kind: 'change0017-g10-fence-holder-v1',
+    pid: input.pid,
+    startTicks: input.startTicks,
+    bootId: input.bootId,
+    lockDevice: input.lockDevice,
+    lockInode: input.lockInode,
+    holderFence: sequence,
+    counter: counterRef,
+  };
+  const campaignRef = artifactRef(`${FENCE_PREFIX}/campaign-fence.json`, campaign);
+  const holderRef = artifactRef(`${FENCE_PREFIX}/holder.json`, holder);
+  const recoveryFence: RecoveryFenceRecord10 = {
+    schemaVersion: 1,
+    kind: 'change0017-g10-recovery-fence-v1',
+    campaign: campaignRef,
+    holder: holderRef,
+    counter: counterRef,
+    campaignFence: campaign.campaignFence,
+    holderFence: sequence,
+  };
+  return {
+    campaignFence: campaign.campaignFence,
+    holderFence: sequence,
+    counter,
+    campaign,
+    holder,
+    recoveryFence,
+  };
+}
+
+/** @id CODE-M5-G11-FENCE-VALIDATION-001
+ * @implements REQ-M5-LIFECYCLE-006
+ * @design DES-M5-025
+ */
+export function verifyRecoveryFenceChain10(
+  plan: RecoveryPlan10,
+  input: {
+    previousCounter: RecoveryFenceCounter10 | null;
+    counter: RecoveryFenceCounter10;
+    campaign: CampaignFence10;
+    holder: FenceHolder10;
+  },
+): RecoveryFence10 {
+  assertCounter(input.counter);
+  assertCampaign(input.campaign, plan);
+  assertClosed(input.holder, [
+    'schemaVersion',
+    'kind',
+    'pid',
+    'startTicks',
+    'bootId',
+    'lockDevice',
+    'lockInode',
+    'holderFence',
+    'counter',
+  ], 'Fence holder');
+  if (input.holder.schemaVersion !== 1
+    || input.holder.kind !== 'change0017-g10-fence-holder-v1') {
+    throw new Error('Fence holder schema is invalid.');
+  }
+  for (const [name, value] of Object.entries({
+    pid: input.holder.pid,
+    startTicks: input.holder.startTicks,
+    lockDevice: input.holder.lockDevice,
+    lockInode: input.holder.lockInode,
+    holderFence: input.holder.holderFence,
+  })) assertPositiveInteger(value, `Fence holder ${name}`);
+  if (!input.holder.bootId) throw new Error('Fence holder bootId must be nonempty.');
+  assertRef(input.holder.counter, 'Fence holder counter');
+  const counterRef = artifactRef(`${FENCE_PREFIX}/counter.json`, input.counter);
+  if (input.counter.sequence === 1
+    && !canonicalBytes(input.campaign.counter).equals(canonicalBytes(counterRef))) {
+    throw new Error('Campaign counter Ref does not bind the first counter.');
+  }
+  if (input.previousCounter?.sequence === 1) {
+    const firstCounterRef = artifactRef(`${FENCE_PREFIX}/counter.json`, input.previousCounter);
+    if (!canonicalBytes(input.campaign.counter).equals(canonicalBytes(firstCounterRef))) {
+      throw new Error('Campaign counter Ref does not preserve the sequence-1 counter.');
+    }
+  }
+  if (!canonicalBytes(input.holder.counter).equals(canonicalBytes(counterRef))) {
+    throw new Error('Fence holder counter Ref does not bind the current counter.');
+  }
+  if (input.campaign.campaignFence !== 1
+    || input.holder.holderFence !== input.counter.sequence) {
+    throw new Error('Campaign and holder fence sequences are inconsistent.');
+  }
+  if (input.previousCounter === null) {
+    if (input.counter.sequence !== 1 || input.counter.previousSha256 !== null) {
+      throw new Error('The first counter must have sequence 1 and a null predecessor.');
+    }
+  } else {
+    assertCounter(input.previousCounter);
+    if (input.counter.sequence !== input.previousCounter.sequence + 1
+      || input.counter.previousSha256 !== sha256(canonicalBytes(input.previousCounter))) {
+      throw new Error('Counter predecessor chain is invalid.');
+    }
+  }
+  const campaignRef = artifactRef(`${FENCE_PREFIX}/campaign-fence.json`, input.campaign);
+  const holderRef = artifactRef(`${FENCE_PREFIX}/holder.json`, input.holder);
+  const recoveryFence: RecoveryFenceRecord10 = {
+    schemaVersion: 1,
+    kind: 'change0017-g10-recovery-fence-v1',
+    campaign: campaignRef,
+    holder: holderRef,
+    counter: counterRef,
+    campaignFence: input.campaign.campaignFence,
+    holderFence: input.holder.holderFence,
+  };
+  return {
+    campaignFence: input.campaign.campaignFence,
+    holderFence: input.holder.holderFence,
+    counter: input.counter,
+    campaign: input.campaign,
+    holder: input.holder,
+    recoveryFence,
+  };
+}
+
+/** @id CODE-M5-G11-D1-DELTA-001
+ * @implements REQ-M5-LIFECYCLE-006
+ * @design DES-M5-025
+ */
+export function createD1ExpectedDelta10(input: D1ExpectedDeltaInput10): D1ExpectedDelta10 {
+  const envelope = input as D1ExpectedDeltaInput10 & {
+    schemaVersion?: unknown;
+    kind?: unknown;
+  };
+  const inputFields = [
+    'designSourcePrecondition',
+    'traceIndexPrecondition',
+    'resolvedJournalPath',
+    'mutations',
+  ];
+  if ('schemaVersion' in envelope || 'kind' in envelope) {
+    assertClosed(envelope, [...inputFields, 'schemaVersion', 'kind'], 'D1ExpectedDelta10');
+    if (envelope.schemaVersion !== 1 || envelope.kind !== 'change0017-g10-d1-expected-delta-v1') {
+      throw new Error('D1 expected delta envelope is invalid.');
+    }
+  } else {
+    assertClosed(input, inputFields, 'D1ExpectedDeltaInput10');
+  }
+  assertRef(input.designSourcePrecondition, 'D1 design source precondition');
+  assertRef(input.traceIndexPrecondition, 'D1 trace index precondition');
+  const journalMatch = /^\.musubix\/journal\/normal\/([0-9]+)\.json$/.exec(
+    input.resolvedJournalPath,
+  );
+  if (!journalMatch || BigInt(journalMatch[1]!) <= 0n || input.resolvedJournalPath.includes('*')) {
+    throw new Error('D1 resolved journal path must contain one concrete positive sequence.');
+  }
+  const expectedPaths = [
+    '.musubix/evidence/approvals/design.json',
+    input.resolvedJournalPath,
+    '.musubix/evidence/order.json',
+    '.musubix/evidence/changes.json',
+  ];
+  if (!Array.isArray(input.mutations) || input.mutations.length !== expectedPaths.length) {
+    throw new Error('D1 expected delta must contain exactly four mutations.');
+  }
+  input.mutations.forEach((mutation, index) => {
+    assertClosed(
+      mutation,
+      ['path', 'writingPath', 'beforeSha256', 'afterSha256'],
+      `D1 mutation ${index + 1}`,
+    );
+    const path = expectedPaths[index]!;
+    if (mutation.path !== path || mutation.writingPath !== `${path}.writing`) {
+      throw new Error('D1 mutation paths or writing siblings are not exact.');
+    }
+    const absent = `absent:${'0'.repeat(64)}`;
+    if (mutation.beforeSha256 !== absent) assertSha(mutation.beforeSha256, 'D1 beforeSha256');
+    if (index !== 1 && mutation.beforeSha256 === absent) {
+      throw new Error('Only the resolved journal may use the absent sentinel.');
+    }
+    assertSha(mutation.afterSha256, 'D1 afterSha256');
+    if (mutation.beforeSha256 === mutation.afterSha256) {
+      throw new Error('D1 replacement before and after hashes must differ.');
+    }
+  });
+  return {
+    schemaVersion: 1,
+    kind: 'change0017-g10-d1-expected-delta-v1',
+    designSourcePrecondition: input.designSourcePrecondition,
+    traceIndexPrecondition: input.traceIndexPrecondition,
+    resolvedJournalPath: input.resolvedJournalPath,
+    mutations: input.mutations.map((mutation) => ({
+      path: mutation.path,
+      writingPath: mutation.writingPath,
+      beforeSha256: mutation.beforeSha256,
+      afterSha256: mutation.afterSha256,
+    })),
+  };
+}
+
+/** @id CODE-M5-G10-RECOVERY-ACCOUNTING-001
+ * @implements REQ-M5-EVIDENCE-007 REQ-M5-LIFECYCLE-006 REQ-M5-WORKTREE-004
+ * @design DES-M5-024
+ */
+export function buildRecoveryAccountingManifest10(
+  plan: RecoveryPlan10,
+  preparation: RecoveryPreparation10,
+): RecoveryAccountingManifest10 {
+  if (preparation.slots.length !== 266) throw new Error('Preparation accounting requires 266 slots.');
+  const allocated = preparation.slots.reduce((total, slot) => total + slot.maximumBytes, 0);
+  if (allocated !== 286_654_464) {
+    throw new Error(`Preparation allocated maximum mismatch: ${allocated}.`);
+  }
+  const entries: RecoveryAccountingEntry10[] = preparation.slots.map((slot, index) => ({
+    path: `${plan.roots.preparation}/accounting/preparation-${String(index).padStart(3, '0')}`,
+    owner: 'preparation',
+    mode: '100644',
+    maximumBytes: slot.maximumBytes + (index === 0 ? 524_288 : 0),
+  }));
+  entries.push(...Array.from({ length: 102 }, (_, index) => ({
+    path: `${plan.roots.preparation}/accounting/post-${String(index).padStart(3, '0')}`,
+    owner: 'post' as const,
+    mode: '100644' as const,
+    maximumBytes: 2_359_296,
+  })));
+  return {
+    schemaVersion: 1,
+    kind: 'change0017-g10-recovery-accounting-manifest-v1',
+    entries,
+    preparationEntries: 266,
+    postEntries: 102,
+    preparationMaximumBytes: 287_178_752,
+    postSlotBytes: 240_648_192,
+    postSharedBytes: 6_291_456,
+    chargedMaximumBytes: CHARGED_MAXIMUM_BYTES,
+    hardLimitBytes: HARD_LIMIT_BYTES,
+    unwritableMarginBytes: 2_752_512,
+  };
+}
+
+/** @id CODE-M5-G10-RECOVERY-ACCOUNTING-VERIFY-001
+ * @implements REQ-M5-EVIDENCE-007 REQ-M5-LIFECYCLE-006 REQ-M5-WORKTREE-004
+ * @design DES-M5-024
+ */
+export function verifyRecoveryAccounting10(
+  manifest: RecoveryAccountingManifest10,
+): { valid: true; chargedMaximumBytes: number; unwritableMarginBytes: number } {
+  if (manifest.schemaVersion !== 1
+    || manifest.kind !== 'change0017-g10-recovery-accounting-manifest-v1') {
+    throw new Error('Recovery accounting manifest schema is invalid.');
+  }
+  if (!Array.isArray(manifest.entries) || manifest.entries.length !== 368) {
+    throw new Error('Recovery accounting manifest must contain 368 entries.');
+  }
+  const paths = new Set<string>();
+  let preparationEntries = 0;
+  let postEntries = 0;
+  let preparationMaximumBytes = 0;
+  let postSlotBytes = 0;
+  for (const entry of manifest.entries) {
+    if (!entry.path || entry.path.startsWith('/') || paths.has(entry.path)) {
+      throw new Error('Recovery accounting paths must be unique and relative.');
+    }
+    paths.add(entry.path);
+    if (entry.mode !== '100644' && entry.mode !== '100755') {
+      throw new Error('Recovery accounting mode must be a canonical string.');
+    }
+    if (!Number.isSafeInteger(entry.maximumBytes) || entry.maximumBytes < 0) {
+      throw new Error('Recovery accounting maximumBytes must be nonnegative.');
+    }
+    if (entry.owner === 'preparation') {
+      preparationEntries += 1;
+      preparationMaximumBytes += entry.maximumBytes;
+    } else if (entry.owner === 'post') {
+      postEntries += 1;
+      postSlotBytes += entry.maximumBytes;
+    } else {
+      throw new Error('Recovery accounting owner is invalid.');
+    }
+  }
+  const chargedMaximumBytes = preparationMaximumBytes + postSlotBytes + manifest.postSharedBytes;
+  if (preparationEntries !== 266 || postEntries !== 102
+    || manifest.preparationEntries !== preparationEntries
+    || manifest.postEntries !== postEntries
+    || manifest.preparationMaximumBytes !== preparationMaximumBytes
+    || manifest.postSlotBytes !== postSlotBytes
+    || manifest.postSharedBytes !== 6_291_456
+    || manifest.chargedMaximumBytes !== chargedMaximumBytes) {
+    throw new Error('Recovery accounting declared totals do not match entry maxima.');
+  }
+  if (chargedMaximumBytes > manifest.hardLimitBytes || manifest.hardLimitBytes !== HARD_LIMIT_BYTES) {
+    throw new Error('Recovery accounting exceeds the hard limit.');
+  }
+  const unwritableMarginBytes = manifest.hardLimitBytes - chargedMaximumBytes;
+  if (manifest.unwritableMarginBytes !== unwritableMarginBytes) {
+    throw new Error('Recovery accounting margin does not match the hard limit.');
+  }
+  return { valid: true, chargedMaximumBytes, unwritableMarginBytes };
+}
+
+/** @id CODE-M5-G10-RECOVERY-VERIFY-001
+ * @implements REQ-M5-EVIDENCE-007 REQ-M5-LIFECYCLE-006
+ * @design DES-M5-024
+ */
+export function verifyRecovery10(
+  plan: RecoveryPlan10,
+  state: {
+    paths: string[];
+    accountingBytes: number;
+    releaseOutcome?: string;
+    abortRequested?: boolean;
+    releasePathSafe?: boolean;
+  },
+): RecoveryObservation10 {
+  return classifyRecoveryState(plan, state);
+}
+
+/** @id CODE-M5-G10-RECOVERY-PREPARATION-001
+ * @implements REQ-M5-EVIDENCE-007 REQ-M5-LIFECYCLE-006
+ * @design DES-M5-024
+ */
+export function publishPreparation10(
+  plan: RecoveryPlan10,
+  fence: RecoveryFence10,
+): RecoveryPreparation10 {
+  if (fence.campaignFence <= 0 || fence.holderFence < fence.campaignFence) {
+    throw new Error('Recovery fence is not current.');
+  }
+  const attemptLedgerGenesis: RecoveryPreparation10['attemptLedgerGenesis'] = {
+    schemaVersion: 1,
+    kind: 'change0017-g10-attempt-ledger-genesis-v1',
+    gapKey: GAP_KEY,
+    pId: P_ID,
+    entries: [],
+    previousSha256: null,
+  };
+  const ownerLedgerGenesis: RecoveryPreparation10['ownerLedgerGenesis'] = {
+    schemaVersion: 1,
+    kind: 'change0017-g10-owner-ledger-genesis-v1',
+    gapKey: GAP_KEY,
+    pId: P_ID,
+    owners: [],
+    previousSha256: null,
+  };
+  const registryFence = {
+    schemaVersion: 1,
+    kind: 'change0017-g10-registry-fence-v1',
+    campaign: fence.recoveryFence.campaign,
+    firstHolder: fence.recoveryFence.holder,
+    campaignFence: fence.campaignFence,
+  };
+  const fenceRef = artifactRef(`${PREPARATION_ROOT}/registry/fence.json`, registryFence);
+  const slots = Array.from({ length: 266 }, (_, index) => ({
+    id: `preparation-${String(index).padStart(3, '0')}`,
+    owner: 'P-budget' as const,
+    maximumBytes: index === 265 ? 1_077_744 : 1_077_648,
+  }));
+  const slotsSha256 = sha256(canonicalBytes(slots));
+  const codec = {
+    schemaVersion: 1,
+    kind: 'change0017-g10-accounting-codec-v1',
+    encoding: 'canonical-json-utf8-lf',
+  };
+  const budgetSpec = {
+    schemaVersion: 1,
+    kind: 'change0017-g10-budget-spec-v1',
+    designSource: plan.authority.designApproval,
+    preparation: {
+      slots: 266,
+      allocatedMaximumBytes: 286_654_464,
+      sharedMaximumBytes: 25_165_824,
+      maximumBytes: 287_178_752,
+    },
+    post: { slots: 102, slotBytes: 240_648_192, sharedBytes: 6_291_456 },
+  };
+  const reservation = {
+    schemaVersion: 1 as const,
+    kind: 'change0017-g10-preparation-reservation-v5' as const,
+    slotCount: 266 as const,
+    maximumBytes: 287_178_752 as const,
+    sharedMaximumBytes: 25_165_824 as const,
+    allocatedMaximumBytes: 286_654_464 as const,
+    recoveryAuthority: plan.authorityRef,
+    fence: fenceRef,
+    codec: artifactRef(`${PREPARATION_ROOT}/preparation/codec.json`, codec),
+    budgetSpec: artifactRef(`${PREPARATION_ROOT}/preparation/budget-spec.json`, budgetSpec),
+    slotsRoot: merkleRoot(slots),
+    slotsSha256,
+  };
+  return {
+    attemptLedgerGenesis,
+    ownerLedgerGenesis,
+    reservation,
+    slots,
+    codec,
+    budgetSpec,
+    registryFence,
+    registryFenceRef: fenceRef,
+  };
+}
+
+/** @id CODE-M5-G10-RECOVERY-CLAIM-001
+ * @implements REQ-M5-APPROVAL-007 REQ-M5-EVIDENCE-007 REQ-M5-LIFECYCLE-006
+ * @design DES-M5-024
+ */
+export function publishClaim10(
+  plan: RecoveryPlan10,
+  preparation: RecoveryPreparation10,
+  fence: RecoveryFence10,
+): {
+  claim: Record<string, unknown>;
+  journal: Record<string, unknown>;
+  claimPath: string;
+  journalPath: string;
+} {
+  const claimPath = `${PREPARATION_ROOT}/registry/claim.json`;
+  const journalPath = `${PREPARATION_ROOT}/registry/journal/000000000001.json`;
+  const fenceRef = preparation.registryFenceRef;
+  const claim = {
+    schemaVersion: 1,
+    kind: 'change0017-g10-campaign-claim-v1',
+    changeId: 'CHANGE-0017',
+    generation: 10,
+    gapKey: GAP_KEY,
+    authorityKey: AUTHORITY_KEY,
+    pId: P_ID,
+    lockFence: fence.campaignFence,
+    attemptLedgerGenesis: artifactRef(
+      `${PREPARATION_ROOT}/charge/genesis.json`,
+      preparation.attemptLedgerGenesis,
+    ),
+    ownerLedgerGenesis: artifactRef(
+      `${PREPARATION_ROOT}/owner/genesis.json`,
+      preparation.ownerLedgerGenesis,
+    ),
+    fence: fenceRef,
+    recoveryAuthority: plan.authorityRef,
+  };
+  const journal = {
+    schemaVersion: 1,
+    kind: 'change0017-g10-claim-journal-v1',
+    sequence: 1,
+    previousSha256: null,
+    claim: artifactRef(claimPath, claim),
+    fence: fenceRef,
+    recoveryAuthority: plan.authorityRef,
+  };
+  return { claim, journal, claimPath, journalPath };
+}
+
+function buildRecoveryPreparationArtifacts10(
+  plan: RecoveryPlan10,
+  fence: RecoveryFence10,
+): {
+  preparation: RecoveryPreparation10;
+  artifacts: unknown[];
+  pSealed: Record<string, unknown>;
+} {
+  const preparation = publishPreparation10(plan, fence);
+  const reservationRef = artifactRef(`${PREPARATION_ROOT}/header/P.json`, preparation.reservation);
+  const slotsRef = artifactRef(`${PREPARATION_ROOT}/table/slots.json`, preparation.slots);
+  const attemptRef = artifactRef(
+    `${PREPARATION_ROOT}/charge/genesis.json`,
+    preparation.attemptLedgerGenesis,
+  );
+  const ownerRef = artifactRef(
+    `${PREPARATION_ROOT}/owner/genesis.json`,
+    preparation.ownerLedgerGenesis,
+  );
+  const registry = {
+    schemaVersion: 1,
+    kind: 'change0017-g10-p-registry-v1',
+    gapKey: GAP_KEY,
+    pId: P_ID,
+    reservation: reservationRef,
+    slots: slotsRef,
+    attemptLedgerGenesis: attemptRef,
+    ownerLedgerGenesis: ownerRef,
+    fence: preparation.registryFenceRef,
+    recoveryAuthority: plan.authorityRef,
+  };
+  const seal = {
+    schemaVersion: 1,
+    kind: 'change0017-g10-p-seal-v1',
+    gapKey: GAP_KEY,
+    pId: P_ID,
+    registry: artifactRef(`${PREPARATION_ROOT}/registry/genesis.json`, registry),
+    reservation: reservationRef,
+    slots: slotsRef,
+    attemptLedgerGenesis: attemptRef,
+    ownerLedgerGenesis: ownerRef,
+    budgetSpec: preparation.reservation.budgetSpec,
+    fence: preparation.registryFenceRef,
+    recoveryAuthority: plan.authorityRef,
+  };
+  const pSealed = {
+    schemaVersion: 1,
+    kind: 'change0017-g10-p-sealed-v1',
+    seal: artifactRef(`${PREPARATION_ROOT}/header/seal.json`, seal),
+    fence: preparation.registryFenceRef,
+  };
+  return {
+    preparation,
+    pSealed,
+    artifacts: [
+      preparation.codec,
+      preparation.budgetSpec,
+      preparation.reservation,
+      preparation.slots,
+      preparation.attemptLedgerGenesis,
+      preparation.ownerLedgerGenesis,
+      preparation.registryFence,
+      registry,
+      seal,
+      pSealed,
+    ],
+  };
+}
+
+/** @id CODE-M5-G10-RECOVERY-MATERIALIZE-001
+ * @implements REQ-M5-APPROVAL-007 REQ-M5-EVIDENCE-007 REQ-M5-LIFECYCLE-006 REQ-M5-WORKTREE-004
+ * @design DES-M5-024
+ */
+export async function materializeRecoveryClaim10(
+  root: string,
+  plan: RecoveryPlan10,
+  fence: RecoveryFence10,
+): Promise<{ paths: string[]; sha256: string[] }> {
+  const prepared = buildRecoveryPreparationArtifacts10(plan, fence);
+  const { preparation } = prepared;
+  const publication = publishClaim10(plan, preparation, fence);
+  const dispatch = {
+    schemaVersion: 1,
+    kind: 'change0017-g10-claim-dispatch-v1',
+    claim: artifactRef(publication.claimPath, publication.claim),
+    journal: artifactRef(publication.journalPath, publication.journal),
+    fence: preparation.registryFenceRef,
+    releasePath: `${PREPARATION_ROOT}/control/release.json`,
+    abortAfterSeal: false,
+  };
+  const artifacts: unknown[] = [
+    ...prepared.artifacts,
+    dispatch,
+    publication.journal,
+    publication.claim,
+  ];
+  const paths = [...plan.publicationFiles.slice(0, 13)];
+  const hashes: string[] = [];
+  for (const [index, path] of paths.entries()) {
+    const result = await recoverCanonicalFile10(root, path, artifacts[index]);
+    hashes.push(result.sha256);
+  }
+  return { paths, sha256: hashes };
+}
+
+/** @id CODE-M5-G10-RECOVERY-ABORT-001
+ * @implements REQ-M5-EVIDENCE-007 REQ-M5-LIFECYCLE-006 REQ-M5-WORKTREE-004
+ * @design DES-M5-024
+ */
+export async function materializeRecoveryAbort10(
+  root: string,
+  plan: RecoveryPlan10,
+  fence: RecoveryFence10,
+  authority?: RecoveryRef10,
+): Promise<{ paths: string[]; sha256: string[] }> {
+  for (const relativePath of plan.publicationFiles.slice(10, 13)) {
+    const path = safePublicationPath(root, relativePath);
+    for (const member of [path, `${path}.writing`, `${path}.pending`]) {
+      if (await publicationMember(member) === 'file') {
+        throw new Error('Abort-before-dispatch requires dispatch, journal and claim absence.');
+      }
+    }
+  }
+  const prepared = buildRecoveryPreparationArtifacts10(plan, fence);
+  const release = {
+    schemaVersion: 1,
+    kind: 'change0017-g10-release-v1',
+    outcome: 'aborted-before-dispatch',
+    pSealed: artifactRef(`${PREPARATION_ROOT}/control/p-sealed.json`, prepared.pSealed),
+    fence: prepared.preparation.registryFenceRef,
+    absent: {
+      dispatch: true,
+      journal: true,
+      claim: true,
+    },
+    ...(authority ? { authority } : {}),
+  };
+  const paths = [...plan.publicationFiles.slice(0, 10), 'control/release.json'];
+  const artifacts = [...prepared.artifacts, release];
+  const hashes: string[] = [];
+  for (const [index, path] of paths.entries()) {
+    const result = await recoverCanonicalFile10(root, path, artifacts[index]);
+    hashes.push(result.sha256);
+  }
+  return { paths, sha256: hashes };
+}
+
+/** @id CODE-M5-G10-RECOVERY-COMPLETION-001
+ * @implements REQ-M5-EVIDENCE-007 REQ-M5-LIFECYCLE-006 REQ-M5-WORKTREE-004
+ * @design DES-M5-024
+ */
+export async function materializeRecoveryCompletion10(
+  root: string,
+  plan: RecoveryPlan10,
+  fence: RecoveryFence10,
+  outcome: 'credit' | 'no-credit' | 'invalidated',
+  sealedExpectedDelta?: D1ExpectedDelta10,
+): Promise<{ classification: 'D1-durable' | 'released-no-credit' | 'D1-invalidated'; paths: string[] }> {
+  let validatedExpectedDelta: D1ExpectedDelta10 | undefined;
+  if (sealedExpectedDelta) {
+    validatedExpectedDelta = createD1ExpectedDelta10(sealedExpectedDelta);
+    if (!canonicalBytes(validatedExpectedDelta).equals(canonicalBytes(sealedExpectedDelta))) {
+      throw new Error('The sealed D1 expected delta differs from its validated canonical form.');
+    }
+  } else if (outcome !== 'no-credit'
+    && plan.authorityRef.path !== 'files/g10-recovery-authority.json') {
+    throw new Error('Current recovery completion requires a presealed D1 expected delta.');
+  }
+  const claim = await materializeRecoveryClaim10(root, plan, fence);
+  const release = {
+    schemaVersion: 1,
+    kind: 'change0017-g10-release-v1',
+    outcome: outcome === 'no-credit' ? 'released-no-credit' : 'verified-credit-eligible',
+    claim: {
+      path: `${PREPARATION_ROOT}/registry/claim.json`,
+      sha256: claim.sha256[12]!,
+      size: (await readRegularNoFollow(safePublicationPath(root, 'registry/claim.json'))).length,
+    },
+    journal: {
+      path: `${PREPARATION_ROOT}/registry/journal/000000000001.json`,
+      sha256: claim.sha256[11]!,
+      size: (await readRegularNoFollow(
+        safePublicationPath(root, 'registry/journal/000000000001.json'),
+      )).length,
+    },
+    fence: publishPreparation10(plan, fence).registryFenceRef,
+  };
+  await recoverCanonicalFile10(root, 'control/release.json', release);
+  const paths = [...claim.paths, 'control/release.json'];
+  if (outcome === 'no-credit') {
+    const noCredit = {
+      schemaVersion: 1,
+      kind: 'change0017-g10-no-credit-v1',
+      release: artifactRef(`${PREPARATION_ROOT}/control/release.json`, release),
+      reason: 'accounting-or-verification-not-credit-eligible',
+    };
+    await recoverCanonicalFile10(root, 'control/no-credit.json', noCredit);
+    paths.push('control/no-credit.json');
+    return { classification: 'released-no-credit', paths };
+  }
+  const expectedDelta = validatedExpectedDelta ?? {
+    schemaVersion: 1 as const,
+    kind: 'change0017-g10-d1-expected-delta-v1' as const,
+    designSourcePrecondition: plan.authority.designApproval,
+    traceIndexPrecondition: artifactRef('.musubix/trace/index.json', {
+      designApproval: plan.authority.designApproval,
+    }),
+    resolvedJournalPath: '.musubix/journal/normal/000000000001.json',
+    mutations: [
+      '.musubix/evidence/approvals/design.json',
+      '.musubix/journal/normal/000000000001.json',
+      '.musubix/evidence/order.json',
+      '.musubix/evidence/changes.json',
+    ].map((path, index) => ({
+      path,
+      writingPath: `${path}.writing`,
+      beforeSha256: index === 1 ? `absent:${'0'.repeat(64)}` : sha256(canonicalBytes({
+        path, state: 'before', designApproval: plan.authority.designApproval,
+      })),
+      afterSha256: sha256(canonicalBytes({
+        path, state: 'after', designApproval: plan.authority.designApproval,
+      })),
+    })),
+  };
+  await recoverCanonicalFile10(root, 'control/D1-expected-delta.json', expectedDelta);
+  const admission = {
+    schemaVersion: 1,
+    kind: 'change0017-g10-d1-admission-v1',
+    expectedDelta: artifactRef(
+      `${PREPARATION_ROOT}/control/D1-expected-delta.json`,
+      expectedDelta,
+    ),
+    release: artifactRef(`${PREPARATION_ROOT}/control/release.json`, release),
+  };
+  await recoverCanonicalFile10(root, 'control/D1-admission.json', admission);
+  paths.push('control/D1-expected-delta.json', 'control/D1-admission.json');
+  if (outcome === 'invalidated') {
+    const invalidation = {
+      schemaVersion: 1,
+      kind: 'change0017-g10-credit-invalidation-v1',
+      admission: artifactRef(`${PREPARATION_ROOT}/control/D1-admission.json`, admission),
+      reason: 'post-admission-accounting-failure',
+    };
+    await recoverCanonicalFile10(root, 'control/credit-invalidation.json', invalidation);
+    paths.push('control/credit-invalidation.json');
+    return { classification: 'D1-invalidated', paths };
+  }
+  return { classification: 'D1-durable', paths };
+}
+
+function classifyRecoveryState(
+  plan: RecoveryPlan10,
+  state: {
+    paths: string[];
+    accountingBytes: number;
+    releaseOutcome?: string;
+    abortRequested?: boolean;
+    releasePathSafe?: boolean;
+  },
+): RecoveryObservation10 {
+  if (!Number.isSafeInteger(state.accountingBytes) || state.accountingBytes < 0) {
+    throw new Error('accountingBytes must be a nonnegative integer.');
+  }
+  const finals = plan.publicationFiles.map((path) => `${plan.roots.preparation}/${path}`);
+  const allowed = new Set(finals.flatMap((path) => [path, `${path}.writing`, `${path}.pending`]));
+  const observed = new Set(state.paths);
+  const dispatchObserved = observed.has(finals[10]!)
+    || observed.has(`${finals[10]!}.writing`)
+    || observed.has(`${finals[10]!}.pending`);
+  if (observed.size !== state.paths.length || state.paths.some((path) => !allowed.has(path))) {
+    return dispatchObserved
+      ? { classification: 'unclassified', action: { kind: 'release-only-verify' } }
+      : { classification: 'unclassified', action: { kind: 'terminal-no-credit-stop' } };
+  }
+  for (const final of finals) {
+    const variants = [final, `${final}.writing`, `${final}.pending`].filter((path) => observed.has(path));
+    if (variants.length > 1) {
+      return dispatchObserved
+        ? { classification: 'unclassified', action: { kind: 'release-only-verify' } }
+        : { classification: 'unclassified', action: { kind: 'terminal-no-credit-stop' } };
+    }
+  }
+  if (dispatchObserved && state.releasePathSafe === false) {
+    return {
+      classification: 'release-publication-blocked',
+      action: { kind: 'terminal-no-credit-stop' },
+    };
+  }
+  const has = (index: number): boolean => observed.has(finals[index]!);
+  if (has(13) && state.releaseOutcome === 'aborted-before-dispatch') {
+    const abortPredecessors = finals.slice(0, 10).every((path) => observed.has(path));
+    const claimFamilyAbsent = finals.slice(10, 13).every((path) => (
+      !observed.has(path)
+      && !observed.has(`${path}.writing`)
+      && !observed.has(`${path}.pending`)
+    ));
+    const abortPaths = new Set([...finals.slice(0, 10), finals[13]!]);
+    if (abortPredecessors && claimFamilyAbsent
+      && state.paths.every((path) => abortPaths.has(path))) {
+      return { classification: 'aborted', action: { kind: 'complete' } };
+    }
+    return { classification: 'unclassified', action: { kind: 'terminal-no-credit-stop' } };
+  }
+  if (has(13)) {
+    if (!finals.slice(0, 11).every((path) => observed.has(path))) {
+      return { classification: 'unclassified', action: { kind: 'release-only-verify' } };
+    }
+    const noCredit = has(14);
+    const expected = has(15);
+    const admission = has(16);
+    const invalidation = has(17);
+    const noCreditTransient = observed.has(`${finals[14]!}.writing`)
+      || observed.has(`${finals[14]!}.pending`);
+    const invalidationTransient = observed.has(`${finals[17]!}.writing`)
+      || observed.has(`${finals[17]!}.pending`);
+    const admissionTransient = observed.has(`${finals[16]!}.writing`)
+      || observed.has(`${finals[16]!}.pending`);
+    const claimVerified = has(11) && has(12);
+    if (state.releaseOutcome === 'verified-credit-eligible' && !claimVerified) {
+      return { classification: 'unclassified', action: { kind: 'release-only-verify' } };
+    }
+    if (noCreditTransient) {
+      return {
+        classification: 'released-no-credit-pending',
+        action: { kind: 'resume', step: 'publish-no-credit' },
+      };
+    }
+    if (invalidationTransient) {
+      if (!admission || !expected) {
+        return { classification: 'unclassified', action: { kind: 'release-only-verify' } };
+      }
+      return {
+        classification: 'D1-invalidation-pending',
+        action: { kind: 'resume', step: 'publish-credit-invalidation' },
+      };
+    }
+    if (admissionTransient && state.accountingBytes > plan.accounting.hardLimitBytes) {
+      return {
+        classification: 'D1-admission-transient-invalid',
+        action: { kind: 'resume', step: 'publish-d1-admission' },
+      };
+    }
+    if (noCredit && (admission || invalidation || admissionTransient)) {
+      return { classification: 'unclassified', action: { kind: 'terminal-no-credit-stop' } };
+    }
+    if ((admission || admissionTransient) && !expected) {
+      return { classification: 'unclassified', action: { kind: 'release-only-verify' } };
+    }
+    if ((invalidation || invalidationTransient) && (!admission || !expected)) {
+      return { classification: 'unclassified', action: { kind: 'release-only-verify' } };
+    }
+    if (admission) {
+      if (state.accountingBytes > plan.accounting.hardLimitBytes && !invalidation) {
+        return {
+          classification: 'D1-invalidation-pending',
+          action: { kind: 'resume', step: 'publish-credit-invalidation' },
+        };
+      }
+      if (invalidation) return { classification: 'D1-invalidated', action: { kind: 'complete' } };
+      return { classification: 'D1-durable', action: { kind: 'complete' } };
+    }
+    if (noCredit) return { classification: 'released-no-credit', action: { kind: 'complete' } };
+    if (expected) {
+      if (state.accountingBytes > plan.accounting.hardLimitBytes) {
+        return {
+          classification: 'released-no-credit-pending',
+          action: { kind: 'resume', step: 'publish-no-credit' },
+        };
+      }
+      return {
+        classification: 'D1-expected',
+        action: { kind: 'resume', step: 'publish-d1-admission' },
+      };
+    }
+    if (state.releaseOutcome === 'released-no-credit'
+      || state.accountingBytes > plan.accounting.hardLimitBytes) {
+      return {
+        classification: 'released-no-credit-pending',
+        action: { kind: 'resume', step: 'publish-no-credit' },
+      };
+    }
+    return {
+      classification: 'released-credit-eligible',
+      action: { kind: 'resume', step: 'publish-d1-expected-delta' },
+    };
+  }
+  if (state.paths.length === 0) {
+    return { classification: 'pristine', action: { kind: 'resume', step: 'publish-codec' } };
+  }
+  let prefix = 0;
+  while (prefix < finals.length && observed.has(finals[prefix]!)) prefix += 1;
+  const extras = state.paths.filter((path) => !finals.slice(0, prefix).includes(path));
+  if (prefix === 10 && extras.length === 1
+    && (extras[0] === `${finals[10]!}.writing` || extras[0] === `${finals[10]!}.pending`)) {
+    return { classification: 'claim-dispatched', action: { kind: 'release-only-verify' } };
+  }
+  if (extras.length === 1 && prefix < 10) {
+    const expected = finals[prefix]!;
+    if (extras[0] === `${expected}.writing` || extras[0] === `${expected}.pending`) {
+      return { classification: 'P-building', action: { kind: 'resume', step: publishSteps[prefix]! } };
+    }
+  }
+  if (extras.length > 0) {
+    const claimBytesObserved = extras.some((path) => (
+      path === finals[11]
+      || path === `${finals[11]!}.writing`
+      || path === `${finals[11]!}.pending`
+      || path === finals[12]
+      || path === `${finals[12]!}.writing`
+      || path === `${finals[12]!}.pending`
+    ));
+    if (dispatchObserved && claimBytesObserved) {
+      return { classification: 'claim-present-unverified', action: { kind: 'release-only-verify' } };
+    }
+    return dispatchObserved
+      ? { classification: 'unclassified', action: { kind: 'release-only-verify' } }
+      : { classification: 'unclassified', action: { kind: 'terminal-no-credit-stop' } };
+  }
+  if (prefix < 10) {
+    return { classification: 'P-building', action: { kind: 'resume', step: publishSteps[prefix]! } };
+  }
+  if (prefix === 10) {
+    if (state.abortRequested === true) {
+      return {
+        classification: 'P-sealed-unclaimed',
+        action: { kind: 'abort-before-dispatch' },
+      };
+    }
+    return {
+      classification: 'P-sealed-unclaimed',
+      action: { kind: 'resume', step: 'publish-dispatch' },
+    };
+  }
+  if (prefix === 11) {
+    return { classification: 'claim-dispatched', action: { kind: 'release-only-verify' } };
+  }
+  if (prefix === 12) {
+    return { classification: 'claim-present-unverified', action: { kind: 'release-only-verify' } };
+  }
+  if (prefix === 13) {
+    return {
+      classification: 'claim-verified',
+      action: { kind: 'release-only-verify', step: 'publish-release' },
+    };
+  }
+  if (prefix >= 14 && state.accountingBytes > plan.accounting.hardLimitBytes) {
+    return {
+      classification: 'released-no-credit-pending',
+      action: { kind: 'resume', step: 'publish-no-credit' },
+    };
+  }
+  if (prefix === 14) {
+    return {
+      classification: 'released-credit-eligible',
+      action: { kind: 'resume', step: 'publish-d1-expected-delta' },
+    };
+  }
+  if (prefix === 15) return { classification: 'released-no-credit', action: { kind: 'complete' } };
+  if (prefix === 16) {
+    return { classification: 'D1-expected', action: { kind: 'resume', step: 'publish-d1-admission' } };
+  }
+  if (prefix === 17) return { classification: 'D1-durable', action: { kind: 'complete' } };
+  return { classification: 'D1-invalidated', action: { kind: 'complete' } };
+}
+
+/** @id CODE-M5-G10-RECOVERY-BOUNDARY-001
+ * @implements REQ-M5-EVIDENCE-007 REQ-M5-LIFECYCLE-006
+ * @design DES-M5-024
+ */
+export function recoverBoundary10(
+  plan: RecoveryPlan10,
+  state: {
+    paths: string[];
+    accountingBytes: number;
+    releaseOutcome?: string;
+    abortRequested?: boolean;
+    releasePathSafe?: boolean;
+  },
+): RecoveryObservation10 {
+  return classifyRecoveryState(plan, state);
+}
+
+/** @id CODE-M5-G10-RECOVERY-RELEASE-001
+ * @implements REQ-M5-APPROVAL-007 REQ-M5-EVIDENCE-007 REQ-M5-LIFECYCLE-006
+ * @design DES-M5-024
+ */
+export function publishRelease10(
+  plan: RecoveryPlan10,
+  observation: { classification: string; accountingBytes: number },
+): { schemaVersion: 1; kind: 'change0017-g10-release-v1'; outcome: string } {
+  if (!Number.isSafeInteger(observation.accountingBytes) || observation.accountingBytes < 0) {
+    throw new Error('accountingBytes must be a nonnegative integer.');
+  }
+  let outcome: string;
+  if (observation.classification === 'P-sealed-unclaimed') outcome = 'aborted-before-dispatch';
+  else if (observation.accountingBytes > plan.accounting.hardLimitBytes) outcome = 'released-no-credit';
+  else if (observation.classification === 'claim-verified') outcome = 'verified-credit-eligible';
+  else outcome = 'released-no-credit';
+  return { schemaVersion: 1, kind: 'change0017-g10-release-v1', outcome };
+}
+
+/** @id CODE-M5-G10-RECOVERY-D1-001
+ * @implements REQ-M5-APPROVAL-007 REQ-M5-EVIDENCE-007 REQ-M5-LIFECYCLE-006
+ * @design DES-M5-024
+ */
+export function publishD1Admission10(
+  plan: RecoveryPlan10,
+  release: { outcome: string; accountingBytes: number },
+): { schemaVersion: 1; kind: 'change0017-g10-d1-admission-v1'; outcome: string } {
+  if (!Number.isSafeInteger(release.accountingBytes) || release.accountingBytes < 0) {
+    throw new Error('accountingBytes must be a nonnegative integer.');
+  }
+  const outcome = release.outcome === 'verified-credit-eligible'
+    && release.accountingBytes <= plan.accounting.hardLimitBytes
+    ? 'D1-durable'
+    : 'released-no-credit';
+  return { schemaVersion: 1, kind: 'change0017-g10-d1-admission-v1', outcome };
+}

@@ -27,8 +27,18 @@ import { buildTrace, checkTrace } from './trace.js';
 import { adapterInvocation, clearAdapterOutput, mergeAdapterArgs, normalizeAdapterReport, readAdapterOutput } from './adapters.js';
 import {
   createPerformanceExecution, performanceCommandSha256, validatePerformanceEvidence,
-  writePerformanceEvidence, type PerformanceExecution,
+  writePerformanceEvidence, matrixPerformanceReportRoot, type MatrixPerformanceContext, type PerformanceExecution,
 } from './performance.js';
+
+/** @id CODE-M5-CI-MATRIX-INPUTS-001
+ * @implements REQ-M5-CI-004
+ * @design DES-M5-CI-004
+ */
+export async function materializeCandidateMatrixInputs(root: string, scope: MatrixPerformanceContext) {
+  const reportRoot = matrixPerformanceReportRoot(scope);
+  const { graph } = await indexGraph(root, { persist: true, refresh: false });
+  return { graph, reportRoot };
+}
 import {
   createMutationExecution, mutationCommandSha256, parseMutationReport, validateMutationEvidence,
   writeMutationEvidence, type MutationExecution,
@@ -256,6 +266,13 @@ export async function runGate(root: string, options: {
   const runner = options.runner ?? runProcess;
   const gateRunId = randomUUID();
   const matrixMode = options.persistenceMode === 'matrix';
+  const environment = options.environment ?? process.env;
+  const matrixScope: MatrixPerformanceContext | undefined = matrixMode ? {
+    repositoryId: environment.REPOSITORY_ID ?? '', candidateCommit: environment.CANDIDATE_COMMIT ?? '',
+    platform: environment.MATRIX_OS ?? '', nodeMajor: Number(environment.MATRIX_NODE), runId: gateRunId,
+  } : undefined;
+  const matrixInputs = matrixScope ? await materializeCandidateMatrixInputs(root, matrixScope) : undefined;
+  const matrixReportRoot = matrixInputs?.reportRoot;
   const changed = options.changed ? await changedFiles(root, runner) : null;
   const evidencePath = '.musubix/evidence/quality.json';
   const previous = await exists(within(root, evidencePath))
@@ -319,7 +336,7 @@ export async function runGate(root: string, options: {
   const trace = await buildTrace(root, !matrixMode);
   const traceResult = await checkTrace(root, trace, true, config.thresholds);
   add('trace', requirementPaths.length > 0, traceResult.diagnostics.filter(scopedToFeature));
-  const { graph } = await indexGraph(root, { persist: !matrixMode, refresh: false });
+  const graph = matrixInputs?.graph ?? (await indexGraph(root, { persist: true, refresh: false })).graph;
   const graphResult = graphGate(graph, config.architecture, config.codeGraph);
   add('graph', graph.files.length > 0, graphResult.diagnostics);
   const formalText = (await Promise.all(requirementPaths.map(async (path) =>
@@ -458,7 +475,7 @@ export async function runGate(root: string, options: {
     if (command.testReport) {
       configuredTestReports++;
       reportPath = matrixMode
-        ? `.musubix/cache/matrix-native/${command.name}/aggregate.json`
+        ? `${matrixReportRoot}/${command.name}/aggregate.json`
         : command.testReport.path;
       const absolute = await safePath(root, reportPath);
       if (await exists(absolute)) await unlink(absolute);
@@ -469,7 +486,7 @@ export async function runGate(root: string, options: {
         command.name,
         undefined,
         undefined,
-        matrixMode ? '.musubix/cache/matrix-native' : undefined,
+        matrixReportRoot,
       );
       adapterOutput = invocation;
       reportPath = invocation.reportPath;
@@ -477,7 +494,7 @@ export async function runGate(root: string, options: {
       await clearAdapterOutput(invocation, await safePath(root, reportPath));
     } else if (command.mutationReport) {
       reportPath = matrixMode
-        ? `.musubix/cache/matrix-native/${command.name}/aggregate.json`
+        ? `${matrixReportRoot}/${command.name}/aggregate.json`
         : command.mutationReport.path;
       const absolute = await safePath(root, reportPath);
       if (await exists(absolute)) await unlink(absolute);
@@ -488,7 +505,7 @@ export async function runGate(root: string, options: {
     const args = command.adapter
       ? mergeAdapterArgs(command.adapter, configuredArgs, adapterArgs)
       : configuredArgs;
-    const executionOptions = { cwd: commandCwd(root, command), timeoutMs: command.timeoutMs };
+    const executionOptions = { cwd: commandCwd(root, command), timeoutMs: command.timeoutMs, env: environment };
     const result = config.testRuntime?.commandNames.some((name) => name === command.name)
       ? await runTestRuntimeCommand(root, command, args, executionOptions, runner,
         await testRuntimeExecutionContext(root, options.evidenceContext && 'integrationId' in options.evidenceContext
@@ -600,6 +617,7 @@ export async function runGate(root: string, options: {
               processStatus: result.status,
               exitCode: result.exitCode,
               tests: report.tests,
+              ...(matrixScope ? { matrix: matrixScope } : {}),
             }));
             for (const test of report.tests) {
               structuredTests.set(test.id, [...structuredTests.get(test.id) ?? [], test]);
@@ -646,9 +664,8 @@ export async function runGate(root: string, options: {
         : `${executedTestIds.length}/${annotatedTestIds.length} annotated test IDs passed in structured command reports.`,
     diagnostics: identityDiagnostics,
   });
-  if (!matrixMode) await writePerformanceEvidence(root, performanceExecutions, gateRunId);
-  const matrixReportRoot = matrixMode ? '.musubix/cache/matrix-native' : undefined;
-  const performance = await validatePerformanceEvidence(root, matrixReportRoot);
+  await writePerformanceEvidence(root, performanceExecutions, gateRunId, matrixScope);
+  const performance = await validatePerformanceEvidence(root, matrixReportRoot, matrixScope);
   checks.push({
     name: 'performance',
     required: required('performance') || performance.budgets > 0,

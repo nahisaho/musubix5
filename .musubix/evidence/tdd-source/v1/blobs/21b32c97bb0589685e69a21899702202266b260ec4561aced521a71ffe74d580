@@ -1,0 +1,89 @@
+# ADR-0042: Make candidate verification hermetic and platform-explicit
+
+Status: Proposed for Generation 29; requirements approved, corrected design approval pending.
+
+## Context
+
+CHANGE-0017 Generation 27 passed the complete local gate after its scoped Git
+LFS migration, but candidate run 37007570832 failed on every required Node.js 24
+matrix platform. Ubuntu rejected archived acknowledgments because their producer
+Node path differed from the runner, then consumed absent or stale local cache
+provenance. Windows additionally exposed unsupported directory sync, checkout
+conversion, worktree mode and invalid fixture-name assumptions. macOS returned
+an abnormal gate payload that the workflow masked with a secondary property
+access exception. Issue #54 records the release-blocking evidence.
+
+## Decision
+
+Separate archived provenance from new execution authorization. Archived runtime
+paths remain hash-bound evidence but are never resolved or launched by a
+validator host. New execution keeps a closed Node.js 24 authorization policy.
+
+Make candidate matrix input production hermetic. Matrix mode creates graph and
+performance inputs from the immutable candidate under a run-scoped root and
+binds observations to candidate, platform, Node, command, run, report, test,
+counter and exit provenance. Local quality cache paths grant no matrix credit.
+
+Use explicit platform contracts at filesystem boundaries. File publication,
+authorization, no-replace semantics and rehash remain mandatory everywhere;
+only the closed parent-directory open/sync error sets may be tolerated.
+Candidate checkout disables line-ending conversion, treats Git index mode as
+authority on Windows, retains POSIX worktree executable-bit checks, and verifies
+logical LFS bytes separately from Git pointers. Git's EOL report describes
+content, not the declared `text` attribute: content without CR or LF reports
+`none`, while newline-containing `-text` files may report `lf`, `crlf`, or
+`mixed`. The comparator therefore rejects non-empty repository-local
+`info/attributes`, disables system attributes, overrides the global attributes
+file with a comparator-owned empty file, clears `attr.tree` and
+`GIT_ATTR_SOURCE`, and then uses candidate-index attributes obtained with
+`git check-attr --cached` to select text or binary policy. Non-regular or
+unreadable `info/attributes` entries fail closed. It applies EOL constraints
+only to the text class and always proves non-LFS identity by hashing unfiltered
+raw bytes as a Git blob.
+
+Validate cross-platform fixture names before mutation. Candidate workflow
+subprocess execution passes through one bounded spool/capture boundary and typed
+normalizer with an ordered abnormal-result decision table. The complete raw
+stdout spool is the only parsing input; raw stream digests are computed before
+redaction, while bounded diagnostic tails are separate redacted projections.
+The normalizer emits either a normal candidate result or a bounded failure
+result and never dereferences an unvalidated shape.
+
+## Consequences
+
+Candidate evidence becomes reproducible from a fresh checkout instead of
+depending on the producer workstation's executable path or ignored cache.
+Windows behavior is explicit without weakening POSIX durability or candidate
+tree identity. Failing matrix jobs may upload signed diagnostic envelopes, but
+non-pass status remains ineligible for release evidence.
+
+The design adds focused cross-platform tests and a small shared result
+normalizer. Matrix jobs perform additional graph/performance generation, so
+their duration may increase, but the approved 300-second per-command ceiling
+and deterministic operation maxima remain unchanged.
+
+## Rejected alternatives
+
+- Rewrite Generation-27 acknowledgments with runner paths: rejected because
+  historical evidence is immutable and would lose producer provenance.
+- Permit arbitrary archived or live executable paths: rejected because it
+  would convert provenance portability into code-execution authorization.
+- Commit or copy `.musubix/cache/**`: rejected because ignored generated cache
+  is not candidate authority and can be stale across commands or platforms.
+- Ignore every Windows `fsync` or access error: rejected because only a closed
+  unsupported parent-directory operation set is safe to tolerate.
+- Normalize candidate bytes after checkout: rejected because conversion could
+  hide a tracked content mismatch; checkout must instead be deterministic.
+- Require `i/lf w/lf` or `i/-text w/-text` for every declared text/binary file:
+  rejected because `git ls-files --eol` reports content classification rather
+  than attribute identity, so empty files report `none` and `-text` does not
+  produce a `-text` EOL token.
+- Skip failing tests on Windows or macOS: rejected because all three matrix
+  identities are mandatory release evidence.
+- Let the workflow throw on malformed gate JSON: rejected because secondary
+  exceptions hide the primary release-blocking diagnostic.
+
+## Links
+
+Requirements: REQ-M5-CI-003 REQ-M5-CI-004 REQ-M5-CI-005 REQ-M5-CI-006 REQ-M5-CI-007 REQ-M5-CI-008
+Design: DES-M5-CI-003 DES-M5-CI-004 DES-M5-CI-005 DES-M5-CI-006 DES-M5-CI-007 DES-M5-CI-008

@@ -1,0 +1,1090 @@
+import { spawn } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { constants } from 'node:fs';
+import { lstat, mkdir, mkdtemp, open, rm } from 'node:fs/promises';
+import { dirname, join, resolve } from 'node:path';
+import { StringDecoder } from 'node:string_decoder';
+import { error, type Diagnostic } from '../../domain/src/index.js';
+import { canonicalBytes, sha256 } from './canonical.js';
+import { loadConfig, materializeExecutionPolicy, type AttestationConfig } from './config.js';
+import type { EvidenceAttestation, AttestationVerificationOptions } from './attestation.js';
+import { verifyDetachedEvidenceAttestation } from './attestation.js';
+import { activeChangeContext } from './change-generation.js';
+import { appendEvidence } from './evidence-registry.js';
+import { files, readText, writeJson } from './files.js';
+import { verifyJournal } from './journal.js';
+import { resolveCandidateSnapshot, verifyCandidateReachableObjectSizes, verifyCandidateLfsClosure } from './workspace-manager.js';
+import {
+  preserveEvidenceDiagnostics,
+  validateCandidateBinding,
+  type CandidateEvidenceBinding,
+  type CandidateEvidenceContext,
+} from './candidate-evidence-binding.js';
+
+export interface CandidateGateCommandOutcome {
+  stdoutPath: string;
+  stderrPath: string;
+  stdoutTail: string;
+  stderrTail: string;
+  stdoutSha256: string;
+  stderrSha256: string;
+  tailsDropped: boolean;
+  resultTextDropped: boolean;
+  exitCode: number | null;
+  signal: string | null;
+  timedOut: boolean;
+}
+
+const candidateStreamLimit = 100_000_000;
+const candidateCarryLimit = 8192;
+const candidateTailLimit = 20000;
+const stripAnsi = (text: string) => text.replace(/\u001b\[[0-?]*[ -/]*[@-~]/g, '');
+
+function secretRepresentations(secrets: readonly string[]): string[] {
+  return [...new Set(secrets.filter(Boolean).flatMap((secret) => {
+    const plain = stripAnsi(secret);
+    return [secret, plain, JSON.stringify(secret), JSON.stringify(secret).slice(1, -1),
+      JSON.stringify(plain), JSON.stringify(plain).slice(1, -1)];
+  }))].sort((a, b) => b.length - a.length);
+}
+
+function redactCandidateText(text: string, representations: readonly string[]): { text: string; unsafe: boolean } {
+  text = stripAnsi(text);
+  const candidates = [...text.matchAll(/(?:github_pat_|gh[opsur]_)[A-Za-z0-9_]+|\bauthorization\s*:\s*[^\r\n]*/gi)];
+  if (representations.some((value) => value.length > candidateCarryLimit)
+    || candidates.some((match) => match[0].length > candidateCarryLimit)) return { text: '', unsafe: true };
+  for (const secret of representations) text = text.split(secret).join('[REDACTED]');
+  text = text.replace(/(?:github_pat_|gh[opsur]_)[A-Za-z0-9_]+/g, '[REDACTED]')
+    .replace(/(\bauthorization\s*:\s*)[^\r\n]*/gi, '$1[REDACTED]');
+  return { text, unsafe: false };
+}
+
+class CandidateTailRedactor {
+  private carry = '';
+  tail = '';
+  dropped = false;
+  unsafe: boolean;
+
+  constructor(private readonly representations: readonly string[]) {
+    this.unsafe = representations.some((value) => value.length > candidateCarryLimit);
+  }
+
+  append(text: string, final = false): void {
+    if (this.unsafe) return;
+    this.carry = stripAnsi(this.carry + text);
+    if (redactCandidateText(this.carry, this.representations).unsafe) {
+      this.unsafe = true;
+      this.tail = this.carry = '';
+      return;
+    }
+    let cut = final ? this.carry.length : Math.max(0, this.carry.length - candidateCarryLimit);
+    const ranges: Array<{ start: number; end: number }> = [];
+    for (const secret of this.representations) {
+      for (let at = this.carry.indexOf(secret); at >= 0; at = this.carry.indexOf(secret, at + 1)) {
+        ranges.push({ start: at, end: at + secret.length });
+      }
+    }
+    for (const match of this.carry.matchAll(/(?:github_pat_|gh[opsur]_)[A-Za-z0-9_]+|\bauthorization\s*:\s*[^\r\n]*/gi)) {
+      ranges.push({ start: match.index, end: match.index + match[0].length });
+    }
+    for (const range of ranges) if (range.start < cut && range.end > cut) cut = Math.max(cut, range.end);
+    const partialAnsi = this.carry.lastIndexOf('\u001b');
+    if (!final && partialAnsi >= 0 && !/^\u001b\[[0-?]*[ -/]*[@-~]/.test(this.carry.slice(partialAnsi))) {
+      cut = Math.min(cut, partialAnsi);
+    }
+    if (!final && this.carry.length - cut > candidateCarryLimit) {
+      this.unsafe = true;
+      this.tail = this.carry = '';
+      return;
+    }
+    const safe = redactCandidateText(this.carry.slice(0, cut), this.representations);
+    this.carry = this.carry.slice(cut);
+    const combined = this.tail + safe.text;
+    this.dropped ||= combined.length > candidateTailLimit;
+    this.tail = combined.slice(-candidateTailLimit);
+  }
+}
+
+/** @id CODE-M5-CI-CANDIDATE-CAPTURE-001
+ * @implements REQ-M5-CI-008
+ * @design DES-M5-CI-008
+ */
+export async function runCandidateGateCommand(input: {
+  command: string; args: string[]; cwd: string; temporaryDirectory: string;
+  timeoutMs: number; secrets: readonly string[]; env?: NodeJS.ProcessEnv;
+}): Promise<CandidateGateCommandOutcome> {
+  if (!Number.isSafeInteger(input.timeoutMs) || input.timeoutMs <= 0 || input.timeoutMs > 300000) {
+    throw new Error('CANDIDATE_GATE_REPORT_INVALID: invalid subprocess timeout.');
+  }
+  await mkdir(input.temporaryDirectory, { recursive: true });
+  for (let path = resolve(input.temporaryDirectory); path !== dirname(path); path = dirname(path)) {
+    const stat = await lstat(path);
+    if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error('CANDIDATE_GATE_REPORT_INVALID: unsafe spool directory.');
+  }
+  const directory = await mkdtemp(join(input.temporaryDirectory, 'musubix5-gate-'));
+  const stdoutPath = join(directory, 'stdout'), stderrPath = join(directory, 'stderr');
+  const flags = constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0);
+  const stdoutFile = await open(stdoutPath, flags, 0o600);
+  let stderrFile: typeof stdoutFile;
+  try { stderrFile = await open(stderrPath, flags, 0o600); }
+  catch (cause) {
+    await stdoutFile.close();
+    await rm(directory, { recursive: true, force: true });
+    throw cause;
+  }
+  const representations = secretRepresentations(input.secrets);
+  const stdoutTail = new CandidateTailRedactor(representations), stderrTail = new CandidateTailRedactor(representations);
+  const stdoutHash = createHash('sha256'), stderrHash = createHash('sha256');
+  let timedOut = false, capped = false;
+  const child = spawn(input.command, input.args, { cwd: input.cwd, env: input.env ?? process.env,
+    shell: false, stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32' });
+  const terminate = () => {
+    if (child.pid && process.platform !== 'win32') {
+      try { process.kill(-child.pid, 'SIGKILL'); }
+      catch (cause) {
+        if (!(cause instanceof Error && 'code' in cause && cause.code === 'ESRCH')) throw cause;
+      }
+    } else child.kill('SIGKILL');
+  };
+  const timer = setTimeout(() => { timedOut = true; terminate(); }, input.timeoutMs);
+  const completed = new Promise<{ exitCode: number | null; signal: string | null }>((accept) => {
+    child.once('error', () => accept({ exitCode: 1, signal: null }));
+    child.once('close', (exitCode, signal) => accept({ exitCode, signal }));
+  });
+  const pump = async (stream: typeof child.stdout, file: typeof stdoutFile, hash: typeof stdoutHash, redactor: CandidateTailRedactor) => {
+    let size = 0;
+    const decoder = new StringDecoder('utf8');
+    for await (const value of stream) {
+      const bytes: Buffer = Buffer.isBuffer(value) ? value : Buffer.from(value);
+      hash.update(bytes);
+      redactor.append(decoder.write(bytes));
+      const retained = Math.min(bytes.length, candidateStreamLimit - size);
+      if (retained > 0) {
+        let offset = 0;
+        while (offset < retained) {
+          const { bytesWritten } = await file.write(bytes, offset, retained - offset);
+          if (!bytesWritten) throw new Error('CANDIDATE_GATE_REPORT_INVALID: incomplete spool write.');
+          offset += bytesWritten;
+        }
+      }
+      size += retained;
+      if (retained !== bytes.length) { capped = true; terminate(); }
+    }
+    redactor.append(decoder.end(), true);
+  };
+  try {
+    const [result] = await Promise.all([completed, pump(child.stdout, stdoutFile, stdoutHash, stdoutTail),
+      pump(child.stderr, stderrFile, stderrHash, stderrTail)]);
+    const unsafe = capped || stdoutTail.unsafe || stderrTail.unsafe;
+    return {
+      stdoutPath, stderrPath, stdoutTail: unsafe ? '' : stdoutTail.tail, stderrTail: unsafe ? '' : stderrTail.tail,
+      stdoutSha256: stdoutHash.digest('hex'), stderrSha256: stderrHash.digest('hex'),
+      tailsDropped: unsafe || stdoutTail.dropped || stderrTail.dropped, resultTextDropped: unsafe,
+      exitCode: capped ? 1 : result.exitCode, signal: capped ? null : result.signal, timedOut,
+    };
+  } catch (cause) {
+    terminate();
+    await rm(directory, { recursive: true, force: true });
+    throw cause;
+  } finally {
+    clearTimeout(timer);
+    await stdoutFile.close();
+    await stderrFile.close();
+  }
+}
+
+interface NormalizedCandidateCheck {
+  name: string; required: boolean; status: 'pass' | 'fail' | 'skipped';
+  summary: string; exitCode?: number | null; stdout?: string; stderr?: string;
+  diagnostics?: Array<{ code: string; severity: 'error' | 'warning' | 'info'; message: string; path?: string }>;
+}
+
+function candidateObject(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function candidateCheck(value: unknown): value is NormalizedCandidateCheck {
+  return candidateObject(value) && typeof value.name === 'string' && /^[a-z][a-z0-9:.-]{0,127}$/.test(value.name)
+    && typeof value.required === 'boolean' && ['pass', 'fail', 'skipped'].includes(String(value.status))
+    && typeof value.summary === 'string'
+    && (value.exitCode === undefined || value.exitCode === null || Number.isInteger(value.exitCode))
+    && (value.stdout === undefined || typeof value.stdout === 'string')
+    && (value.stderr === undefined || typeof value.stderr === 'string')
+    && (value.diagnostics === undefined || Array.isArray(value.diagnostics) && value.diagnostics.every((diagnostic) =>
+      candidateObject(diagnostic) && typeof diagnostic.code === 'string' && /^[A-Z][A-Z0-9_]{0,127}$/.test(diagnostic.code)
+      && ['error', 'warning', 'info'].includes(String(diagnostic.severity)) && typeof diagnostic.message === 'string'
+      && (diagnostic.path === undefined || typeof diagnostic.path === 'string')));
+}
+
+/** @id CODE-M5-CI-CANDIDATE-NORMALIZER-001
+ * @implements REQ-M5-CI-008
+ * @design DES-M5-CI-008
+ */
+export async function normalizeCandidateGateReport(outcome: CandidateGateCommandOutcome, options: {
+  resultPath: string; context: CandidateGateContext & { job: { os: string; nodeMajor: number } };
+  secrets: readonly string[]; preTreeMatchesCandidate?: boolean; postTreeMatchesCandidate?: boolean;
+}) {
+  const context = options.context;
+  if (!/^repository:[a-f0-9]{64}$/.test(context.repositoryId) || !/^CHANGE-\d+$/.test(context.changeId)
+    || !Number.isSafeInteger(context.generation) || context.generation <= 0
+    || !/^[a-f0-9]{40}$/.test(context.candidateCommit) || !/^[a-f0-9]{64}$/.test(context.gateInputFingerprint)
+    || !['ubuntu', 'windows', 'macos'].includes(context.job.os) || context.job.nodeMajor !== 24) {
+    throw new Error('CANDIDATE_GATE_REPORT_INVALID: invalid candidate context.');
+  }
+  const representations = secretRepresentations(options.secrets);
+  let omitText = outcome.resultTextDropped || representations.some((value) => value.length > candidateCarryLimit);
+  const safeText = (text: string): string => {
+    const result = redactCandidateText(text, representations);
+    omitText ||= result.unsafe;
+    return result.text.slice(-candidateTailLimit);
+  };
+  let parsed: unknown, classification: string | undefined, originalCode: string | undefined, originalMessage: string | undefined;
+  let checks: NormalizedCandidateCheck[] = [];
+  try {
+    const stat = await lstat(outcome.stdoutPath);
+    if (!stat.isFile() || stat.isSymbolicLink() || stat.size > candidateStreamLimit) {
+      classification = 'malformed-json';
+    } else {
+      const file = await open(outcome.stdoutPath, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
+      let raw: Buffer;
+      try { raw = await file.readFile(); }
+      finally { await file.close(); }
+      if (sha256(raw) !== outcome.stdoutSha256) { classification = 'malformed-json'; omitText = true; }
+      else if (!raw.length) classification = 'empty-stdout';
+      else {
+        try { parsed = JSON.parse(raw.toString('utf8')); }
+        catch (cause) {
+          if (!(cause instanceof SyntaxError)) throw cause;
+          classification = 'malformed-json';
+        }
+      }
+    }
+    if (outcome.timedOut) classification = 'timeout';
+    else if (outcome.signal) classification = 'signal';
+    else if (!classification) {
+      if (!candidateObject(parsed)) classification = 'invalid-root';
+      else if ('error' in parsed) {
+        classification = 'cli-error';
+        const envelope = parsed.error;
+        if (candidateObject(envelope)) {
+          if (typeof envelope.code === 'string' && /^[A-Z][A-Z0-9_]{0,127}$/.test(envelope.code)) originalCode = safeText(envelope.code);
+          if (typeof envelope.message === 'string') originalMessage = safeText(envelope.message);
+        } else if (typeof envelope === 'string') originalMessage = safeText(envelope);
+      } else if (!('checks' in parsed)) classification = 'missing-checks';
+      else if (!Array.isArray(parsed.checks)) classification = 'non-array-checks';
+      else if (parsed.checks.length > 10000 || !parsed.checks.every(candidateCheck)) classification = 'invalid-check';
+      else checks = parsed.checks;
+    }
+    const sanitizedChecks = checks.map((check) => ({
+      name: safeText(check.name), required: check.required, status: check.status, summary: safeText(check.summary),
+      ...(check.diagnostics ? { diagnostics: check.diagnostics.map((diagnostic) => ({
+        code: safeText(diagnostic.code), severity: diagnostic.severity, message: safeText(diagnostic.message),
+        ...(diagnostic.path ? { path: safeText(diagnostic.path) } : {}),
+      })) } : {}),
+    }));
+    const commands = checks.filter((check) => check.name.startsWith('command:')).map((check) => ({
+      name: safeText(check.name.slice('command:'.length)), exitCode: check.exitCode ?? -1,
+      digest: sha256(canonicalBytes({ name: check.name.slice('command:'.length), exitCode: check.exitCode ?? -1,
+        stdout: check.stdout ?? '', stderr: check.stderr ?? '' })), status: check.status === 'pass' ? 'pass' as const : 'fail' as const,
+    }));
+    const commandsPassed = !classification && !omitText && outcome.exitCode === 0
+      && checks.every((check) => !check.required || check.name === 'approval' || check.status === 'pass')
+      && commands.length === requiredCandidateGateCommands.length
+      && [...commands.map((command) => command.name)].sort().join('\n') === [...requiredCandidateGateCommands].sort().join('\n')
+      && commands.every((command) => command.status === 'pass');
+    if (!classification && outcome.exitCode !== 0) classification = 'non-zero-exit';
+    if (outcome.resultTextDropped && outcome.exitCode !== 0 && !outcome.timedOut && !outcome.signal) classification = 'non-zero-exit';
+    const stdoutTail = safeText(outcome.stdoutTail), stderrTail = safeText(outcome.stderrTail);
+    if (omitText && !classification) classification = 'redaction-unavailable';
+    const pass = commandsPassed && options.preTreeMatchesCandidate === true && options.postTreeMatchesCandidate === true && !omitText;
+    const result = {
+      schemaVersion: 1, ...options.context, producer: 'github-actions', runtime: options.context.job,
+      commands: omitText ? [] : commands, commandsPassed: commandsPassed && !omitText,
+      preTreeMatchesCandidate: options.preTreeMatchesCandidate === true, postTreeMatchesCandidate: options.postTreeMatchesCandidate === true,
+      gateReportDigest: outcome.stdoutSha256, status: pass ? 'pass' as const : 'fail' as const,
+      stdoutSha256: outcome.stdoutSha256, stderrSha256: outcome.stderrSha256,
+      exitCode: outcome.exitCode, signal: outcome.signal, timedOut: outcome.timedOut,
+      tailsDropped: outcome.tailsDropped || omitText, resultTextDropped: omitText,
+      ...(!omitText ? { stdoutTail, stderrTail, checks: sanitizedChecks } : {}),
+      ...(classification ? { error: { code: 'CANDIDATE_GATE_REPORT_INVALID', case: classification,
+        ...(!omitText && originalCode ? { originalCode } : {}), ...(!omitText && originalMessage ? { originalMessage } : {}) } } : {}),
+    };
+    const resultFile = await open(options.resultPath,
+      constants.O_WRONLY | constants.O_CREAT | constants.O_TRUNC | (constants.O_NOFOLLOW ?? 0), 0o600);
+    try {
+      await resultFile.writeFile(canonicalBytes(result));
+      await resultFile.sync();
+    } finally { await resultFile.close(); }
+    return result;
+  } finally {
+    await rm(outcome.stdoutPath, { force: true });
+    await rm(outcome.stderrPath, { force: true });
+    if (dirname(outcome.stdoutPath) === dirname(outcome.stderrPath)
+      && dirname(outcome.stdoutPath).split(/[\\/]/).at(-1)?.startsWith('musubix5-gate-')) {
+      await rm(dirname(outcome.stdoutPath), { recursive: true, force: true });
+    }
+  }
+}
+
+export const candidateMatrixJobs = [
+  { os: 'ubuntu', nodeMajor: 24 },
+  { os: 'windows', nodeMajor: 24 },
+  { os: 'macos', nodeMajor: 24 },
+] as const;
+
+// The workflow runs verification under runner.temp so macOS Unix socket paths stay within platform limits.
+export const historicalCandidateMatrixJobs = [
+  { os: 'ubuntu', nodeMajor: 20 },
+  { os: 'ubuntu', nodeMajor: 22 },
+  { os: 'windows', nodeMajor: 22 },
+  { os: 'macos', nodeMajor: 22 },
+] as const;
+
+export type CandidateGateJob =
+  | typeof candidateMatrixJobs[number]
+  | typeof historicalCandidateMatrixJobs[number];
+
+const persistedCandidateMatrixJobs: readonly CandidateGateJob[] = [
+  ...candidateMatrixJobs,
+  ...historicalCandidateMatrixJobs,
+];
+
+export const requiredCandidateGateCommands = [
+  'typecheck',
+  'build',
+  'test',
+  'codegraph-tests',
+  'compatibility',
+  'pack-check',
+  'pack-smoke',
+] as const;
+
+const legacyCandidateGateCommands = requiredCandidateGateCommands.filter(
+  (command) => command !== 'codegraph-tests',
+);
+
+export interface CandidateGateContext {
+  repositoryId: string;
+  changeId: string;
+  generation: number;
+  candidateCommit: string;
+  gateInputFingerprint: string;
+}
+
+export interface CandidateGateCommand {
+  executable: string;
+  args: string[];
+}
+
+export interface CandidateGateDispatchGuidance {
+  candidateBranch: string;
+  candidateFullRef: string;
+  inspectLocal: CandidateGateCommand;
+  createLocal: CandidateGateCommand;
+  inspectRemote: CandidateGateCommand;
+  createRemote: CandidateGateCommand;
+  dispatch: CandidateGateCommand;
+  deleteLocal: CandidateGateCommand;
+  deleteRemote: CandidateGateCommand;
+}
+
+/**
+ * @id CODE-M5-WAVE0-CANDIDATE-REF-001
+ * @implements REQ-M5-WAVE0-CANDIDATE-REF-001
+ * @design DES-M5-WAVE0-004
+ */
+export function candidateDispatchGuidance(
+  context: CandidateGateContext,
+): CandidateGateDispatchGuidance {
+  const candidateBranch = `candidate/${context.changeId.toLowerCase()}`
+    + `-g${context.generation}-${context.candidateCommit.slice(0, 12).toLowerCase()}`;
+  const candidateFullRef = `refs/heads/${candidateBranch}`;
+  return {
+    candidateBranch,
+    candidateFullRef,
+    inspectLocal: {
+      executable: 'git',
+      args: ['show-ref', '--verify', '--hash', candidateFullRef],
+    },
+    createLocal: {
+      executable: 'git',
+      args: ['update-ref', candidateFullRef, context.candidateCommit, ''],
+    },
+    inspectRemote: {
+      executable: 'git',
+      args: ['ls-remote', '--exit-code', 'origin', candidateFullRef],
+    },
+    createRemote: {
+      executable: 'git',
+      args: [
+        'push',
+        `--force-with-lease=${candidateFullRef}:`,
+        'origin',
+        `${context.candidateCommit}:${candidateFullRef}`,
+      ],
+    },
+    dispatch: {
+      executable: 'gh',
+      args: [
+        'workflow',
+        'run',
+        '.github/workflows/candidate-gate.yml',
+        '--ref',
+        candidateBranch,
+        '-f',
+        `changeId=${context.changeId}`,
+        '-f',
+        `generation=${context.generation}`,
+        '-f',
+        `candidateCommit=${context.candidateCommit}`,
+        '-f',
+        `repositoryId=${context.repositoryId}`,
+        '-f',
+        `gateInputFingerprint=${context.gateInputFingerprint}`,
+      ],
+    },
+    deleteLocal: {
+      executable: 'git',
+      args: ['update-ref', '-d', candidateFullRef, context.candidateCommit],
+    },
+    deleteRemote: {
+      executable: 'git',
+      args: [
+        'push',
+        `--force-with-lease=${candidateFullRef}:${context.candidateCommit}`,
+        'origin',
+        `:${candidateFullRef}`,
+      ],
+    },
+  };
+}
+
+export interface CandidateGateJobResult extends CandidateGateContext {
+  schemaVersion: 1;
+  job: CandidateGateJob;
+  producer: string;
+  runtime: { os: string; nodeMajor: number };
+  commands?: Array<{ name: string; digest: string; status: 'pass' | 'fail' }>;
+  commandsPassed: boolean;
+  preTreeMatchesCandidate: boolean;
+  postTreeMatchesCandidate: boolean;
+  status: 'pass' | 'fail';
+}
+
+export interface CandidateGateEnvelope {
+  schemaVersion: 1;
+  result: CandidateGateJobResult;
+  attestation: EvidenceAttestation | null;
+}
+
+const approvalAutomationDefault = {
+  design: {
+    mode: 'manual',
+    producerRepairLimit: 3,
+    repairPlannerBudgetUnits: 1000,
+    reviewerBudgetUnits: 1000,
+  },
+  release: { mode: 'manual' },
+  requirements: {
+    mode: 'manual',
+    producerRepairLimit: 3,
+    repairPlannerBudgetUnits: 1000,
+    reviewerBudgetUnits: 1000,
+  },
+} as const;
+
+interface ApprovalAutomationPolicy {
+  design: {
+    mode: 'manual' | 'verified-auto';
+    producerRepairLimit: number;
+    repairPlannerBudgetUnits: number;
+    reviewerBudgetUnits: number;
+  };
+  release: { mode: 'manual' };
+  requirements: {
+    mode: 'manual' | 'verified-auto';
+    producerRepairLimit: number;
+    repairPlannerBudgetUnits: number;
+    reviewerBudgetUnits: number;
+  };
+}
+
+const candidateGateDefault: { attestation: AttestationConfig } = {
+  attestation: {
+    githubOidc: {
+      audience: 'https://github.com/nahisaho/musubix5/actions/musubix5-gate',
+      issuer: 'https://token.actions.githubusercontent.com',
+      keyBinding: 'public-key',
+      mode: 'strict',
+      repository: 'nahisaho/musubix5',
+      workflow: '.github/workflows/candidate-gate.yml',
+    },
+    maxAgeSeconds: 86_400,
+    maxFutureSkewSeconds: 60,
+    mode: 'ci-required',
+    repository: 'nahisaho/musubix5',
+    trustedPublicKeys: [],
+  },
+};
+
+function boundedInteger(value: unknown, location: string, minimum: number, maximum: number): number {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < minimum || value > maximum) {
+    throw new Error(`CONFIG_INVALID: ${location} must be an integer in ${minimum}..${maximum}.`);
+  }
+  return value;
+}
+
+function candidateGatePolicy(value: unknown): { attestation: AttestationConfig } {
+  if (value === undefined) return candidateGateDefault;
+  if (!isRecord(value)
+    || Object.keys(value).some((key) => key !== 'attestation')
+    || !isRecord(value.attestation)) {
+    throw new Error('CONFIG_INVALID: candidateGate must contain only attestation.');
+  }
+  const attestation = value.attestation;
+  const allowedAttestation = new Set([
+    'mode', 'repository', 'maxAgeSeconds', 'maxFutureSkewSeconds', 'trustedPublicKeys', 'githubOidc',
+  ]);
+  if (Object.keys(attestation).some((key) => !allowedAttestation.has(key))
+    || attestation.mode !== 'ci-required'
+    || typeof attestation.repository !== 'string'
+    || !attestation.repository
+    || !Array.isArray(attestation.trustedPublicKeys)
+    || attestation.trustedPublicKeys.length !== 0
+    || !isRecord(attestation.githubOidc)) {
+    throw new Error('CONFIG_INVALID: candidateGate.attestation must define strict CI OIDC policy.');
+  }
+  const oidc = attestation.githubOidc;
+  const allowedOidc = new Set([
+    'mode', 'issuer', 'audience', 'repository', 'workflow', 'keyBinding',
+  ]);
+  if (Object.keys(oidc).some((key) => !allowedOidc.has(key))
+    || oidc.mode !== 'strict'
+    || oidc.issuer !== 'https://token.actions.githubusercontent.com'
+    || typeof oidc.audience !== 'string'
+    || !oidc.audience
+    || oidc.repository !== attestation.repository
+    || typeof oidc.workflow !== 'string'
+    || !oidc.workflow.startsWith('.github/workflows/')
+    || oidc.keyBinding !== 'public-key') {
+    throw new Error('CONFIG_INVALID: candidateGate.attestation.githubOidc is invalid.');
+  }
+  return {
+    attestation: {
+      mode: 'ci-required',
+      repository: attestation.repository,
+      maxAgeSeconds: boundedInteger(
+        attestation.maxAgeSeconds,
+        'candidateGate.attestation.maxAgeSeconds',
+        1,
+        604_800,
+      ),
+      maxFutureSkewSeconds: boundedInteger(
+        attestation.maxFutureSkewSeconds,
+        'candidateGate.attestation.maxFutureSkewSeconds',
+        0,
+        600,
+      ),
+      trustedPublicKeys: [],
+      githubOidc: {
+        mode: 'strict',
+        issuer: 'https://token.actions.githubusercontent.com',
+        audience: oidc.audience,
+        repository: oidc.repository,
+        workflow: oidc.workflow,
+        keyBinding: 'public-key',
+      },
+    },
+  };
+}
+
+function approvalAutomationPolicy(value: unknown): ApprovalAutomationPolicy {
+  if (value === undefined) return approvalAutomationDefault;
+  if (!isRecord(value)
+    || Object.keys(value).sort().join(',') !== 'design,release,requirements'
+    || !isRecord(value.design)
+    || !isRecord(value.requirements)
+    || !isRecord(value.release)
+    || value.release.mode !== 'manual'
+    || Object.keys(value.release).some((key) => key !== 'mode')) {
+    throw new Error('CONFIG_INVALID: approvalAutomation schema is invalid.');
+  }
+  const boundary = (entry: Record<string, unknown>, location: string) => {
+    const allowed = new Set([
+      'mode', 'producerRepairLimit', 'repairPlannerBudgetUnits', 'reviewerBudgetUnits',
+    ]);
+    if (Object.keys(entry).some((key) => !allowed.has(key))
+      || !['manual', 'verified-auto'].includes(String(entry.mode))) {
+      throw new Error(`CONFIG_INVALID: ${location} schema is invalid.`);
+    }
+    return {
+      mode: entry.mode as 'manual' | 'verified-auto',
+      producerRepairLimit: boundedInteger(entry.producerRepairLimit, `${location}.producerRepairLimit`, 1, 100),
+      repairPlannerBudgetUnits: boundedInteger(
+        entry.repairPlannerBudgetUnits,
+        `${location}.repairPlannerBudgetUnits`,
+        1,
+        1_000_000,
+      ),
+      reviewerBudgetUnits: boundedInteger(
+        entry.reviewerBudgetUnits,
+        `${location}.reviewerBudgetUnits`,
+        1,
+        1_000_000,
+      ),
+    };
+  };
+  return {
+    design: boundary(value.design, 'approvalAutomation.design'),
+    release: { mode: 'manual' },
+    requirements: boundary(value.requirements, 'approvalAutomation.requirements'),
+  };
+}
+
+interface PersistedCandidateGate {
+  order: number;
+  artifactDigest: string;
+  result: CandidateGateJobResult;
+  attestation: EvidenceAttestation;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isCandidateGateJobShape(value: unknown): value is { os: string; nodeMajor: number } {
+  return isRecord(value)
+    && typeof value.os === 'string'
+    && value.os.length > 0
+    && Number.isInteger(value.nodeMajor)
+    && Number(value.nodeMajor) > 0;
+}
+
+function isAcceptedJob(
+  value: { os: string; nodeMajor: number },
+  acceptedJobs: readonly CandidateGateJob[],
+): value is CandidateGateJob {
+  return acceptedJobs.some((job) => job.os === value.os && job.nodeMajor === value.nodeMajor);
+}
+
+function isCurrentJob(value: CandidateGateJob): value is typeof candidateMatrixJobs[number] {
+  return candidateMatrixJobs.some((job) =>
+    job.os === value.os && job.nodeMajor === value.nodeMajor);
+}
+
+function parseCandidateGateResult(
+  value: unknown,
+  acceptedJobs: readonly CandidateGateJob[],
+  acceptedCommandSets: readonly (readonly string[])[],
+  acceptedJobDescription: string,
+): CandidateGateJobResult {
+  if (!isRecord(value)
+    || value.schemaVersion !== 1
+    || typeof value.repositoryId !== 'string'
+    || !value.repositoryId
+    || typeof value.changeId !== 'string'
+    || !/^CHANGE-\d+$/.test(value.changeId)
+    || !Number.isInteger(value.generation)
+    || Number(value.generation) < 1
+    || typeof value.candidateCommit !== 'string'
+    || !/^[0-9a-f]{40,64}$/.test(value.candidateCommit)
+    || typeof value.gateInputFingerprint !== 'string'
+    || !/^[0-9a-f]{64}$/i.test(value.gateInputFingerprint)
+    || !isCandidateGateJobShape(value.job)
+    || value.producer !== 'github-actions'
+    || !isRecord(value.runtime)
+    || value.runtime.os !== value.job.os
+    || value.runtime.nodeMajor !== value.job.nodeMajor
+    || typeof value.commandsPassed !== 'boolean'
+    || typeof value.preTreeMatchesCandidate !== 'boolean'
+    || typeof value.postTreeMatchesCandidate !== 'boolean'
+    || !['pass', 'fail'].includes(String(value.status))) {
+    throw new Error('RELEASE_GATE_EVIDENCE_STALE: candidate gate result schema is invalid.');
+  }
+  if (!isAcceptedJob(value.job, acceptedJobs)) {
+    throw new Error(
+      `RELEASE_GATE_EVIDENCE_STALE: candidate gate ${value.job.os}-node${value.job.nodeMajor} is outside ${acceptedJobDescription}.`,
+    );
+  }
+  if (!Array.isArray(value.commands)
+    || value.commands.length === 0
+    || value.commands.some((command) => !isRecord(command)
+      || typeof command.name !== 'string'
+      || !command.name
+      || typeof command.digest !== 'string'
+      || !/^[0-9a-f]{64}$/i.test(command.digest)
+      || !['pass', 'fail'].includes(String(command.status)))
+    || new Set(value.commands.map((command) => (command as Record<string, unknown>).name)).size
+      !== value.commands.length) {
+    throw new Error('RELEASE_GATE_EVIDENCE_STALE: candidate gate command evidence is invalid.');
+  }
+  const commandNames = value.commands.map((command) => String((command as Record<string, unknown>).name)).sort();
+  if (!acceptedCommandSets.some((commands) =>
+    commandNames.join('\n') === [...commands].sort().join('\n'))) {
+    throw new Error('RELEASE_GATE_EVIDENCE_STALE: candidate gate command set is incomplete.');
+  }
+  const commandsPass = value.commands.every((command) =>
+    (command as Record<string, unknown>).status === 'pass');
+  const expectedPass = commandsPass && value.preTreeMatchesCandidate && value.postTreeMatchesCandidate;
+  if (value.commandsPassed !== commandsPass || value.status !== (expectedPass ? 'pass' : 'fail')) {
+    throw new Error('RELEASE_GATE_EVIDENCE_STALE: candidate gate terminal status is inconsistent.');
+  }
+  return value as unknown as CandidateGateJobResult;
+}
+
+function jobId(job: CandidateGateJobResult['job']): string {
+  return `${job.os}-node${job.nodeMajor}`;
+}
+
+function sameContext(left: CandidateGateContext, right: CandidateGateContext): boolean {
+  return left.repositoryId === right.repositoryId
+    && left.changeId === right.changeId
+    && left.generation === right.generation
+    && left.candidateCommit === right.candidateCommit
+    && left.gateInputFingerprint === right.gateInputFingerprint;
+}
+
+const integrationCandidateGateDetails: Readonly<Record<string, string>> = {
+  RELEASE_GATE_EVIDENCE_MISSING: 'integration-candidate-gate-missing',
+  RELEASE_GATE_EVIDENCE_STALE: 'integration-candidate-context-mismatch',
+  RELEASE_GATE_CANDIDATE_MISMATCH: 'integration-candidate-context-mismatch',
+};
+
+/** @id CODE-M5-INTEGRATION-GATE-DIAGNOSTIC-001
+ * @implements REQ-M5-RELEASE-002 REQ-M5-PARALLEL-010
+ * @design DES-M5-MULTI-CHANGE-005
+ */
+export function classifyIntegrationCandidateGateDiagnostic(
+  diagnostic: Diagnostic,
+  sourceStage = 'release',
+  domain?: string,
+): Diagnostic {
+  const preserved = preserveEvidenceDiagnostics([diagnostic])[0]!;
+  const provenance = {
+    ...(preserved as Diagnostic & { sourceStage?: string; domain?: string }),
+    ...((preserved as Diagnostic & { sourceStage?: string }).sourceStage
+      ? {}
+      : { sourceStage }),
+    ...((preserved as Diagnostic & { domain?: string }).domain || !domain ? {} : { domain }),
+  };
+  if (preserved.detail !== undefined) return provenance;
+  const detail = integrationCandidateGateDetails[preserved.code];
+  return detail ? { ...provenance, detail } : provenance;
+}
+
+export function projectCandidateGate(
+  context: CandidateEvidenceContext,
+  records: Array<CandidateGateJobResult & { binding?: CandidateEvidenceBinding }>,
+): { records: CandidateGateJobResult[]; diagnostics: Diagnostic[] } {
+  const selected: CandidateGateJobResult[] = [];
+  const diagnostics: Diagnostic[] = [];
+  for (const record of records) {
+    const binding = validateCandidateBinding(record, context);
+    if (!binding.valid) {
+      diagnostics.push(...binding.diagnostics);
+      continue;
+    }
+    selected.push(record);
+  }
+  return { records: selected, diagnostics };
+}
+
+/** @id CODE-M5-CANDIDATE-GATE-001
+ * @implements REQ-M5-RELEASE-002 REQ-M5-CI-001
+ * @design DES-M5-019 DES-M5-CI-001
+ */
+export function validateCandidateGateSet(
+  context: CandidateGateContext,
+  records: CandidateGateJobResult[],
+): { valid: boolean; diagnostics: Diagnostic[] } {
+  const diagnostics: Diagnostic[] = [];
+  const current = new Map<string, CandidateGateJobResult>();
+  const observed = new Set<string>();
+  for (const record of records.filter((entry) => isCurrentJob(entry.job))) {
+    const id = jobId(record.job);
+    observed.add(id);
+    if (!sameContext(context, record)) {
+      diagnostics.push(error(
+        record.candidateCommit !== context.candidateCommit
+          ? 'RELEASE_GATE_CANDIDATE_MISMATCH'
+          : 'RELEASE_GATE_EVIDENCE_STALE',
+        `Candidate gate ${jobId(record.job)} is bound to another candidate context.`,
+      ));
+      continue;
+    }
+    const commandNames = record.commands?.map((command) => command.name).sort();
+    if (commandNames
+      && commandNames.join('\n') !== [...requiredCandidateGateCommands].sort().join('\n')) {
+      diagnostics.push(error(
+        'RELEASE_GATE_EVIDENCE_STALE',
+        `Candidate gate ${jobId(record.job)} does not contain the current required command set.`,
+      ));
+      continue;
+    }
+
+    if (current.has(id)) {
+      diagnostics.push(error('RELEASE_GATE_EVIDENCE_STALE', `Candidate gate ${id} is duplicated.`));
+      continue;
+    }
+    current.set(id, record);
+    if (!record.preTreeMatchesCandidate || !record.postTreeMatchesCandidate) {
+      diagnostics.push(error('RELEASE_CANDIDATE_TREE_MISMATCH', `Candidate gate ${id} did not preserve the candidate tree.`));
+    } else if (record.status !== 'pass' || !record.commandsPassed) {
+      diagnostics.push(error('RELEASE_GATE_EVIDENCE_STALE', `Candidate gate ${id} is not passing.`));
+    }
+  }
+  for (const job of candidateMatrixJobs) {
+    const id = jobId(job);
+    if (!observed.has(id)) {
+      diagnostics.push(error('RELEASE_GATE_EVIDENCE_MISSING', `Candidate gate ${id} is missing.`));
+    }
+  }
+  return { valid: diagnostics.length === 0, diagnostics };
+}
+
+/** @id CODE-M5-CANDIDATE-GATE-FINGERPRINT-CONFIG-001
+ * @implements REQ-M5-LIFECYCLE-006
+ * @design DES-M5-015
+ */
+export async function candidateGateFingerprintConfig(root: string): Promise<Record<string, unknown>> {
+  const config = await loadConfig(root);
+  const path = '.musubix/config.json';
+  const raw = JSON.parse(await readText(root, path)) as Record<string, unknown>;
+  const materialized = materializeExecutionPolicy(config);
+  const {
+    language: _language,
+    qualityProfile: _qualityProfile,
+    approval,
+    testRuntime,
+    ...executionConfig
+  } = materialized;
+  return {
+    approval,
+    approvalAutomation: approvalAutomationPolicy(raw.approvalAutomation),
+    candidateGate: candidateGatePolicy(raw.candidateGate),
+    executionPolicy: executionConfig,
+    ...(testRuntime === undefined ? {} : { testRuntime }),
+  };
+}
+
+export async function candidateGateContext(
+  root: string,
+  changeId: string,
+  generation: number,
+  expectedCommit?: string,
+): Promise<CandidateGateContext> {
+  const snapshot = await resolveCandidateSnapshot(root, changeId);
+  if (expectedCommit && snapshot.commit !== expectedCommit) {
+    throw new Error('RELEASE_GATE_CANDIDATE_MISMATCH: persisted candidate commit changed.');
+  }
+  await verifyCandidateReachableObjectSizes(root, snapshot.commit);
+  await verifyCandidateLfsClosure(root, snapshot.commit, 'local');
+  const config = await candidateGateFingerprintConfig(root);
+  const identity = {
+    schemaVersion: 'gate-input-fingerprint-v1',
+    repositoryId: snapshot.repositoryId,
+    changeId,
+    generation,
+    candidateCommit: snapshot.commit,
+    config,
+  };
+  return {
+    repositoryId: snapshot.repositoryId,
+    changeId,
+    generation,
+    candidateCommit: snapshot.commit,
+    gateInputFingerprint: sha256(canonicalBytes(identity)),
+  };
+}
+
+async function loadPersistedCandidateGates(root: string): Promise<PersistedCandidateGate[]> {
+  const records = await verifyJournal(root);
+  return records.flatMap((record) => {
+    if (record.kind !== 'evidence' || !record.payload || typeof record.payload !== 'object') return [];
+    const evidence = record.payload as Record<string, unknown>;
+    if (evidence.kind !== 'release' || !evidence.payload || typeof evidence.payload !== 'object') return [];
+    const payload = evidence.payload as Record<string, unknown>;
+    if (payload.candidateGate !== true) return [];
+    if (!isRecord(payload.attestation)
+      || typeof payload.artifactDigest !== 'string'
+      || !/^[0-9a-f]{64}$/i.test(payload.artifactDigest)) {
+      throw new Error('RELEASE_GATE_EVIDENCE_STALE: persisted candidate gate evidence is malformed.');
+    }
+    return [{
+      order: record.order,
+      artifactDigest: payload.artifactDigest,
+      result: parseCandidateGateResult(
+        payload.result,
+        persistedCandidateMatrixJobs,
+        [legacyCandidateGateCommands, requiredCandidateGateCommands],
+        'the supported candidate gate history',
+      ),
+      attestation: payload.attestation as unknown as EvidenceAttestation,
+    }];
+  });
+}
+
+export async function loadCandidateGateResults(root: string): Promise<CandidateGateJobResult[]> {
+  const latest = new Map<string, PersistedCandidateGate>();
+  for (const record of await loadPersistedCandidateGates(root)) {
+    const id = jobId(record.result.job);
+    const current = latest.get(id);
+    if (!current || record.order > current.order) latest.set(id, record);
+  }
+  return [...latest.values()]
+    .sort((left, right) => left.order - right.order)
+    .map((record) => record.result);
+}
+
+export async function ingestCandidateGateEnvelopes(
+  root: string,
+  envelopes: CandidateGateEnvelope[],
+  options: AttestationVerificationOptions = {},
+): Promise<CandidateGateJobResult[]> {
+  if (envelopes.some((envelope) =>
+    !isRecord(envelope)
+    || envelope.schemaVersion !== 1
+    || !isRecord(envelope.attestation)
+    || !isRecord(envelope.attestation.ci)
+    || typeof envelope.attestation.ci.provider !== 'string'
+    || typeof envelope.attestation.ci.runId !== 'string')) {
+    throw new Error('RELEASE_GATE_EVIDENCE_STALE: candidate gate artifact is not attested.');
+  }
+  const active = await activeChangeContext(root);
+  if (!active) {
+    throw new Error('CHANGE_GENERATION_INCOMPLETE: candidate gate ingestion requires an active CHANGE generation.');
+  }
+  const context = await candidateGateContext(root, active.changeId, active.generation);
+  const gatePolicy = (await candidateGateFingerprintConfig(root)).candidateGate as {
+    attestation: AttestationConfig;
+  };
+  const persisted = await loadPersistedCandidateGates(root);
+  const persistedRuns = new Map<string, string>();
+  for (const record of persisted) {
+    persistedRuns.set(
+      `${record.attestation.ci.provider}:${record.attestation.ci.runId}:${jobId(record.result.job)}`,
+      record.artifactDigest,
+    );
+  }
+  const seenRuns = new Map<string, string>();
+  const seenJobs = new Set<string>();
+  const validated: Array<{
+    result: CandidateGateJobResult;
+    attestation: EvidenceAttestation;
+    artifactDigest: string;
+    resultJobId: string;
+    existing: PersistedCandidateGate | undefined;
+  }> = [];
+  for (const envelope of envelopes) {
+    const attestation = envelope.attestation!;
+    const artifactDigest = sha256(canonicalBytes(envelope.result));
+    const result = parseCandidateGateResult(
+      envelope.result,
+      candidateMatrixJobs,
+      [requiredCandidateGateCommands],
+      'the current candidate matrix',
+    );
+    const diagnostics = await verifyDetachedEvidenceAttestation(
+      attestation,
+      gatePolicy.attestation,
+      {
+        repository: gatePolicy.attestation.repository
+          ?? gatePolicy.attestation.githubOidc?.repository
+          ?? '',
+        commitSha: context.candidateCommit,
+        ci: attestation.ci,
+        evidenceHeads: { candidateGate: artifactDigest },
+      },
+      { ...options, expectedWorkflowSha: context.candidateCommit },
+      '.musubix/evidence/release/gates/',
+    );
+    if (diagnostics.length) {
+      throw new Error(`RELEASE_GATE_EVIDENCE_STALE: ${diagnostics[0]!.message}`);
+    }
+    const resultJobId = jobId(result.job);
+    if (seenJobs.has(resultJobId)) {
+      throw new Error(`RELEASE_GATE_EVIDENCE_STALE: candidate gate ${resultJobId} is duplicated.`);
+    }
+    seenJobs.add(resultJobId);
+    const runIdentity = `${attestation.ci.provider}:${attestation.ci.runId}:${resultJobId}`;
+    const priorDigest = seenRuns.get(runIdentity) ?? persistedRuns.get(runIdentity);
+    if (priorDigest && priorDigest !== artifactDigest) {
+      throw new Error('RELEASE_GATE_EVIDENCE_STALE: CI run identity was reused for another artifact.');
+    }
+    seenRuns.set(runIdentity, artifactDigest);
+    if (!sameContext(context, result)) {
+      throw new Error('RELEASE_GATE_EVIDENCE_STALE: candidate context mismatch');
+    }
+    const existing = persisted.find((record) =>
+      record.artifactDigest === artifactDigest
+      && jobId(record.result.job) === resultJobId
+      && sameContext(record.result, result));
+    const latest = persisted
+      .filter((record) => jobId(record.result.job) === resultJobId && sameContext(record.result, result))
+      .sort((left, right) => left.order - right.order)
+      .at(-1);
+    if (!existing && latest
+      && Date.parse(attestation.issuedAt) <= Date.parse(latest.attestation.issuedAt)) {
+      throw new Error('RELEASE_GATE_EVIDENCE_STALE: candidate gate result is not newer than current evidence.');
+    }
+    validated.push({ result, attestation, artifactDigest, resultJobId, existing });
+  }
+
+  const ingested: CandidateGateJobResult[] = [];
+  for (const item of validated) {
+    const {
+      result, attestation, artifactDigest, resultJobId, existing,
+    } = item;
+    if (existing) {
+      ingested.push(existing.result);
+      continue;
+    }
+    await appendEvidence(root, {
+      kind: 'release',
+      producerId: result.producer,
+      repositoryId: result.repositoryId,
+      candidateId: `candidate:${result.candidateCommit}`,
+      changeId: result.changeId,
+      inputDigest: artifactDigest,
+      dependencyHeads: { candidateGate: result.gateInputFingerprint },
+      status: result.status === 'pass' ? 'pass' : 'failed',
+      idempotencyKey: `change:${result.changeId}:g${result.generation}:gate:${result.candidateCommit}:${result.gateInputFingerprint}:${resultJobId}:${artifactDigest}`,
+      payload: {
+        candidateGate: true,
+        artifactDigest,
+        attestationDigest: sha256(canonicalBytes(attestation)),
+        ci: attestation.ci,
+        result,
+        attestation,
+      },
+    });
+    await writeJson(root, `.musubix/evidence/release/gates/${resultJobId}.json`, {
+      schemaVersion: 1,
+      artifactDigest,
+      attestationDigest: sha256(canonicalBytes(attestation)),
+      ci: attestation.ci,
+      result,
+    });
+    ingested.push(result);
+  }
+  return ingested;
+}
+
+export async function requireCandidateGateSet(
+  root: string,
+  changeId: string,
+  generation: number,
+  candidateCommit: string,
+): Promise<CandidateGateContext> {
+  const records = await loadCandidateGateResults(root);
+  if (!records.length) {
+    throw new Error('RELEASE_GATE_EVIDENCE_MISSING: candidate matrix gate evidence is missing.');
+  }
+  const context = await candidateGateContext(root, changeId, generation, candidateCommit);
+  const validation = validateCandidateGateSet(context, records);
+  if (!validation.valid) {
+    const first = validation.diagnostics[0]!;
+    throw new Error(`${first.code}: ${first.message}`);
+  }
+  return context;
+}

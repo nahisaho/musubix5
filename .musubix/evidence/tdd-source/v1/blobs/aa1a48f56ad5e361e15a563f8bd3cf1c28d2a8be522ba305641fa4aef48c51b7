@@ -1,0 +1,746 @@
+# @id CODE-M5-RELEASE-WORKFLOW-YAML-001
+# @implements REQ-M5-RELEASE-003 REQ-M5-REL020-002 REQ-M5-CI-001
+# @design DES-M5-020 DES-M5-REL020-002 DES-M5-CI-001
+name: Candidate-bound release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      evidence_commit:
+        description: Full commit containing current approval and release authorization
+        required: true
+        type: string
+      release_tag:
+        description: Existing lightweight release tag
+        required: true
+        type: string
+      release_operation_id:
+        description: Authorized GitHub Release operation
+        required: true
+        type: string
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      release_tag: ${{ steps.context.outputs.release_tag }}
+      candidate_commit: ${{ steps.context.outputs.candidate_commit }}
+      evidence_commit: ${{ steps.context.outputs.evidence_commit }}
+      release_approval_sha256: ${{ steps.authorization.outputs.release_approval_sha256 }}
+    steps:
+      - name: Check Git LFS before checkout
+        run: |
+          node --input-type=module <<'NODE'
+          // check-lfs-tool.mjs bootstrap before repository checkout.
+          import { execFileSync } from 'node:child_process';
+          let text;
+          try { text = execFileSync('git', ['lfs', 'version'], {encoding:'utf8', stdio:['ignore','pipe','pipe']}); }
+          catch { throw new Error('TDD_SOURCE_LFS_UNAVAILABLE: tool-missing'); }
+          const v = /^git-lfs\/(\d+)\.(\d+)\.(\d+)(?:\s|$)/.exec(text);
+          if (!v || +v[1] < 3 || +v[1] === 3 && (+v[2] < 4 || +v[2] === 4 && +v[3] < 1))
+            throw new Error('TDD_SOURCE_LFS_UNAVAILABLE: version-unsupported');
+          NODE
+      - name: Checkout tagged candidate with full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+          path: candidate
+      - name: Checkout post-candidate evidence
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.evidence_commit }}
+          fetch-depth: 0
+          lfs: true
+          path: evidence
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: candidate/package-lock.json
+      - name: Verify candidate LFS before install and validation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node candidate/scripts/verify-lfs-checkout.mjs candidate
+      - name: Verify evidence LFS before approval reads
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node candidate/scripts/verify-lfs-checkout.mjs evidence
+      - name: Pin npm
+        run: npm install --global npm@11.5.1
+      - id: context
+        name: Validate tag, version, and ancestry
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_TAG: ${{ inputs.release_tag }}
+          EVIDENCE_COMMIT: ${{ inputs.evidence_commit }}
+          RELEASE_OPERATION_ID: ${{ inputs.release_operation_id }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          tag="$GITHUB_REF_NAME"
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            tag="$INPUT_TAG"
+            [[ "$GITHUB_REF_TYPE" == "tag" && "$GITHUB_REF_NAME" == "$tag" ]] || {
+              echo "RELEASE_TAG_CANDIDATE_MISMATCH: dispatch workflow ref must be the release tag" >&2
+              exit 1
+            }
+            [[ "$EVIDENCE_COMMIT" =~ ^[0-9a-f]{40,64}$ ]] || {
+              echo "RELEASE_TAG_CANDIDATE_MISMATCH: evidence_commit must be a full lowercase SHA" >&2
+              exit 1
+            }
+            [[ "$RELEASE_OPERATION_ID" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || {
+              echo "RELEASE_OPERATION_NOT_AUTHORIZED: release operation id is invalid" >&2
+              exit 1
+            }
+          fi
+          [[ "$tag" =~ ^v ]] || {
+            echo "RELEASE_VERSION_MISMATCH: tag must begin with v" >&2
+            exit 1
+          }
+          git -C candidate fetch --force origin "refs/tags/$tag:refs/tags/$tag" \
+            "+refs/heads/$DEFAULT_BRANCH:refs/remotes/origin/$DEFAULT_BRANCH"
+          tag_type="$(git -C candidate cat-file -t "refs/tags/$tag")"
+          [[ "$tag_type" == "commit" ]] || {
+            echo "RELEASE_TAG_CANDIDATE_MISMATCH: annotated tags are not accepted" >&2
+            exit 1
+          }
+          candidate="$(git -C candidate rev-parse "refs/tags/$tag")"
+          [[ "$candidate" == "$GITHUB_SHA" ]] || {
+            echo "RELEASE_TAG_CANDIDATE_MISMATCH: GITHUB_SHA is not the tagged candidate" >&2
+            exit 1
+          }
+          git -C candidate merge-base --is-ancestor "$candidate" "origin/$DEFAULT_BRANCH" || {
+            echo "RELEASE_TAG_CANDIDATE_MISMATCH: candidate is not reachable from the default branch" >&2
+            exit 1
+          }
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            evidence="$(git -C evidence rev-parse HEAD)"
+            [[ "$evidence" == "$EVIDENCE_COMMIT" ]] || {
+              echo "RELEASE_TAG_CANDIDATE_MISMATCH: evidence checkout mismatch" >&2
+              exit 1
+            }
+            git -C candidate cat-file -e "$evidence^{commit}" || {
+              echo "RELEASE_TAG_CANDIDATE_MISMATCH: evidence commit is unavailable" >&2
+              exit 1
+            }
+            git -C candidate merge-base --is-ancestor "$candidate" "$evidence" || {
+              echo "RELEASE_TAG_CANDIDATE_MISMATCH: evidence is not a descendant of the candidate" >&2
+              exit 1
+            }
+            git -C candidate merge-base --is-ancestor "$evidence" "origin/$DEFAULT_BRANCH" || {
+              echo "RELEASE_OPERATION_NOT_AUTHORIZED: evidence is not reachable from the default branch" >&2
+              exit 1
+            }
+          else
+            evidence=""
+          fi
+          echo "release_tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "candidate_commit=$candidate" >> "$GITHUB_OUTPUT"
+          echo "evidence_commit=$evidence" >> "$GITHUB_OUTPUT"
+      - name: Install candidate
+        working-directory: candidate
+        run: npm ci
+      - name: Typecheck
+        working-directory: candidate
+        run: npm run typecheck
+      - name: Build
+        working-directory: candidate
+        run: npm run build
+      - name: Validate every release version surface
+        working-directory: candidate
+        env:
+          RELEASE_TAG: ${{ steps.context.outputs.release_tag }}
+        run: |
+          node --input-type=module -e \
+            "import('./dist/packages/analysis/src/release-workflow.js').then(async m => console.log(JSON.stringify(await m.validateReleaseVersions(process.cwd(), process.env.RELEASE_TAG))))"
+      - id: authorization
+        name: Validate release authorization and independently derive approval
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          CANDIDATE_COMMIT: ${{ steps.context.outputs.candidate_commit }}
+          RELEASE_TAG: ${{ steps.context.outputs.release_tag }}
+          OPERATION_ID: ${{ inputs.release_operation_id }}
+        run: |
+          set -euo pipefail
+          node candidate/dist/packages/cli/src/main.js release-operation validate \
+            "$OPERATION_ID" --root evidence --scope release \
+            --candidate-commit "$CANDIDATE_COMMIT" --release-tag "$RELEASE_TAG" --json \
+            > release-authorization.json
+          approval_sha="$(node -p \
+            'JSON.parse(require("fs").readFileSync("release-authorization.json")).verifiedReleaseApprovalSha256')"
+          [[ "$approval_sha" =~ ^[a-f0-9]{64}$ ]] || {
+            echo "RELEASE_OPERATION_NOT_AUTHORIZED: verified release approval digest is invalid" >&2
+            exit 1
+          }
+          echo "release_approval_sha256=$approval_sha" >> "$GITHUB_OUTPUT"
+      - name: Full tests
+        working-directory: candidate
+        run: npm test
+      - name: Compatibility tests
+        working-directory: candidate
+        run: npm run test:compat
+      - name: Package checks
+        working-directory: candidate
+        run: npm run pack:check
+      - name: Package smoke tests
+        working-directory: candidate
+        run: npm run pack:smoke
+      - name: Formal classification (advisory)
+        working-directory: candidate
+        continue-on-error: true
+        run: npx musubix5 formal check .musubix/features/musubix5-clean-foundation/requirements.md --solver none --json
+
+  bundle:
+    needs: validate
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Check Git LFS before checkout
+        run: |
+          node --input-type=module <<'NODE'
+          // check-lfs-tool.mjs bootstrap before repository checkout.
+          import { execFileSync } from 'node:child_process';
+          let text;
+          try { text = execFileSync('git', ['lfs', 'version'], {encoding:'utf8', stdio:['ignore','pipe','pipe']}); }
+          catch { throw new Error('TDD_SOURCE_LFS_UNAVAILABLE: tool-missing'); }
+          const v = /^git-lfs\/(\d+)\.(\d+)\.(\d+)(?:\s|$)/.exec(text);
+          if (!v || +v[1] < 3 || +v[1] === 3 && (+v[2] < 4 || +v[2] === 4 && +v[3] < 1))
+            throw new Error('TDD_SOURCE_LFS_UNAVAILABLE: version-unsupported');
+          NODE
+      - name: Clean checkout A
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.candidate_commit }}
+          fetch-depth: 0
+          lfs: true
+          path: build-a
+      - name: Clean checkout B
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.candidate_commit }}
+          fetch-depth: 0
+          lfs: true
+          path: build-b
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Independently verify both reproducibility checkouts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node build-a/scripts/verify-lfs-checkout.mjs build-a
+          node build-b/scripts/verify-lfs-checkout.mjs build-b
+      - name: Pin npm
+        run: npm install --global npm@11.5.1
+      # @id CODE-M5-RELEASE-003-CONTEXT-BUNDLE-001
+      # @implements REQ-M5-RELEASE-003
+      # @design DES-M5-020
+      - name: Build reproducible package and release context
+        env:
+          RELEASE_TAG: ${{ needs.validate.outputs.release_tag }}
+          CANDIDATE_COMMIT: ${{ needs.validate.outputs.candidate_commit }}
+          EVIDENCE_COMMIT: ${{ needs.validate.outputs.evidence_commit }}
+          RELEASE_APPROVAL_SHA256: ${{ needs.validate.outputs.release_approval_sha256 }}
+          RELEASE_MODE: ${{ github.event_name == 'workflow_dispatch' && 'dispatch' || 'tag-push' }}
+        run: |
+          set -euo pipefail
+          mkdir -p build-a-pack build-b-pack release-bundle
+          for source in build-a build-b; do
+            npm --prefix "$source" ci
+            npm --prefix "$source" run build
+            (cd "$source" && npm pack --pack-destination "../${source}-pack")
+          done
+          a="$(find build-a-pack -name '*.tgz' -type f -print -quit)"
+          b="$(find build-b-pack -name '*.tgz' -type f -print -quit)"
+          cmp --silent "$a" "$b" || {
+            echo "RELEASE_PACKAGE_DIGEST_MISMATCH: clean npm pack outputs differ" >&2
+            exit 1
+          }
+          cp "$a" release-bundle/
+          (cd build-a && npm sbom --sbom-format cyclonedx > ../release-bundle/sbom.cdx.json)
+          node --input-type=module <<'NODE'
+          import { execFileSync } from 'node:child_process';
+          import { readFileSync, writeFileSync } from 'node:fs';
+          const { canonicalRepositoryIdentity } =
+            await import('./build-a/dist/packages/analysis/src/canonical.js');
+          const { releaseContextBytes, validateReleaseContext } =
+            await import('./build-a/dist/packages/analysis/src/release-workflow.js');
+          const remotes = execFileSync(
+            'git',
+            ['-C', 'build-a', 'config', '--get-all', 'remote.origin.url'],
+            { encoding: 'utf8' },
+          );
+          const repositoryRoot = execFileSync(
+            'git',
+            ['-C', 'build-a', 'rev-parse', '--show-toplevel'],
+            { encoding: 'utf8' },
+          ).trim();
+          const dispatch = process.env.RELEASE_MODE === 'dispatch';
+          const expected = {
+            schemaVersion: 'release-context-v1',
+            mode: process.env.RELEASE_MODE,
+            repository: canonicalRepositoryIdentity(
+              remotes.split(/\r?\n/, 1)[0],
+              repositoryRoot,
+            ),
+            candidateCommit: process.env.CANDIDATE_COMMIT,
+            workflow: '.github/workflows/release.yml',
+            releaseTag: process.env.RELEASE_TAG,
+            ...(dispatch ? {
+              evidenceCommit: process.env.EVIDENCE_COMMIT,
+              verifiedReleaseApprovalSha256: process.env.RELEASE_APPROVAL_SHA256,
+            } : {}),
+          };
+          writeFileSync(
+            'release-bundle/release-context.json',
+            releaseContextBytes(expected),
+          );
+          const bytes = readFileSync('release-bundle/release-context.json');
+          let decoded;
+          try {
+            decoded = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+          } catch {
+            throw new Error(
+              'RELEASE_ATTESTATION_INVALID: context-decode: release context is not strict UTF-8',
+            );
+          }
+          let parsed;
+          try {
+            parsed = JSON.parse(decoded);
+          } catch {
+            throw new Error(
+              'RELEASE_ATTESTATION_INVALID: context-parse: release context is not valid JSON',
+            );
+          }
+          try {
+            validateReleaseContext(parsed);
+          } catch {
+            throw new Error(
+              'RELEASE_ATTESTATION_INVALID: context-schema: release context schema is invalid',
+            );
+          }
+          if (!bytes.equals(releaseContextBytes(expected))) {
+            throw new Error(
+              'RELEASE_ATTESTATION_INVALID: context-canonical-bytes: release context bytes are not canonical',
+            );
+          }
+          NODE
+          (cd release-bundle && sha256sum ./*.tgz sbom.cdx.json release-context.json > SHA256SUMS)
+      - name: Create OIDC-bound ephemeral Ed25519 attestation
+        env:
+          RELEASE_TAG: ${{ needs.validate.outputs.release_tag }}
+          CANDIDATE_COMMIT: ${{ needs.validate.outputs.candidate_commit }}
+          EVIDENCE_COMMIT: ${{ needs.validate.outputs.evidence_commit }}
+          RELEASE_APPROVAL_SHA256: ${{ needs.validate.outputs.release_approval_sha256 }}
+          RELEASE_MODE: ${{ github.event_name == 'workflow_dispatch' && 'dispatch' || 'tag-push' }}
+        run: |
+          set -euo pipefail
+          openssl genpkey -algorithm ED25519 -out release-bundle/attestation-private.pem
+          openssl pkey -in release-bundle/attestation-private.pem -pubout \
+            -out release-bundle/attestation-public.pem
+          key_sha="$(openssl pkey -pubin -in release-bundle/attestation-public.pem -outform DER \
+            | openssl dgst -sha256 -binary | base64 -w0 | tr '+/' '-_' | tr -d '=')"
+          audience="musubix5-release#musubix3-key-sha256=$key_sha"
+          oidc_token="$(curl --fail --silent --show-error \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$(node -p 'encodeURIComponent(process.argv[1])' "$audience")" \
+            | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>process.stdout.write(JSON.parse(s).value))')"
+          export OIDC_TOKEN="$oidc_token"
+          CHECKSUMS_SHA="$(sha256sum release-bundle/SHA256SUMS | cut -d' ' -f1)"
+          export CHECKSUMS_SHA
+          RELEASE_CONTEXT_SHA="$(sha256sum release-bundle/release-context.json | cut -d' ' -f1)"
+          export RELEASE_CONTEXT_SHA
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs';
+          import { attestationSigningPayload } from './build-a/dist/packages/analysis/src/attestation.js';
+          const context = JSON.parse(readFileSync('release-bundle/release-context.json', 'utf8'));
+          const value = {
+            schemaVersion: 1,
+            repository: process.env.GITHUB_REPOSITORY,
+            commitSha: process.env.CANDIDATE_COMMIT,
+            ci: { provider: 'github', runId: process.env.GITHUB_RUN_ID },
+            evidenceHeads: {
+              releaseContext: process.env.RELEASE_CONTEXT_SHA,
+              releaseBundle: process.env.CHECKSUMS_SHA,
+            },
+            release: {
+              mode: context.mode,
+              repository: context.repository,
+              candidateCommit: context.candidateCommit,
+              workflow: context.workflow,
+              releaseTag: context.releaseTag,
+              ...(context.mode === 'dispatch' ? {
+                evidenceCommit: context.evidenceCommit,
+                verifiedReleaseApprovalSha256: context.verifiedReleaseApprovalSha256,
+              } : {}),
+            },
+            issuedAt: new Date().toISOString(),
+            keyId: `release-${process.env.GITHUB_RUN_ID}`,
+            githubOidc: {
+              token: process.env.OIDC_TOKEN,
+              publicKey: readFileSync('release-bundle/attestation-public.pem', 'utf8'),
+            },
+          };
+          writeFileSync('release-bundle/attestation-unsigned.json', attestationSigningPayload(value));
+          NODE
+          openssl pkeyutl -sign -inkey release-bundle/attestation-private.pem \
+            -rawin -in release-bundle/attestation-unsigned.json \
+            | base64 -w0 > release-bundle/attestation.sig
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs';
+          const value = JSON.parse(readFileSync('release-bundle/attestation-unsigned.json', 'utf8'));
+          value.signature = readFileSync('release-bundle/attestation.sig', 'utf8');
+          writeFileSync('release-bundle/attestation.json', JSON.stringify(value, null, 2) + '\n');
+          NODE
+          rm release-bundle/attestation-private.pem
+      - name: Upload run-scoped sealed bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-bundle-${{ github.run_id }}
+          path: release-bundle/
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: true
+
+  release:
+    if: github.event_name == 'workflow_dispatch'
+    needs: [validate, bundle]
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: release-${{ inputs.release_operation_id }}
+      cancel-in-progress: false
+    permissions:
+      contents: write
+    steps:
+      - name: Check Git LFS before checkout
+        run: |
+          node --input-type=module <<'NODE'
+          // check-lfs-tool.mjs bootstrap before repository checkout.
+          import { execFileSync } from 'node:child_process';
+          let text;
+          try { text = execFileSync('git', ['lfs', 'version'], {encoding:'utf8', stdio:['ignore','pipe','pipe']}); }
+          catch { throw new Error('TDD_SOURCE_LFS_UNAVAILABLE: tool-missing'); }
+          const v = /^git-lfs\/(\d+)\.(\d+)\.(\d+)(?:\s|$)/.exec(text);
+          if (!v || +v[1] < 3 || +v[1] === 3 && (+v[2] < 4 || +v[2] === 4 && +v[3] < 1))
+            throw new Error('TDD_SOURCE_LFS_UNAVAILABLE: version-unsupported');
+          NODE
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.candidate_commit }}
+          fetch-depth: 0
+          lfs: true
+          path: candidate
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.evidence_commit }}
+          fetch-depth: 0
+          lfs: true
+          path: evidence
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Reverify candidate and evidence before trust and side effects
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node candidate/scripts/verify-lfs-checkout.mjs candidate
+          node candidate/scripts/verify-lfs-checkout.mjs evidence
+      - run: npm install --global npm@11.5.1
+      - run: npm --prefix candidate ci && npm --prefix candidate run build
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-bundle-${{ github.run_id }}
+          path: release-bundle
+      # @id CODE-M5-RELEASE-003-CONTEXT-VERIFY-001
+      # @implements REQ-M5-RELEASE-003
+      # @design DES-M5-020
+      - id: verify_release
+        name: Verify checksums, attestation, authorization, and target
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.validate.outputs.release_tag }}
+          CANDIDATE_COMMIT: ${{ needs.validate.outputs.candidate_commit }}
+          EVIDENCE_COMMIT: ${{ needs.validate.outputs.evidence_commit }}
+          RELEASE_APPROVAL_SHA256: ${{ needs.validate.outputs.release_approval_sha256 }}
+          OPERATION_ID: ${{ inputs.release_operation_id }}
+        run: |
+          set -euo pipefail
+          (cd release-bundle && sha256sum --check SHA256SUMS) || {
+            echo "RELEASE_ARTIFACT_CHECKSUM_MISMATCH: sealed bundle checksum failed" >&2
+            exit 1
+          }
+          CHECKSUMS_SHA="$(sha256sum release-bundle/SHA256SUMS | cut -d' ' -f1)"
+          export CHECKSUMS_SHA
+          RELEASE_CONTEXT_SHA="$(sha256sum release-bundle/release-context.json | cut -d' ' -f1)"
+          export RELEASE_CONTEXT_SHA
+          node --input-type=module <<'NODE'
+          import { execFileSync } from 'node:child_process';
+          import { readFileSync } from 'node:fs';
+          const { canonicalRepositoryIdentity } =
+            await import('./candidate/dist/packages/analysis/src/canonical.js');
+          const { releaseContextBytes, validateReleaseContext } =
+            await import('./candidate/dist/packages/analysis/src/release-workflow.js');
+          const remotes = execFileSync(
+            'git',
+            ['-C', 'candidate', 'config', '--get-all', 'remote.origin.url'],
+            { encoding: 'utf8' },
+          );
+          const repositoryRoot = execFileSync(
+            'git',
+            ['-C', 'candidate', 'rev-parse', '--show-toplevel'],
+            { encoding: 'utf8' },
+          ).trim();
+          const bytes = readFileSync('release-bundle/release-context.json');
+          let decoded;
+          try {
+            decoded = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+          } catch {
+            throw new Error(
+              'RELEASE_ATTESTATION_INVALID: context-decode: release context is not strict UTF-8',
+            );
+          }
+          let parsed;
+          try {
+            parsed = JSON.parse(decoded);
+          } catch {
+            throw new Error(
+              'RELEASE_ATTESTATION_INVALID: context-parse: release context is not valid JSON',
+            );
+          }
+          try {
+            validateReleaseContext(parsed);
+          } catch {
+            throw new Error(
+              'RELEASE_ATTESTATION_INVALID: context-schema: release context schema is invalid',
+            );
+          }
+          const expected = {
+            schemaVersion: 'release-context-v1',
+            mode: 'dispatch',
+            repository: canonicalRepositoryIdentity(
+              remotes.split(/\r?\n/, 1)[0],
+              repositoryRoot,
+            ),
+            candidateCommit: process.env.CANDIDATE_COMMIT,
+            workflow: '.github/workflows/release.yml',
+            releaseTag: process.env.RELEASE_TAG,
+            evidenceCommit: process.env.EVIDENCE_COMMIT,
+            verifiedReleaseApprovalSha256: process.env.RELEASE_APPROVAL_SHA256,
+          };
+          const eventRepository = canonicalRepositoryIdentity(`https://github.com/${process.env.GITHUB_REPOSITORY}.git`);
+          if (expected.repository !== eventRepository) {
+            throw new Error(
+              'RELEASE_OPERATION_NOT_AUTHORIZED: event repository identity mismatch',
+            );
+          }
+          if (!bytes.equals(releaseContextBytes(expected))) {
+            throw new Error(
+              'RELEASE_ATTESTATION_INVALID: context-canonical-bytes: '
+              + 'release context binding mismatch; '
+              + 'release evidence producers must use the credential-free GitHub HTTPS origin.',
+            );
+          }
+          NODE
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const { verifyDetachedEvidenceAttestation } =
+            await import('./candidate/dist/packages/analysis/src/attestation.js');
+          const { validateReleaseAttestationIdentity } =
+            await import('./candidate/dist/packages/analysis/src/release-workflow.js');
+          const attestation = JSON.parse(readFileSync('release-bundle/attestation.json', 'utf8'));
+          const context = JSON.parse(readFileSync('release-bundle/release-context.json', 'utf8'));
+          validateReleaseAttestationIdentity(
+            context,
+            attestation,
+            process.env.RELEASE_CONTEXT_SHA,
+            process.env.CHECKSUMS_SHA,
+          );
+          const diagnostics = await verifyDetachedEvidenceAttestation(attestation, {
+            mode: 'ci-required',
+            repository: process.env.GITHUB_REPOSITORY,
+            maxAgeSeconds: 2592000,
+            maxFutureSkewSeconds: 60,
+            trustedPublicKeys: [],
+            githubOidc: {
+              mode: 'strict',
+              audience: 'musubix5-release',
+              repository: process.env.GITHUB_REPOSITORY,
+              workflow: '.github/workflows/release.yml',
+              ref: `refs/tags/${process.env.RELEASE_TAG}`,
+              keyBinding: 'public-key',
+            },
+          }, {
+            repository: process.env.GITHUB_REPOSITORY,
+            commitSha: process.env.CANDIDATE_COMMIT,
+            ci: { provider: 'github', runId: process.env.GITHUB_RUN_ID },
+            evidenceHeads: {
+              releaseContext: process.env.RELEASE_CONTEXT_SHA,
+              releaseBundle: process.env.CHECKSUMS_SHA,
+            },
+          }, { expectedWorkflowSha: process.env.CANDIDATE_COMMIT }, 'release-bundle/attestation.json');
+          if (diagnostics.length) {
+            throw new Error(`RELEASE_ATTESTATION_INVALID: ${diagnostics.map(x => x.message).join('; ')}`);
+          }
+          NODE
+          node candidate/dist/packages/cli/src/main.js release-operation validate \
+            "$OPERATION_ID" --root evidence --scope release \
+            --candidate-commit "$CANDIDATE_COMMIT" --release-tag "$RELEASE_TAG" --json
+          set +e
+          gh api --include "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" \
+            > release-target-exact.txt 2> release-target-exact-error.txt
+          exact_status=$?
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/releases?per_page=100" \
+            > release-target-pages.json 2> release-target-pages-error.txt
+          enumeration_status=$?
+          set -e
+          EXACT_STATUS="$exact_status" ENUMERATION_STATUS="$enumeration_status" \
+            node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const {
+            classifyReleaseCreationTargetLookup,
+            parseReleaseTargetApiResponse,
+          } =
+            await import('./candidate/dist/packages/analysis/src/release-workflow.js');
+
+          const exactText = readFileSync('release-target-exact.txt', 'utf8');
+          let exactResponse;
+          try {
+            exactResponse = parseReleaseTargetApiResponse(exactText);
+          } catch {
+            exactResponse = undefined;
+          }
+          const statusCode = exactResponse?.statusCode;
+          let exactRelease;
+          if (statusCode === 200 && exactResponse?.body) {
+            const release = exactResponse.body;
+            exactRelease = {
+              tagName: release.tag_name,
+              draft: release.draft,
+              prerelease: release.prerelease,
+            };
+          }
+
+          let pages;
+          try {
+            pages = JSON.parse(readFileSync('release-target-pages.json', 'utf8'));
+          } catch {
+            pages = undefined;
+          }
+          const complete = Number(process.env.ENUMERATION_STATUS) === 0
+            && Array.isArray(pages)
+            && pages.every((page) => Array.isArray(page));
+          const releases = complete
+            ? pages.flat().map((release) => ({
+                tagName: release.tag_name,
+                draft: release.draft,
+                prerelease: release.prerelease,
+              }))
+            : [];
+          const outcome = classifyReleaseCreationTargetLookup({
+            expectedTag: process.env.RELEASE_TAG,
+            exact: {
+              exitCode: Number(process.env.EXACT_STATUS),
+              statusCode,
+              release: exactRelease,
+            },
+            enumeration: { complete, releases },
+          });
+          if (outcome === 'present-stable' || outcome === 'present-draft-or-prerelease') {
+            throw new Error(
+              'RELEASE_OPERATION_NOT_AUTHORIZED: GitHub Release target already exists',
+            );
+          }
+          if (outcome !== 'absent') {
+            console.error(readFileSync('release-target-exact-error.txt', 'utf8'));
+            console.error(readFileSync('release-target-pages-error.txt', 'utf8'));
+            throw new Error(
+              'RELEASE_TARGET_LOOKUP_FAILED: authenticated GitHub Release lookup failed',
+            );
+          }
+          NODE
+          echo "attempted" > release-create-state.txt
+          set +e
+          release_url="$(gh release create "$RELEASE_TAG" release-bundle/* --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes)"
+          create_status=$?
+          set -e
+          if [[ "$create_status" -ne 0 ]]; then
+            echo "failure" > release-create-state.txt
+            exit "$create_status"
+          fi
+          echo "success" > release-create-state.txt
+          echo "release_url=$release_url" >> "$GITHUB_OUTPUT"
+      - name: Record terminal release outcome and summary
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+          VERIFY_OUTCOME: ${{ steps.verify_release.outcome }}
+          RELEASE_URL: ${{ steps.verify_release.outputs.release_url }}
+          OPERATION_ID: ${{ inputs.release_operation_id }}
+          RELEASE_TAG: ${{ needs.validate.outputs.release_tag }}
+          CANDIDATE_COMMIT: ${{ needs.validate.outputs.candidate_commit }}
+          EVIDENCE_COMMIT: ${{ needs.validate.outputs.evidence_commit }}
+          RELEASE_APPROVAL_SHA256: ${{ needs.validate.outputs.release_approval_sha256 }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+          const createState = existsSync('release-create-state.txt')
+            ? readFileSync('release-create-state.txt', 'utf8').trim()
+            : 'not-run';
+          const verificationOutcome = createState === 'not-run'
+            ? process.env.VERIFY_OUTCOME || 'not-run'
+            : 'success';
+          const outcome = {
+            schemaVersion: 1,
+            scope: 'release',
+            operationId: process.env.OPERATION_ID,
+            status: process.env.JOB_STATUS === 'success' ? 'completed' : 'failed',
+            jobStatus: process.env.JOB_STATUS,
+            verificationOutcome,
+            createOutcome: createState,
+            failureStage: process.env.JOB_STATUS === 'success' ? null
+              : createState === 'failure' || createState === 'attempted'
+                ? 'release-creation'
+                : process.env.VERIFY_OUTCOME === 'failure' ? 'verification' : 'setup',
+            runId: process.env.GITHUB_RUN_ID,
+            runAttempt: process.env.GITHUB_RUN_ATTEMPT,
+            repository: process.env.GITHUB_REPOSITORY,
+            releaseTag: process.env.RELEASE_TAG,
+            candidateCommit: process.env.CANDIDATE_COMMIT,
+            evidenceCommit: process.env.EVIDENCE_COMMIT,
+            releaseApprovalSha256: process.env.RELEASE_APPROVAL_SHA256,
+            releaseUrl: process.env.RELEASE_URL || null,
+          };
+          writeFileSync('release-outcome.json', `${JSON.stringify(outcome, null, 2)}\n`);
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY,
+            `## Release outcome\n\n`
+            + `- Status: **${outcome.status}**\n`
+            + `- Operation: \`${outcome.operationId}\`\n`
+            + `- Tag: \`${outcome.releaseTag}\`\n`
+            + `- Candidate: \`${outcome.candidateCommit}\`\n`
+            + `- Evidence: \`${outcome.evidenceCommit}\`\n`
+            + `- Verification: \`${outcome.verificationOutcome}\`\n`
+            + `- Release creation: \`${outcome.createOutcome}\`\n`
+            + (outcome.failureStage ? `- Failure stage: \`${outcome.failureStage}\`\n` : '')
+            + (outcome.releaseUrl ? `- URL: ${outcome.releaseUrl}\n` : ''));
+          NODE
+      - name: Upload terminal release outcome
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-outcome-${{ github.run_id }}-${{ github.run_attempt }}
+          path: release-outcome.json
+          if-no-files-found: error

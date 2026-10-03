@@ -1,6 +1,6 @@
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { performance } from 'node:perf_hooks';
 
 const testIds = [
@@ -104,8 +104,14 @@ for (const testId of selected) {
 const reportPath = resolve(reportArgument);
 const tests = [];
 let failed = false;
+const fileGroups = new Map();
+for (const id of selected.filter((id) => !id.startsWith('TEST-M5-GRAPH-'))) {
+  const file = filesByTestId.get(id);
+  if (!fileGroups.has(file)) fileGroups.set(file, []);
+  fileGroups.get(file).push(id);
+}
 const groups = targetTestId ? [[targetTestId]] : [
-  selected.filter((id) => !id.startsWith('TEST-M5-GRAPH-')),
+  ...fileGroups.values(),
   ...selected.filter((id) => id.startsWith('TEST-M5-GRAPH-')).map((id) => [id]),
 ];
 
@@ -133,7 +139,7 @@ if (runtimeDispatch && (runtimeDispatch.schemaVersion !== 1
   throw new Error('TEST_RUNTIME_BOOTSTRAP_INVALID: augmentation-binding: group dispatch');
 }
 await mkdir(dirname(reportPath), { recursive: true });
-for (const { ordinal, testIds: group, args } of describedGroups) {
+for (const { ordinal } of describedGroups) {
   const supplied = runtimeDispatch?.groups[ordinal];
   if (supplied && (Object.keys(supplied).sort().join(',') !== 'args,command,env,ordinal,resultPath'
     || supplied.ordinal !== ordinal || supplied.command !== process.execPath
@@ -143,17 +149,48 @@ for (const { ordinal, testIds: group, args } of describedGroups) {
     || typeof supplied.resultPath !== 'string')) {
     throw new Error('TEST_RUNTIME_BOOTSTRAP_INVALID: augmentation-binding: supplied group');
   }
+}
+
+/** @id CODE-M5-CI-CODEGRAPH-SCHEDULER-001
+ * @implements REQ-M5-CI-004
+ * @design DES-M5-CI-004
+ */
+const activeChildren = new Set();
+const groupResults = new Array(describedGroups.length);
+let nextGroup = 0;
+let schedulerError;
+function stopChildren(cause) {
+  schedulerError ??= cause;
+  for (const child of activeChildren) child.kill('SIGTERM');
+}
+const interrupt = (signal) => stopChildren(new Error(`CodeGraph scheduler interrupted by ${signal}.`));
+const onSigint = () => interrupt('SIGINT');
+const onSigterm = () => interrupt('SIGTERM');
+
+async function runGroup({ ordinal, testIds: group, args }) {
+  const supplied = runtimeDispatch?.groups[ordinal];
   const operationsPath = resolve(dirname(reportPath), `.operations-${group[0]}.json`);
   const vitestReportPath = resolve(dirname(reportPath), `.vitest-${group[0]}.json`);
   await mkdir(dirname(operationsPath), { recursive: true });
   await rm(operationsPath, { force: true });
   await rm(vitestReportPath, { force: true });
+  if (schedulerError) return;
   const started = performance.now();
-  const result = spawnSync(process.execPath, supplied?.args ?? args, {
-    cwd: process.cwd(),
-    env: { ...supplied?.env ?? process.env, MUSUBIX_OPERATION_REPORT: operationsPath },
-    stdio: 'inherit',
+  const result = await new Promise((resolveResult) => {
+    const child = spawn(process.execPath, supplied?.args ?? args, {
+      cwd: process.cwd(),
+      env: { ...supplied?.env ?? process.env, MUSUBIX_OPERATION_REPORT: operationsPath },
+      stdio: 'inherit',
+    });
+    activeChildren.add(child);
+    let error;
+    child.on('error', (cause) => { error = cause; });
+    child.on('close', (status, signal) => {
+      activeChildren.delete(child);
+      resolveResult({ status, signal, error });
+    });
   });
+  if (schedulerError) return;
   let assertions = [];
   let nativeReportBase64 = null;
   try {
@@ -163,33 +200,61 @@ for (const { ordinal, testIds: group, args } of describedGroups) {
     assertions = (vitestReport.testResults ?? []).flatMap((file) => file.assertionResults ?? []);
   } catch (cause) {
     if (cause?.code !== 'ENOENT') throw cause;
+    console.error(`CodeGraph group ${ordinal}: missing native report ${vitestReportPath}.`);
   }
   if (supplied) await writeFile(supplied.resultPath, `${JSON.stringify({
     status: result.error ? 'error' : result.signal ? 'timeout' : 'completed',
     exitCode: result.status, durationMs: Math.max(0, Math.round(performance.now() - started)),
     nativeReportBase64,
   })}\n`, { flag: 'wx', mode: 0o600 });
+  if (result.error) throw result.error;
+  if (result.status !== 0) console.error(`CodeGraph group ${ordinal} exited with ${result.signal ?? result.status}.`);
   let operations;
   try {
     const value = JSON.parse(await readFile(operationsPath, 'utf8'));
     if (value && typeof value === 'object' && !Array.isArray(value)) operations = value;
   } catch (cause) {
     if (cause?.code !== 'ENOENT') throw cause;
-  } finally {
-    await rm(operationsPath, { force: true });
-    await rm(vitestReportPath, { force: true });
   }
   if (operations && group.length !== 1) throw new Error('Operation counters require an isolated test invocation.');
+  const results = [];
   for (const testId of group) {
     const matching = assertions.filter((test) => test.title === testId || test.title?.startsWith(`${testId} `));
     let status = matching.length === 1 && ['passed', 'failed', 'skipped'].includes(matching[0].status)
       ? matching[0].status : 'error';
     if (status === 'failed') console.error(`${testId}: ${(matching[0].failureMessages ?? []).join('\n')}`);
+    if (status === 'error') console.error(`${testId}: expected one native assertion with a supported status; received ${matching.length}.`);
     if (result.status !== 0 && status === 'passed') status = 'error';
     failed ||= status !== 'passed';
-    tests.push({ id: testId, status, ...(operations ? { operations } : {}) });
+    results.push({ id: testId, status, ...(operations ? { operations } : {}) });
+  }
+  groupResults[ordinal] = results;
+}
+
+async function worker() {
+  try {
+    while (!schedulerError && nextGroup < describedGroups.length) {
+      await runGroup(describedGroups[nextGroup++]);
+    }
+  } catch (cause) {
+    stopChildren(cause);
   }
 }
 
+process.on('SIGINT', onSigint);
+process.on('SIGTERM', onSigterm);
+try {
+  // Each worker owns one native child at a time; counters remain per invocation.
+  await Promise.all([worker(), worker()]);
+} finally {
+  process.off('SIGINT', onSigint);
+  process.off('SIGTERM', onSigterm);
+  await Promise.all(describedGroups.flatMap(({ testIds: group }) => [
+    rm(resolve(dirname(reportPath), `.operations-${group[0]}.json`), { force: true }),
+    rm(resolve(dirname(reportPath), `.vitest-${group[0]}.json`), { force: true }),
+  ]));
+}
+if (schedulerError) throw schedulerError;
+tests.push(...groupResults.flat());
 await writeFile(reportPath, `${JSON.stringify({ schemaVersion: 1, tests }, null, 2)}\n`);
 process.exitCode = failed ? 1 : 0;

@@ -40,7 +40,7 @@ import { loadChangeEvidence } from './change-evidence.js';
 import { classifyParallelTddEvidence } from './parallel-tdd-evidence.js';
 import { loadTddEvidence } from './tdd.js';
 import { selectCurrentTddCycle } from './tdd-cycle-resolver.js';
-import { compareTrackedTree, listCandidateSnapshotRecords } from './workspace-manager.js';
+import { compareTrackedTree, listCandidateSnapshotRecords, prepareCandidateCheckout } from './workspace-manager.js';
 import { parsePorcelainV1Z } from './git-status.js';
 import {
   acquireChangeLease,
@@ -1219,9 +1219,11 @@ async function withDetachedVerificationWorkspace<T>(
     await git(root, ['worktree', 'remove', '--force', workspace], 'PARALLEL_WORKTREE_CONFLICT');
   }
   await mkdir(dirname(workspace), { recursive: true });
+  await prepareCandidateCheckout(root);
   await git(root, ['worktree', 'add', '--quiet', '--detach', workspace, head]);
   let validationFailure: Error | undefined;
   try {
+    await prepareCandidateCheckout(workspace);
     if (!await isClean(workspace) || await git(workspace, ['rev-parse', 'HEAD']) !== head) {
       domain('PARALLEL_RESULT_UNVERIFIED', 'detached verification workspace is not clean at the reported head.');
     }
@@ -1323,6 +1325,7 @@ async function ensureWorktree(
   await assertManagedPathAncestors(worktree, managedRoot);
   await mkdir(dirname(worktree), { recursive: true });
   if (await isDirectory(worktree)) {
+    await prepareCandidateCheckout(worktree);
     const [head, existingBranch] = await Promise.all([
       git(worktree, ['rev-parse', 'HEAD']),
       git(worktree, ['branch', '--show-current']),
@@ -1333,6 +1336,7 @@ async function ensureWorktree(
     return;
   }
   const branchExists = await gitSucceeds(root, ['rev-parse', '--verify', `refs/heads/${branch}^{commit}`]);
+  await prepareCandidateCheckout(root);
   if (branchExists) {
     const branchHead = await git(root, ['rev-parse', '--verify', `refs/heads/${branch}^{commit}`]);
     if (branchHead !== startCommit) {
@@ -1342,6 +1346,7 @@ async function ensureWorktree(
   } else {
     await git(root, ['worktree', 'add', '--quiet', '-b', branch, worktree, startCommit]);
   }
+  await prepareCandidateCheckout(worktree);
 }
 
 async function assignmentStart(

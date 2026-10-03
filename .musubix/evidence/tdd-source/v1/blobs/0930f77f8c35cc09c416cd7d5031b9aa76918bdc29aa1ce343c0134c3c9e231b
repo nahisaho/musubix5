@@ -1,0 +1,319 @@
+import { execFile, spawn } from 'node:child_process';
+import { createHash, randomUUID } from 'node:crypto';
+import { createReadStream } from 'node:fs';
+import { link, lstat, mkdir, open, readFile, realpath, rm } from 'node:fs/promises';
+import { basename, dirname, isAbsolute, resolve } from 'node:path';
+import { createInterface } from 'node:readline';
+import { promisify } from 'node:util';
+import { canonicalBytes, sha256 } from './canonical.js';
+import { candidateGitEnvironment, verifyCandidateReachableObjectSizes, verifyCandidateLfsClosure } from './candidate-git-distribution.js';
+import { validateSourceLfsVersion } from './tdd-source-lfs.js';
+import { SourceOperationError } from './tdd-source-diagnostics.js';
+
+const execute = promisify(execFile);
+const oid = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/;
+const digestPattern = /^[a-f0-9]{64}$/;
+const prefix = '.musubix/evidence/tdd-source/v1/blobs/';
+type ConflictCause = 'raw-object-binding' | 'source-ref-drift' | 'protected-ref-overlap' | 'commit-map-divergence' |
+  'receipt-divergence' | 'actor-mismatch';
+const conflict = (cause: ConflictCause) => new SourceOperationError('TDD_SOURCE_LFS_MIGRATION_CONFLICT', cause);
+
+export interface SourceLfsMigrationRequest {
+  changeId: string;
+  generation: number;
+  operationId: string;
+  actor: string;
+  sourceTip: string;
+  protectedRefs: Array<{ ref: string; commit: string }>;
+  migrationRef: string;
+  paths: Array<{ path: string; digest: string; size: number }>;
+  mapPath: string;
+}
+export interface SourceLfsMigrationPlan extends SourceLfsMigrationRequest {
+  schemaVersion: 1;
+  kind: 'source-lfs-migration-plan';
+  root: string;
+  credit: false;
+  gitVersion: string;
+  lfsVersion: string;
+  args: string[];
+  selfHash: string;
+}
+
+async function git(root: string, args: string[], limit = 4096): Promise<string> {
+  try {
+    const { stdout } = await execute('git', ['-C', resolve(root), ...args], {
+      encoding: 'utf8', shell: false, env: candidateGitEnvironment(), maxBuffer: limit, timeout: 120_000,
+    });
+    return stdout.trim();
+  } catch { throw conflict('commit-map-divergence'); }
+}
+
+function validBranch(ref: string): boolean {
+  return /^refs\/(?:heads|tags)\/[A-Za-z0-9][A-Za-z0-9._/-]*$/.test(ref) &&
+    !ref.includes('..') && !ref.includes('//') && !ref.endsWith('/') && !ref.endsWith('.lock');
+}
+
+async function verifyRaw(root: string, commit: string, path: string, digest: string, expectedSize: number): Promise<void> {
+  if (!(await git(root, ['ls-tree', commit, '--', path])).startsWith('100644 blob ')) {
+    throw conflict('raw-object-binding');
+  }
+  const object = await git(root, ['rev-parse', '--verify', `${commit}:${path}`]);
+  if (!oid.test(object) || await git(root, ['cat-file', '-t', object]) !== 'blob' ||
+    Number(await git(root, ['cat-file', '-s', object])) !== expectedSize) throw conflict('raw-object-binding');
+  const child = spawn('git', ['-C', resolve(root), 'cat-file', 'blob', object], {
+    shell: false, env: candidateGitEnvironment(), stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  child.stderr.resume();
+  const completed = new Promise<void>((accept, reject) => {
+    child.once('error', () => reject(conflict('raw-object-binding')));
+    child.once('close', (code) => code === 0 ? accept() : reject(conflict('raw-object-binding')));
+  });
+  void completed.catch(() => {});
+  const timer = setTimeout(() => child.kill(), 120_000);
+  let size = 0;
+  const hash = createHash('sha256');
+  try {
+    for await (const bytes of child.stdout) {
+      size += (bytes as Buffer).length;
+      if (size > expectedSize) throw conflict('raw-object-binding');
+      hash.update(bytes as Buffer);
+    }
+    await completed;
+    if (size !== expectedSize || hash.digest('hex') !== digest) throw conflict('raw-object-binding');
+  } finally { clearTimeout(timer); child.kill(); }
+}
+
+/** @id CODE-M5-LFS-MIGRATION-CANONICAL-RECEIPT-001
+ * @implements REQ-M5-LIFECYCLE-006 REQ-M5-RELEASE-002
+ * @design DES-M5-012
+ */
+export function canonicalSourceLfsMigrationReceipt<T extends Record<string, unknown>>(value: T): T & {
+  schemaVersion: 1; credit: false; selfHash: string;
+} {
+  const { selfHash: _ignored, ...fields } = value;
+  const body = { ...fields, schemaVersion: 1 as const, credit: false as const };
+  return { ...body, selfHash: sha256(canonicalBytes(body)) } as T & { schemaVersion: 1; credit: false; selfHash: string };
+}
+
+export function verifySourceLfsMigrationReceipt(input: unknown, predecessorHash?: string): void {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) throw conflict('receipt-divergence');
+  const value = input as Record<string, unknown>;
+  const { selfHash, ...body } = value;
+  if (value.schemaVersion !== 1 || value.credit !== false || typeof selfHash !== 'string' ||
+    !digestPattern.test(selfHash) || sha256(canonicalBytes(body)) !== selfHash ||
+    typeof value.root !== 'string' || typeof value.changeId !== 'string' || !/^CHANGE-[0-9]+$/.test(value.changeId) ||
+    !Number.isSafeInteger(value.generation) || Number(value.generation) < 1 ||
+    typeof value.operationId !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(value.operationId) ||
+    typeof value.actor !== 'string' || !value.actor || /[\x00-\x1f]/.test(value.actor) ||
+    !['source-lfs-migration-plan', 'source-lfs-migration', 'source-lfs-migration-adoption',
+      'source-lfs-migration-snapshot'].includes(String(value.kind)) ||
+    predecessorHash !== undefined && value.predecessorReceiptHash !== predecessorHash) throw conflict('receipt-divergence');
+}
+
+/** Create-new publication; an identical canonical phase replays, divergent bytes never overwrite. */
+export async function publishSourceLfsMigrationReceipt(path: string, receipt: Record<string, unknown>): Promise<void> {
+  verifySourceLfsMigrationReceipt(receipt);
+  const common = await git(String(receipt.root), ['rev-parse', '--path-format=absolute', '--git-common-dir']);
+  const name = ({ 'source-lfs-migration-plan': 'plan.json', 'source-lfs-migration': 'migration.json',
+    'source-lfs-migration-adoption': 'adoption.json', 'source-lfs-migration-snapshot': 'snapshot.json' } as Record<string, string>)
+    [String(receipt.kind)];
+  const ownedDirectory = resolve(common, 'musubix5/lfs-migrations', String(receipt.changeId),
+    `g${receipt.generation}`, String(receipt.operationId));
+  if (basename(path) !== name || resolve(path) !== resolve(ownedDirectory, name!)) throw conflict('receipt-divergence');
+  const bytes = canonicalBytes(receipt);
+  await mkdir(dirname(path), { recursive: true });
+  const owned = `${path}.${randomUUID()}.pending`;
+  const file = await open(owned, 'wx', 0o600);
+  try {
+    await file.writeFile(bytes); await file.sync(); await file.close();
+    try { await link(owned, path); }
+    catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'EEXIST' || !(await readFile(path)).equals(bytes)) {
+        throw conflict('receipt-divergence');
+      }
+    }
+    const directory = await open(dirname(path), 'r');
+    try { await directory.sync(); }
+    catch (error) {
+      if (!['EINVAL', 'ENOTSUP', 'EISDIR', 'EBADF'].includes((error as NodeJS.ErrnoException).code ?? '')) throw error;
+    } finally { await directory.close(); }
+  } finally { await file.close().catch(() => {}); await rm(owned, { force: true }); }
+}
+
+/** @id CODE-M5-LFS-MIGRATION-SCOPED-PLAN-001
+ * @implements REQ-M5-LIFECYCLE-006 REQ-M5-RELEASE-002 REQ-M5-WORKTREE-004
+ * @design DES-M5-012
+ */
+export async function planSourceLfsMigration(root: string, requestValue: unknown): Promise<SourceLfsMigrationPlan> {
+  if (!requestValue || typeof requestValue !== 'object') throw conflict('raw-object-binding');
+  const request = requestValue as SourceLfsMigrationRequest;
+  if (typeof request.changeId !== 'string' || typeof request.operationId !== 'string' ||
+    typeof request.actor !== 'string' || typeof request.sourceTip !== 'string' ||
+    typeof request.migrationRef !== 'string' || typeof request.mapPath !== 'string' ||
+    !/^CHANGE-[0-9]+$/.test(request.changeId) || !Number.isSafeInteger(request.generation) || request.generation < 1 ||
+    !/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(request.operationId) ||
+    !request.actor || /[\x00-\x1f]/.test(request.actor) ||
+    !oid.test(request.sourceTip) || !validBranch(request.migrationRef) || !request.migrationRef.startsWith('refs/heads/') ||
+    !Array.isArray(request.paths) || !request.paths.length || !Array.isArray(request.protectedRefs) || !request.protectedRefs.length ||
+    !request.mapPath || isAbsolute(request.mapPath) || request.mapPath.split(/[\\/]/).some((part) => !part || part === '.' || part === '..') ||
+    /[\x00-\x1f]/.test(request.mapPath)) throw conflict('raw-object-binding');
+  if (request.paths.some((entry) => !entry || typeof entry.path !== 'string' || typeof entry.digest !== 'string' ||
+    typeof entry.size !== 'number') ||
+    request.protectedRefs.some((ref) => !ref || typeof ref.ref !== 'string' || typeof ref.commit !== 'string')) {
+    throw conflict('raw-object-binding');
+  }
+  const paths = [...request.paths].sort((a, b) => Buffer.compare(Buffer.from(a.path), Buffer.from(b.path)));
+  const directory = await git(root, ['rev-parse', '--path-format=absolute', '--git-dir']);
+  const common = await git(root, ['rev-parse', '--path-format=absolute', '--git-common-dir']);
+  if (await realpath(directory) !== await realpath(common) ||
+    await git(root, ['rev-parse', '--is-bare-repository']) !== 'false') {
+    throw conflict('raw-object-binding');
+  }
+  for (const [index, entry] of paths.entries()) {
+    if (!digestPattern.test(entry.digest) || entry.path !== prefix + entry.digest ||
+      !Number.isSafeInteger(entry.size) || entry.size < 100_000_000 || entry.size > 1_073_741_824 ||
+      index > 0 && paths[index - 1]!.path === entry.path) throw conflict('raw-object-binding');
+  }
+  const protectedRefs = [...request.protectedRefs].sort((a, b) => Buffer.compare(Buffer.from(a.ref), Buffer.from(b.ref)));
+  let hasProtectedAncestor = false;
+  for (const [index, ref] of protectedRefs.entries()) {
+    if (!validBranch(ref.ref) || ref.ref === request.migrationRef || !oid.test(ref.commit) ||
+      index > 0 && protectedRefs[index - 1]!.ref === ref.ref) throw conflict('protected-ref-overlap');
+    try {
+      await verifyCandidateReachableObjectSizes(root, ref.commit);
+    } catch { throw conflict('protected-ref-overlap'); }
+    try { await git(root, ['merge-base', '--is-ancestor', ref.commit, request.sourceTip]); hasProtectedAncestor = true; }
+    catch { /* Other frozen published branches may legitimately diverge from the unpublished tip. */ }
+  }
+  if (!hasProtectedAncestor) throw conflict('protected-ref-overlap');
+  if (await git(root, ['rev-parse', '--verify', '--end-of-options', `${request.sourceTip}^{commit}`]) !== request.sourceTip) {
+    throw conflict('source-ref-drift');
+  }
+  for (const entry of paths) await verifyRaw(root, request.sourceTip, entry.path, entry.digest, entry.size);
+  let version = '';
+  try { version = await git(root, ['lfs', 'version']); }
+  catch { /* Version validation classifies unavailable tools without exposing subprocess output. */ }
+  const lfsVersion = validateSourceLfsVersion(version);
+  const gitVersion = await git(root, ['--version']);
+  const body = { ...request, paths, protectedRefs, root: resolve(root), schemaVersion: 1 as const,
+    kind: 'source-lfs-migration-plan' as const, credit: false as const, gitVersion, lfsVersion,
+    args: ['lfs', 'migrate', 'import', `--include=${paths.map((entry) => entry.path).join(',')}`,
+      `--include-ref=${request.migrationRef}`, ...protectedRefs.map((ref) => `--exclude-ref=${ref.ref}`),
+      `--object-map=${request.mapPath}`] };
+  return canonicalSourceLfsMigrationReceipt(body);
+}
+
+export interface SourceLfsMigrationVerificationReceipt extends Omit<SourceLfsMigrationPlan, 'kind'> {
+  kind: 'source-lfs-migration';
+  rewrittenTip: string;
+  rewrittenTree: string;
+  mapSha256: string;
+}
+
+async function parents(root: string, commit: string): Promise<string[]> {
+  const result = await git(root, ['rev-list', '--parents', '-n', '1', commit, '--']);
+  const parts = result.split(' ');
+  if (parts.shift() !== commit || parts.some((value) => !oid.test(value))) throw conflict('commit-map-divergence');
+  return parts;
+}
+
+async function unrelatedAttributeLines(root: string, commit: string, paths: Set<string>): Promise<string[]> {
+  const entry = await git(root, ['ls-tree', commit, '--', '.gitattributes']);
+  if (!entry) return [];
+  if (!entry.startsWith('100644 blob ')) throw conflict('commit-map-divergence');
+  const attributeOid = entry.split(/\s+/)[2];
+  if (!attributeOid || !oid.test(attributeOid)) throw conflict('commit-map-divergence');
+  const bytes = await git(root, ['cat-file', 'blob', attributeOid], 1024 * 1024);
+  return bytes.split('\n').filter((line) => {
+    if (!line) return false;
+    const pattern = line.split(/\s+/)[0] ?? '';
+    return !paths.has(pattern) && pattern !== `${prefix}*`;
+  });
+}
+
+/** @id CODE-M5-LFS-MIGRATION-MAP-VERIFICATION-001
+ * @implements REQ-M5-LIFECYCLE-006 REQ-M5-RELEASE-002
+ * @design DES-M5-012
+ */
+export async function verifySourceLfsMigration(receipt: SourceLfsMigrationVerificationReceipt): Promise<{
+  commit: string; tree: string; credit: false;
+}> {
+  verifySourceLfsMigrationReceipt(receipt);
+  const root = receipt.root;
+  if (receipt.kind !== 'source-lfs-migration' || !oid.test(receipt.rewrittenTip) ||
+    !oid.test(receipt.rewrittenTree) || !digestPattern.test(receipt.mapSha256) ||
+    !oid.test(receipt.sourceTip) || !Array.isArray(receipt.paths) || !receipt.paths.length ||
+    !Array.isArray(receipt.protectedRefs) || !receipt.protectedRefs.length ||
+    typeof receipt.mapPath !== 'string' || isAbsolute(receipt.mapPath) ||
+    receipt.mapPath.split(/[\\/]/).some((part) => !part || part === '.' || part === '..') ||
+    receipt.paths.some((entry) => !entry || !digestPattern.test(entry.digest) ||
+      entry.path !== prefix + entry.digest || !Number.isSafeInteger(entry.size) ||
+      entry.size < 100_000_000 || entry.size > 1_073_741_824) ||
+    receipt.protectedRefs.some((ref) => !ref || !validBranch(ref.ref) || !oid.test(ref.commit))) {
+    throw conflict('receipt-divergence');
+  }
+  const mapPath = resolve(root, receipt.mapPath);
+  const info = await lstat(mapPath);
+  if (!info.isFile() || info.isSymbolicLink() || info.size > 16 * 1024 * 1024) throw conflict('commit-map-divergence');
+  const hash = createHash('sha256');
+  const map = new Map<string, string>(), reverse = new Set<string>();
+  const stream = createReadStream(mapPath);
+  stream.on('data', (bytes) => { hash.update(bytes); });
+  const lines = createInterface({ input: stream, crlfDelay: Infinity });
+  try {
+    for await (const line of lines) {
+      const values = line.split(',');
+      const [oldCommit, newCommit] = values;
+      if (line.length > 129 || values.length !== 2 || !oldCommit || !newCommit || !oid.test(oldCommit) || !oid.test(newCommit) ||
+        oldCommit === newCommit || map.has(oldCommit) || reverse.has(newCommit) || map.size >= 100_000) {
+        throw conflict('commit-map-divergence');
+      }
+      map.set(oldCommit, newCommit); reverse.add(newCommit);
+    }
+  } finally { lines.close(); stream.destroy(); }
+  if (hash.digest('hex') !== receipt.mapSha256) throw conflict('commit-map-divergence');
+  if (map.get(receipt.sourceTip) !== receipt.rewrittenTip) throw conflict('commit-map-divergence');
+  const allowed = new Set(receipt.paths.map((entry) => entry.path));
+  allowed.add('.gitattributes');
+  for (const [oldCommit, newCommit] of map) {
+    await git(root, ['merge-base', '--is-ancestor', oldCommit, receipt.sourceTip]);
+    await git(root, ['merge-base', '--is-ancestor', newCommit, receipt.rewrittenTip]);
+    for (const protectedRef of receipt.protectedRefs) {
+      let overlaps = false;
+      try { await git(root, ['merge-base', '--is-ancestor', oldCommit, protectedRef.commit]); overlaps = true; }
+      catch { /* A rewritten commit must be outside every frozen published closure. */ }
+      if (overlaps) throw conflict('protected-ref-overlap');
+    }
+    const oldParents = await parents(root, oldCommit), newParents = await parents(root, newCommit);
+    if (oldParents.length !== newParents.length ||
+      oldParents.some((parent, index) => (map.get(parent) ?? parent) !== newParents[index])) throw conflict('commit-map-divergence');
+    const changed = (await git(root, ['diff-tree', '--no-ext-diff', '--no-renames', '--no-commit-id', '--name-only', '-r', '-z', oldCommit, newCommit], 1024 * 1024))
+      .split('\0').filter(Boolean);
+    if (changed.some((path) => !allowed.has(path))) throw conflict('commit-map-divergence');
+    if (changed.includes('.gitattributes') &&
+      JSON.stringify(await unrelatedAttributeLines(root, oldCommit, allowed)) !==
+        JSON.stringify(await unrelatedAttributeLines(root, newCommit, allowed))) {
+      throw conflict('commit-map-divergence');
+    }
+    for (const path of changed.filter((path) => path !== '.gitattributes')) {
+      const previous = await git(root, ['ls-tree', oldCommit, '--', path]);
+      const current = await git(root, ['ls-tree', newCommit, '--', path]);
+      if (previous.slice(0, 7) !== current.slice(0, 7) || !previous.startsWith('100644 blob ') ||
+        !current.startsWith('100644 blob ')) throw conflict('commit-map-divergence');
+      const entry = receipt.paths.find((value) => value.path === path)!;
+      await verifyRaw(root, oldCommit, path, entry.digest, entry.size);
+    }
+  }
+  let protectedAncestor = false;
+  for (const protectedRef of receipt.protectedRefs) {
+    if (await git(root, ['rev-parse', '--verify', protectedRef.ref]) !== protectedRef.commit) throw conflict('protected-ref-overlap');
+    try { await git(root, ['merge-base', '--is-ancestor', protectedRef.commit, receipt.rewrittenTip]); protectedAncestor = true; }
+    catch { /* A published branch other than the protected default can diverge. */ }
+  }
+  if (!protectedAncestor) throw conflict('protected-ref-overlap');
+  if (await git(root, ['rev-parse', `${receipt.rewrittenTip}^{tree}`]) !== receipt.rewrittenTree) throw conflict('receipt-divergence');
+  await verifyCandidateReachableObjectSizes(root, receipt.rewrittenTip);
+  await verifyCandidateLfsClosure(root, receipt.rewrittenTip, 'local');
+  return { commit: receipt.rewrittenTip, tree: receipt.rewrittenTree, credit: false };
+}

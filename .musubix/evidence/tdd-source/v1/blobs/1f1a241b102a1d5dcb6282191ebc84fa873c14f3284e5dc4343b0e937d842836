@@ -1,0 +1,80 @@
+# ADR-0040: Set the ordinary full-test ceiling to 300 seconds
+
+Status: Proposed for Generation 27; requirements approved, design approval pending.
+
+## Context
+
+CHANGE-0017 Generation 19 completed valid Git LFS Red/Green chronology, but the
+configured ordinary full-test command remained limited to 180000 ms. The user
+explicitly changed that release policy before quality to a limit below 300
+seconds. Compatibility, pack-smoke and other command-specific limits were not
+changed. Generation 20 proved the timeout mismatch but was abandoned before
+implementation because config-only changes were absent from implementation
+fingerprints; ADR-0041 governs that independent lifecycle repair.
+Generation 21 reached Implementation but was abandoned after its
+config-fingerprint Green exposed a contradictory fixture baseline; it supplies
+no current timeout credit.
+Generation 22 was abandoned after its fingerprint Red was found to be a
+malformed-journal bootstrap failure; it also supplies no current timeout credit.
+Generation 23 completed the two approved cycles but retained an overbroad
+nine-requirement CHANGE scope; it supplies no current timeout credit.
+Generation 24 completed the narrowed-scope cycles but quality found that the
+canonical execution-policy/candidate-gate design projections and two trust-test
+digest constants still encoded 180000; it supplies no current release credit.
+Generation 26 corrected the complete candidate-gate digest and added the
+authoritative production trace identity, but quality found that the separate
+no-`testRuntime` trust constant still encoded the historical 180000 projection.
+
+## Decision
+
+Set only the command named `test` in `.musubix/config.json` from
+`timeoutMs:180000` to `timeoutMs:300000`. Select the command by its unique name,
+not its array position. Preserve every other parsed config value.
+
+Materialize the same unique value in the canonical execution-policy and
+candidate-gate design projections. Bind their SHA-256 values as
+`7c7ce3ed0eb363e5d43161dcd04b0dc58c3587b2cf4be9db11cca39fd521e041`
+and
+`414123c757dad57d01855bd408c1a3b9cf70044238df4156b2a1699bee30851f`,
+respectively. Candidate-gate trust tests use the latter digest.
+
+Generation 24 proved the config projection with
+`TEST-M5-FULL-TEST-TIMEOUT-001`. Generation 25 revised that test to prove that
+the live config, normative candidate-gate JSON, live candidate-gate
+materialization and both trust-test constants bind the approved 300000 policy.
+Its Red contained exactly the two stale trust-test digest assertions, but its
+test-only fix could not change the Implementation fingerprint. Generation 26
+retains that proof, changes the two constants, and adds only the approved
+non-executable trace block on `candidateGateFingerprintConfig()`.
+
+Generation 27 additionally binds the current candidate-gate projection without
+the unchanged `testRuntime` member to
+`2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd`
+and changes only `legacyGateSha256` in `tests/test-runtime-gate.test.ts` from
+historical
+`bb4a58c169b4e4f7357b608dc3b00028a613f907613b88d1540b3654ea600c8a`.
+`TEST-M5-FULL-TEST-TIMEOUT-001` proves the stale-to-current transition with an
+unchanged Red source through Green.
+
+Quality uses the existing configured command evidence and requires its measured
+duration to be strictly less than 300000 ms, with ordinary success and no test,
+bootstrap or provenance failure. No new result schema or validator is added.
+
+## Consequences
+
+The full suite may run for up to, but not including, 300 seconds. This is a
+bounded policy relaxation, not permission to hide failures or raise other
+timeouts. Generations 19 through 26 remain immutable non-current evidence.
+
+## Rejected alternatives
+
+- Keep 180000 ms: rejected by the user's explicit policy change.
+- Raise every 180000-ms command: rejected because compatibility and pack-smoke
+  were not requested to change.
+- Allow an open-ended or larger timeout: rejected because the approved ceiling
+  is exactly 300000 ms.
+
+## Links
+
+Requirements: REQ-M5-LIFECYCLE-006
+Design: DES-M5-011 DES-M5-012 DES-M5-015

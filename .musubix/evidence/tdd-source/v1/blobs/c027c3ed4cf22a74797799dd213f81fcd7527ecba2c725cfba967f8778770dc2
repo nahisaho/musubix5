@@ -1,0 +1,216 @@
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+
+/** @typedef {{schemaVersion:1,kind:'test-runtime-anchor-v1',runId:string,wallEpochMs:number,monoEpochMs:number,hrtimeNs:string}} Anchor */
+/** @typedef {{hrtimeBeforeNs:string,performanceMs:number,hrtimeAfterNs:string}} Sample */
+/** @typedef {{samples:Sample[],selectedIndex:number,localWallEpochMs:number,localMonoEpochMs:number}} Calibration */
+/** @typedef {{schemaVersion:1,kind:'test-runtime-provider-v1',executionRunId:string,profileSha256:string,bootstrapSha256:string,inputsSha256:string,anchorId:string,anchor:Anchor}} Provider */
+/** @typedef {{schemaVersion:1,kind:'test-runtime-install-v1',installedNow:()=>number,anchorId:string,bootstrapSha256:string,profileSha256:string,calibration:Calibration}} Installation */
+
+export const markerKey = 'musubix5.testRuntime.stableWallClock.install.v1';
+export const clockEnvironmentKey = 'MUSUBIX5_TEST_RUNTIME_CLOCK';
+export const profileSha256 = 'f9fbe94729722eaaea1f1e49bbaf6c48053ea1ed6a8498a2287dbfe4a20bf06e';
+if (typeof import.meta.url !== 'string') {
+  fail(Object.getOwnPropertyDescriptor(globalThis, Symbol.for(markerKey))
+    ? 'duplicate-conflict' : 'worker-scope', 'missing module URL');
+}
+const bootstrapURL = pathToFileURL(fileURLToPath(import.meta.url)).href;
+const originalPerformanceNow = performance.now.bind(performance);
+
+/** @param {string} reason @param {string} [detail] @returns {never} */
+export function fail(reason, detail = '') {
+  throw new Error(`TEST_RUNTIME_BOOTSTRAP_INVALID: ${reason}${detail ? `: ${detail}` : ''}`);
+}
+
+/** @param {unknown} value @param {string[]} names @param {string} reason @returns {Record<string, unknown>} */
+export function closed(value, names, reason) {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) fail(reason, 'expected object');
+  const prototype = Object.getPrototypeOf(value);
+  if (prototype !== null && prototype !== Object.prototype) {
+    const constructor = Object.getOwnPropertyDescriptor(prototype, 'constructor');
+    if (Object.getPrototypeOf(prototype) !== null || !constructor || !Object.hasOwn(constructor, 'value')
+      || typeof constructor.value !== 'function'
+      || Function.prototype.toString.call(constructor.value) !== 'function Object() { [native code] }'
+      || Reflect.ownKeys(prototype).sort().join('\0') !== Reflect.ownKeys(Object.prototype).sort().join('\0')) {
+      fail(reason, 'prototype');
+    }
+  }
+  const descriptors = Object.getOwnPropertyDescriptors(value);
+  if (Reflect.ownKeys(value).some((key) => typeof key !== 'string')
+    || Object.keys(descriptors).sort().join('\0') !== [...names].sort().join('\0')
+    || Object.values(descriptors).some((d) => !Object.hasOwn(d, 'value'))) fail(reason, 'closed data fields');
+  return Object.fromEntries(Object.entries(descriptors).map(([key, d]) => [key, d.value]));
+}
+
+/** @param {unknown} value @returns {unknown} */
+function ordered(value) {
+  if (Array.isArray(value)) return value.map(ordered);
+  if (value !== null && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)
+      .map(([key, v]) => [key, ordered(v)]));
+  }
+  return value;
+}
+
+/** @param {unknown} value */
+export function hash(value) {
+  return createHash('sha256').update(`${JSON.stringify(ordered(value))}\n`).digest('hex');
+}
+
+/** @template T @param {T} value @returns {Readonly<T>} */
+export function freeze(value) {
+  if (value !== null && (typeof value === 'object' || typeof value === 'function')) {
+    for (const d of Object.values(Object.getOwnPropertyDescriptors(value))) {
+      if (Object.hasOwn(d, 'value') && d.value !== value) freeze(d.value);
+    }
+    Object.freeze(value);
+  }
+  return value;
+}
+
+/** @param {unknown} value @returns {Anchor} */
+export function validateAnchor(value) {
+  const a = closed(value, ['schemaVersion', 'kind', 'runId', 'wallEpochMs', 'monoEpochMs', 'hrtimeNs'], 'anchor-schema');
+  if (a.schemaVersion !== 1 || a.kind !== 'test-runtime-anchor-v1'
+    || typeof a.runId !== 'string' || !a.runId.trim()
+    || typeof a.wallEpochMs !== 'number' || !Number.isSafeInteger(a.wallEpochMs)
+    || typeof a.monoEpochMs !== 'number' || !Number.isFinite(a.monoEpochMs)
+    || typeof a.hrtimeNs !== 'string' || !/^(0|[1-9][0-9]*)$/.test(a.hrtimeNs)) fail('anchor-schema');
+  return { schemaVersion: 1, kind: 'test-runtime-anchor-v1', runId: a.runId,
+    wallEpochMs: a.wallEpochMs, monoEpochMs: a.monoEpochMs, hrtimeNs: a.hrtimeNs };
+}
+
+/** @param {unknown} value @returns {Provider} */
+export function validateProvider(value) {
+  const p = closed(value, ['schemaVersion', 'kind', 'executionRunId', 'profileSha256',
+    'bootstrapSha256', 'inputsSha256', 'anchorId', 'anchor'], 'worker-scope');
+  const anchor = validateAnchor(p.anchor);
+  if (p.schemaVersion !== 1 || p.kind !== 'test-runtime-provider-v1'
+    || typeof p.executionRunId !== 'string' || !p.executionRunId.trim()
+    || p.profileSha256 !== profileSha256 || typeof p.bootstrapSha256 !== 'string'
+    || !/^[a-f0-9]{64}$/.test(p.bootstrapSha256) || typeof p.inputsSha256 !== 'string'
+    || !/^[a-f0-9]{64}$/.test(p.inputsSha256) || p.anchorId !== hash(anchor)) fail('worker-scope');
+  return { schemaVersion: 1, kind: 'test-runtime-provider-v1', executionRunId: p.executionRunId,
+    profileSha256, bootstrapSha256: p.bootstrapSha256, inputsSha256: p.inputsSha256,
+    anchorId: hash(anchor), anchor };
+}
+
+/* @id CODE-M5-TEST-CLOCK-CALIBRATION-001
+ * @implements REQ-M5-LIFECYCLE-006 REQ-M5-COMPAT-013
+ * @design DES-M5-015
+ */
+/** @param {unknown} input @param {unknown} values @returns {Calibration} */
+export function calibrateClock(input, values) {
+  const anchor = validateAnchor(input);
+  if (!Array.isArray(values) || values.length !== 8) fail('calibration', 'exactly eight samples required');
+  const samples = values.map((value) => {
+    const s = closed(value, ['hrtimeBeforeNs', 'performanceMs', 'hrtimeAfterNs'], 'calibration');
+    if (typeof s.hrtimeBeforeNs !== 'string' || !/^(0|[1-9][0-9]*)$/.test(s.hrtimeBeforeNs)
+      || typeof s.hrtimeAfterNs !== 'string' || !/^(0|[1-9][0-9]*)$/.test(s.hrtimeAfterNs)
+      || typeof s.performanceMs !== 'number' || !Number.isFinite(s.performanceMs)
+      || BigInt(s.hrtimeAfterNs) < BigInt(s.hrtimeBeforeNs)) fail('calibration', 'invalid sample');
+    if (BigInt(s.hrtimeBeforeNs) < BigInt(anchor.hrtimeNs)) fail('clock-domain', 'sample precedes anchor');
+    return { hrtimeBeforeNs: s.hrtimeBeforeNs, performanceMs: s.performanceMs, hrtimeAfterNs: s.hrtimeAfterNs };
+  });
+  let selectedIndex = 0;
+  const widths = samples.map((s) => BigInt(s.hrtimeAfterNs) - BigInt(s.hrtimeBeforeNs));
+  for (let i = 1; i < widths.length; i++) if (widths[i] < widths[selectedIndex]) selectedIndex = i;
+  if (widths[selectedIndex] > 1_000_000n) fail('calibration', 'all sample widths exceed one millisecond');
+  const selected = samples[selectedIndex];
+  const deltaTwice = BigInt(selected.hrtimeBeforeNs) + BigInt(selected.hrtimeAfterNs) - 2n * BigInt(anchor.hrtimeNs);
+  if (deltaTwice > BigInt(Number.MAX_SAFE_INTEGER)) fail('clock-domain', 'unrepresentable elapsed time');
+  const localWallEpochMs = anchor.wallEpochMs + Number(deltaTwice) / 2_000_000;
+  if (!Number.isSafeInteger(Math.floor(localWallEpochMs))) fail('calibration', 'unsafe local epoch');
+  return freeze({ samples, selectedIndex, localWallEpochMs, localMonoEpochMs: selected.performanceMs });
+}
+
+/* @id CODE-M5-TEST-CLOCK-PROGRESSION-001
+ * @implements REQ-M5-LIFECYCLE-006 REQ-M5-COMPAT-013
+ * @design DES-M5-015
+ */
+/** @param {{wallEpochMs:number,monoEpochMs:number,performanceNow:()=>number,wallNow?:()=>number}} options */
+export function createClock({ wallEpochMs, monoEpochMs, performanceNow }) {
+  if (!Number.isFinite(wallEpochMs) || !Number.isSafeInteger(Math.floor(wallEpochMs))
+    || !Number.isFinite(monoEpochMs) || typeof performanceNow !== 'function') fail('calibration');
+  let last = Math.floor(wallEpochMs);
+  return Object.freeze(() => {
+    const now = performanceNow();
+    if (!Number.isFinite(now)) fail('calibration', 'nonfinite monotonic observation');
+    const value = Math.floor(wallEpochMs + Math.max(0, now - monoEpochMs));
+    if (!Number.isSafeInteger(value)) fail('calibration', 'unsafe clock output');
+    last = Math.max(last, value);
+    return last;
+  });
+}
+
+/** @param {string|undefined} options @returns {{tokens:string[],preload:boolean}} */
+export function parseNodeOptions(options) {
+  if (options && /[^\S\t ]|["'\\]/.test(options)) fail('node-options');
+  const tokens = (options ?? '').split(/[ \t]+/).filter(Boolean);
+  const result = [];
+  let preload = false, memory;
+  for (const token of tokens) {
+    if (token === `--import=${bootstrapURL}`) { preload = true; continue; }
+    if (token === '--enable-source-maps') { result.push(token); continue; }
+    if (/^--max-old-space-size=[1-9][0-9]*$/.test(token)) {
+      const amount = Number(token.slice(token.indexOf('=') + 1));
+      if (!Number.isSafeInteger(amount) || (memory !== undefined && memory !== amount)) fail('node-options');
+      memory = amount; result.push(token); continue;
+    }
+    fail('node-options', token);
+  }
+  return { tokens: result, preload };
+}
+
+/* @id CODE-M5-TEST-CLOCK-INSTALL-001
+ * @implements REQ-M5-LIFECYCLE-006 REQ-M5-COMPAT-013
+ * @design DES-M5-015
+ */
+/** @param {unknown} supplied @returns {Installation} */
+export function installClock(supplied) {
+  const provider = validateProvider(supplied);
+  const expected = createHash('sha256').update(readFileSync(fileURLToPath(import.meta.url))).digest('hex');
+  if (expected !== provider.bootstrapSha256) fail('input-hash');
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis, Symbol.for(markerKey));
+  if (descriptor) {
+    const marker = closed(descriptor.value, ['schemaVersion', 'kind', 'installedNow', 'anchorId',
+      'bootstrapSha256', 'profileSha256', 'calibration'], 'duplicate-conflict');
+    if (descriptor.enumerable || descriptor.configurable || descriptor.writable
+      || marker.schemaVersion !== 1 || marker.kind !== 'test-runtime-install-v1'
+      || marker.anchorId !== provider.anchorId || marker.bootstrapSha256 !== provider.bootstrapSha256
+      || marker.profileSha256 !== profileSha256 || typeof marker.installedNow !== 'function'
+      || !Object.isFrozen(descriptor.value)) fail('duplicate-conflict');
+    const calibration = closed(marker.calibration, ['samples', 'selectedIndex', 'localWallEpochMs', 'localMonoEpochMs'], 'duplicate-conflict');
+    if (hash(calibrateClock(provider.anchor, calibration.samples)) !== hash(marker.calibration)) fail('duplicate-conflict');
+    return descriptor.value;
+  }
+  const samples = Array.from({ length: 8 }, () => {
+    const before = process.hrtime.bigint(), performanceMs = originalPerformanceNow(), after = process.hrtime.bigint();
+    return { hrtimeBeforeNs: before.toString(), performanceMs, hrtimeAfterNs: after.toString() };
+  });
+  const calibration = calibrateClock(provider.anchor, samples);
+  const installedNow = createClock({ wallEpochMs: calibration.localWallEpochMs,
+    monoEpochMs: calibration.localMonoEpochMs, performanceNow: originalPerformanceNow });
+  /** @type {Installation} */
+  const marker = { schemaVersion: 1, kind: 'test-runtime-install-v1', installedNow,
+    anchorId: provider.anchorId, bootstrapSha256: provider.bootstrapSha256, profileSha256, calibration };
+  freeze(marker);
+  Object.defineProperty(Date, 'now', { value: installedNow, writable: true, configurable: true, enumerable: false });
+  Object.defineProperty(globalThis, Symbol.for(markerKey), {
+    value: marker, enumerable: false, writable: false, configurable: false,
+  });
+  return marker;
+}
+
+/** @param {Provider} provider */
+export function inheritClock(provider) {
+  const options = parseNodeOptions(process.env.NODE_OPTIONS);
+  process.env[clockEnvironmentKey] = JSON.stringify(provider);
+  process.env.NODE_OPTIONS = [...options.tokens, `--import=${bootstrapURL}`].join(' ');
+}
+
+const inherited = process.env[clockEnvironmentKey];
+const options = parseNodeOptions(process.env.NODE_OPTIONS);
+if (Boolean(inherited) !== options.preload) fail('worker-scope', 'incomplete inherited clock binding');
+if (inherited) installClock(JSON.parse(inherited));

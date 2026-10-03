@@ -70,6 +70,11 @@ jobs:
           if (!v || +v[1] < 3 || +v[1] === 3 && (+v[2] < 4 || +v[2] === 4 && +v[3] < 1))
             throw new Error('TDD_SOURCE_LFS_UNAVAILABLE: version-unsupported');
           NODE
+      # @id CODE-M5-CI-CHECKOUT-EOL-001
+      # @implements REQ-M5-CI-006
+      # @design DES-M5-CI-006
+      - name: Disable checkout line-ending conversion
+        run: git config --global core.autocrlf false
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.candidateCommit }}
@@ -87,130 +92,68 @@ jobs:
       - run: npm ci
       - run: npm run build
       - name: Run closed verification matrix
+        # @id CODE-M5-CI-MATRIX-WORKFLOW-001
+        # @implements REQ-M5-CI-008
+        # @design DES-M5-CI-008
         shell: bash
         run: |
           node --input-type=module <<'NODE'
-          import { spawnSync } from 'node:child_process';
-          import { createHash } from 'node:crypto';
-          import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
           import { join } from 'node:path';
-          import { requiredCandidateGateCommands } from './dist/packages/analysis/src/candidate-gate.js';
-          import { canonicalRepositoryIdentity } from './dist/packages/analysis/src/canonical.js';
-          import { verifyCandidateLfsClosure, compareTrackedTree } from './dist/packages/analysis/src/workspace-manager.js';
-
-          const canonical = (value) => Array.isArray(value)
-            ? `[${value.map(canonical).join(',')}]`
-            : value && typeof value === 'object'
-              ? `{${Object.entries(value).sort(([a], [b]) => Buffer.compare(Buffer.from(a), Buffer.from(b))).map(([key, nested]) => `${JSON.stringify(key)}:${canonical(nested)}`).join(',')}}`
-              : JSON.stringify(value);
-          const digest = (value) => createHash('sha256').update(`${canonical(value)}\n`).digest('hex');
-          const run = (command, args) => spawnSync(command, args, {
-            cwd: process.cwd(),
-            encoding: 'utf8',
-            shell: false,
-          });
-          const head = run('git', ['rev-parse', 'HEAD']).stdout.trim();
-          const repositoryRoot = run('git', ['rev-parse', '--show-toplevel']).stdout.trim();
-          if (head.toLowerCase() !== process.env.CANDIDATE_COMMIT.toLowerCase()) {
-            throw new Error('Checked out commit does not match candidateCommit.');
+          import { readFileSync } from 'node:fs';
+          import { writeCandidateGateRunnerFailure } from './.github/scripts/write-candidate-gate-runner-failure.mjs';
+          let runner;
+          try {
+            runner = await import('./dist/packages/analysis/src/candidate-gate-runner.js');
+          } catch {
+            writeCandidateGateRunnerFailure('runner-import-failure');
           }
-          const remote = run('git', ['config', '--get-all', 'remote.origin.url']);
-          const selectedRemote = remote.stdout.split(/\r?\n/, 1)[0];
-          if (remote.status !== 0
-            || !repositoryRoot
-            || canonicalRepositoryIdentity(selectedRemote, repositoryRoot) !== process.env.REPOSITORY_ID) {
-            throw new Error(
-              'RELEASE_GATE_CANDIDATE_MISMATCH: repository identity mismatch; '
-              + 'release evidence producers must use the credential-free GitHub HTTPS origin.',
-            );
-          }
-          const treeClean = () => {
-            const status = run('git', ['status', '--porcelain=v1', '--untracked-files=no']);
-            return status.status === 0 && status.stdout.length === 0;
-          };
-          await verifyCandidateLfsClosure(process.cwd(), head, 'local');
-          const preHydration = spawnSync(process.execPath, ['scripts/verify-lfs-checkout.mjs', '.', '--verify-only'], { stdio: 'inherit' });
-          const preTreeMatchesCandidate = preHydration.status === 0 && await compareTrackedTree(process.cwd(), head, 'pre');
-          if (!preTreeMatchesCandidate) throw new Error('TDD_SOURCE_LFS_INVALID: worktree-integrity');
-          const completed = spawnSync(process.execPath, [
-            'dist/packages/cli/src/main.js',
-            'gate',
-            '--matrix',
-            '--json',
-          ], {
-            cwd: process.cwd(),
-            encoding: 'utf8',
-            maxBuffer: 100_000_000,
-          });
-          if (!completed.stdout) throw new Error(`Matrix gate produced no JSON: ${completed.stderr}`);
-          const report = JSON.parse(completed.stdout);
-          const failedChecks = report.checks
-            .filter(({ required, status, name }) => required && status !== 'pass' && name !== 'approval')
-            .map(({ name, status, summary, diagnostics, stdout, stderr }) => ({
-              name,
-              status,
-              summary,
-              diagnostics,
-              stdout: stdout?.slice(-20_000),
-              stderr: stderr?.slice(-20_000),
-            }));
-          if (failedChecks.length) {
-            console.error(JSON.stringify({ failedChecks }, null, 2));
-            const testReportPath = join(process.cwd(), '.musubix/cache/matrix-native/test/aggregate.json');
-            if (existsSync(testReportPath)) {
-              const testReport = JSON.parse(readFileSync(testReportPath, 'utf8'));
-              const failedTests = testReport.testResults.flatMap(({ name, assertionResults }) =>
-                assertionResults
-                  .filter(({ status }) => status === 'failed')
-                  .map(({ fullName, failureMessages }) => ({ name, fullName, failureMessages })));
-              console.error(JSON.stringify({ failedTests }, null, 2));
+          let input;
+          if (runner) {
+            try {
+              const context = {
+                repositoryId: process.env.REPOSITORY_ID, changeId: process.env.CHANGE_ID,
+                generation: Number(process.env.GENERATION), candidateCommit: process.env.CANDIDATE_COMMIT,
+                gateInputFingerprint: process.env.GATE_INPUT_FINGERPRINT,
+                job: { os: process.env.MATRIX_OS, nodeMajor: Number(process.env.MATRIX_NODE) },
+              };
+              const config = JSON.parse(readFileSync('.musubix/config.json', 'utf8'));
+              const selected = config.commands.filter(command => command.name === 'test');
+              if (!process.env.RUNNER_TEMP || typeof runner.runCandidateGateWorkflow !== 'function'
+                || selected.length !== 1 || !Number.isSafeInteger(selected[0].timeoutMs)
+                || selected[0].timeoutMs <= 0 || selected[0].timeoutMs > 300000
+                || !/^repository:[a-f0-9]{64}$/.test(context.repositoryId ?? '')
+                || !/^CHANGE-\d+$/.test(context.changeId ?? '')
+                || !Number.isSafeInteger(context.generation) || context.generation <= 0
+                || !/^[a-f0-9]{40}$/.test(context.candidateCommit ?? '')
+                || !/^[a-f0-9]{64}$/.test(context.gateInputFingerprint ?? '')
+                || !['ubuntu', 'windows', 'macos'].includes(context.job.os) || context.job.nodeMajor !== 24) {
+                throw new Error('GATE_RUNNER_UNAVAILABLE: invalid wrapper startup inputs.');
+              }
+              input = {
+                command: process.execPath, args: ['dist/packages/cli/src/main.js', 'gate', '--matrix', '--json'],
+                cwd: process.cwd(), temporaryDirectory: process.env.RUNNER_TEMP,
+                timeoutMs: selected[0].timeoutMs, secrets: [], context,
+                resultPath: join(process.env.RUNNER_TEMP, 'candidate-gate-result.json'),
+              };
+            } catch {
+              writeCandidateGateRunnerFailure('runner-startup-failure');
             }
           }
-          const commands = report.checks
-            .filter(({ name }) => name.startsWith('command:'))
-            .map((check) => {
-            const details = {
-              name: check.name.slice('command:'.length),
-              exitCode: check.exitCode ?? -1,
-              stdout: check.stdout ?? '',
-              stderr: check.stderr ?? '',
-            };
-            return {
-              name: details.name,
-              exitCode: details.exitCode,
-              digest: digest(details),
-              status: check.status === 'pass' ? 'pass' : 'fail',
-            };
-          });
-          await verifyCandidateLfsClosure(process.cwd(), head, 'local');
-          const postHydration = spawnSync(process.execPath, ['scripts/verify-lfs-checkout.mjs', '.', '--verify-only'], { stdio: 'inherit' });
-          const postTreeMatchesCandidate = postHydration.status === 0 && await compareTrackedTree(process.cwd(), head, 'post');
-          const commandNames = commands.map(({ name }) => name).sort();
-          const expectedCommandNames = [...requiredCandidateGateCommands].sort();
-          const commandsPassed = failedChecks.length === 0
-            && commandNames.join('\n') === expectedCommandNames.join('\n')
-            && commands.every(({ status }) => status === 'pass');
-          const result = {
-            schemaVersion: 1,
-            repositoryId: process.env.REPOSITORY_ID,
-            changeId: process.env.CHANGE_ID,
-            generation: Number(process.env.GENERATION),
-            candidateCommit: process.env.CANDIDATE_COMMIT,
-            gateInputFingerprint: process.env.GATE_INPUT_FINGERPRINT,
-            job: { os: process.env.MATRIX_OS, nodeMajor: Number(process.env.MATRIX_NODE) },
-            producer: 'github-actions',
-            runtime: { os: process.env.MATRIX_OS, nodeMajor: Number(process.env.MATRIX_NODE) },
-            commands,
-            gateReportDigest: digest(report),
-            commandsPassed,
-            preTreeMatchesCandidate,
-            postTreeMatchesCandidate,
-            status: commandsPassed && preTreeMatchesCandidate && postTreeMatchesCandidate ? 'pass' : 'fail',
-          };
-          mkdirSync(process.env.RUNNER_TEMP, { recursive: true });
-          writeFileSync(join(process.env.RUNNER_TEMP, 'candidate-gate-result.json'), `${canonical(result)}\n`);
+          if (input) {
+            let subprocessStarted = false;
+            input.onCommandStart = () => { subprocessStarted = true; };
+            try {
+              // The runner owns verifyCandidateLfsClosure and tracked-tree verification before and after capture.
+              const result = await runner.runCandidateGateWorkflow(input);
+              if (result.status !== 'pass') process.exitCode = 1;
+            } catch (cause) {
+              if (subprocessStarted) throw cause;
+              writeCandidateGateRunnerFailure('runner-startup-failure');
+            }
+          }
           NODE
       - name: Sign with GitHub OIDC-bound ephemeral key
+        if: ${{ always() }}
         shell: bash
         run: |
           node --input-type=module <<'NODE'
@@ -259,11 +202,13 @@ jobs:
           );
           NODE
       - uses: actions/upload-artifact@v4
+        if: ${{ always() }}
         with:
           name: candidate-gate-${{ matrix.os }}-node${{ matrix.node }}
           path: ${{ runner.temp }}/candidate-gate-envelope.json
           if-no-files-found: error
       - name: Enforce terminal result
+        if: ${{ always() }}
         shell: bash
         run: |
           node --input-type=module -e "import {readFileSync} from 'node:fs'; import {join} from 'node:path'; const r=JSON.parse(readFileSync(join(process.env.RUNNER_TEMP,'candidate-gate-result.json'),'utf8')); process.exit(r.status==='pass'?0:1)"

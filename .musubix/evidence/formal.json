@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-02T12:21:53.087Z",
-  "totalRequirements": 121,
+  "generatedAt": "2026-10-03T01:43:38.794Z",
+  "totalRequirements": 127,
   "modeledRequirements": 4,
-  "modeledFraction": 0.03305785123966942,
+  "modeledFraction": 0.031496062992125984,
   "result": {
     "valid": true,
     "abstraction": "Consistency of explicit branch-scoped conditional, exact unit-normalized integer numeric, bounded temporal interval, deterministic state-transition, and controlled unconditional Boolean constraints; not implementation correctness.",
@@ -133,6 +133,12 @@
       "REQ-M5-RELEASE-002",
       "REQ-M5-CI-001",
       "REQ-M5-CI-002",
+      "REQ-M5-CI-003",
+      "REQ-M5-CI-004",
+      "REQ-M5-CI-005",
+      "REQ-M5-CI-006",
+      "REQ-M5-CI-007",
+      "REQ-M5-CI-008",
       "REQ-M5-PARALLEL-001",
       "REQ-M5-PARALLEL-002",
       "REQ-M5-PARALLEL-003",
@@ -595,6 +601,36 @@
       {
         "code": "FORMAL_UNSUPPORTED",
         "severity": "warning",
+        "message": "REQ-M5-CI-003 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-CI-004 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-CI-005 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-CI-006 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-CI-007 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-CI-008 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
         "message": "REQ-M5-PARALLEL-001 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
       },
       {
@@ -770,7 +806,7 @@
     ".musubix/features/evidence-selector-guards/requirements.md": "fdb70191e472f41e16eab793b2b2d86583587cd86a88db5627be59bf045ef601",
     ".musubix/features/multi-change-workspaces/requirements.md": "9071c2c1f8a7ca49b9137cf074fe30b33343264536f41efcdddad0ab2a6cff4d",
     ".musubix/features/musubix5-clean-foundation/requirements.md": "47be4910318f7b52f53b46839c549a4081a928110d9347617686cf019df4e1df",
-    ".musubix/features/node24-github-actions/requirements.md": "32e775df8d7bbe3336b657a2516b93e3ec5bf3ca202506b96e159569dfe95c5b",
+    ".musubix/features/node24-github-actions/requirements.md": "0bab4257be7a8bf8a7123db0adfd2e9e9d7aa43e22b2b7a607b257f65383102b",
     ".musubix/features/npm-registry-deadline/requirements.md": "89ba3f12e9dd5a66c4e1e21ba3a5ed087fdfc03353d7fd72c605439d8a0b9aab",
     ".musubix/features/parallel-agent-development/requirements.md": "8d0cb15a2928c593d70d03acc21f93f404a084cf8ce49f20197a2338949c24f7",
     ".musubix/features/product-name-guidance/requirements.md": "a8303e07f54704341f496511865093182a8c269a701fc2a8cf8e90bb10a38f19",

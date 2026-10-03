@@ -1,0 +1,160 @@
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { chmodSync,existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,symlinkSync,truncateSync,writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname,join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { expect,it } from 'vitest';
+import { compareTrackedTree } from '../packages/analysis/src/workspace-manager.js';
+
+/** @id TEST-M5-CI-WINDOWS-TREE-001
+ * @verifies REQ-M5-CI-006
+ */
+it('TEST-M5-CI-WINDOWS-TREE-001 uses only candidate-index attributes and raw bytes with platform-specific mode authority',async () => {
+  const root=mkdtempSync(join(tmpdir(),'tree-'));
+  const git=(...args: string[]) => execFileSync('git',['-C',root,...args],{ encoding: 'utf8' }).trim();
+  const write=(path: string,bytes: string|Buffer) => {
+    mkdirSync(dirname(join(root,path)),{ recursive: true });
+    writeFileSync(join(root,path),bytes);
+  };
+  const attrs='* text=auto eol=lf\nbinary-* -text\n';
+  const contents={
+    'empty-text': '','single-line': 'hello','text-lf': 'hello\n',
+    'binary-empty': '','binary-lf': '{"x":1}\n','binary-crlf': 'a\r\n',
+    'binary-nul': Buffer.from([0,255,13,10]),
+  };
+  const temporaryFiles=() => readdirSync(tmpdir()).filter((path) => path.startsWith('musubix5-candidate-attrs-')).sort();
+  const before=temporaryFiles();
+  try {
+    git('init','--quiet');
+    git('config','user.name','fixture');
+    git('config','user.email','fixture@example.invalid');
+    git('config','core.autocrlf','false');
+    git('config','core.fileMode','true');
+    write('.gitattributes',attrs);
+    for(const [path,bytes] of Object.entries(contents)) write(path,bytes);
+    git('add','.');
+    git('commit','--quiet','-m','candidate fixture');
+    const head=git('rev-parse','HEAD');
+    const compare=() => compareTrackedTree(root,head,'pre');
+    expect(await compare()).toBe(true);
+    const info=join(root,git('rev-parse','--git-path','info/attributes'));
+    mkdirSync(dirname(info),{ recursive: true });
+    writeFileSync(info,'text-lf -text\n');
+    expect(await compare()).toBe(false);
+    rmSync(info);
+    mkdirSync(info);
+    expect(await compare()).toBe(false);
+    rmSync(info,{ recursive: true });
+    writeFileSync(info,' \n\t');
+    expect(await compare()).toBe(true);
+    if(process.platform!=='win32') {
+      chmodSync(info,0);
+      expect(await compare()).toBe(false);
+      chmodSync(info,0o600);
+    }
+    rmSync(info);
+    write('.gitattributes','* -text\n');
+    expect(await compare()).toBe(false);
+    write('.gitattributes',attrs);
+    const foreign=join(tmpdir(),'foreign-'+root.split(/[\\/]/).at(-1));
+    writeFileSync(foreign,'* filter=evil -text\n');
+    try {
+      git('config','core.attributesFile',foreign);
+      git('config','attr.tree',head);
+      const saved=process.env.GIT_ATTR_SOURCE;
+      process.env.GIT_ATTR_SOURCE='invalid-foreign-tree';
+      try { expect(await compare()).toBe(true); }
+      finally {
+        if(saved===undefined) delete process.env.GIT_ATTR_SOURCE;
+        else process.env.GIT_ATTR_SOURCE=saved;
+      }
+    } finally { rmSync(foreign); }
+    for(const bytes of ['a\r\n','a\nb\r\n','\0\n']) {
+      write('text-lf',bytes);
+      expect(await compare()).toBe(false);
+    }
+    write('text-lf',contents['text-lf']);
+    git('config','core.autocrlf','true');
+    expect(await compare()).toBe(false);
+    git('config','core.autocrlf','false');
+    git('config','core.fileMode','false');
+    if(process.platform!=='win32') {
+      chmodSync(join(root,'text-lf'),0o755);
+      expect(await compare()).toBe(false);
+      const descriptor=Object.getOwnPropertyDescriptor(process,'platform')!;
+      try {
+        Object.defineProperty(process,'platform',{ ...descriptor,value: 'win32' });
+        for(const fileMode of ['true','false']) {
+          git('config','core.fileMode',fileMode);
+          expect(await compare()).toBe(true);
+          git('update-index','--chmod=+x','text-lf');
+          expect(await compare()).toBe(false);
+          git('update-index','--chmod=-x','text-lf');
+        }
+      } finally { Object.defineProperty(process,'platform',descriptor); }
+      chmodSync(join(root,'text-lf'),0o644);
+    }
+    write('.gitattributes',attrs+'text-lf filter=evil\n');
+    git('add','.gitattributes');
+    git('commit','--quiet','-m','forbidden candidate filter');
+    expect(await compareTrackedTree(root,git('rev-parse','HEAD'),'pre')).toBe(false);
+    expect(temporaryFiles()).toEqual(before);
+    if(process.platform!=='win32') {
+      git('reset','--quiet',head);
+      write('.gitattributes',attrs);
+      symlinkSync('text-lf',join(root,'link'));
+      git('add','link');
+      git('commit','--quiet','-m','symlink fixture');
+      expect(await compareTrackedTree(root,git('rev-parse','HEAD'),'pre')).toBe(true);
+    }
+    const workflow=readFileSync(fileURLToPath(new URL('../.github/workflows/candidate-gate.yml',import.meta.url)),'utf8');
+    expect(workflow.indexOf('git config --global core.autocrlf false')).toBeGreaterThan(-1);
+    expect(workflow.indexOf('git config --global core.autocrlf false')).toBeLessThan(workflow.indexOf('uses: actions/checkout'));
+    expect(existsSync(root)).toBe(true);
+  } finally {
+    rmSync(root,{ recursive: true,force: true });
+  }
+});
+
+it('candidate-tree supplemental verification preserves hydrated LFS bytes and Gitlink identity before and after the gate', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'tree-lfs-'));
+  const git = (...args: string[]) => execFileSync('git', ['-C', root, ...args], { encoding: 'utf8' }).trim();
+  try {
+    git('init', '--quiet');
+    git('config', 'user.name', 'fixture');
+    git('config', 'user.email', 'fixture@example.invalid');
+    git('config', 'core.autocrlf', 'false');
+    writeFileSync(join(root, '.gitattributes'), '* text=auto eol=lf\n.musubix/evidence/tdd-source/v1/blobs/* filter=lfs -text\n');
+    writeFileSync(join(root, 'ordinary'), 'ordinary\n');
+    git('add', '.gitattributes', 'ordinary');
+    const hash = createHash('sha256');
+    const block = Buffer.alloc(1000000);
+    for (let i = 0; i < 100; i++) hash.update(block);
+    const digest = hash.digest('hex');
+    const path = '.musubix/evidence/tdd-source/v1/blobs/' + digest;
+    mkdirSync(dirname(join(root, path)), { recursive: true });
+    const pointer = `version https://git-lfs.github.com/spec/v1\noid sha256:${digest}\nsize 100000000\n`;
+    const oid = execFileSync('git', ['-C', root, 'hash-object', '-w', '--stdin'], { input: pointer, encoding: 'utf8' }).trim();
+    git('update-index', '--add', '--cacheinfo', '100644', oid, path);
+    writeFileSync(join(root, path), '');
+    truncateSync(join(root, path), 100000000);
+    const module = join(root, 'module');
+    mkdirSync(module);
+    const childGit = (...args: string[]) => execFileSync('git', ['-C', module, ...args], { encoding: 'utf8' }).trim();
+    childGit('init', '--quiet');
+    childGit('config', 'user.name', 'fixture');
+    childGit('config', 'user.email', 'fixture@example.invalid');
+    childGit('commit', '--quiet', '--allow-empty', '-m', 'gitlink fixture');
+    git('update-index', '--add', '--cacheinfo', '160000', childGit('rev-parse', 'HEAD'), 'module');
+    git('commit', '--quiet', '-m', 'hydrated immutable candidate');
+    const head = git('rev-parse', 'HEAD');
+    expect(await compareTrackedTree(root, head, 'pre')).toBe(true);
+    expect(await compareTrackedTree(root, head, 'post')).toBe(true);
+    writeFileSync(join(root, 'ordinary'), 'unrelated mutation\n');
+    expect(await compareTrackedTree(root, head, 'post')).toBe(false);
+    writeFileSync(join(root, 'ordinary'), 'ordinary\n');
+    childGit('commit', '--quiet', '--allow-empty', '-m', 'divergent gitlink');
+    expect(await compareTrackedTree(root, head, 'pre')).toBe(false);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});

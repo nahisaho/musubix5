@@ -1,0 +1,66 @@
+import { randomUUID } from 'node:crypto';
+import { existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { expect,it } from 'vitest';
+import { digest } from '../packages/analysis/src/files.js';
+import * as performance from '../packages/analysis/src/performance.js';
+import * as gate from '../packages/analysis/src/gate.js';
+
+/** @id TEST-M5-CI-MATRIX-GRAPH-001
+ * @verifies REQ-M5-CI-004
+ */
+it('TEST-M5-CI-MATRIX-GRAPH-001 reconstructs graph ownership and binds fresh performance to every matrix identity',async () => {
+  const root=mkdtempSync(join(tmpdir(),'matrix-'));
+  const scope={ repositoryId: 'repository:'+'a'.repeat(64),candidateCommit: 'b'.repeat(40),platform: 'ubuntu',nodeMajor: 24,runId: randomUUID() };
+  const api=performance as unknown as Record<string,(...args: unknown[]) => Promise<unknown>>;
+  const gateApi=gate as unknown as Record<string,(...args: unknown[]) => Promise<unknown>>;
+  try {
+    mkdirSync(join(root,'.musubix/features/budget'),{ recursive: true });
+    writeFileSync(join(root,'leaf.ts'),'export const leaf = 1;\n');
+    writeFileSync(join(root,'.musubix/features/budget/requirements.md'),`# Budget\n\n## REQ-FIXTURE-001: Bound operations\nPriority: must\nType: non-functional\nPattern: ubiquitous\nStatement: The system shall bound deterministic operations.\nAcceptance: Exactly one passing operation report.\nPerformance: {"counter":"visits","max":2,"testId":"TEST-FIXTURE-001","unit":"operations"}\n`);
+    const command={ name: 'counter',command: 'node',args: ['counter.mjs','--report','{reportPath}'],required: true,timeoutMs: 300000,testReport: { format: 'musubix-json',path: '.musubix/cache/test-results/codegraph.json' } };
+    writeFileSync(join(root,'.musubix/config.json'),JSON.stringify({ schemaVersion: 1,commands: [command] }));
+    expect(existsSync(join(root,'.musubix/cache/codegraph.json'))).toBe(false);
+    expect(existsSync(join(root,command.testReport.path))).toBe(false);
+    const materialized=await gateApi.materializeCandidateMatrixInputs!(root,scope) as { reportRoot: string; graph: { files: string[] } };
+    expect(materialized.graph.files).toContain('leaf.ts');
+    expect(existsSync(join(root,'.musubix/cache/codegraph.json'))).toBe(true);
+    const reportPath=materialized.reportRoot+'/counter/aggregate.json';
+    const report=JSON.stringify({ schemaVersion: 1,tests: [{ id: 'TEST-FIXTURE-001',status: 'passed',operations: { visits: 2 } }] });
+    mkdirSync(join(root,materialized.reportRoot,'counter'),{ recursive: true });
+    writeFileSync(join(root,reportPath),report);
+    const input={
+      runId: scope.runId,executionId: 'c'.repeat(64),commandName: 'counter',
+      commandSha256: performance.performanceCommandSha256('node',['counter.mjs','--report',reportPath]),
+      reportPath,sourceKind: 'file' as const,reportSha256: digest(report),processStatus: 'completed' as const,exitCode: 0,
+      tests: [{ id: 'TEST-FIXTURE-001',status: 'passed' as const,operations: { visits: 2 } }],matrix: scope,
+    };
+    const persist=async (execution=input) => api.writePerformanceEvidence!(root,[performance.createPerformanceExecution(execution)],scope.runId,scope);
+    const validate=async (expected=scope) => api.validatePerformanceEvidence!(root,materialized.reportRoot,expected) as Promise<{ valid: boolean }>;
+    await persist();
+    expect((await validate()).valid).toBe(true);
+    const evidencePath=join(root,materialized.reportRoot,'performance.json');
+    const original=readFileSync(evidencePath,'utf8');
+    for(const [key,replacement] of Object.entries({ repositoryId: 'other',candidateCommit: 'd'.repeat(40),platform: 'windows',nodeMajor: 22,runId: randomUUID() })) {
+      expect((await validate({ ...scope,[key]: replacement })).valid,key).toBe(false);
+    }
+    for(const changed of [
+      { commandName: 'other' },{ commandSha256: 'd'.repeat(64) },{ reportPath: join(root,reportPath) },
+      { reportPath: reportPath.replaceAll('/','\\') },{ reportSha256: 'd'.repeat(64) },
+      { exitCode: 1 },{ tests: [{ id: 'TEST-OTHER-001',status: 'passed' as const,operations: { visits: 2 } }] },
+      { tests: [{ id: 'TEST-FIXTURE-001',status: 'passed' as const,operations: { wrong: 2 } }] },
+    ]) {
+      await persist({ ...input,...changed });
+      expect((await validate()).valid,JSON.stringify(changed)).toBe(false);
+    }
+    writeFileSync(evidencePath,original);
+    const tampered=JSON.parse(original) as { observations: Array<{ maximum: number }> };
+    tampered.observations[0]!.maximum=3;
+    writeFileSync(evidencePath,JSON.stringify(tampered));
+    expect((await validate()).valid).toBe(false);
+    expect(existsSync(join(root,command.testReport.path))).toBe(false);
+  } finally {
+    rmSync(root,{ recursive: true,force: true });
+  }
+});

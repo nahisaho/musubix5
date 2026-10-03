@@ -1,0 +1,27 @@
+import { execFileSync } from 'node:child_process';
+import { rmSync } from 'node:fs';
+import { expect, it } from 'vitest';
+import { createParallelFixture } from './fixtures/parallel-runtime-fixture.js';
+import { createParallelPlan, prepareParallelPlanRuntime, issueParallelAssignmentInstruction } from '../packages/analysis/src/parallel-runtime.js';
+/** @id TEST-M5-CI-PARALLEL-CHECKOUT-001
+ * @verifies REQ-M5-CI-006
+ */
+it('TEST-M5-CI-PARALLEL-CHECKOUT-001 configures parallel candidate checkouts before materialization under an inherited conversion setting', async () => {
+    const fixture = await createParallelFixture();
+    const git = (root: string, ...args: string[]) => execFileSync('git', ['-C', root, ...args], { encoding: 'utf8' }).trim();
+    try {
+        git(fixture.root, 'config', 'core.autocrlf', 'true');
+        const plan = await createParallelPlan(fixture.root, fixture.planFile);
+        await prepareParallelPlanRuntime(fixture.root, plan.planId);
+        const instruction = await issueParallelAssignmentInstruction(fixture.root, plan.planId, 'core');
+        const workspace = String(instruction.worktree);
+        expect(git(workspace, 'config', '--show-origin', '--get', 'core.autocrlf')).toMatch(/\sfalse$/);
+        expect(git(workspace, 'status', '--porcelain')).toBe('');
+        if (process.platform === 'win32') {
+            expect(git(workspace, 'config', '--get', 'core.fileMode')).toBe('false');
+        }
+    }
+    finally {
+        rmSync(fixture.root, { recursive: true, force: true });
+    }
+});
