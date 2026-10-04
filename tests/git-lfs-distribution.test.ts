@@ -177,9 +177,11 @@ it('TEST-M5-CANDIDATE-GIT-DISTRIBUTION-001 rejects raw reachable history and ver
     if (name === 'candidate-gate') {
       const wrapper = await readFile('.github/scripts/run-candidate-gate-wrapper.mjs', 'utf8');
       const runner = await readFile('packages/analysis/src/candidate-gate-runner.ts', 'utf8');
+      const probe = await readFile('.github/scripts/run-candidate-precondition-probe.mjs', 'utf8');
       expect(text).toContain('runCandidateGateWrapper');
       expect(wrapper).toContain('runCandidateGateWorkflow');
-      expect(runner).toContain('verifyCandidateLfsClosure');
+      expect(runner).toContain('run-candidate-precondition-probe.mjs');
+      expect(probe).toContain('verifyCandidateLfsClosure');
     }
     if (name === 'npm-publish') expect(text).toMatch(/verify-lfs-checkout\.mjs release-evidence/);
   }

@@ -1064,7 +1064,7 @@ export async function runTestRuntimeCommand(
       { ...options, env: entry.env });
   }
   if (execution.status !== 'completed') {
-    invalid('acknowledgment-binding', `incomplete command (${execution.status}); exit code ${execution.exitCode}; duration ${execution.durationMs} ms`);
+    invalid('acknowledgment-binding', `incomplete command ${command.name} (${execution.status}); exit code ${execution.exitCode}; duration ${execution.durationMs} ms`);
   }
   const runs: TestRuntimeProvenance['runs'] = [];
   for (const entry of prepared) {
@@ -1088,7 +1088,7 @@ export async function runTestRuntimeCommand(
       }
     }
     if (native.status !== 'completed') {
-      invalid('acknowledgment-binding', `incomplete command (${native.status}); exit code ${native.exitCode}; duration ${native.durationMs} ms`);
+      invalid('acknowledgment-binding', `incomplete command ${command.name} (${native.status}); exit code ${native.exitCode}; duration ${native.durationMs} ms`);
     }
     let ackBytes: Buffer;
     try {

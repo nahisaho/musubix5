@@ -65,6 +65,7 @@ it('TEST-M5-CI-MATRIX-ERROR-001 proves the complete closed runner failure and re
     };
     try {
         expect((await execute(report())).status).toBe('pass');
+        expect((await execute(report([{ name: 'constitution:RULE-002', required: true, status: 'pass', summary: 'measured' }]))).status).toBe('pass');
         expect((await execute(report([{ name: 'approval', required: true, status: 'fail', summary: 'pending' }]))).status).toBe('pass');
         const requiredFailure = await execute(report([{ name: 'trace', required: true, status: 'fail', summary: 'primary',
                 diagnostics: [{ code: 'TRACE_FAILED', severity: 'error', message: 'primary diagnostic' }] }]));
@@ -300,6 +301,9 @@ it('TEST-M5-CI-MATRIX-ERROR-001 proves the complete closed runner failure and re
         const originalImports = runnerSource.split('\n').filter(line => line.includes("from './candidate-gate.js'"));
         expect(originalImports.length).toBeGreaterThan(0);
         expect(originalImports.every(line => line.startsWith('import type '))).toBe(true);
+        expect(runnerSource).toContain('run-candidate-precondition-probe.mjs');
+        const runtimeSource = readFileSync(fileURLToPath(new URL('../packages/analysis/src/test-runtime.ts', import.meta.url)), 'utf8');
+        expect(runtimeSource).toContain('incomplete command ${command.name} (${execution.status})');
     }
     finally {
         rmSync(root, { recursive: true, force: true });

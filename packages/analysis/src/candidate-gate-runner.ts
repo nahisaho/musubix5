@@ -563,7 +563,7 @@ export async function runCandidateGateCommand(input: CommandInput): Promise<Cand
     }
 }
 function candidateCheck(value: unknown): value is CandidateCheck {
-    return object(value) && typeof value.name === 'string' && /^[a-z][a-z0-9:.-]{0,127}$/.test(value.name)
+    return object(value) && typeof value.name === 'string' && /^[A-Za-z][A-Za-z0-9:.-]{0,127}$/.test(value.name)
         && typeof value.required === 'boolean' && typeof value.status === 'string' && ['pass', 'fail', 'skipped'].includes(value.status)
         && typeof value.summary === 'string'
         && (value.exitCode === undefined || value.exitCode === null || Number.isSafeInteger(value.exitCode))
@@ -858,9 +858,10 @@ function defaultPreconditions(input: CommandInput & NormalizeOptions, probes: Se
         }
     };
     const git = (args: string[]) => probe('git', args);
-    const workspace = new URL('./workspace-manager.js', import.meta.url).href;
-    const workspaceProbe = (expression: string) => probe(process.execPath, ['--input-type=module', '-e',
-        `import * as w from ${JSON.stringify(workspace)};try{${expression}}catch(e){console.log(JSON.stringify({code:e?.code,message:e?.message}));process.exitCode=1;}`]);
+    const workspaceProbe = (operation: 'lfs' | 'tree', phase?: 'pre' | 'post') => probe(process.execPath, [
+        join(input.cwd, '.github/scripts/run-candidate-precondition-probe.mjs'),
+        operation, input.cwd, input.context.candidateCommit, ...(phase ? [phase] : []),
+    ]);
     return {
         candidateCommit: async () => {
             const head = await git(['rev-parse', 'HEAD']);
@@ -876,11 +877,11 @@ function defaultPreconditions(input: CommandInput & NormalizeOptions, probes: Se
             }
         },
         lfsClosure: async () => {
-            await workspaceProbe(`await w.verifyCandidateLfsClosure(${JSON.stringify(input.cwd)},${JSON.stringify(input.context.candidateCommit)},'local');`);
+            await workspaceProbe('lfs');
         },
         trackedTree: async (phase) => {
             await probe(process.execPath, ['scripts/verify-lfs-checkout.mjs', '.', '--verify-only']);
-            return (await workspaceProbe(`console.log(await w.compareTrackedTree(${JSON.stringify(input.cwd)},${JSON.stringify(input.context.candidateCommit)},${JSON.stringify(phase)}));`)).trim() === 'true';
+            return (await workspaceProbe('tree', phase)).trim() === 'true';
         },
     };
 }

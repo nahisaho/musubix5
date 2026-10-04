@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "kind": "repository-trace-index",
-  "generatedAt": "2026-10-04T02:50:42.458Z",
+  "generatedAt": "2026-10-04T04:27:23.828Z",
   "nodes": [
     {
       "id": "ADR-0002",
@@ -574,6 +574,12 @@
       "line": 591
     },
     {
+      "id": "CODE-M5-CI-CANDIDATE-PRECONDITION-PROBE-001",
+      "kind": "code",
+      "path": ".github/scripts/run-candidate-precondition-probe.mjs",
+      "line": 1
+    },
+    {
       "id": "CODE-M5-CI-CANDIDATE-RUNNER-FALLBACK-001",
       "kind": "code",
       "path": ".github/scripts/write-candidate-gate-runner-failure.mjs",
@@ -583,7 +589,7 @@
       "id": "CODE-M5-CI-CANDIDATE-WORKFLOW-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-gate-runner.ts",
-      "line": 887
+      "line": 888
     },
     {
       "id": "CODE-M5-CI-CANDIDATE-WRAPPER-001",
@@ -3914,7 +3920,7 @@
       "id": "TEST-M5-CI-MATRIX-ORCHESTRATION-TIMEOUT-001",
       "kind": "test",
       "path": "tests/candidate-gate-workflow-errors.test.ts",
-      "line": 308
+      "line": 312
     },
     {
       "id": "TEST-M5-CI-MATRIX-PRECONDITION-THROWN-VALUE-001",
@@ -8321,6 +8327,16 @@
     },
     {
       "from": "CODE-M5-CI-CANDIDATE-NORMALIZER-001",
+      "to": "REQ-M5-CI-008",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-CI-CANDIDATE-PRECONDITION-PROBE-001",
+      "to": "DES-M5-CI-008",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-CI-CANDIDATE-PRECONDITION-PROBE-001",
       "to": "REQ-M5-CI-008",
       "relation": "implements"
     },
@@ -21418,6 +21434,7 @@
   "diagnostics": [],
   "fingerprints": {
     ".github/scripts/run-candidate-gate-wrapper.mjs": "af0297d9f9b361b45a7231c83bb16a808e108269e94b599b2955f71c829a54fe",
+    ".github/scripts/run-candidate-precondition-probe.mjs": "a094d0c077cb145bb938f15ded15262f2650d494ae734a2bd8b167c674b15ded",
     ".github/scripts/write-candidate-gate-runner-failure.mjs": "945f2f3919fa8f26f0f69da138f794ad4c204e3c51bb4735a13422ca6f711df5",
     ".github/skills/sdd-agent-assignment/SKILL.md": "a92acc1af27365d13272c1b0a65f84d29fa5f582f1eb2a450da05ff8920c31a1",
     ".github/skills/sdd-change/SKILL.md": "043787ee6ccc065cf9b397905f033074b291832745350efb96bbfcb783b5221b",
@@ -21517,7 +21534,7 @@
     "packages/analysis/src/bootstrap-runner.ts": "4167b10f413af1cdc39858f16f94110e407b7778ca8c09d8c0179e497f52550e",
     "packages/analysis/src/budget-ledger.ts": "c7e4fa74032e066491708685359ca7115ab34c44a0d2af18337bd15a4da25590",
     "packages/analysis/src/candidate-evidence-binding.ts": "b1a0f978e747939dcae508f8a91e1fd8a6681d98c6d3887b9ee43468cf7d307a",
-    "packages/analysis/src/candidate-gate-runner.ts": "9bd7ae0df58a7ad81b21bc08c192376a37923cbf55169c7921047dc172c727d5",
+    "packages/analysis/src/candidate-gate-runner.ts": "03e6b2793161a8a793a18b9a4b97c9f5dd1e12e608eaed33a93cc586e92f6503",
     "packages/analysis/src/candidate-gate.ts": "677a3d7ca3706881da529c5fbb6a43feef5a280345ac643a403ea71f66675620",
     "packages/analysis/src/candidate-git-distribution.ts": "8b98ee0da982d428b96dfe07152543d5a7d642cb7780b4f19c681edefdbc9664",
     "packages/analysis/src/candidate-integration.ts": "4f51cbef136e023493349979466a8ccdb88577832c32f0cf7c96819ee7982caa",
@@ -21575,7 +21592,7 @@
     "packages/analysis/src/tdd-types.ts": "83fc67aa4db7dd1a2df42e56a8cb63ffc11a6185bd12a9f191ba4f5b20e12103",
     "packages/analysis/src/tdd.ts": "3d37ec493c02bc35a51fb77b05db6bac0bc3f6631dafedff51266263f07f3db9",
     "packages/analysis/src/test-report.ts": "c4389c1a73b8ff61beae2061c1eaaeeadc4c5cc529befc059111ea5430d602c4",
-    "packages/analysis/src/test-runtime.ts": "f31dacf86cdf68c1e9a1861a8797c0fb0f814d24ed022f82ecc5a87f2fc2e16b",
+    "packages/analysis/src/test-runtime.ts": "e2d303cc80e6665397b289aadd485bb15874f3aec183a6f0847bda1708e6c99c",
     "packages/analysis/src/trace.ts": "9f95196dead55f62357d60c1107012b8c460f9204db21343bc847c0467385f47",
     "packages/analysis/src/workflow-correction.ts": "63fddf07315b8af34b7a96a542c68f82eee5ba8a321795a24bafe1ca8033e2f6",
     "packages/analysis/src/workflow-types.ts": "4fa0d85248bd9373eed4dc7043f1320c9b918f08fc8874dd982c528876b74783",
@@ -21627,7 +21644,7 @@
     "tests/candidate-gate-eol.test.ts": "db72054d71bb5bb2cb986c7a5ccb7b31d714b6c863e5901fd7d1fe723e8a1ad4",
     "tests/candidate-gate-orchestration-boundaries.test.ts": "8f7c5fd2c3f35a47e7a5353cfbc54a7094ef553f02f5521862fe8edf1a3fa5a2",
     "tests/candidate-gate-trust.test.ts": "227371266a2458df7abe3cae9d1f0d9902938b8677ebc0c8094b918882569482",
-    "tests/candidate-gate-workflow-errors.test.ts": "134046890e1f4ca7e59b7b3f4cbc55c47ad67079958b0be2682d24147ba3b6a1",
+    "tests/candidate-gate-workflow-errors.test.ts": "b9ac7e88bdee5f634514c38a12b01de3444a522e5f8c27d5d4296bbcf0f29010",
     "tests/candidate-gate.test.ts": "631aff9c100e48b935e258883d67dc266ba4facea7181d31a1c1c76613f173ba",
     "tests/candidate-integration-dependencies.test.ts": "cf7b57b88909268baceb4d17eb0a5acab080011e20c37739746502d7758e5553",
     "tests/candidate-integration-determinism.test.ts": "72dd197925de5226dcacae00cac1187b9cf1cdbeb7970b199849e2113ae185f6",
@@ -21697,7 +21714,7 @@
     "tests/generation10-recovery-state-machine.test.ts": "ea7227cef21df8586965e84da6f234e94b8502bd77856ebb73b97afc5a196d21",
     "tests/generation10-recovery.test.ts": "b7b8beb89f8e9886c9db989bf922329a96ab575ad0b4b3f1d3db522c2cd65925",
     "tests/generation11-recovery.test.ts": "ca197fef376f2b2f599d541e717fa2a154e2ae42e1331d01207dd1d3bf20bc0f",
-    "tests/git-lfs-distribution.test.ts": "3d0bbd92061881489393bde1c8aa099725934cf2c0f62282944c0e85ef4fc0d4",
+    "tests/git-lfs-distribution.test.ts": "c63cd5f48e4d1f866ff522364aa339795fc499cf2d2e7c563a68282485951116",
     "tests/git-lfs-generation14-coverage.test.ts": "f8ce67c7b32adf92362ea88213fc83f51b02bd78f18523e6ac0a5ed18ea6f864",
     "tests/global-setup.ts": "6786ccc1dea640c9c67a2fcdcf20ba43bc0482c28e5e11757982e5ed460a97b5",
     "tests/graph-nested-alias.test.ts": "6314074909d5a28e0213282ef0d7f76b0609c7c83ad3972a7364247afb7d11fb",
@@ -21772,7 +21789,7 @@
     "tests/test-harness-portability.test.ts": "644252711db925d5a45ceed8b5f0bb9b0108ec726aebb80d1a833493df585ee3",
     "tests/test-runtime-evidence.test.ts": "134ab968cea1a167b1d9676cded63d54a242e228b91f8c6a5e7633604e690654",
     "tests/test-runtime-gate.test.ts": "ca4494c6f0037e1c7acdeac84ef13c0932cf4fd843c5181dda2477b67fb768a2",
-    "tests/test-runtime-incomplete-command.test.ts": "d6864436655d79f3a580ca339f12cba4488f6c56bb2738f91abe2614217a7a1f",
+    "tests/test-runtime-incomplete-command.test.ts": "f7f90d40441ea450b519c5ba90de6f6f808cfb5898f409fd33452756a60adf0b",
     "tests/test-runtime-timers.test.ts": "537545a730e760093cba4cc272802560aed507c6f0e23cb7737918afb4a30457",
     "tests/test-runtime-worker.test.ts": "5591efa0440a03a201df78c47b547b61939b118f68ef83e6b88237c24ab0a600",
     "tests/trace-namespace.test.ts": "8597797fe0fa237f52c6831c1d541ed0666b5789b11d3fc04a72b8c6d3fd9b4e",

@@ -28,7 +28,7 @@ it('TEST-M5-TEST-RUNTIME-INCOMPLETE-COMMAND-001 reports a real configured-runner
     await expect(runTestRuntimeCommand(root, command,
       ['vitest', 'run', 'tests/cli-json-error-contract.test.ts', '--maxWorkers=1'],
       { cwd: root, timeoutMs: 1 }, runner, context))
-      .rejects.toThrow(/^TEST_RUNTIME_BOOTSTRAP_INVALID: acknowledgment-binding: incomplete command \(timeout\)/);
+      .rejects.toThrow(/^TEST_RUNTIME_BOOTSTRAP_INVALID: acknowledgment-binding: incomplete command test \(timeout\)/);
     expect(native).toMatchObject({ status: 'timeout', exitCode: null });
     expect(requestPath).toBeDefined();
     if (!requestPath) throw new Error('The real configured invocation must have a request.');
