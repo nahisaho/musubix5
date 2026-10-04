@@ -10,7 +10,11 @@ describe('repository identity workflow wiring', () => {
      */
     it('TEST-M5-WORKTREE-REPOSITORY-IDENTITY-004 derives matrix identity from the checkout', async () => {
         const workflow = readFileSync(resolve(root, '.github/workflows/candidate-gate.yml'), 'utf8');
-        expect(workflow).toContain("await import('./dist/packages/analysis/src/candidate-gate-runner.js')");
+        expect(workflow).toContain("import { runCandidateGateWrapper } from './.github/scripts/run-candidate-gate-wrapper.mjs'");
+        const wrapper = readFileSync(resolve(root, '.github/scripts/run-candidate-gate-wrapper.mjs'), 'utf8');
+        expect(wrapper).toContain("resolve(cwd, 'dist/packages/analysis/src/candidate-gate-runner.js')");
+        expect(wrapper).toContain('import(pathToFileURL(');
+        expect(wrapper).toContain('candidateGateOrchestrationTimeout(');
         const runner = await import('../packages/analysis/src/candidate-gate-runner.js');
         expect(runner.runCandidateGateWorkflow).toBeTypeOf('function');
         const implementation = readFileSync(resolve(root, 'packages/analysis/src/candidate-gate-runner.ts'), 'utf8');
@@ -24,7 +28,7 @@ describe('repository identity workflow wiring', () => {
      */
     it('TEST-M5-CANDIDATE-GATE-PRE-APPROVAL-001 accepts required commands before release approval', async () => {
         const workflow = readFileSync(resolve(root, '.github/workflows/candidate-gate.yml'), 'utf8');
-        expect(workflow).toContain('runCandidateGateWorkflow');
+        expect(workflow).toContain('runCandidateGateWrapper');
         expect(workflow).not.toContain("const commandsPassed = report.status === 'pass'");
         const runner = await import('../packages/analysis/src/candidate-gate-runner.js');
         const { requiredCandidateGateCommands } = await import('../packages/analysis/src/candidate-gate.js');

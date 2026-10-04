@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "kind": "repository-trace-index",
-  "generatedAt": "2026-10-03T00:35:42.973Z",
+  "generatedAt": "2026-10-04T02:50:42.458Z",
   "nodes": [
     {
       "id": "ADR-0002",
@@ -565,13 +565,13 @@
       "id": "CODE-M5-CI-CANDIDATE-CAPTURE-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-gate-runner.ts",
-      "line": 214
+      "line": 409
     },
     {
       "id": "CODE-M5-CI-CANDIDATE-NORMALIZER-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-gate-runner.ts",
-      "line": 377
+      "line": 591
     },
     {
       "id": "CODE-M5-CI-CANDIDATE-RUNNER-FALLBACK-001",
@@ -583,7 +583,13 @@
       "id": "CODE-M5-CI-CANDIDATE-WORKFLOW-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-gate-runner.ts",
-      "line": 572
+      "line": 887
+    },
+    {
+      "id": "CODE-M5-CI-CANDIDATE-WRAPPER-001",
+      "kind": "code",
+      "path": ".github/scripts/run-candidate-gate-wrapper.mjs",
+      "line": 1
     },
     {
       "id": "CODE-M5-CI-CHECKOUT-CONFIG-001",
@@ -595,7 +601,7 @@
       "id": "CODE-M5-CI-CHECKOUT-EOL-001",
       "kind": "code",
       "path": ".github/workflows/candidate-gate.yml",
-      "line": 73
+      "line": 75
     },
     {
       "id": "CODE-M5-CI-CODEGRAPH-SCHEDULER-001",
@@ -631,7 +637,7 @@
       "id": "CODE-M5-CI-MATRIX-WORKFLOW-001",
       "kind": "code",
       "path": ".github/workflows/candidate-gate.yml",
-      "line": 95
+      "line": 104
     },
     {
       "id": "CODE-M5-CI-NODE24-001",
@@ -3638,7 +3644,7 @@
       "id": "TEST-M5-CANDIDATE-GATE-PRE-APPROVAL-001",
       "kind": "test",
       "path": "tests/repository-identity-workflows.test.ts",
-      "line": 21
+      "line": 25
     },
     {
       "id": "TEST-M5-CANDIDATE-GIT-DISTRIBUTION-001",
@@ -3890,13 +3896,31 @@
       "id": "TEST-M5-CI-MATRIX-ERROR-001",
       "kind": "test",
       "path": "tests/candidate-gate-workflow-errors.test.ts",
-      "line": 8
+      "line": 11
     },
     {
       "id": "TEST-M5-CI-MATRIX-GRAPH-001",
       "kind": "test",
       "path": "tests/candidate-matrix-inputs.test.ts",
       "line": 10
+    },
+    {
+      "id": "TEST-M5-CI-MATRIX-ORCHESTRATION-BOUNDARIES-001",
+      "kind": "test",
+      "path": "tests/candidate-gate-orchestration-boundaries.test.ts",
+      "line": 8
+    },
+    {
+      "id": "TEST-M5-CI-MATRIX-ORCHESTRATION-TIMEOUT-001",
+      "kind": "test",
+      "path": "tests/candidate-gate-workflow-errors.test.ts",
+      "line": 308
+    },
+    {
+      "id": "TEST-M5-CI-MATRIX-PRECONDITION-THROWN-VALUE-001",
+      "kind": "test",
+      "path": "tests/candidate-gate-orchestration-boundaries.test.ts",
+      "line": 178
     },
     {
       "id": "TEST-M5-CI-NODE24-001",
@@ -5198,7 +5222,7 @@
       "id": "TEST-M5-RELEASE-003-REPOSITORY-IDENTITY-003",
       "kind": "test",
       "path": "tests/repository-identity-workflows.test.ts",
-      "line": 60
+      "line": 64
     },
     {
       "id": "TEST-M5-RELEASE-003-SHELL-FAILURE-001",
@@ -5276,7 +5300,7 @@
       "id": "TEST-M5-RELEASE-004-REPOSITORY-IDENTITY-003",
       "kind": "test",
       "path": "tests/repository-identity-workflows.test.ts",
-      "line": 80
+      "line": 84
     },
     {
       "id": "TEST-M5-RELEASE-004-REVIEW-001",
@@ -8317,6 +8341,16 @@
     },
     {
       "from": "CODE-M5-CI-CANDIDATE-WORKFLOW-001",
+      "to": "REQ-M5-CI-008",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-CI-CANDIDATE-WRAPPER-001",
+      "to": "DES-M5-CI-008",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-CI-CANDIDATE-WRAPPER-001",
       "to": "REQ-M5-CI-008",
       "relation": "implements"
     },
@@ -17011,6 +17045,36 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-CI-MATRIX-ORCHESTRATION-BOUNDARIES-001",
+      "to": "DES-M5-CI-008",
+      "relation": "implements"
+    },
+    {
+      "from": "TEST-M5-CI-MATRIX-ORCHESTRATION-BOUNDARIES-001",
+      "to": "REQ-M5-CI-008",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-CI-MATRIX-ORCHESTRATION-TIMEOUT-001",
+      "to": "DES-M5-CI-008",
+      "relation": "implements"
+    },
+    {
+      "from": "TEST-M5-CI-MATRIX-ORCHESTRATION-TIMEOUT-001",
+      "to": "REQ-M5-CI-008",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-CI-MATRIX-PRECONDITION-THROWN-VALUE-001",
+      "to": "DES-M5-CI-008",
+      "relation": "implements"
+    },
+    {
+      "from": "TEST-M5-CI-MATRIX-PRECONDITION-THROWN-VALUE-001",
+      "to": "REQ-M5-CI-008",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-CI-NODE24-001",
       "to": "REQ-M5-CI-001",
       "relation": "verifies"
@@ -21353,7 +21417,8 @@
   ],
   "diagnostics": [],
   "fingerprints": {
-    ".github/scripts/write-candidate-gate-runner-failure.mjs": "dc7b6c7828020ff2c619ce871461afe2a5cd1306eba984c82e922cd0b25158d6",
+    ".github/scripts/run-candidate-gate-wrapper.mjs": "af0297d9f9b361b45a7231c83bb16a808e108269e94b599b2955f71c829a54fe",
+    ".github/scripts/write-candidate-gate-runner-failure.mjs": "945f2f3919fa8f26f0f69da138f794ad4c204e3c51bb4735a13422ca6f711df5",
     ".github/skills/sdd-agent-assignment/SKILL.md": "a92acc1af27365d13272c1b0a65f84d29fa5f582f1eb2a450da05ff8920c31a1",
     ".github/skills/sdd-change/SKILL.md": "043787ee6ccc065cf9b397905f033074b291832745350efb96bbfcb783b5221b",
     ".github/skills/sdd-design/SKILL.md": "d7665156ac3c4116ef9ff2ecb91be9337caee21976420d92881e38bfb5439429",
@@ -21366,7 +21431,7 @@
     ".github/skills/sdd-quality/SKILL.md": "b9451e41ce6598ca90284a7b439aa3a8b98cf4c47f5e90659754b6dfe8c5f712",
     ".github/skills/sdd-requirements/SKILL.md": "c5d07dcc445c38b8b79c1144934b12c575189a02b0999aa57cf85abcf825b59a",
     ".github/skills/sdd-traceability/SKILL.md": "923c6c8915f3c2464cc2732392cbf2675485070fd5a78b2a502ef4aaa4852cdd",
-    ".github/workflows/candidate-gate.yml": "2b627e8c1041b5d633902056ea88d6b2cbbf47aae237ea15f34d717fac2c4baf",
+    ".github/workflows/candidate-gate.yml": "0a30580d20268eded1aac5944e56fb09e3720b2865852406ce375b333a03cabc",
     ".github/workflows/npm-publish.yml": "6d1b7c5a13c384864c45bac7b876b06216ca691f7ae431991ee8a279426cbcbf",
     ".github/workflows/release.yml": "aa1a48f56ad5e361e15a563f8bd3cf1c28d2a8be522ba305641fa4aef48c51b7",
     ".musubix/decisions/ADR-0002.md": "9f41d752530613cf6cc3ab6798709567e85650e5b97426dfca4147840eb35684",
@@ -21409,7 +21474,7 @@
     ".musubix/decisions/ADR-0039.md": "8812a9eb461b474504c4e25552be222af3d012125dc6ccfa6a7faaadb1c411f2",
     ".musubix/decisions/ADR-0040.md": "1f1a241b102a1d5dcb6282191ebc84fa873c14f3284e5dc4343b0e937d842836",
     ".musubix/decisions/ADR-0041.md": "1919f12be4545b9199f1febed358527fcb0b5bc702887e6690eaefa6d63a0468",
-    ".musubix/decisions/ADR-0042.md": "74f4c2fff5f7e5f39691ca23e3a29f92e6be981935b89cb6e01838ba4fdd7149",
+    ".musubix/decisions/ADR-0042.md": "dacd2a5d2df0e84bd84112db4862a2f0d5cd00fd93b0b8e67d4be82996b6b3e2",
     ".musubix/features/candidate-cleanup-policy/design.md": "54d32a6d446bbaed299860b164fe74d24362e0c5739862bc79df2e0acab20c1b",
     ".musubix/features/candidate-cleanup-policy/requirements.md": "253a36dbca0b76a81f452c845f2988e2b33163823095ee5ac1add81519dd5462",
     ".musubix/features/codegraph-performance/design.md": "a8461463b6c0a7e8ae11b9496ab5e724e5d98e2700dd32623e5fd6331187b175",
@@ -21420,8 +21485,8 @@
     ".musubix/features/multi-change-workspaces/requirements.md": "9071c2c1f8a7ca49b9137cf074fe30b33343264536f41efcdddad0ab2a6cff4d",
     ".musubix/features/musubix5-clean-foundation/design.md": "9cee7263faa38fbc78b21cbba83e74e37ca08c0f510fe39e4a23883d7ee09531",
     ".musubix/features/musubix5-clean-foundation/requirements.md": "47be4910318f7b52f53b46839c549a4081a928110d9347617686cf019df4e1df",
-    ".musubix/features/node24-github-actions/design.md": "ef4942e9aa75abe179212ec36ef5466ba446929842ecf3b8ab0ebf65da781a0e",
-    ".musubix/features/node24-github-actions/requirements.md": "0bab4257be7a8bf8a7123db0adfd2e9e9d7aa43e22b2b7a607b257f65383102b",
+    ".musubix/features/node24-github-actions/design.md": "6e145c2c257968bdaef1b28834ae829ce3a6f324afd70027a4975a09065cc4a5",
+    ".musubix/features/node24-github-actions/requirements.md": "1070912905cfea8e6a39f66fa1a9363c6e57781991319efab460808443dbb5e9",
     ".musubix/features/npm-registry-deadline/design.md": "a46582fe0fd7e2c64ea36fcf7a50d24f1b45e7789cd2e75634da0ebf4cc29195",
     ".musubix/features/npm-registry-deadline/requirements.md": "89ba3f12e9dd5a66c4e1e21ba3a5ed087fdfc03353d7fd72c605439d8a0b9aab",
     ".musubix/features/parallel-agent-development/design.md": "2d3ee454f0f131cdd21a62932790fafa0b6edc3df68d43e473d74b294d1e8a5d",
@@ -21452,7 +21517,7 @@
     "packages/analysis/src/bootstrap-runner.ts": "4167b10f413af1cdc39858f16f94110e407b7778ca8c09d8c0179e497f52550e",
     "packages/analysis/src/budget-ledger.ts": "c7e4fa74032e066491708685359ca7115ab34c44a0d2af18337bd15a4da25590",
     "packages/analysis/src/candidate-evidence-binding.ts": "b1a0f978e747939dcae508f8a91e1fd8a6681d98c6d3887b9ee43468cf7d307a",
-    "packages/analysis/src/candidate-gate-runner.ts": "a6e839e84b9244f18cbe2afaa0362053864e13b2280ff155fffb513ba498b5c7",
+    "packages/analysis/src/candidate-gate-runner.ts": "9bd7ae0df58a7ad81b21bc08c192376a37923cbf55169c7921047dc172c727d5",
     "packages/analysis/src/candidate-gate.ts": "677a3d7ca3706881da529c5fbb6a43feef5a280345ac643a403ea71f66675620",
     "packages/analysis/src/candidate-git-distribution.ts": "8b98ee0da982d428b96dfe07152543d5a7d642cb7780b4f19c681edefdbc9664",
     "packages/analysis/src/candidate-integration.ts": "4f51cbef136e023493349979466a8ccdb88577832c32f0cf7c96819ee7982caa",
@@ -21560,8 +21625,9 @@
     "tests/candidate-finalization-durability.test.ts": "0ac297eb6381105542987b1c8a3271acd6038eb8f42aa27a9b4673ab2ecad0f8",
     "tests/candidate-finalization-state.test.ts": "3235f93ed92d58cb2450ad466fd86a579e650e39d74682dc71b9b46a29a80623",
     "tests/candidate-gate-eol.test.ts": "db72054d71bb5bb2cb986c7a5ccb7b31d714b6c863e5901fd7d1fe723e8a1ad4",
+    "tests/candidate-gate-orchestration-boundaries.test.ts": "8f7c5fd2c3f35a47e7a5353cfbc54a7094ef553f02f5521862fe8edf1a3fa5a2",
     "tests/candidate-gate-trust.test.ts": "227371266a2458df7abe3cae9d1f0d9902938b8677ebc0c8094b918882569482",
-    "tests/candidate-gate-workflow-errors.test.ts": "d0883cd828da65cbd3aacab179d515b47799dba0bcef045cca31f813c0f4d032",
+    "tests/candidate-gate-workflow-errors.test.ts": "134046890e1f4ca7e59b7b3f4cbc55c47ad67079958b0be2682d24147ba3b6a1",
     "tests/candidate-gate.test.ts": "631aff9c100e48b935e258883d67dc266ba4facea7181d31a1c1c76613f173ba",
     "tests/candidate-integration-dependencies.test.ts": "cf7b57b88909268baceb4d17eb0a5acab080011e20c37739746502d7758e5553",
     "tests/candidate-integration-determinism.test.ts": "72dd197925de5226dcacae00cac1187b9cf1cdbeb7970b199849e2113ae185f6",
@@ -21631,7 +21697,7 @@
     "tests/generation10-recovery-state-machine.test.ts": "ea7227cef21df8586965e84da6f234e94b8502bd77856ebb73b97afc5a196d21",
     "tests/generation10-recovery.test.ts": "b7b8beb89f8e9886c9db989bf922329a96ab575ad0b4b3f1d3db522c2cd65925",
     "tests/generation11-recovery.test.ts": "ca197fef376f2b2f599d541e717fa2a154e2ae42e1331d01207dd1d3bf20bc0f",
-    "tests/git-lfs-distribution.test.ts": "ba3dd1202233b87ba4fb33a72c1ceb7ad6a8197f05780a4ffdec02486cb9a39c",
+    "tests/git-lfs-distribution.test.ts": "3d0bbd92061881489393bde1c8aa099725934cf2c0f62282944c0e85ef4fc0d4",
     "tests/git-lfs-generation14-coverage.test.ts": "f8ce67c7b32adf92362ea88213fc83f51b02bd78f18523e6ac0a5ed18ea6f864",
     "tests/global-setup.ts": "6786ccc1dea640c9c67a2fcdcf20ba43bc0482c28e5e11757982e5ed460a97b5",
     "tests/graph-nested-alias.test.ts": "6314074909d5a28e0213282ef0d7f76b0609c7c83ad3972a7364247afb7d11fb",
@@ -21686,7 +21752,7 @@
     "tests/release-workflow-hardening.test.ts": "660de8593069a29b952193e8cefe45213bdaf3689acf276949cb74a6ae739d72",
     "tests/release-workflow.test.ts": "e4811756ea1f233477582ca74267e63cf246b9ada1ca385be1a920c3408062b2",
     "tests/repository-identity-generation12.test.ts": "15c05bdb4e79de6ed827b4e5732e3c685f2b9650c4613047d485d7d4194f0fdc",
-    "tests/repository-identity-workflows.test.ts": "5f675fdd4cfa361a4c95a30c02e5948e6785004dc08dab38c7979ae8fe7d95b6",
+    "tests/repository-identity-workflows.test.ts": "d332fd688074ba8822fd26552abd5e587355f8a91af155d67645da956f0e1a62",
     "tests/repository-identity.test.ts": "836714fe02fc5728a6c0644b917149bead52268569b66cdba02ab709ebadcc64",
     "tests/resilient-removal.test.ts": "04abd69134a65e17114930b836e5df7136c03b523bc1ca341f80cfc919b94d16",
     "tests/run-local-workspace.test.ts": "b0071c5905412c1f846d854155fbd37b0f72c08db40a20405be71cbfc2f10561",

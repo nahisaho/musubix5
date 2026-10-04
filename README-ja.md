@@ -654,6 +654,13 @@ bindingされた入力を準備し、その候補commitでworkflowを実行し�
 `musubix5 candidate-gate validate`で完全性を確認します。取り込みは署名なし、
 stale、候補不一致、同一batch内job重複、CI run再利用を拒否し、検証はtracked
 tree変更を報告したrecordを拒否します。
+runnerは各commandのtimeoutとgate全体の予算を分離し、
+`75,000 + 必須7 commandのtimeoutMs合計 + formal.timeoutMs`ミリ秒を使用します。
+候補・repository・LFS・treeの事前検証には別の合計300,000ミリ秒の期限を適用し、
+期限切れではgateを起動しません。matrix jobは95分、gate stepは50分とし、
+準備・署名・uploadにも個別の期限を設けます。import可能なcandidate wrapperは
+起動・処理障害を失敗診断resultに変換しますが、fallbackの永続化も失敗した場合は
+envelopeが利用可能とは主張せずnon-zeroで終了します。
 context commandは、決定的なcandidate branchを検査・作成・dispatch・削除するための
 副作用を持たない`{ executable, args }` descriptorも返します。CLIがrefを自動的に
 push、dispatch、移動、削除することはないため、各commandを確認して明示的に実行します。

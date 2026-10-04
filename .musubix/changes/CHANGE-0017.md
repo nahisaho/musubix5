@@ -6,21 +6,56 @@ status: active
 ---
 # CHANGE-0017: establish-wave1-development-foundations
 
-Requirements: REQ-M5-CI-003 REQ-M5-CI-004 REQ-M5-CI-005 REQ-M5-CI-006 REQ-M5-CI-007 REQ-M5-CI-008
+Requirements: REQ-M5-CI-008
 
-## Generation 29 current release boundary
+## Generation 30 current release boundary
 
-Generation 29 claims only `REQ-M5-CI-003` through `REQ-M5-CI-008`. It corrects
+Generation 30 is a defect correction limited to `REQ-M5-CI-008`. Candidate
+gate run `37088115126` proved that the Generation-29 workflow incorrectly used
+the configured 300,000-millisecond `test` command timeout as the outer timeout
+for the complete seven-command matrix gate. Ubuntu and macOS were terminated
+with empty output, while Windows returned
+`TEST_RUNTIME_BOOTSTRAP_INVALID: acknowledgment-binding: incomplete command`.
+All three jobs preserved signed structured failure envelopes, but none grants
+candidate-gate or release credit.
+
+Generation 30 shall preserve the 300,000-millisecond maximum for every
+individual configured command while providing a separate deterministic outer
+orchestration budget for the closed command set, configured formal timeout and
+a fixed 75,000-millisecond engineering allowance for bounded non-command work.
+The allowance does not claim that every possible internal timeout can be
+exhausted sequentially. Process-tree termination and pipe drainage remain
+separately bounded after outer timeout detection. It shall prove that an
+individual command or formal timeout remains a primary structured failure and
+that a conforming sequence of individually bounded commands is not terminated
+merely because aggregate gate duration exceeds one command's timeout. CI-003
+through CI-007 remain unchanged Generation-29 behavior and require no new
+normative credit. Generation 30 also fixes `REQ-M5-CI-008` startup versus
+precondition classification: early wrapper startup faults use the
+dependency-free fallback, every precondition throw is normalized without
+rethrow, and callback/spawn startup faults are returned directly by the runner.
+The runner also distinguishes post-spawn child errors from pre-spawn startup,
+normalizes internal post-spawn processing failures, applies one aggregate
+300,000-millisecond precondition deadline, and sets the matrix job boundary to
+100 minutes with explicit pre-gate, post-gate and runner-cleanup budgets so
+GitHub Actions cannot preempt the maximum structured-failure path.
+`TEST-M5-CI-MATRIX-ORCHESTRATION-TIMEOUT-001` is authoritative for both the
+outer-budget correction and these classification boundaries.
+
+## Historical Generation 29 release boundary
+
+Generation 29 historically claimed `REQ-M5-CI-003` through `REQ-M5-CI-008`. Its
+CI-008 outer-timeout behavior is superseded by Generation 30. Generation 29 corrected
 the clean-runner and cross-platform defects observed by candidate gate run
 `37007570832` and registered in #54. Generation 27 remains immutable historical
 evidence and grants no Generation-29 requirements, design, TDD, implementation,
 quality, candidate-gate, or release credit.
 
-The current generation requires portable validation of archived test-runtime
+Generation 29 required portable validation of archived test-runtime
 provenance, explicit reconstruction of ignored Code Graph and performance
 inputs, platform-specific durable source publication, deterministic Windows
 candidate-tree comparison and filenames, and structured candidate-workflow
-failure envelopes. Its planned authoritative tests are
+failure envelopes. Its historical authoritative tests were
 `TEST-M5-CI-ARCHIVED-RUNTIME-001`, `TEST-M5-CI-MATRIX-GRAPH-001`,
 `TEST-M5-CI-WINDOWS-DURABILITY-001`, `TEST-M5-CI-WINDOWS-TREE-001`,
 `TEST-M5-CI-WINDOWS-FILENAME-001`, and `TEST-M5-CI-MATRIX-ERROR-001`.
@@ -31,15 +66,17 @@ closed candidate-workflow abnormal-result set first exposed by the macOS
 missing-`checks` secondary exception in #54. REQ-M5-CI-003 owns validation of
 incomplete archived acknowledgments; REQ-M5-CI-008 owns preserving that primary
 failure as a bounded structured terminal result without re-validating it. The
-required external proof is a fresh run producing one passing signed envelope
+Generation 29 required external proof from a fresh run producing one passing signed envelope
 for each of Ubuntu/24, Windows/24, and macOS/24 bound to one new immutable
-Generation-29 candidate. Neither
+Generation-29 candidate. That proof was not obtained and grants no Generation-30
+credit. Neither
 Generation-27 candidate `8991ee153e0f9f0d8ce9b92f36c2fc1559b8a619` nor run
 `37007570832` can provide Generation-29 candidate-gate or release credit.
 
 Generation 28 is abandoned after requirements review split its prematurely
 recorded single `REQ-M5-CI-003` impact scope into the six independently
-verifiable obligations now owned by Generation 29. It grants no current credit.
+verifiable obligations now owned by Generation 29. It grants no Generation-29
+or Generation-30 credit.
 
 ## Historical Generation 27 release boundary
 
@@ -47,7 +84,7 @@ Generation 27 claims only `REQ-M5-LIFECYCLE-006`. All broader requirement sets
 and batch instructions below are immutable historical context and grant no
 Generation-27 evidence credit.
 
-The current generation corrects the ordinary 300000-millisecond test-policy
+Generation 27 corrected the ordinary 300000-millisecond test-policy
 projection and removes duplicate current-cycle classification work. Its fresh
 authoritative TDD tests are `TEST-M5-FULL-TEST-TIMEOUT-001` and
 `TEST-M5-CHANGE-CURRENT-SELECTION-CACHE-001`; retained
@@ -66,8 +103,8 @@ with zero native failures. `TEST-M5-EVIDENCE-CURRENT-001` completed in
 39510.025154 milliseconds. Requirements, design, constitution, trace, graph,
 formal, workflow, TDD, change history, completeness, all seven configured
 commands, test identities, deterministic performance, model correspondence and
-constitution rules passed. The gate remains non-ready only because current
-Generation-27 release approval has not been recorded.
+constitution rules passed. The historical gate remained non-ready only because
+Generation-27 release approval was not recorded.
 
 Local gate success is not remote release readiness. Before ref publication,
 the 126,595,440-byte logical source
@@ -93,7 +130,7 @@ None of these skipped or warning surfaces is represented as a passing proof.
 
 ## Historical Generation 10 recovery requirements
 
-The following Generation-10 text is historical and does not amend the current
+The following Generation-10 text is historical and does not amend the
 Generation-27 requirement set. Generation 9 is abandoned after its approved Epoch A and safe between-epochs
 abort. Its approval invocation, RecoveryAuthority29, release records, search
 evidence, historical allocation identity and absent P/claim/D1 state are

@@ -706,6 +706,14 @@ download all three opaque artifacts, ingest them with
 `musubix5 candidate-gate validate`. Ingestion rejects unsigned, stale, wrong-candidate, same-batch duplicate-job,
 or reused-run artifacts; validation rejects any accepted record whose gate
 reported a tracked-tree change.
+The runner budgets gate orchestration separately from each inner command:
+`75,000 + sum(the seven required command timeoutMs values) + formal.timeoutMs`
+milliseconds. Candidate, repository, LFS and tree preconditions share a separate
+300,000-millisecond deadline; a precondition timeout never starts the gate.
+The matrix job allows 95 minutes, including a 50-minute gate step and bounded
+setup/signing/upload steps. Startup and processing faults produce failing
+diagnostic results through the importable candidate wrapper; if even fallback
+persistence fails, the job exits non-zero without claiming an available envelope.
 The context command also returns inert `{ executable, args }` descriptors for
 inspecting, creating, dispatching, and deleting a deterministic candidate
 branch. Review and execute those commands explicitly: the CLI never pushes,

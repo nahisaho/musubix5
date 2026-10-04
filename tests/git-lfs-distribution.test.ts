@@ -174,7 +174,13 @@ it('TEST-M5-CANDIDATE-GIT-DISTRIBUTION-001 rejects raw reachable history and ver
       }
     }
     expect(text).toContain('verify-lfs-checkout.mjs');
-    if (name === 'candidate-gate') expect(text).toContain('verifyCandidateLfsClosure');
+    if (name === 'candidate-gate') {
+      const wrapper = await readFile('.github/scripts/run-candidate-gate-wrapper.mjs', 'utf8');
+      const runner = await readFile('packages/analysis/src/candidate-gate-runner.ts', 'utf8');
+      expect(text).toContain('runCandidateGateWrapper');
+      expect(wrapper).toContain('runCandidateGateWorkflow');
+      expect(runner).toContain('verifyCandidateLfsClosure');
+    }
     if (name === 'npm-publish') expect(text).toMatch(/verify-lfs-checkout\.mjs release-evidence/);
   }
   expect(checkouts).toBe(9);

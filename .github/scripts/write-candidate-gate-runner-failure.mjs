@@ -3,12 +3,12 @@
  * @design DES-M5-CI-008
  */
 import { createHash } from 'node:crypto';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { constants, closeSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export function writeCandidateGateRunnerFailure(cause, env = process.env) {
-  if (!['runner-import-failure', 'runner-startup-failure'].includes(cause)) {
+  if (!['runner-import-failure', 'runner-startup-failure', 'runner-processing-failure'].includes(cause)) {
     throw new Error('GATE_RUNNER_UNAVAILABLE: invalid fallback cause.');
   }
   const directory = env.RUNNER_TEMP;
@@ -32,18 +32,32 @@ export function writeCandidateGateRunnerFailure(cause, env = process.env) {
     status: 'fail', commands: [], commandsPassed: false,
     preTreeMatchesCandidate: false, postTreeMatchesCandidate: false,
     gateReportDigest: emptyDigest, stdoutSha256: emptyDigest, stderrSha256: emptyDigest,
-    stdoutTail: '', stderrTail: '', checks: [],
     exitCode: null, signal: null, timedOut: false, drainTruncated: false,
     tailsDropped: false, resultTextDropped: false, matchedCauses: [cause],
-    originalDomainCode: 'GATE_RUNNER_UNAVAILABLE',
+    childErrorMessage: null,
+    originalDomainCode: cause === 'runner-processing-failure' ? 'GATE_RUNNER_PROCESSING_FAILED' : 'GATE_RUNNER_UNAVAILABLE',
     originalDomainMessage: cause === 'runner-import-failure'
-      ? 'Candidate runner module could not be imported.' : 'Candidate runner wrapper could not start.',
+      ? 'Candidate gate runner module unavailable.' : cause === 'runner-startup-failure'
+        ? 'Candidate gate runner unavailable.' : 'Candidate gate runner processing failed.',
     error: { code: 'CANDIDATE_GATE_REPORT_INVALID', case: cause },
   };
-  writeFileSync(join(directory, 'candidate-gate-result.json'), JSON.stringify(result) + '\n', { mode: 0o600 });
-  writeFileSync(join(directory, 'candidate-gate-envelope.json'),
-    JSON.stringify({ schemaVersion: 1, result, attestation: null }) + '\n', { mode: 0o600 });
   process.exitCode = 1;
+  const stat = lstatSync(directory);
+  if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error('Candidate gate fallback persistence failed.');
+  const staging = mkdtempSync(join(directory, '.candidate-fallback-'));
+  const paths = [join(directory, 'candidate-gate-result.json'), join(directory, 'candidate-gate-envelope.json')];
+  try {
+    for (const [index, data] of [result, { schemaVersion: 1, result, attestation: null }].entries()) {
+      const path = join(staging, String(index));
+      const file = openSync(path, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0), 0o600);
+      try { writeFileSync(file, JSON.stringify(data) + '\n'); fsyncSync(file); }
+      finally { closeSync(file); }
+      renameSync(path, paths[index]);
+    }
+  } catch (cause) {
+    for (const path of paths) rmSync(path, { force: true });
+    throw cause;
+  } finally { rmSync(staging, { recursive: true, force: true }); }
   return result;
 }
 

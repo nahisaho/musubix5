@@ -34,6 +34,7 @@ permissions:
 jobs:
   verify:
     name: ${{ matrix.os }}-node${{ matrix.node }}
+    timeout-minutes: 100
     strategy:
       fail-fast: false
       matrix:
@@ -58,6 +59,7 @@ jobs:
       REPOSITORY_ID: ${{ inputs.repositoryId }}
     steps:
       - name: Check Git LFS before checkout
+        timeout-minutes: 2
         shell: bash
         run: |
           node --input-type=module <<'NODE'
@@ -74,85 +76,48 @@ jobs:
       # @implements REQ-M5-CI-006
       # @design DES-M5-CI-006
       - name: Disable checkout line-ending conversion
+        timeout-minutes: 1
         run: git config --global core.autocrlf false
       - uses: actions/checkout@v4
+        timeout-minutes: 5
         with:
           ref: ${{ inputs.candidateCommit }}
           persist-credentials: false
           lfs: true
           fetch-depth: 0
       - uses: actions/setup-node@v4
+        timeout-minutes: 3
         with:
           node-version: ${{ matrix.node }}
           cache: npm
       - name: Fetch and independently verify exact candidate LFS closure
+        timeout-minutes: 5
         env:
           GH_TOKEN: ${{ github.token }}
         run: node scripts/verify-lfs-checkout.mjs .
       - run: npm ci
+        timeout-minutes: 8
       - run: npm run build
+        timeout-minutes: 6
       - name: Run closed verification matrix
+        timeout-minutes: 55
         # @id CODE-M5-CI-MATRIX-WORKFLOW-001
         # @implements REQ-M5-CI-008
         # @design DES-M5-CI-008
         shell: bash
         run: |
           node --input-type=module <<'NODE'
-          import { join } from 'node:path';
-          import { readFileSync } from 'node:fs';
           import { writeCandidateGateRunnerFailure } from './.github/scripts/write-candidate-gate-runner-failure.mjs';
-          let runner;
-          try {
-            runner = await import('./dist/packages/analysis/src/candidate-gate-runner.js');
-          } catch {
-            writeCandidateGateRunnerFailure('runner-import-failure');
-          }
-          let input;
-          if (runner) {
-            try {
-              const context = {
-                repositoryId: process.env.REPOSITORY_ID, changeId: process.env.CHANGE_ID,
-                generation: Number(process.env.GENERATION), candidateCommit: process.env.CANDIDATE_COMMIT,
-                gateInputFingerprint: process.env.GATE_INPUT_FINGERPRINT,
-                job: { os: process.env.MATRIX_OS, nodeMajor: Number(process.env.MATRIX_NODE) },
-              };
-              const config = JSON.parse(readFileSync('.musubix/config.json', 'utf8'));
-              const selected = config.commands.filter(command => command.name === 'test');
-              if (!process.env.RUNNER_TEMP || typeof runner.runCandidateGateWorkflow !== 'function'
-                || selected.length !== 1 || !Number.isSafeInteger(selected[0].timeoutMs)
-                || selected[0].timeoutMs <= 0 || selected[0].timeoutMs > 300000
-                || !/^repository:[a-f0-9]{64}$/.test(context.repositoryId ?? '')
-                || !/^CHANGE-\d+$/.test(context.changeId ?? '')
-                || !Number.isSafeInteger(context.generation) || context.generation <= 0
-                || !/^[a-f0-9]{40}$/.test(context.candidateCommit ?? '')
-                || !/^[a-f0-9]{64}$/.test(context.gateInputFingerprint ?? '')
-                || !['ubuntu', 'windows', 'macos'].includes(context.job.os) || context.job.nodeMajor !== 24) {
-                throw new Error('GATE_RUNNER_UNAVAILABLE: invalid wrapper startup inputs.');
-              }
-              input = {
-                command: process.execPath, args: ['dist/packages/cli/src/main.js', 'gate', '--matrix', '--json'],
-                cwd: process.cwd(), temporaryDirectory: process.env.RUNNER_TEMP,
-                timeoutMs: selected[0].timeoutMs, secrets: [], context,
-                resultPath: join(process.env.RUNNER_TEMP, 'candidate-gate-result.json'),
-              };
-            } catch {
-              writeCandidateGateRunnerFailure('runner-startup-failure');
-            }
-          }
-          if (input) {
-            let subprocessStarted = false;
-            input.onCommandStart = () => { subprocessStarted = true; };
-            try {
-              // The runner owns verifyCandidateLfsClosure and tracked-tree verification before and after capture.
-              const result = await runner.runCandidateGateWorkflow(input);
-              if (result.status !== 'pass') process.exitCode = 1;
-            } catch (cause) {
-              if (subprocessStarted) throw cause;
-              writeCandidateGateRunnerFailure('runner-startup-failure');
-            }
-          }
+          import { runCandidateGateWrapper } from './.github/scripts/run-candidate-gate-wrapper.mjs';
+          // runCandidateGateWorkflow owns preconditions, startup and atomic primary persistence.
+          // The dependency-free fallback closes runner-import-failure / runner-startup-failure / processing.
+          await runCandidateGateWrapper({ dependencies: {
+            importRunner: () => import('./dist/packages/analysis/src/candidate-gate-runner.js'),
+            writeFailure: writeCandidateGateRunnerFailure,
+          } });
           NODE
       - name: Sign with GitHub OIDC-bound ephemeral key
+        timeout-minutes: 5
         if: ${{ always() }}
         shell: bash
         run: |
@@ -202,12 +167,14 @@ jobs:
           );
           NODE
       - uses: actions/upload-artifact@v4
+        timeout-minutes: 4
         if: ${{ always() }}
         with:
           name: candidate-gate-${{ matrix.os }}-node${{ matrix.node }}
           path: ${{ runner.temp }}/candidate-gate-envelope.json
           if-no-files-found: error
       - name: Enforce terminal result
+        timeout-minutes: 1
         if: ${{ always() }}
         shell: bash
         run: |

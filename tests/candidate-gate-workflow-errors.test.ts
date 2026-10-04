@@ -3,8 +3,11 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { expect, it } from 'vitest';
-import type { CandidateGateCommandOutcome, CandidateGateRunnerResult } from '../packages/analysis/src/candidate-gate-runner.js';
+import { EventEmitter } from 'node:events';
+import { PassThrough } from 'node:stream';
+import { parse } from 'yaml';
+import { expect, it, vi } from 'vitest';
+import type { CandidateGateCommandOutcome, CandidateGateRunnerDependencies, CandidateGateRunnerResult } from '../packages/analysis/src/candidate-gate-runner.js';
 /** @id TEST-M5-CI-MATRIX-ERROR-001
  * @verifies REQ-M5-CI-008
  * @design DES-M5-CI-008
@@ -57,7 +60,7 @@ it('TEST-M5-CI-MATRIX-ERROR-001 proves the complete closed runner failure and re
         return normalize({
             stdoutPath, stderrPath, stdoutTail: stdout, stderrTail: '', stdoutSha256: sha(stdout), stderrSha256: sha(''),
             exitCode: 0, signal: null, timedOut: false, drainTruncated: false, streamCapTerminated: false,
-            tailsDropped: false, resultTextDropped: false, ...overrides,
+            tailsDropped: false, resultTextDropped: false, spawned: true, childErrorMessage: null, ...overrides,
         }, options());
     };
     try {
@@ -101,7 +104,8 @@ it('TEST-M5-CI-MATRIX-ERROR-001 proves the complete closed runner failure and re
         fixed(await execute('{"error":{"code":"OTHER","message":"acknowledgment-binding: incomplete command"}}'), ['cli-error']);
         fixed(await synthetic('{', { timedOut: true, streamCapTerminated: true, signal: 'SIGKILL', exitCode: null }), ['timeout', 'stream-cap-termination', 'signal', 'malformed-json']);
         fixed(await synthetic('', { timedOut: true, signal: 'SIGKILL', exitCode: null }), ['timeout', 'signal', 'empty-stdout']);
-        const timed = await run(command('setInterval(()=>{},10000)', 40));
+        const timed = await run({ ...command('setInterval(()=>{},10000)', 75107),
+            dependencies: { setTimeout: ((callback: () => void, delay: number) => setTimeout(callback, delay === 75107 ? 40 : delay)) as typeof setTimeout } });
         const timedResult = await normalize(timed, options());
         expect(timedResult.matchedCauses[0]).toBe('timeout');
         expect(timedResult.timedOut).toBe(true);
@@ -109,7 +113,7 @@ it('TEST-M5-CI-MATRIX-ERROR-001 proves the complete closed runner failure and re
         const signaled = await normalize(await run(command('process.kill(process.pid,"SIGTERM")')), options());
         fixed(signaled, ['signal', 'empty-stdout']);
         expect(signaled.signal).toBe('SIGTERM');
-        for (const timeout of [0, -1, 300001, 1.2])
+        for (const timeout of [0, -1, 75106, 2475001, 1.2])
             await expect(run(command('', timeout))).rejects.toThrow();
         const rawSecret = 'configured-"secret"\nvalue';
         const escaped = JSON.stringify(rawSecret).slice(1, -1);
@@ -277,7 +281,7 @@ it('TEST-M5-CI-MATRIX-ERROR-001 proves the complete closed runner failure and re
             .split('\n').map(line => line.startsWith('          ') ? line.slice(10) : line).join('\n');
         const absoluteFallback = fallback.replace(/\\/g, '/');
         for (const [moduleText, expected] of [[undefined, 'runner-import-failure'], ['not javascript !!!', 'runner-import-failure'],
-            ['export const runCandidateGateWorkflow = null;', 'runner-startup-failure']] as const) {
+            ['export class CandidateGateStartupError extends Error { code = "GATE_RUNNER_UNAVAILABLE"; } export const runCandidateGateWorkflow = null;', 'runner-startup-failure']] as const) {
             const modulePath = join(root, 'wrapper-runner.mjs');
             if (moduleText !== undefined)
                 writeFileSync(modulePath, moduleText);
@@ -301,3 +305,292 @@ it('TEST-M5-CI-MATRIX-ERROR-001 proves the complete closed runner failure and re
         rmSync(root, { recursive: true, force: true });
     }
 }, 60000);
+/** @id TEST-M5-CI-MATRIX-ORCHESTRATION-TIMEOUT-001
+ * @verifies REQ-M5-CI-008
+ * @design DES-M5-CI-008
+ */
+it('TEST-M5-CI-MATRIX-ORCHESTRATION-TIMEOUT-001 proves orchestration budgets and closed failure boundaries with deterministic seams', async () => {
+    const runner = await import('../packages/analysis/src/candidate-gate-runner.js');
+    const { CandidateGateStartupError, candidateGateOrchestrationTimeout: budget, runCandidateGateWorkflow: workflow } = runner;
+    expect(budget).toBeTypeOf('function');
+    const runnerSource = readFileSync(fileURLToPath(new URL('../packages/analysis/src/candidate-gate-runner.ts', import.meta.url)), 'utf8');
+    expect(runnerSource).toContain('const probeRegionTimeoutMs = maxInnerTimeoutMs;');
+    const wrapperPath = fileURLToPath(new URL('../.github/scripts/run-candidate-gate-wrapper.mjs', import.meta.url));
+    const { runCandidateGateWrapper: wrapper } = await import(wrapperPath);
+    const base = fileURLToPath(new URL('../.test-work/g30/', import.meta.url));
+    mkdirSync(base, { recursive: true });
+    const root = mkdtempSync(join(base, 'runner-test-'));
+    const resultPath = join(root, 'candidate-gate-result.json');
+    const names = ['typecheck', 'build', 'test', 'codegraph-tests', 'compatibility', 'pack-check', 'pack-smoke'];
+    const declarations = (timeoutMs: number) => names.map(name => ({ name, timeoutMs }));
+    const context = {
+        repositoryId: 'repository:' + 'a'.repeat(64), changeId: 'CHANGE-0017', generation: 30,
+        candidateCommit: 'b'.repeat(40), gateInputFingerprint: 'c'.repeat(64), job: { os: 'ubuntu', nodeMajor: 24 },
+    };
+    const env = {
+        RUNNER_TEMP: root, REPOSITORY_ID: context.repositoryId, CHANGE_ID: context.changeId,
+        GENERATION: '30', CANDIDATE_COMMIT: context.candidateCommit, GATE_INPUT_FINGERPRINT: context.gateInputFingerprint,
+        MATRIX_OS: 'ubuntu', MATRIX_NODE: '24',
+    };
+    const empty = createHash('sha256').update('').digest('hex');
+    const events: string[] = [];
+    const preconditions = {
+        candidateCommit: async () => { events.push('candidate'); },
+        repositoryIdentity: async () => { events.push('repository'); },
+        lfsClosure: async () => { events.push('lfs'); },
+        trackedTree: async () => { events.push('tree'); return true; },
+    };
+    const input = {
+        command: process.execPath, args: [], cwd: root, temporaryDirectory: root, resultPath,
+        timeoutMs: 2475000, secrets: [], env: {}, context, preconditions,
+    };
+    const report = JSON.stringify({ checks: names.map(name => ({
+            name: 'command:' + name, required: true, status: 'pass', summary: 'ok', exitCode: 0,
+        })) });
+    const dependencies = (mode: 'pass' | 'pre-error' | 'post-error' | 'hang' = 'pass', delay = 0): CandidateGateRunnerDependencies => ({
+        now: () => Date.now(),
+        spawn: (() => {
+            events.push('spawn-attempt');
+            const child = Object.assign(new EventEmitter(), {
+                pid: 12345, stdout: new PassThrough(), stderr: new PassThrough(), kill: () => true,
+            });
+            queueMicrotask(() => {
+                if (mode === 'pre-error') {
+                    child.emit('error', new Error('before spawn'));
+                    child.stdout.end();
+                    child.stderr.end();
+                    return;
+                }
+                child.emit('spawn');
+                if (mode === 'hang')
+                    return;
+                setTimeout(() => {
+                    if (mode === 'post-error')
+                        child.emit('error', new Error('private-secret'));
+                    else {
+                        child.stdout.write(report);
+                        child.emit('exit', 0, null);
+                    }
+                    child.stdout.end();
+                    child.stderr.end();
+                }, delay);
+            });
+            return child;
+        }) as CandidateGateRunnerDependencies['spawn'],
+        onCommandStart: () => { events.push('callback'); },
+        setTimeout: ((callback: () => void, delay: number) => {
+            events.push('timer:' + delay);
+            return setTimeout(callback, delay);
+        }) as typeof setTimeout,
+        clearTimeout,
+        terminateProcessTree: child => {
+            events.push('terminate');
+            child.stdout?.destroy();
+            child.stderr?.destroy();
+            child.emit('exit', null, 'SIGKILL');
+        },
+    });
+    const failure = (result: CandidateGateRunnerResult, code: string, message: string, cause: string) => {
+        expect(result.status).toBe('fail');
+        expect(result.originalDomainCode).toBe(code);
+        expect(result.originalDomainMessage).toBe(message);
+        expect(result.matchedCauses).toEqual([cause]);
+        expect(result.error).toEqual({ code: 'CANDIDATE_GATE_REPORT_INVALID', case: cause });
+        for (const key of ['exitCode', 'signal', 'childErrorMessage'])
+            expect(result[key as keyof typeof result]).toBeNull();
+        for (const key of ['timedOut', 'drainTruncated', 'tailsDropped', 'resultTextDropped'])
+            expect(result[key as keyof typeof result]).toBe(false);
+        expect(result.stdoutSha256).toBe(empty);
+        expect(result.stderrSha256).toBe(empty);
+        for (const key of ['stdoutTail', 'stderrTail', 'checks'])
+            expect(result).not.toHaveProperty(key);
+    };
+    let fallbackCount = 0;
+    const wrap = (config: unknown = { commands: declarations(1), formal: { timeoutMs: 100 } }, overrides: object = {}) => wrapper({ cwd: root, env, config, dependencies: {
+            importRunner: async () => runner, runner: dependencies(),
+            fallbackObserver: () => { fallbackCount++; }, ...overrides,
+        } });
+    try {
+        expect(budget(declarations(1), 100)).toBe(75107);
+        expect(budget(declarations(300000), 300000)).toBe(2475000);
+        expect(budget(declarations(100), 12345)).toBe(88045);
+        const invalid: Array<[
+            unknown,
+            unknown
+        ]> = [
+            [declarations(1).slice(1), 100], [[...declarations(1), { name: 'extra', timeoutMs: 1 }], 100],
+            [[...declarations(1).slice(1), { name: names[1], timeoutMs: 1 }], 100],
+            ...[0, -1, 1.5, 300001, NaN].map(value => [declarations(value), 100] as [
+                unknown,
+                unknown
+            ]),
+            ...[undefined, 99, 300001, 100.1].map(value => [declarations(1), value] as [
+                unknown,
+                unknown
+            ]),
+        ];
+        for (const [commands, formalTimeout] of invalid) {
+            expect(() => budget(commands, formalTimeout)).toThrow(CandidateGateStartupError);
+            const before = fallbackCount;
+            events.length = 0;
+            const result = await wrap({ commands, formal: { timeoutMs: formalTimeout } }, {
+                runner: { ...dependencies(), preconditions: { ...preconditions, candidateCommit: async () => { throw Error('not reached'); } } },
+            });
+            failure(result, 'GATE_RUNNER_UNAVAILABLE', 'Candidate gate runner unavailable.', 'runner-startup-failure');
+            expect(fallbackCount).toBe(before + 1);
+            expect(events).toEqual([]);
+        }
+        for (const computed of [75106, 2475001, NaN, Number.MAX_SAFE_INTEGER + 1]) {
+            expect(() => budget(declarations(1), 100, { arithmetic: () => computed })).toThrow(CandidateGateStartupError);
+            failure(await wrap(undefined, { runner: { arithmetic: () => computed } }), 'GATE_RUNNER_UNAVAILABLE', 'Candidate gate runner unavailable.', 'runner-startup-failure');
+        }
+        for (const badEnv of [{ ...env, GENERATION: '0' }, { ...env, RUNNER_TEMP: '' }, { ...env, MATRIX_NODE: '22' }]) {
+            await expect(runner.validateCandidateGateWrapperInput({ cwd: root, env: badEnv, config: {} })).rejects.toBeInstanceOf(CandidateGateStartupError);
+        }
+        failure(await wrap(undefined, { importRunner: async () => { throw Error('import'); } }), 'GATE_RUNNER_UNAVAILABLE', 'Candidate gate runner module unavailable.', 'runner-import-failure');
+        failure(await wrap(undefined, { validateInput: () => { throw new CandidateGateStartupError(); } }), 'GATE_RUNNER_UNAVAILABLE', 'Candidate gate runner unavailable.', 'runner-startup-failure');
+        for (const thrown of [Object.assign(Error('foreign'), { code: 'GATE_RUNNER_UNAVAILABLE' }), new Error('processing')]) {
+            failure(await wrap(undefined, { validateInput: () => { throw thrown; } }), 'GATE_RUNNER_PROCESSING_FAILED', 'Candidate gate runner processing failed.', 'runner-processing-failure');
+        }
+        const startup = new CandidateGateStartupError();
+        const throwingGetter = Object.defineProperty({}, 'code', { get() { throw Error('getter'); } });
+        const proxy = new Proxy({}, { get() { throw Error('proxy'); } });
+        const generic = [null, undefined, Symbol('fault'), 'text', {}, throwingGetter, proxy, startup,
+            { code: 'lowercase', message: 'x' }, { code: 'A'.repeat(129), message: 'x' },
+            { code: 'GATE_ANYTHING', message: 'x' }, { code: 'CANDIDATE_GATE_REPORT_INVALID', message: 'x' },
+            { code: 'VALID_CODE', message: 7 }];
+        const beforePreconditions = fallbackCount;
+        for (const thrown of generic) {
+            events.length = 0;
+            const result = await workflow({ ...input, dependencies: dependencies(),
+                onCommandStart: () => { throw Error('must not reach'); },
+                preconditions: { ...preconditions, candidateCommit: async () => { throw thrown; } } });
+            failure(result, 'CANDIDATE_GATE_PRECONDITION_FAILED', 'Candidate gate precondition failed.', 'precondition-domain-failure');
+            expect(events).toEqual([]);
+        }
+        expect(fallbackCount).toBe(beforePreconditions);
+        const domain = await workflow({ ...input, secrets: ['private-secret'], dependencies: dependencies(),
+            preconditions: { ...preconditions, lfsClosure: async () => { throw { code: 'DOMAIN_ERROR', message: '🙂'.repeat(22000) + 'private-secret' }; } } });
+        expect(domain.originalDomainCode).toBe('DOMAIN_ERROR');
+        expect(Array.from(domain.originalDomainMessage!)).toHaveLength(20000);
+        expect(domain.originalDomainMessage).not.toContain('private-secret');
+        const unsafe = await workflow({ ...input, secrets: ['x'.repeat(8193)], dependencies: dependencies(),
+            preconditions: { ...preconditions, candidateCommit: async () => { throw { code: 'DOMAIN_ERROR', message: 'x'.repeat(8193) }; } } });
+        expect(unsafe.originalDomainMessage).toBeNull();
+        expect(unsafe.originalDomainCode).toBe('DOMAIN_ERROR');
+        expect(unsafe.childErrorMessage).toBeNull();
+        expect(unsafe.tailsDropped).toBe(true);
+        expect(unsafe.resultTextDropped).toBe(true);
+        for (const key of ['stdoutTail', 'stderrTail', 'checks'])
+            expect(unsafe).not.toHaveProperty(key);
+        const callbacks = [
+            { onCommandStart: () => { throw startup; } },
+            { spawn: (() => { throw Error('sync spawn'); }) as CandidateGateRunnerDependencies['spawn'] },
+            { createSpool: async () => { throw Error('spool'); } },
+        ];
+        for (const faults of callbacks) {
+            failure(await workflow({ ...input, dependencies: { ...dependencies(), ...faults } }), 'GATE_RUNNER_UNAVAILABLE', 'Candidate gate runner unavailable.', 'runner-startup-failure');
+        }
+        for (const stage of ['spool-directory', 'stdout-open', 'stderr-open', 'command-start', 'spawn-attempt'] as const) {
+            failure(await workflow({ ...input, dependencies: { ...dependencies(), fault: at => { if (at === stage)
+                        throw Error(stage); } } }), 'GATE_RUNNER_UNAVAILABLE', 'Candidate gate runner unavailable.', 'runner-startup-failure');
+        }
+        failure(await workflow({ ...input, dependencies: dependencies('pre-error') }), 'GATE_RUNNER_UNAVAILABLE', 'Candidate gate runner unavailable.', 'runner-startup-failure');
+        const postError = await workflow({ ...input, secrets: ['private-secret'], dependencies: dependencies('post-error') });
+        expect(postError.originalDomainCode).toBe('GATE_SUBPROCESS_ERROR');
+        expect(postError.childErrorMessage).toBe('[REDACTED]');
+        expect(postError.matchedCauses).toContain('subprocess-error');
+        expect(events).toContain('terminate');
+        for (const stage of ['stream-processing', 'postconditions', 'normalization'] as const) {
+            const result = await workflow({ ...input, dependencies: { ...dependencies(), fault: at => { if (at === stage)
+                        throw Error(stage); } } });
+            expect(result.originalDomainCode).toBe('GATE_RUNNER_PROCESSING_FAILED');
+            expect(result.originalDomainMessage).toBe('Candidate gate runner processing failed.');
+            expect(result.matchedCauses).toContain('runner-processing-failure');
+            if (stage === 'postconditions') {
+                expect(result.postTreeMatchesCandidate).toBe(false);
+                expect(result.exitCode).toBe(0);
+                expect(result.timedOut).toBe(false);
+                expect(result.matchedCauses).not.toContain('timeout');
+                expect(result.stdoutSha256).not.toBe(empty);
+            }
+        }
+        const beforePersistence = fallbackCount;
+        failure(await wrap(undefined, { runner: { ...dependencies(), preconditions,
+                persistResult: async () => { throw Error('primary persistence'); } } }), 'GATE_RUNNER_PROCESSING_FAILED', 'Candidate gate runner processing failed.', 'runner-processing-failure');
+        expect(fallbackCount).toBe(beforePersistence + 1);
+        await expect(wrap(undefined, {
+            importRunner: async () => { throw Error('import'); },
+            writeFailure: () => { throw Error('fallback persistence'); },
+        })).rejects.toThrow('fallback persistence');
+        vi.useFakeTimers();
+        events.length = 0;
+        const extended = workflow({ ...input, dependencies: dependencies('pass', 400000) });
+        await vi.advanceTimersByTimeAsync(400000);
+        expect((await extended).status).toBe('pass');
+        expect(events.indexOf('callback')).toBeLessThan(events.indexOf('timer:2475000'));
+        expect(events.indexOf('timer:2475000')).toBeLessThan(events.indexOf('spawn-attempt'));
+        events.length = 0;
+        const expiry = workflow({ ...input, timeoutMs: 75107, dependencies: dependencies('hang') });
+        await vi.advanceTimersByTimeAsync(80107);
+        expect((await expiry).timedOut).toBe(true);
+        expect(events).toContain('terminate');
+        events.length = 0;
+        const preExpiry = workflow({ ...input, dependencies: dependencies(),
+            preconditions: { ...preconditions, candidateCommit: () => new Promise(() => { }) } });
+        await vi.advanceTimersByTimeAsync(305000);
+        failure(await preExpiry, 'CANDIDATE_GATE_PRECONDITION_TIMEOUT', 'Candidate gate precondition timed out.', 'precondition-domain-failure');
+        expect(events).not.toContain('spawn-attempt');
+        expect(events).not.toContain('timer:2475000');
+        events.length = 0;
+        let postTreeCalls = 0;
+        const postExpiry = workflow({ ...input, dependencies: dependencies(), preconditions: {
+                ...preconditions,
+                trackedTree: async phase => {
+                    if (phase === 'pre')
+                        return true;
+                    postTreeCalls++;
+                    return new Promise<boolean>(() => { });
+                },
+            } });
+        await vi.advanceTimersByTimeAsync(300000);
+        const postResult = await postExpiry;
+        expect(postTreeCalls).toBe(1);
+        expect(postResult.originalDomainCode).toBe('GATE_RUNNER_PROCESSING_FAILED');
+        expect(postResult.matchedCauses).toContain('runner-processing-failure');
+        expect(postResult.matchedCauses).not.toContain('timeout');
+        expect(postResult.postTreeMatchesCandidate).toBe(false);
+        expect(postResult.exitCode).toBe(0);
+        expect(postResult.timedOut).toBe(false);
+        expect(postResult.stdoutSha256).not.toBe(empty);
+        vi.useRealTimers();
+        const yaml = parse(readFileSync(fileURLToPath(new URL('../.github/workflows/candidate-gate.yml', import.meta.url)), 'utf8'));
+        const job = yaml.jobs.verify;
+        expect(job['timeout-minutes']).toBe(100);
+        const gateIndex = job.steps.findIndex((step: {
+            name?: string;
+        }) => step.name === 'Run closed verification matrix');
+        expect(job.steps[gateIndex]['timeout-minutes']).toBe(55);
+        const minutes = (steps: Array<Record<string, unknown>>) => steps.reduce((sum, step) => {
+            expect(step['timeout-minutes']).toBeGreaterThan(0);
+            return sum + Number(step['timeout-minutes']);
+        }, 0);
+        expect(minutes(job.steps.slice(0, gateIndex))).toBeLessThanOrEqual(30);
+        expect(minutes(job.steps.slice(gateIndex + 1))).toBeLessThanOrEqual(10);
+        expect(300000 + 2475000 + 5000 + 300000 + 220000).toBe(55 * 60000);
+        expect((30 + 55 + 10) * 60000).toBeLessThan(100 * 60000);
+        expect(job.steps.some((step: {
+            name?: string;
+        }) => step.name === 'Check Git LFS before checkout')).toBe(true);
+        expect(job.steps.some((step: {
+            name?: string;
+        }) => step.name === 'Fetch and independently verify exact candidate LFS closure')).toBe(true);
+        expect(JSON.parse(readFileSync(resultPath, 'utf8')).status).toBe('fail');
+        expect(readFileSync(join(root, 'candidate-gate-envelope.json'), 'utf8')).not.toContain('private-secret');
+    }
+    finally {
+        vi.useRealTimers();
+        rmSync(root, { recursive: true, force: true });
+        process.exitCode = 0;
+    }
+}, 30000);
