@@ -1396,26 +1396,25 @@ export async function compareTrackedTree(
       if (!stat.isFile() || stat.isSymbolicLink() ||
         !['100644', '100755'].includes(entry.gitMode) ||
         (process.platform !== 'win32' && (stat.mode & 0o111 ? '100755' : '100644') !== entry.gitMode)) return false;
+      hash.update(`blob ${stat.size}\0`);
+      let streamed = 0;
+      let worktreeHasLf = false, worktreeHasCr = false, worktreeHasNul = false;
+      for await (const chunk of createReadStream(path)) {
+        const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+        streamed += bytes.length;
+        hash.update(bytes);
+        worktreeHasLf ||= bytes.includes(10);
+        worktreeHasCr ||= bytes.includes(13);
+        worktreeHasNul ||= bytes.includes(0);
+      }
+      const after = await lstat(path);
+      if (streamed !== stat.size || after.ino !== stat.ino || after.size !== stat.size ||
+        after.mtimeMs !== stat.mtimeMs || after.ctimeMs !== stat.ctimeMs) return false;
       if (values?.get('text') !== 'unset') {
         if (!['set', 'auto'].includes(values?.get('text') ?? '') || values?.get('eol') !== 'lf') return false;
-        const candidate = await readCandidateBlob(root, commit, entry.objectId);
-        const candidateHasLf = candidate.includes(10);
-        let worktreeHasLf = false, worktreeHasCr = false, worktreeHasNul = false;
-        for await (const chunk of createReadStream(path)) {
-          const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
-          worktreeHasLf ||= bytes.includes(10);
-          worktreeHasCr ||= bytes.includes(13);
-          worktreeHasNul ||= bytes.includes(0);
-        }
-        if (candidate.includes(13) || candidate.includes(0) || worktreeHasCr || worktreeHasNul
-          || candidateHasLf !== worktreeHasLf
-          || eol.get(entry.nfcPath) !== (candidateHasLf ? 'i/lf w/lf' : 'i/none w/none')) return false;
+        if (worktreeHasCr || worktreeHasNul ||
+          eol.get(entry.nfcPath) !== (worktreeHasLf ? 'i/lf w/lf' : 'i/none w/none')) return false;
       }
-      hash.update(`blob ${stat.size}\0`);
-      for await (const bytes of createReadStream(path)) hash.update(bytes);
-      const after = await lstat(path);
-      if (after.ino !== stat.ino || after.size !== stat.size ||
-        after.mtimeMs !== stat.mtimeMs || after.ctimeMs !== stat.ctimeMs) return false;
     }
     if (hash.digest('hex') !== entry.objectId) return false;
   }

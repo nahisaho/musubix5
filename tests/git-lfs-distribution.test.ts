@@ -1,7 +1,7 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawn as spawnProcess } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { createReadStream } from 'node:fs';
-import { chmod, copyFile, lstat, mkdir, mkdtemp, open, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { chmod, copyFile, lstat, mkdir, mkdtemp, open, readFile, readdir, rm, truncate, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { expect, it } from 'vitest';
 import { parse } from 'yaml';
@@ -151,6 +151,150 @@ it('TEST-M5-TDD-SOURCE-LFS-001 preserves logical identity and verifies canonical
   }
 }, 180_000);
 
+/** @id TEST-M5-CI-CANDIDATE-HEAD-ATTRIBUTES-001
+ * @verifies REQ-M5-CI-006 REQ-M5-CI-008
+ * @design DES-M5-CI-006 DES-M5-CI-008
+ */
+it('TEST-M5-CI-CANDIDATE-HEAD-ATTRIBUTES-001 keeps candidate-head attributes strict before media deduplication', async () => {
+  const { runCandidateGateWorkflow } = await import('../packages/analysis/src/candidate-gate-runner.js');
+  const roots: string[] = [];
+  const mediaSize = 100_000_000;
+  const block = Buffer.alloc(1_000_000);
+  const mediaHash = createHash('sha256');
+  for (let index = 0; index < 100; index++) mediaHash.update(block);
+  const digest = mediaHash.digest('hex');
+  const sourcePath = prefix + digest;
+  const invalidAttributes = attributes([digest]).replace(
+    `${sourcePath} filter=lfs diff=lfs merge=lfs -text !eol`,
+    `${sourcePath} filter=lfs diff=lfs merge=lfs -text eol=lf`,
+  );
+  const expectedMessage = `TDD_SOURCE_LFS_INVALID: attributes ${JSON.stringify({
+    path: sourcePath, digest, operationId: null, scope: null, target: null, reason: 'attributes',
+  })}`;
+  const installMedia = async (root: string) => {
+    const common = git(root, ['rev-parse', '--path-format=absolute', '--git-common-dir']);
+    const cache = resolve(common, 'lfs/objects', digest.slice(0, 2), digest.slice(2, 4), digest);
+    await mkdir(resolve(cache, '..'), { recursive: true });
+    await writeFile(cache, '');
+    await truncate(cache, mediaSize);
+  };
+  const bind = async (root: string, selectedAttributes: string, message: string) => {
+    await mkdir(resolve(root, prefix), { recursive: true });
+    await writeFile(resolve(root, '.gitattributes'), selectedAttributes);
+    const pointerOid = execFileSync('git', ['-C', root, 'hash-object', '-w', '--stdin'], {
+      input: pointer(digest, mediaSize), encoding: 'utf8',
+    }).trim();
+    git(root, ['add', '.gitattributes']);
+    git(root, ['update-index', '--add', '--cacheinfo', '100644', pointerOid, sourcePath]);
+    git(root, ['commit', '-m', message]);
+    await installMedia(root);
+    return git(root, ['rev-parse', 'HEAD']);
+  };
+  const sharedFixture = async (candidateSortsBeforeHistorical: boolean) => {
+    const root = await fixture();
+    roots.push(root);
+    const historical = await bind(root, invalidAttributes, 'historical eol compatibility');
+    for (let attempt = 0; attempt < 256; attempt++) {
+      git(root, ['reset', '--hard', historical]);
+      await writeFile(resolve(root, 'candidate-order'), `${attempt}\n`);
+      git(root, ['add', 'candidate-order']);
+      execFileSync('git', ['-C', root, 'commit', '-m', `candidate order ${attempt}`], {
+        stdio: ['pipe', 'pipe', 'pipe'],
+        env: {
+          ...process.env,
+          GIT_CONFIG_NOSYSTEM: '1',
+          GIT_CONFIG_GLOBAL: '/dev/null',
+          GIT_AUTHOR_NAME: 'LFS fixture',
+          GIT_AUTHOR_EMAIL: 'fixture@example.invalid',
+          GIT_COMMITTER_NAME: 'LFS fixture',
+          GIT_COMMITTER_EMAIL: 'fixture@example.invalid',
+          GIT_AUTHOR_DATE: `2001-01-01T00:${String(Math.floor(attempt / 60)).padStart(2, '0')}:${String(attempt % 60).padStart(2, '0')}Z`,
+          GIT_COMMITTER_DATE: `2001-01-01T00:${String(Math.floor(attempt / 60)).padStart(2, '0')}:${String(attempt % 60).padStart(2, '0')}Z`,
+        },
+      });
+      const candidate = git(root, ['rev-parse', 'HEAD']);
+      if ((candidate < historical) === candidateSortsBeforeHistorical) return root;
+    }
+    throw new Error('Unable to construct deterministic commit ordering fixture.');
+  };
+  const run = async (root: string) => {
+    let commandStarts = 0;
+    let spawns = 0;
+    const commit = git(root, ['rev-parse', 'HEAD']);
+    const checks = ['typecheck', 'build', 'test', 'codegraph-tests', 'compatibility', 'pack-check', 'pack-smoke']
+      .map((name) => ({ name: `command:${name}`, required: true, status: 'pass', summary: 'ok', exitCode: 0 }));
+    const result = await runCandidateGateWorkflow({
+      command: process.execPath,
+      args: ['-e', `process.stdout.write(${JSON.stringify(JSON.stringify({ checks }))})`],
+      cwd: root,
+      temporaryDirectory: root,
+      timeoutMs: 75_107,
+      resultPath: resolve(root, 'candidate-gate-result.json'),
+      context: {
+        repositoryId: 'repository:' + 'a'.repeat(64),
+        changeId: 'CHANGE-0017',
+        generation: 37,
+        candidateCommit: commit,
+        gateInputFingerprint: 'b'.repeat(64),
+        job: { os: 'ubuntu', nodeMajor: 24 },
+      },
+      secrets: [],
+      onCommandStart: () => { commandStarts++; },
+      dependencies: {
+        spawn: (command, args, options) => {
+          spawns++;
+          return spawnProcess(command, args, options);
+        },
+      },
+      preconditions: {
+        candidateCommit: async () => {},
+        repositoryIdentity: async () => {},
+        lfsClosure: async () => {
+          await workspace.verifyCandidateLfsClosure(root, commit, 'local', {
+            verifyPolicy: async () => {},
+            sourceDependencies: { toolVersion: async () => 'git-lfs/3.4.1' },
+          });
+        },
+        trackedTree: async () => true,
+      },
+    });
+    return { result, commandStarts, spawns };
+  };
+  const expectRejected = async (root: string) => {
+    const { result, commandStarts, spawns } = await run(root);
+    expect(result).toMatchObject({
+      status: 'fail',
+      error: { code: 'CANDIDATE_GATE_REPORT_INVALID' },
+      originalDomainCode: 'TDD_SOURCE_LFS_INVALID',
+      originalDomainMessage: expectedMessage,
+    });
+    expect(commandStarts).toBe(0);
+    expect(spawns).toBe(0);
+  };
+  try {
+    const headOnly = await fixture();
+    roots.push(headOnly);
+    await bind(headOnly, invalidAttributes, 'invalid candidate head only');
+    await expectRejected(headOnly);
+
+    await expectRejected(await sharedFixture(true));
+    await expectRejected(await sharedFixture(false));
+
+    const validHead = await fixture();
+    roots.push(validHead);
+    await bind(validHead, invalidAttributes, 'historical eol compatibility');
+    await writeFile(resolve(validHead, '.gitattributes'), attributes([digest]));
+    git(validHead, ['add', '.gitattributes']);
+    git(validHead, ['commit', '-m', 'strict candidate head']);
+    const accepted = await run(validHead);
+    expect(accepted.result.status).toBe('pass');
+    expect(accepted.commandStarts).toBe(1);
+    expect(accepted.spawns).toBe(1);
+  } finally {
+    await Promise.all(roots.map((root) => rm(root, { recursive: true, force: true })));
+  }
+}, 180_000);
+
 /** @id TEST-M5-CANDIDATE-GIT-DISTRIBUTION-001
  * @verifies REQ-M5-LIFECYCLE-006 REQ-M5-COMPAT-013 REQ-M5-RELEASE-002 REQ-M5-RELEASE-003 REQ-M5-RELEASE-004
  * @design DES-M5-012 DES-M5-023 DES-M5-019 DES-M5-020 DES-M5-021
@@ -248,6 +392,69 @@ it('TEST-M5-CANDIDATE-GIT-DISTRIBUTION-001 rejects raw reachable history and ver
     await expect(workspace.planSourceLfsMigration(root, { ...request, paths: [{ ...request.paths[0], path: '*' }] }))
       .rejects.toThrow(/TDD_SOURCE_LFS_MIGRATION_CONFLICT/);
     expect(git(root, ['merge-base', '--is-ancestor', protectedCommit, candidate])).toBe('');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+}, 180_000);
+
+/** @id TEST-M5-CI-CANDIDATE-PRECONDITION-EFFICIENCY-001
+ * @verifies REQ-M5-CI-008
+ * @design DES-M5-CI-008
+ */
+it('TEST-M5-CI-CANDIDATE-PRECONDITION-EFFICIENCY-001 validates every binding but streams duplicate LFS media once', async () => {
+  const root = await fixture();
+  const operations: string[] = [];
+  const dependencies = {
+    verifyPolicy: async () => {},
+    sourceDependencies: { toolVersion: async () => 'git-lfs/3.4.1' },
+    onOperation: (operation: string) => operations.push(operation),
+  };
+  try {
+    const rawBytes = Buffer.from('historical raw source');
+    const rawDigest = hash(rawBytes);
+    await mkdir(resolve(root, prefix), { recursive: true });
+    await writeFile(resolve(root, prefix + rawDigest), rawBytes);
+    git(root, ['add', prefix + rawDigest]);
+    git(root, ['commit', '-m', 'retain bounded raw source']);
+
+    const block = Buffer.alloc(1_000_000);
+    const mediaHash = createHash('sha256');
+    for (let index = 0; index < 100; index++) mediaHash.update(block);
+    const digest = mediaHash.digest('hex');
+    const sourcePath = prefix + digest;
+    const pointerBytes = pointer(digest, 100_000_000);
+    await writeFile(resolve(root, '.gitattributes'), attributes([digest]));
+    const pointerOid = execFileSync('git', ['-C', root, 'hash-object', '-w', '--stdin'], {
+      input: pointerBytes,
+      encoding: 'utf8',
+    }).trim();
+    git(root, ['add', '.gitattributes']);
+    git(root, ['update-index', '--add', '--cacheinfo', '100644', pointerOid, sourcePath]);
+    git(root, ['commit', '-m', 'bind source pointer']);
+    await writeFile(resolve(root, 'ordinary'), 'one\n');
+    git(root, ['add', 'ordinary']);
+    git(root, ['commit', '-m', 'retain pointer once']);
+    await writeFile(resolve(root, 'ordinary'), 'two\n');
+    git(root, ['add', 'ordinary']);
+    git(root, ['commit', '-m', 'retain pointer twice']);
+    const common = git(root, ['rev-parse', '--path-format=absolute', '--git-common-dir']);
+    const cache = resolve(common, 'lfs/objects', digest.slice(0, 2), digest.slice(2, 4), digest);
+    await mkdir(resolve(cache, '..'), { recursive: true });
+    await writeFile(cache, '');
+    await truncate(cache, 100_000_000);
+
+    expect(await workspace.verifyCandidateLfsClosure(root, 'HEAD', 'local', dependencies))
+      .toMatchObject({ objects: 1 });
+    expect(operations.filter((value) => value === 'tree-prefix').length).toBe(5);
+    expect(operations.filter((value) => value === 'attribute-index').length).toBe(4);
+    expect(operations.filter((value) => value === 'pointer-batch').length).toBe(1);
+    expect(operations.filter((value) => value === 'media-stream').length).toBe(1);
+
+    const info = resolve(root, git(root, ['rev-parse', '--git-path', 'info/attributes']));
+    await mkdir(resolve(info, '..'), { recursive: true });
+    await writeFile(info, `${sourcePath} -filter\n`);
+    await expect(workspace.verifyCandidateLfsClosure(root, 'HEAD', 'local', dependencies))
+      .rejects.toThrow(/TDD_SOURCE_LFS_INVALID.*attributes/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "kind": "repository-trace-index",
-  "generatedAt": "2026-10-04T04:27:23.828Z",
+  "generatedAt": "2026-10-04T07:39:59.595Z",
   "nodes": [
     {
       "id": "ADR-0002",
@@ -349,7 +349,7 @@
       "id": "CODE-M5-CANDIDATE-BOUNDED-GIT-CLOSURE-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-git-distribution.ts",
-      "line": 152
+      "line": 157
     },
     {
       "id": "CODE-M5-CANDIDATE-CLEANUP-001",
@@ -397,13 +397,13 @@
       "id": "CODE-M5-CANDIDATE-HISTORICAL-LFS-CLOSURE-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-git-distribution.ts",
-      "line": 308
+      "line": 384
     },
     {
       "id": "CODE-M5-CANDIDATE-LOGICAL-SOURCE-STREAM-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-git-distribution.ts",
-      "line": 225
+      "line": 230
     },
     {
       "id": "CODE-M5-CANDIDATE-LOGICAL-TREE-COMPARISON-001",
@@ -619,7 +619,7 @@
       "id": "CODE-M5-CI-DIRECTORY-DURABILITY-001",
       "kind": "code",
       "path": "packages/analysis/src/tdd-source-lfs.ts",
-      "line": 177
+      "line": 178
     },
     {
       "id": "CODE-M5-CI-LIVE-RUNTIME-001",
@@ -1087,25 +1087,25 @@
       "id": "CODE-M5-LFS-ATOMIC-MATERIALIZATION-001",
       "kind": "code",
       "path": "packages/analysis/src/tdd-source-lfs.ts",
-      "line": 603
+      "line": 625
     },
     {
       "id": "CODE-M5-LFS-CANONICAL-POINTER-001",
       "kind": "code",
       "path": "packages/analysis/src/tdd-source-lfs.ts",
-      "line": 47
+      "line": 48
     },
     {
       "id": "CODE-M5-LFS-EFFECTIVE-ATTRIBUTES-001",
       "kind": "code",
       "path": "packages/analysis/src/tdd-source-lfs.ts",
-      "line": 242
+      "line": 243
     },
     {
       "id": "CODE-M5-LFS-EXACT-CLOSURE-FETCH-001",
       "kind": "code",
       "path": "packages/analysis/src/tdd-source-lfs.ts",
-      "line": 125
+      "line": 126
     },
     {
       "id": "CODE-M5-LFS-MIGRATION-CANONICAL-RECEIPT-001",
@@ -1129,13 +1129,13 @@
       "id": "CODE-M5-LFS-TRANSPORT-POLICY-001",
       "kind": "code",
       "path": "packages/analysis/src/tdd-source-lfs.ts",
-      "line": 82
+      "line": 83
     },
     {
       "id": "CODE-M5-LFS-VERIFIED-SOURCE-STREAM-001",
       "kind": "code",
       "path": "packages/analysis/src/tdd-source-lfs.ts",
-      "line": 430
+      "line": 452
     },
     {
       "id": "CODE-M5-LIFECYCLE-001",
@@ -1519,7 +1519,7 @@
       "id": "CODE-M5-SOURCE-BATCHED-READ-FENCE-001",
       "kind": "code",
       "path": "packages/analysis/src/tdd-source-lfs.ts",
-      "line": 501
+      "line": 523
     },
     {
       "id": "CODE-M5-SOURCE-BLOB-ATTRIBUTE-ADMISSION-001",
@@ -1573,7 +1573,7 @@
       "id": "CODE-M5-SOURCE-DIRECTORY-SYNC-001",
       "kind": "code",
       "path": "packages/analysis/src/tdd-source-lfs.ts",
-      "line": 200
+      "line": 201
     },
     {
       "id": "CODE-M5-SOURCE-ENVIRONMENT-001",
@@ -2029,7 +2029,7 @@
       "id": "CODE-M5-WORKTREE-003",
       "kind": "code",
       "path": "packages/analysis/src/workspace-manager.ts",
-      "line": 1428
+      "line": 1427
     },
     {
       "id": "CODE-M5-WORKTREE-004",
@@ -3656,7 +3656,7 @@
       "id": "TEST-M5-CANDIDATE-GIT-DISTRIBUTION-001",
       "kind": "test",
       "path": "tests/git-lfs-distribution.test.ts",
-      "line": 154
+      "line": 298
     },
     {
       "id": "TEST-M5-CANDIDATE-OWNERSHIP-ROUTING-001",
@@ -3873,6 +3873,18 @@
       "kind": "test",
       "path": "tests/test-runtime-evidence.test.ts",
       "line": 74
+    },
+    {
+      "id": "TEST-M5-CI-CANDIDATE-HEAD-ATTRIBUTES-001",
+      "kind": "test",
+      "path": "tests/git-lfs-distribution.test.ts",
+      "line": 154
+    },
+    {
+      "id": "TEST-M5-CI-CANDIDATE-PRECONDITION-EFFICIENCY-001",
+      "kind": "test",
+      "path": "tests/git-lfs-distribution.test.ts",
+      "line": 400
     },
     {
       "id": "TEST-M5-CI-CODEGRAPH-SCHEDULER-001",
@@ -17021,6 +17033,36 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-CI-CANDIDATE-HEAD-ATTRIBUTES-001",
+      "to": "DES-M5-CI-006",
+      "relation": "implements"
+    },
+    {
+      "from": "TEST-M5-CI-CANDIDATE-HEAD-ATTRIBUTES-001",
+      "to": "DES-M5-CI-008",
+      "relation": "implements"
+    },
+    {
+      "from": "TEST-M5-CI-CANDIDATE-HEAD-ATTRIBUTES-001",
+      "to": "REQ-M5-CI-006",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-CI-CANDIDATE-HEAD-ATTRIBUTES-001",
+      "to": "REQ-M5-CI-008",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-CI-CANDIDATE-PRECONDITION-EFFICIENCY-001",
+      "to": "DES-M5-CI-008",
+      "relation": "implements"
+    },
+    {
+      "from": "TEST-M5-CI-CANDIDATE-PRECONDITION-EFFICIENCY-001",
+      "to": "REQ-M5-CI-008",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-CI-CODEGRAPH-SCHEDULER-001",
       "to": "DES-M5-CI-004",
       "relation": "implements"
@@ -21491,7 +21533,7 @@
     ".musubix/decisions/ADR-0039.md": "8812a9eb461b474504c4e25552be222af3d012125dc6ccfa6a7faaadb1c411f2",
     ".musubix/decisions/ADR-0040.md": "1f1a241b102a1d5dcb6282191ebc84fa873c14f3284e5dc4343b0e937d842836",
     ".musubix/decisions/ADR-0041.md": "1919f12be4545b9199f1febed358527fcb0b5bc702887e6690eaefa6d63a0468",
-    ".musubix/decisions/ADR-0042.md": "dacd2a5d2df0e84bd84112db4862a2f0d5cd00fd93b0b8e67d4be82996b6b3e2",
+    ".musubix/decisions/ADR-0042.md": "7b361af56907bd6c50b15eee736b04fcb897cc103a5524291e571ee85e11d796",
     ".musubix/features/candidate-cleanup-policy/design.md": "54d32a6d446bbaed299860b164fe74d24362e0c5739862bc79df2e0acab20c1b",
     ".musubix/features/candidate-cleanup-policy/requirements.md": "253a36dbca0b76a81f452c845f2988e2b33163823095ee5ac1add81519dd5462",
     ".musubix/features/codegraph-performance/design.md": "a8461463b6c0a7e8ae11b9496ab5e724e5d98e2700dd32623e5fd6331187b175",
@@ -21502,8 +21544,8 @@
     ".musubix/features/multi-change-workspaces/requirements.md": "9071c2c1f8a7ca49b9137cf074fe30b33343264536f41efcdddad0ab2a6cff4d",
     ".musubix/features/musubix5-clean-foundation/design.md": "9cee7263faa38fbc78b21cbba83e74e37ca08c0f510fe39e4a23883d7ee09531",
     ".musubix/features/musubix5-clean-foundation/requirements.md": "47be4910318f7b52f53b46839c549a4081a928110d9347617686cf019df4e1df",
-    ".musubix/features/node24-github-actions/design.md": "6e145c2c257968bdaef1b28834ae829ce3a6f324afd70027a4975a09065cc4a5",
-    ".musubix/features/node24-github-actions/requirements.md": "1070912905cfea8e6a39f66fa1a9363c6e57781991319efab460808443dbb5e9",
+    ".musubix/features/node24-github-actions/design.md": "f379fb804abf82092a9afcef66e2fd04c059c825ca26ca0997d70a1990650328",
+    ".musubix/features/node24-github-actions/requirements.md": "50095ed8a3314155e88d5faa1816a8a8cd7f0ceb2e06eee33c6d52252cd9071c",
     ".musubix/features/npm-registry-deadline/design.md": "a46582fe0fd7e2c64ea36fcf7a50d24f1b45e7789cd2e75634da0ebf4cc29195",
     ".musubix/features/npm-registry-deadline/requirements.md": "89ba3f12e9dd5a66c4e1e21ba3a5ed087fdfc03353d7fd72c605439d8a0b9aab",
     ".musubix/features/parallel-agent-development/design.md": "2d3ee454f0f131cdd21a62932790fafa0b6edc3df68d43e473d74b294d1e8a5d",
@@ -21536,7 +21578,7 @@
     "packages/analysis/src/candidate-evidence-binding.ts": "b1a0f978e747939dcae508f8a91e1fd8a6681d98c6d3887b9ee43468cf7d307a",
     "packages/analysis/src/candidate-gate-runner.ts": "03e6b2793161a8a793a18b9a4b97c9f5dd1e12e608eaed33a93cc586e92f6503",
     "packages/analysis/src/candidate-gate.ts": "677a3d7ca3706881da529c5fbb6a43feef5a280345ac643a403ea71f66675620",
-    "packages/analysis/src/candidate-git-distribution.ts": "8b98ee0da982d428b96dfe07152543d5a7d642cb7780b4f19c681edefdbc9664",
+    "packages/analysis/src/candidate-git-distribution.ts": "2113ac7caca2b77c3405e2d2063b7da1aae8b6273ec1296ed2491c9460a99d0b",
     "packages/analysis/src/candidate-integration.ts": "4f51cbef136e023493349979466a8ccdb88577832c32f0cf7c96819ee7982caa",
     "packages/analysis/src/candidate-path.ts": "12be923afca597681dfae8edea1bb143f33d148ebb79bfbf5c0e4d2e0e8123b3",
     "packages/analysis/src/candidate-state.ts": "5c8f5fb8ce72b41349f7198c5c70c251d2d8645389f1a8943579838a067113ca",
@@ -21581,7 +21623,7 @@
     "packages/analysis/src/tdd-source-artifacts.ts": "46800f981dc804c202e7494c10402ea0de7295dea39a5a140cc298c5ef1c6485",
     "packages/analysis/src/tdd-source-diagnostics.ts": "a9cb99e4f17eb5ea37df0580e814f547d6a9461f24018977658a63ac592256b2",
     "packages/analysis/src/tdd-source-ledger.ts": "291210042e98b21d89372208ad18e92e19d1d6844882aec77843754756b57d7d",
-    "packages/analysis/src/tdd-source-lfs.ts": "40d63f5a30b56887fd772c79342a48e2482aa668922f8da3166433ef838dbe9e",
+    "packages/analysis/src/tdd-source-lfs.ts": "ee2c2d93d75712111c2b2692797590db11ebd41f000009ca02153ad34e4cd983",
     "packages/analysis/src/tdd-source-pair.ts": "968fe51dcd4723a5d5b7bdb28f5e17de9003a6a2f9f7fdd2eb842cfd6bdca43b",
     "packages/analysis/src/tdd-source-review.ts": "3df913b398badb2ada63bdca33fbfcfc2c6cf9813d8746fd0fa2ea38cfc62b58",
     "packages/analysis/src/tdd-source-snapshot.ts": "ada87f23ea3e6315fdd5bd659237155e6c45f72ab16b1f55f4a232f6ee6e11aa",
@@ -21598,7 +21640,7 @@
     "packages/analysis/src/workflow-types.ts": "4fa0d85248bd9373eed4dc7043f1320c9b918f08fc8874dd982c528876b74783",
     "packages/analysis/src/workflow-waiver.ts": "77a93cc41b1a917bf08f8a26eacafc0ce32edcf3b3d90a2b5ccca5d792d014ac",
     "packages/analysis/src/workflow.ts": "39339b38f17c544b31e7b0a4e1e84a0f0550277080642829a84cdd63ca06e281",
-    "packages/analysis/src/workspace-manager.ts": "520ba72d1922a4a5e511e0913280f526915e94d7fe74169a36d195ff78c3f203",
+    "packages/analysis/src/workspace-manager.ts": "5e525af734945c11a1f693568e06dcdf3fed30b681336559b4fd9b83e914b33f",
     "packages/cli/src/install.ts": "5af752b5995abc883f93d230eadb4d54f76ae903860535755d555240ec887081",
     "packages/cli/src/main.ts": "c3cff678631a4b8fa28c40a1119be6ba6e0fa22f2c589c3a99243a8fc122405c",
     "packages/domain/src/constitution.ts": "514278499642ff46ed902864b9192f566b116b4f92eb3fafa6b62588335e170a",
@@ -21714,7 +21756,7 @@
     "tests/generation10-recovery-state-machine.test.ts": "ea7227cef21df8586965e84da6f234e94b8502bd77856ebb73b97afc5a196d21",
     "tests/generation10-recovery.test.ts": "b7b8beb89f8e9886c9db989bf922329a96ab575ad0b4b3f1d3db522c2cd65925",
     "tests/generation11-recovery.test.ts": "ca197fef376f2b2f599d541e717fa2a154e2ae42e1331d01207dd1d3bf20bc0f",
-    "tests/git-lfs-distribution.test.ts": "c63cd5f48e4d1f866ff522364aa339795fc499cf2d2e7c563a68282485951116",
+    "tests/git-lfs-distribution.test.ts": "ac85e49f635fdfbd6e6745899f5a74161ee1b7deed022a98914bd80f4ba35990",
     "tests/git-lfs-generation14-coverage.test.ts": "f8ce67c7b32adf92362ea88213fc83f51b02bd78f18523e6ac0a5ed18ea6f864",
     "tests/global-setup.ts": "6786ccc1dea640c9c67a2fcdcf20ba43bc0482c28e5e11757982e5ed460a97b5",
     "tests/graph-nested-alias.test.ts": "6314074909d5a28e0213282ef0d7f76b0609c7c83ad3972a7364247afb7d11fb",

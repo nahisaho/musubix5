@@ -6,7 +6,7 @@ import { lstat, mkdir, mkdtemp, open, readdir, rename, rm, writeFile } from 'nod
 import { resolve } from 'node:path';
 import { createInterface } from 'node:readline';
 import { promisify } from 'node:util';
-import { readSourceBlobStream, parseSourceLfsPointer, verifySourceLfsPolicy, sourceBlobAttributes,
+import { readSourceBlobStream, parseSourceLfsPointer, validateSourceAttributes, verifySourceLfsPolicy, sourceBlobAttributes,
   fetchSourceLfsClosure } from './tdd-source-lfs.js';
 import { SourceOperationError, type SourceReason } from './tdd-source-diagnostics.js';
 
@@ -30,10 +30,14 @@ export function candidateGitEnvironment(): NodeJS.ProcessEnv {
 
 class Scan {
   private readonly children = new Set<ChildProcessWithoutNullStreams>();
-  private readonly deadline = performance.now() + 120_000;
-  private readonly timer = setTimeout(() => this.abort(), 120_000);
+  private readonly deadline: number;
+  private readonly timer: ReturnType<typeof setTimeout>;
   private aborted = false;
-  constructor(readonly root: string) { this.timer.unref(); }
+  constructor(readonly root: string, timeoutMs = 120_000) {
+    this.deadline = performance.now() + timeoutMs;
+    this.timer = setTimeout(() => this.abort(), timeoutMs);
+    this.timer.unref();
+  }
   check(): void { if (this.aborted || performance.now() >= this.deadline) throw scanFailure(); }
   abort(): void { this.aborted = true; for (const child of this.children) child.kill(); }
   close(): void { clearTimeout(this.timer); for (const child of this.children) child.kill(); }
@@ -126,10 +130,11 @@ async function freeze(scan: Scan, ref: string): Promise<string> {
 }
 
 interface TreeEntry { mode: string; type: string; oid: string; size: number | null; path: string }
-async function* tree(scan: Scan, commit: string): AsyncGenerator<TreeEntry> {
+async function* tree(scan: Scan, commit: string, pathspec?: string): AsyncGenerator<TreeEntry> {
   const treeOid = (await scan.small(['rev-parse', '--verify', `${commit}^{tree}`])).toString().trim();
   if (!oidPattern.test(treeOid)) throw scanFailure();
-  const child = scan.child(['ls-tree', '--full-tree', '-r', '-l', '-z', treeOid]);
+  const child = scan.child(['ls-tree', '--full-tree', '-r', '-l', '-z', treeOid,
+    ...(pathspec ? ['--', pathspec] : [])]);
   child.process.stdin.end();
   for await (const record of records(child.process.stdout, 0, 65536)) {
     scan.check();
@@ -229,7 +234,11 @@ export async function verifyCandidateReachableObjectSizes(
 export async function readCandidateSourceBlobStream(
   root: string, commit: string, path: string, digest: string,
   sink: (bytes: Buffer) => void | Promise<void>,
-  options: { historicalAttributes?: boolean; dependencies?: import('./tdd-source-lfs.js').SourceLfsDependencies } = {},
+  options: {
+    historicalAttributes?: boolean;
+    hermeticAttributes?: boolean;
+    dependencies?: import('./tdd-source-lfs.js').SourceLfsDependencies;
+  } = {},
 ): Promise<void> {
   if (!oidPattern.test(commit) || !/^[a-f0-9]{64}$/.test(digest) || path !== sourcePrefix + digest) {
     throw lfsFailure('INVALID', 'pointer-path-digest');
@@ -243,6 +252,8 @@ export interface CandidateLfsClosureDependencies {
   /** Test-only policy seam for a credential-free, isolated loopback LFS service. */
   verifyPolicy?: (root: string) => Promise<void>;
   sourceDependencies?: import('./tdd-source-lfs.js').SourceLfsDependencies;
+  /** Test-only deterministic logical-operation observer. */
+  onOperation?: (operation: 'tree-prefix' | 'attribute-index' | 'pointer-batch' | 'media-stream') => void;
 }
 
 const execute = promisify(execFile);
@@ -305,6 +316,71 @@ async function mergeRuns(left: string, right: string, output: string): Promise<v
   } finally { await a.return(undefined); await b.return(undefined); await handle.close(); }
 }
 
+async function readPointerInventory(
+  scan: Scan,
+  inventory: string,
+  accept: (pointer: { oid: string; size: number }, historicalCommit: string) => Promise<void>,
+): Promise<void> {
+  const child = scan.child(['cat-file', '--batch']);
+  const iterator = child.process.stdout[Symbol.asyncIterator]();
+  let pending = Buffer.alloc(0);
+  const pull = async (): Promise<void> => {
+    const next = await iterator.next();
+    if (next.done) throw scanFailure();
+    pending = Buffer.concat([pending, Buffer.isBuffer(next.value) ? next.value : Buffer.from(next.value)]);
+  };
+  const readLine = async (): Promise<string> => {
+    while (pending.indexOf(10) < 0) {
+      if (pending.length > 4096) throw scanFailure();
+      await pull();
+    }
+    const end = pending.indexOf(10);
+    const line = pending.subarray(0, end).toString('ascii');
+    pending = pending.subarray(end + 1);
+    return line;
+  };
+  const readExact = async (length: number): Promise<Buffer> => {
+    while (pending.length < length) await pull();
+    const value = pending.subarray(0, length);
+    pending = pending.subarray(length);
+    return value;
+  };
+  const writer = (async () => {
+    for await (const line of fileLines(inventory)) {
+      const [objectId] = line.split(' ');
+      if (!objectId || !oidPattern.test(objectId)) throw scanFailure();
+      if (!child.process.stdin.write(`${objectId}\n`)) await once(child.process.stdin, 'drain');
+    }
+    child.process.stdin.end();
+  })();
+  const reader = (async () => {
+    for await (const line of fileLines(inventory)) {
+      const [objectId, digest, historicalCommit] = line.split(' ');
+      if (!objectId || !digest || !historicalCommit ||
+        !oidPattern.test(objectId) || !/^[a-f0-9]{64}$/.test(digest) ||
+        !oidPattern.test(historicalCommit)) throw scanFailure();
+      const header = /^([a-f0-9]+) blob (0|[1-9][0-9]*)$/.exec(await readLine());
+      if (!header || header[1] !== objectId) throw scanFailure();
+      const size = Number(header[2]);
+      if (!Number.isSafeInteger(size) || size < 0 || size > 1024) {
+        scan.abort();
+        throw lfsFailure('INVALID', 'pointer-schema');
+      }
+      const bytes = await readExact(size);
+      if ((await readExact(1))[0] !== 10) throw scanFailure();
+      await accept(parseSourceLfsPointer(bytes, digest), historicalCommit);
+    }
+  })();
+  try {
+    await Promise.all([writer, reader]);
+    await child.done;
+    if (pending.length) throw scanFailure();
+  } catch (error) {
+    scan.abort();
+    throw error;
+  }
+}
+
 /** @id CODE-M5-CANDIDATE-HISTORICAL-LFS-CLOSURE-001
  * @implements REQ-M5-LIFECYCLE-006 REQ-M5-RELEASE-002
  * @design DES-M5-012 DES-M5-023
@@ -313,7 +389,7 @@ export async function verifyCandidateLfsClosure(
   root: string, ref: string, availability: 'local' | 'remote',
   dependencies: CandidateLfsClosureDependencies = {},
 ): Promise<{ commit: string; objects: number }> {
-  const scan = new Scan(root);
+  const scan = new Scan(root, 310_000);
   let scratch: string | undefined;
   try {
     if (availability !== 'local' && availability !== 'remote') throw lfsFailure('INVALID', 'attributes');
@@ -322,6 +398,8 @@ export async function verifyCandidateLfsClosure(
     const owner = resolve(common, 'musubix5/lfs-verification');
     await mkdir(owner, { recursive: true });
     scratch = await mkdtemp(resolve(owner, 'closure-'));
+    const bindingInventory = resolve(scratch, 'bindings');
+    const bindingHandle = await open(bindingInventory, 'wx', 0o600);
     let runCount = 0;
     let batch: string[] = [];
     const flush = async () => {
@@ -331,36 +409,53 @@ export async function verifyCandidateLfsClosure(
     };
     const commits = scan.child(['rev-list', commit, '--']);
     commits.process.stdin.end();
-    for await (const line of records(commits.process.stdout, 10, 4096)) {
-      const historicalCommit = line.toString('ascii');
-      if (!oidPattern.test(historicalCommit)) throw scanFailure();
-      let sourceEntries: TreeEntry[] = [];
-      const inventoryEntries = async () => {
-        if (!sourceEntries.length) return;
+    try {
+      for await (const line of records(commits.process.stdout, 10, 4096)) {
+        const historicalCommit = line.toString('ascii');
+        if (!oidPattern.test(historicalCommit)) throw scanFailure();
+        dependencies.onOperation?.('tree-prefix');
+        const sourceEntries: TreeEntry[] = [];
+        for await (const entry of tree(scan, historicalCommit, sourcePrefix)) {
+          const digest = entry.path.slice(sourcePrefix.length);
+          if (!entry.path.startsWith(sourcePrefix) || !/^[a-f0-9]{64}$/.test(digest) ||
+            entry.type !== 'blob' || !['100644', '100755'].includes(entry.mode)) {
+            throw lfsFailure('INVALID', 'mode');
+          }
+          sourceEntries.push(entry);
+        }
+        if (!sourceEntries.length) continue;
+        dependencies.onOperation?.('attribute-index');
         const values = await sourceBlobAttributes(root,
-          sourceEntries.map((entry) => entry.path.slice(sourcePrefix.length)), historicalCommit);
+          sourceEntries.map((entry) => entry.path.slice(sourcePrefix.length)), historicalCommit, false,
+          { hermetic: true });
         for (const entry of sourceEntries) {
           const digest = entry.path.slice(sourcePrefix.length);
-          if (values.get(digest)?.get('filter') !== 'lfs') continue;
+          const selected = values.get(digest);
+          if (!selected) throw scanFailure();
+          const isLfs = selected.get('filter') === 'lfs';
+          if (!isLfs) {
+            if (selected.get('filter') !== 'unspecified') throw lfsFailure('INVALID', 'attributes');
+            continue;
+          }
+          validateSourceAttributes(digest, selected, true, {
+            selected: true,
+            historical: historicalCommit !== commit,
+          });
           if (entry.size! > 1024) throw lfsFailure('INVALID', 'pointer-schema');
-          const pointer = parseSourceLfsPointer(await scan.small(['cat-file', 'blob', entry.oid], 1024), digest);
-          batch.push(`${pointer.oid} ${pointer.size} ${historicalCommit}`);
-          if (batch.length === 1024) await flush();
+          await bindingHandle.write(`${entry.oid} ${digest} ${historicalCommit}\n`);
         }
-        sourceEntries = [];
-      };
-      for await (const entry of tree(scan, historicalCommit)) {
-        if (!entry.path.startsWith(sourcePrefix)) continue;
-        const digest = entry.path.slice(sourcePrefix.length);
-        if (!/^[a-f0-9]{64}$/.test(digest) || entry.type !== 'blob' || !['100644', '100755'].includes(entry.mode)) {
-          throw lfsFailure('INVALID', 'mode');
-        }
-        sourceEntries.push(entry);
-        if (sourceEntries.length === 128) await inventoryEntries();
       }
-      await inventoryEntries();
+      await commits.done;
+    } finally {
+      await bindingHandle.close();
     }
-    await commits.done;
+    if ((await lstat(bindingInventory)).size) {
+      dependencies.onOperation?.('pointer-batch');
+      await readPointerInventory(scan, bindingInventory, async (pointer, historicalCommit) => {
+        batch.push(`${pointer.oid} ${pointer.size} ${historicalCommit}`);
+        if (batch.length === 1024) await flush();
+      });
+    }
     await flush();
     if (runCount) await (dependencies.verifyPolicy ?? ((directory) =>
       verifySourceLfsPolicy(directory, dependencies.sourceDependencies)))(root);
@@ -394,7 +489,7 @@ export async function verifyCandidateLfsClosure(
       await mkdir(cache);
       verificationRoot = await (dependencies.prepareRemote ?? prepareIndependentRemote)(root, commit, cache);
       if (resolve(verificationRoot) === resolve(root)) throw lfsFailure('INVALID', 'download-integrity');
-      const remoteScan = new Scan(verificationRoot);
+      const remoteScan = new Scan(verificationRoot, 310_000);
       try {
         if (await freeze(remoteScan, commit) !== commit) throw lfsFailure('INVALID', 'download-integrity');
         const otherCommon = (await remoteScan.small(['rev-parse', '--path-format=absolute', '--git-common-dir'])).toString().trim();
@@ -403,12 +498,15 @@ export async function verifyCandidateLfsClosure(
         }
       } finally { remoteScan.close(); }
     }
+    let verifiedOid = '';
     if (runCount) for await (const line of fileLines(inventory)) {
       const [oid, , historicalCommit] = line.split(' ');
-      // Every historical binding is checked, even if its media was already verified.
+      if (oid === verifiedOid) continue;
+      verifiedOid = oid!;
+      dependencies.onOperation?.('media-stream');
       try {
         await readCandidateSourceBlobStream(verificationRoot, historicalCommit!, sourcePrefix + oid, oid!, () => {}, {
-          historicalAttributes: historicalCommit !== commit,
+          historicalAttributes: historicalCommit !== commit, hermeticAttributes: true,
           ...(dependencies.sourceDependencies ? { dependencies: dependencies.sourceDependencies } : {}),
         });
       } catch (error) {

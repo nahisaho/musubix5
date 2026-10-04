@@ -1,7 +1,7 @@
 import { execFile } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
 import { createReadStream, type Stats } from 'node:fs';
-import { chmod, lstat, mkdir, mkdtemp, open, readFile, rename, rm } from 'node:fs/promises';
+import { chmod, lstat, mkdir, mkdtemp, open, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, relative, resolve } from 'node:path';
 import { SourceOperationError } from './tdd-source-diagnostics.js';
 
@@ -17,6 +17,7 @@ export interface SourceReadOptions {
   commit?: string;
   verifyWorktree?: boolean;
   historicalAttributes?: boolean;
+  hermeticAttributes?: boolean;
   dependencies?: SourceLfsDependencies;
 }
 export interface SourceLfsDependencies {
@@ -245,11 +246,13 @@ export async function sourceLfsMediaPath(root: string, digest: string): Promise<
  */
 export async function sourceBlobAttributes(
   root: string, digests: readonly string[], commit?: string, cachedIndex = false,
+  options: { hermetic?: boolean } = {},
 ): Promise<Map<string, Map<string, string>>> {
   if (digests.some((digest) => !digestPattern.test(digest))) {
     throw new SourceOperationError('TDD_SOURCE_APPROVAL_INVALID', 'blob-hash');
   }
   let scratch: string | undefined;
+  let emptyAttributes: string | undefined;
   let env = process.env;
   try {
     if (commit !== undefined) {
@@ -259,6 +262,21 @@ export async function sourceBlobAttributes(
       await mkdir(owner, { recursive: true });
       scratch = await mkdtemp(resolve(owner, 'index-'));
       env = { ...process.env, GIT_INDEX_FILE: resolve(scratch, 'index'), GIT_NO_REPLACE_OBJECTS: '1', GIT_NO_LAZY_FETCH: '1' };
+      if (options.hermetic) {
+        const info = (await sourceGit(root,
+          ['rev-parse', '--path-format=absolute', '--git-path', 'info/attributes'], undefined, env)).toString().trim();
+        try {
+          const stat = await lstat(info);
+          if (!stat.isFile() || stat.isSymbolicLink() || !(stat.mode & 0o444) ||
+            (await readFile(info, 'utf8')).trim()) throw invalid('attributes');
+        } catch (error) {
+          if (!(error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT')) throw error;
+        }
+        emptyAttributes = resolve(scratch, 'empty-attributes');
+        await writeFile(emptyAttributes, '', { flag: 'wx', mode: 0o600 });
+        env = { ...env, GIT_ATTR_NOSYSTEM: '1' };
+        delete env.GIT_ATTR_SOURCE;
+      }
       const tree = (await sourceGit(root, ['rev-parse', '--verify', `${commit}^{tree}`], undefined, env)).toString().trim();
       if (!oidPattern.test(tree)) throw invalid('pointer-schema');
       await sourceGit(root, ['read-tree', tree], undefined, env);
@@ -268,7 +286,10 @@ export async function sourceBlobAttributes(
     for (let start = 0; start < unique.length; start += 512) {
       const batch = unique.slice(start, start + 512);
       const input = Buffer.from(batch.map((digest) => sourceBlobPrefix + digest + '\0').join(''));
-      const output = await sourceGit(root, ['check-attr', '-z', ...(commit || cachedIndex ? ['--cached'] : []),
+      const isolated = options.hermetic
+        ? ['-c', `core.attributesFile=${emptyAttributes}`, '-c', 'attr.tree=']
+        : [];
+      const output = await sourceGit(root, [...isolated, 'check-attr', '-z', ...(commit || cachedIndex ? ['--cached'] : []),
         '--stdin', ...attributes], input, env);
       const fields = output.toString().split('\0');
       if (fields.pop() !== '' || fields.length !== batch.length * 21) {
@@ -410,7 +431,8 @@ export async function resolveSourceBlobBinding(root: string, digest: string, opt
   if (!match || match[3] !== path) throw invalid('mode', digest);
   const mode = match[1]!, objectId = match[2]!;
   if (mode !== '100644' && mode !== '100755') throw invalid('mode', digest);
-  const values = (await sourceBlobAttributes(root, [digest], options.commit, !options.commit)).get(digest)!;
+  const values = (await sourceBlobAttributes(root, [digest], options.commit, !options.commit,
+    options.hermeticAttributes === undefined ? {} : { hermetic: options.hermeticAttributes })).get(digest)!;
   const lfs = values.get('filter') === 'lfs';
   validateSourceAttributes(digest, values, lfs, {
     selected: Boolean(options.commit), historical: options.historicalAttributes ?? (!lfs && !options.commit),

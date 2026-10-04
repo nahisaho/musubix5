@@ -6,7 +6,73 @@ status: active
 ---
 # CHANGE-0017: establish-wave1-development-foundations
 
-Requirements: REQ-M5-CI-008
+Requirements: REQ-M5-CI-006 REQ-M5-CI-008
+
+## Generation 39 current release boundary
+
+Generation 39 corrects a candidate-head attribute validation gap discovered by
+the post-quality Generation-35 implementation review. Historical closure
+enumeration applied the historical attribute relaxation to every reachable
+commit, including the candidate head. Media verification then streamed only the
+first binding for each deduplicated OID. When an older valid binding sorted
+before a candidate-head binding for the same media OID, candidate-head
+conversion attributes such as `eol=lf` could avoid the strict non-historical
+validation required by `REQ-M5-CI-006`.
+
+The correction keeps `REQ-M5-CI-008` structured precondition handling and the
+Generation-35 prefix, batching, media-deduplication, timeout, and single-stream
+performance invariants. Every binding is attribute-validated before media
+deduplication, and the candidate head is always validated in strict
+non-historical mode. Historical commits retain their approved historical rules.
+`TEST-M5-CI-CANDIDATE-HEAD-ATTRIBUTES-001` is authoritative for candidate-head
+only rejection, shared-OID fixtures in both deterministic inventory orders,
+acceptance of a valid candidate head alongside a historically valid binding,
+and structured precondition failure without callback or subprocess spawn.
+Generation 36 is abandoned because its impact phase omitted
+`REQ-M5-CI-006`. Generation 37 is abandoned because its valid-history fixture
+used an LFS pointer below the 100,000,000-byte source threshold. Generation 38
+is abandoned because its runner timeout was below the 75,107-millisecond
+orchestration minimum. Those generations grant no requirements, design, TDD,
+implementation, quality, candidate-gate, or release credit.
+
+## Generation 33 current release boundary
+
+Generation 33 is a defect correction limited to `REQ-M5-CI-008`. Candidate
+gate run `37178547480` proved that the Generation-32 runner-owned precondition
+performed redundant historical Git and LFS work: Windows failed after
+approximately 120 seconds consistently with the closure scanner's private
+120,000-millisecond deadline and emitted the required generic uncoded
+precondition failure, while macOS exhausted the approved aggregate
+300,000-millisecond precondition deadline before the gate subprocess started.
+Ubuntu passed both tree conditions and produced a valid normal report, but its
+configured `test` command exited 1; the envelope does not contain enough
+bounded diagnostic text to identify the failing native test, so the same
+immutable candidate is rerun to establish whether that failure is intermittent
+before any unrelated test behavior is changed. A repeated Ubuntu test failure
+must be isolated and corrected in a separately scoped requirement batch or
+registered issue; it cannot be waived or attributed to this closure correction.
+
+Generation 33 preserves the approved aggregate deadline, independent
+runner-owned LFS and tree proofs, one-envelope artifact policy, and hostile or
+uncoded thrown-value normalization. It removes implementation-only
+amplification by enumerating only the unchanged exact
+`.musubix/evidence/tdd-source/v1/blobs/` historical namespace in each commit,
+building attributes from each complete historical tree, validating every
+historical path/mode/attribute/pointer binding, batching bounded pointer reads,
+hashing each distinct `(OID, size)` LFS media identity once per invocation, and
+combining ordinary text classification, byte counting and Git blob hashing in
+one worktree stream with before/after metadata checks. Historical attribute
+queries reject uncommitted repository-local, global, system, `attr.tree` and
+environment-selected authority, and pointer-batch input/output use bounded
+concurrent backpressure.
+`TEST-M5-CI-CANDIDATE-PRECONDITION-EFFICIENCY-001` shall prove deterministic
+tree, attribute-index, pointer-batch and unique-media operation counts, prove
+that duplicate OIDs do not suppress later invalid bindings, and retain all
+existing corruption, conflicting-size, ref-drift, tree-mismatch and
+aggregate-timeout failures. The private scanner watchdog becomes 310,000
+milliseconds so the runner's aggregate 300,000-millisecond timer owns
+candidate timeout classification. A fresh Windows/macOS matrix remains the
+platform performance proof.
 
 ## Generation 30 current release boundary
 
