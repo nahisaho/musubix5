@@ -62,7 +62,7 @@
       ],
       "adapter": "vitest",
       "required": true,
-      "timeoutMs": 300000
+      "timeoutMs": 900000
     },
     {
       "name": "codegraph-tests",
@@ -157,7 +157,8 @@
     "mode": "compatible",
     "maxAgeSeconds": 3600,
     "maxFutureSkewSeconds": 60,
-    "maxTranscriptBytes": 125000000
+    "maxTranscriptBytes": 600000000,
+    "maxTranscriptLineBytes": 4000000
   },
   "attestation": {
     "mode": "local",

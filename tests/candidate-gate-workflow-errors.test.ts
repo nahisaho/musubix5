@@ -309,11 +309,156 @@ it('TEST-M5-CI-MATRIX-ERROR-001 proves the complete closed runner failure and re
         rmSync(root, { recursive: true, force: true });
     }
 }, 60000);
+/** @id TEST-M5-CI-MATRIX-COMMAND-DIAGNOSTICS-001
+ * @verifies REQ-M5-CI-008
+ * @design DES-M5-CI-008
+ */
+it('TEST-M5-CI-MATRIX-COMMAND-DIAGNOSTICS-001 Generation 45 preserves only bounded failed-command diagnostics in the signed envelope result', async () => {
+    const { normalizeCandidateGateReport: normalize } = await import('../packages/analysis/src/candidate-gate-runner.js');
+    const root = mkdtempSync(join(fileURLToPath(new URL('../.test-work/', import.meta.url)), 'g40-diagnostics-'));
+    const stdoutPath = join(root, 'stdout.json');
+    const stderrPath = join(root, 'stderr.txt');
+    const resultPath = join(root, 'candidate-gate-result.json');
+    const context = {
+        repositoryId: 'repository:' + 'a'.repeat(64), changeId: 'CHANGE-0017', generation: 40,
+        candidateCommit: 'b'.repeat(40), gateInputFingerprint: 'c'.repeat(64), job: { os: 'ubuntu', nodeMajor: 24 },
+    };
+    const sha = (value: string) => createHash('sha256').update(value).digest('hex');
+    const run = async (checks: unknown[], secrets: string[] = [], exitCode = 1) => {
+        const stdout = JSON.stringify({ checks });
+        writeFileSync(stdoutPath, stdout);
+        writeFileSync(stderrPath, '');
+        const outcome: CandidateGateCommandOutcome = {
+            stdoutPath, stderrPath, stdoutTail: stdout.slice(-20000), stderrTail: '',
+            stdoutSha256: sha(stdout), stderrSha256: sha(''), tailsDropped: false, resultTextDropped: false,
+            drainTruncated: false, streamCapTerminated: false, exitCode, signal: null, timedOut: false,
+            spawned: true, childErrorMessage: null,
+        };
+        return normalize(outcome, {
+            resultPath, context, secrets, preTreeMatchesCandidate: true, postTreeMatchesCandidate: true,
+        });
+    };
+    const pass = (name: string) => ({
+        name: `command:${name}`, required: true, status: 'pass', summary: 'passed', exitCode: 0,
+        stdout: 'passing output must not be retained', stderr: 'passing error output must not be retained',
+    });
+    try {
+        const insideIdentity = 'TEST-M5-SOURCE-CLI-001';
+        const outsideIdentity = 'TEST-M5-OUTSIDE-TAIL-001';
+        const result = await run([
+            pass('typecheck'),
+            pass('build'),
+            {
+                name: 'command:test', required: true, status: 'fail', summary: 'failed', exitCode: 1,
+                stdout: 'x'.repeat(21000) + insideIdentity + '\nprivate-secret',
+                stderr: 'stderr private-secret',
+            },
+            {
+                name: 'command:codegraph-tests', required: true, status: 'fail', summary: 'failed', exitCode: 1,
+                stdout: outsideIdentity + '\n' + 'y'.repeat(21000), stderr: '',
+            },
+            {
+                name: 'command:compatibility', required: true, status: 'fail', summary: 'failed', exitCode: null,
+            },
+            pass('pack-check'),
+            pass('pack-smoke'),
+            {
+                name: 'command:optional', required: false, status: 'fail', summary: 'optional', exitCode: 1,
+                stdout: 'optional output', stderr: 'optional stderr',
+            },
+            {
+                name: 'performance', required: true, status: 'fail', summary: 'non-command',
+                stdout: 'non-command output', stderr: 'non-command stderr',
+            },
+        ], ['private-secret']);
+        const checks = result.checks ?? [];
+        const checkRecord = (name: string) => checks.find(check => check.name === name) as unknown as Record<string, unknown>;
+        const failedTest = checkRecord('command:test');
+        expect(failedTest.exitCode).toBe(1);
+        expect(failedTest.stdoutTail).toContain(insideIdentity);
+        expect(failedTest.stdoutTail).not.toContain('private-secret');
+        expect(failedTest.stderrTail).toBe('stderr [REDACTED]');
+        expect(Array.from(failedTest.stdoutTail as string)).toHaveLength(20000);
+        expect(Array.from(failedTest.stderrTail as string).length).toBeLessThanOrEqual(20000);
+        const outside = checkRecord('command:codegraph-tests');
+        expect(outside.stdoutTail).not.toContain(outsideIdentity);
+        const absent = checkRecord('command:compatibility');
+        expect(absent).toMatchObject({ exitCode: null, stdoutTail: '', stderrTail: '' });
+        for (const name of ['command:typecheck', 'command:optional', 'performance']) {
+            const check = checkRecord(name);
+            expect(check).not.toHaveProperty('exitCode');
+            expect(check).not.toHaveProperty('stdoutTail');
+            expect(check).not.toHaveProperty('stderrTail');
+        }
+        expect(readFileSync(resultPath, 'utf8')).not.toContain('private-secret');
+
+        for (const malformed of [
+            { name: 'command:test', required: true, status: 'fail', summary: 'bad', exitCode: 1.5 },
+            { name: 'command:test', required: true, status: 'fail', summary: 'bad', exitCode: 1, stdout: null },
+            { name: 'command:test', required: true, status: 'fail', summary: 'bad', exitCode: 1, stderr: 7 },
+        ]) {
+            const invalid = await run([malformed], [], 0);
+            expect(invalid.error?.case).toBe('invalid-check');
+            expect(invalid.checks).toEqual([]);
+        }
+
+        const unsafeSecret = 'z'.repeat(8193);
+        const unsafe = await run([{
+            name: 'command:test', required: true, status: 'fail', summary: 'failed', exitCode: null,
+            stdout: unsafeSecret,
+        }], [unsafeSecret]);
+        expect(unsafe.resultTextDropped).toBe(true);
+        expect(unsafe.tailsDropped).toBe(true);
+        expect(unsafe).not.toHaveProperty('checks');
+
+        const workflow = parse(readFileSync(fileURLToPath(new URL('../.github/workflows/candidate-gate.yml', import.meta.url)), 'utf8'));
+        expect(workflow.jobs.verify.steps.filter((step: {
+            uses?: string;
+        }) => step.uses?.startsWith('actions/upload-artifact@'))).toHaveLength(1);
+    }
+    finally {
+        rmSync(root, { recursive: true, force: true });
+    }
+}, 30000);
 /** @id TEST-M5-CI-MATRIX-ORCHESTRATION-TIMEOUT-001
  * @verifies REQ-M5-CI-008
  * @design DES-M5-CI-008
  */
-it('TEST-M5-CI-MATRIX-ORCHESTRATION-TIMEOUT-001 proves orchestration budgets and closed failure boundaries with deterministic seams', async () => {
+it('TEST-M5-CI-MATRIX-ORCHESTRATION-TIMEOUT-001 Generation 45 proves orchestration budgets and closed failure boundaries with deterministic seams', async () => {
+    const config = JSON.parse(readFileSync(fileURLToPath(new URL('../.musubix/config.json', import.meta.url)), 'utf8'));
+    const testTimeoutMs = Number(config.commands.find((command: {
+        name: string;
+    }) => command.name === 'test')?.timeoutMs);
+    expect(testTimeoutMs).toBe(900000);
+    expect(config.commands.filter((command: {
+        name: string;
+    }) => command.name !== 'test').every((command: {
+        timeoutMs: number;
+    }) => command.timeoutMs <= 300000)).toBe(true);
+    expect(config.formal.timeoutMs).toBeLessThanOrEqual(300000);
+    expect(75000 + testTimeoutMs + (6 * 300000) + 300000).toBe(3075000);
+    const yaml = parse(readFileSync(fileURLToPath(new URL('../.github/workflows/candidate-gate.yml', import.meta.url)), 'utf8'));
+    const job = yaml.jobs.verify;
+    expect(job['timeout-minutes']).toBe(110);
+    const gateIndex = job.steps.findIndex((step: {
+        name?: string;
+    }) => step.name === 'Run closed verification matrix');
+    expect(job.steps[gateIndex]['timeout-minutes']).toBe(65);
+    const minutes = (steps: Array<Record<string, unknown>>) => steps.reduce((sum, step) => {
+        expect(step['timeout-minutes']).toBeGreaterThan(0);
+        return sum + Number(step['timeout-minutes']);
+    }, 0);
+    expect(minutes(job.steps.slice(0, gateIndex))).toBeLessThanOrEqual(30);
+    expect(minutes(job.steps.slice(gateIndex + 1))).toBeLessThanOrEqual(10);
+    expect(300000 + 3075000 + 5000 + 300000 + 220000).toBe(65 * 60000);
+    expect((30 + 65 + 10) * 60000).toBe(105 * 60000);
+    expect(110 * 60000 - (30 + 65 + 10) * 60000).toBe(300000);
+    expect(job.steps.some((step: {
+        name?: string;
+    }) => step.name === 'Check Git LFS before checkout')).toBe(true);
+    expect(job.steps.some((step: {
+        name?: string;
+    }) => step.name === 'Fetch and independently verify exact candidate LFS closure')).toBe(true);
     const runner = await import('../packages/analysis/src/candidate-gate-runner.js');
     const { CandidateGateStartupError, candidateGateOrchestrationTimeout: budget, runCandidateGateWorkflow: workflow } = runner;
     expect(budget).toBeTypeOf('function');
@@ -326,7 +471,10 @@ it('TEST-M5-CI-MATRIX-ORCHESTRATION-TIMEOUT-001 proves orchestration budgets and
     const root = mkdtempSync(join(base, 'runner-test-'));
     const resultPath = join(root, 'candidate-gate-result.json');
     const names = ['typecheck', 'build', 'test', 'codegraph-tests', 'compatibility', 'pack-check', 'pack-smoke'];
-    const declarations = (timeoutMs: number) => names.map(name => ({ name, timeoutMs }));
+    const declarations = (timeoutMs: number, testTimeoutMs = timeoutMs) => names.map(name => ({
+        name,
+        timeoutMs: name === 'test' ? testTimeoutMs : timeoutMs,
+    }));
     const context = {
         repositoryId: 'repository:' + 'a'.repeat(64), changeId: 'CHANGE-0017', generation: 30,
         candidateCommit: 'b'.repeat(40), gateInputFingerprint: 'c'.repeat(64), job: { os: 'ubuntu', nodeMajor: 24 },
@@ -346,7 +494,7 @@ it('TEST-M5-CI-MATRIX-ORCHESTRATION-TIMEOUT-001 proves orchestration budgets and
     };
     const input = {
         command: process.execPath, args: [], cwd: root, temporaryDirectory: root, resultPath,
-        timeoutMs: 2475000, secrets: [], env: {}, context, preconditions,
+        timeoutMs: 3075000, secrets: [], env: {}, context, preconditions,
     };
     const report = JSON.stringify({ checks: names.map(name => ({
             name: 'command:' + name, required: true, status: 'pass', summary: 'ok', exitCode: 0,
@@ -416,7 +564,7 @@ it('TEST-M5-CI-MATRIX-ORCHESTRATION-TIMEOUT-001 proves orchestration budgets and
         } });
     try {
         expect(budget(declarations(1), 100)).toBe(75107);
-        expect(budget(declarations(300000), 300000)).toBe(2475000);
+        expect(budget(declarations(300000, 900000), 300000)).toBe(3075000);
         expect(budget(declarations(100), 12345)).toBe(88045);
         const invalid: Array<[
             unknown,
@@ -432,6 +580,8 @@ it('TEST-M5-CI-MATRIX-ORCHESTRATION-TIMEOUT-001 proves orchestration budgets and
                 unknown,
                 unknown
             ]),
+            [declarations(1, 900001), 100],
+            [declarations(1).map(command => command.name === 'build' ? { ...command, timeoutMs: 300001 } : command), 100],
         ];
         for (const [commands, formalTimeout] of invalid) {
             expect(() => budget(commands, formalTimeout)).toThrow(CandidateGateStartupError);
@@ -444,7 +594,7 @@ it('TEST-M5-CI-MATRIX-ORCHESTRATION-TIMEOUT-001 proves orchestration budgets and
             expect(fallbackCount).toBe(before + 1);
             expect(events).toEqual([]);
         }
-        for (const computed of [75106, 2475001, NaN, Number.MAX_SAFE_INTEGER + 1]) {
+        for (const computed of [75106, 3075001, NaN, Number.MAX_SAFE_INTEGER + 1]) {
             expect(() => budget(declarations(1), 100, { arithmetic: () => computed })).toThrow(CandidateGateStartupError);
             failure(await wrap(undefined, { runner: { arithmetic: () => computed } }), 'GATE_RUNNER_UNAVAILABLE', 'Candidate gate runner unavailable.', 'runner-startup-failure');
         }
@@ -532,8 +682,8 @@ it('TEST-M5-CI-MATRIX-ORCHESTRATION-TIMEOUT-001 proves orchestration budgets and
         const extended = workflow({ ...input, dependencies: dependencies('pass', 400000) });
         await vi.advanceTimersByTimeAsync(400000);
         expect((await extended).status).toBe('pass');
-        expect(events.indexOf('callback')).toBeLessThan(events.indexOf('timer:2475000'));
-        expect(events.indexOf('timer:2475000')).toBeLessThan(events.indexOf('spawn-attempt'));
+        expect(events.indexOf('callback')).toBeLessThan(events.indexOf('timer:3075000'));
+        expect(events.indexOf('timer:3075000')).toBeLessThan(events.indexOf('spawn-attempt'));
         events.length = 0;
         const expiry = workflow({ ...input, timeoutMs: 75107, dependencies: dependencies('hang') });
         await vi.advanceTimersByTimeAsync(80107);
@@ -545,7 +695,7 @@ it('TEST-M5-CI-MATRIX-ORCHESTRATION-TIMEOUT-001 proves orchestration budgets and
         await vi.advanceTimersByTimeAsync(305000);
         failure(await preExpiry, 'CANDIDATE_GATE_PRECONDITION_TIMEOUT', 'Candidate gate precondition timed out.', 'precondition-domain-failure');
         expect(events).not.toContain('spawn-attempt');
-        expect(events).not.toContain('timer:2475000');
+        expect(events).not.toContain('timer:3075000');
         events.length = 0;
         let postTreeCalls = 0;
         const postExpiry = workflow({ ...input, dependencies: dependencies(), preconditions: {
@@ -568,27 +718,6 @@ it('TEST-M5-CI-MATRIX-ORCHESTRATION-TIMEOUT-001 proves orchestration budgets and
         expect(postResult.timedOut).toBe(false);
         expect(postResult.stdoutSha256).not.toBe(empty);
         vi.useRealTimers();
-        const yaml = parse(readFileSync(fileURLToPath(new URL('../.github/workflows/candidate-gate.yml', import.meta.url)), 'utf8'));
-        const job = yaml.jobs.verify;
-        expect(job['timeout-minutes']).toBe(100);
-        const gateIndex = job.steps.findIndex((step: {
-            name?: string;
-        }) => step.name === 'Run closed verification matrix');
-        expect(job.steps[gateIndex]['timeout-minutes']).toBe(55);
-        const minutes = (steps: Array<Record<string, unknown>>) => steps.reduce((sum, step) => {
-            expect(step['timeout-minutes']).toBeGreaterThan(0);
-            return sum + Number(step['timeout-minutes']);
-        }, 0);
-        expect(minutes(job.steps.slice(0, gateIndex))).toBeLessThanOrEqual(30);
-        expect(minutes(job.steps.slice(gateIndex + 1))).toBeLessThanOrEqual(10);
-        expect(300000 + 2475000 + 5000 + 300000 + 220000).toBe(55 * 60000);
-        expect((30 + 55 + 10) * 60000).toBeLessThan(100 * 60000);
-        expect(job.steps.some((step: {
-            name?: string;
-        }) => step.name === 'Check Git LFS before checkout')).toBe(true);
-        expect(job.steps.some((step: {
-            name?: string;
-        }) => step.name === 'Fetch and independently verify exact candidate LFS closure')).toBe(true);
         expect(JSON.parse(readFileSync(resultPath, 'utf8')).status).toBe('fail');
         expect(readFileSync(join(root, 'candidate-gate-envelope.json'), 'utf8')).not.toContain('private-secret');
     }

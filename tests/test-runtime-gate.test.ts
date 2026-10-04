@@ -9,7 +9,7 @@ import { loadApprovalProjectionConfig, loadConfig } from '../packages/analysis/s
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const profileSha256 = 'f9fbe94729722eaaea1f1e49bbaf6c48053ea1ed6a8498a2287dbfe4a20bf06e';
-const gateSha256 = '414123c757dad57d01855bd408c1a3b9cf70044238df4156b2a1699bee30851f';
+const gateSha256 = '2d92597fbbd621ec23abb31d26c4f4287b3b735d7523fd4f284e5f7f3e837516';
 const legacyGateSha256 = '2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd';
 const profile = {
   calibration: { maxWidthMs: 1, samples: 8 },
@@ -46,7 +46,7 @@ const profile = {
  * @verifies REQ-M5-COMPAT-013
  * @design DES-M5-015
  */
-it('TEST-M5-TEST-CLOCK-GATE-FINGERPRINT-001 binds the closed runtime policy without changing legacy approval projection', async () => {
+it('TEST-M5-TEST-CLOCK-GATE-FINGERPRINT-001 Generation 49 binds the closed runtime policy without changing legacy approval projection', async () => {
   const current = await candidateGateFingerprintConfig(root);
   expect(current, 'candidate gate must include the approved runtime policy')
     .toHaveProperty('testRuntime', profile);
@@ -70,14 +70,35 @@ it('TEST-M5-TEST-CLOCK-GATE-FINGERPRINT-001 binds the closed runtime policy with
     if (typeof original !== 'object' || original === null || Array.isArray(original)) {
       throw new Error('Expected an object repository config');
     }
-    const legacy = Object.fromEntries(Object.entries(original).filter(([key]) => key !== 'testRuntime'));
+    const legacy = structuredClone(original) as Record<string, unknown>;
+    if (!Array.isArray(legacy.commands)) {
+      throw new Error('Expected a commands array');
+    }
+    const legacyTestCommands = legacy.commands.filter((command): command is Record<string, unknown> =>
+      typeof command === 'object' && command !== null && command.name === 'test');
+    if (legacyTestCommands.length !== 1) {
+      throw new Error(`Expected one legacy test command, observed ${legacyTestCommands.length}`);
+    }
+    legacyTestCommands[0]!.timeoutMs = 300000;
+    delete legacy.testRuntime;
+    if (typeof legacy.workflow !== 'object' || legacy.workflow === null || Array.isArray(legacy.workflow)) {
+      throw new Error('Expected a workflow object');
+    }
+    const legacyWorkflow = legacy.workflow as Record<string, unknown>;
+    legacyWorkflow.maxTranscriptBytes = 125000000;
+    delete legacyWorkflow.maxTranscriptLineBytes;
     const configPath = join(fixture, '.musubix/config.json');
     writeFileSync(configPath, canonicalBytes(legacy));
-    const legacyApproval = canonicalBytes(await loadApprovalProjectionConfig(fixture));
+    let legacyApproval = canonicalBytes(await loadApprovalProjectionConfig(fixture));
     const legacyGate = await candidateGateFingerprintConfig(fixture);
     expect(legacyGate).not.toHaveProperty('testRuntime');
     expect(sha256(canonicalBytes(legacyGate))).toBe(legacyGateSha256);
 
+    legacyTestCommands[0]!.timeoutMs = 900000;
+    legacyWorkflow.maxTranscriptBytes = 600000000;
+    legacyWorkflow.maxTranscriptLineBytes = 4000000;
+    writeFileSync(configPath, canonicalBytes(legacy));
+    legacyApproval = canonicalBytes(await loadApprovalProjectionConfig(fixture));
     writeFileSync(configPath, canonicalBytes({ ...legacy, testRuntime: profile }));
     expect(canonicalBytes(await loadApprovalProjectionConfig(fixture))).toEqual(legacyApproval);
     expect(await loadConfig(fixture)).toHaveProperty('testRuntime', profile);

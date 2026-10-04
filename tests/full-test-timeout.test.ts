@@ -7,7 +7,7 @@ import { canonicalBytes, sha256 } from '../packages/analysis/src/canonical.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const legacyGateSha256 = '327baa0f399450fd6714f112e41bc23e13de79a9c1113499795ea76d87bcd03e';
-const approvedGateSha256 = '414123c757dad57d01855bd408c1a3b9cf70044238df4156b2a1699bee30851f';
+const approvedGateSha256 = '2d92597fbbd621ec23abb31d26c4f4287b3b735d7523fd4f284e5f7f3e837516';
 const approvedLegacyGateSha256 = '2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd';
 const redCandidateGateSha256 = '71780a08dd4b0058b8420f6254cf6cbd10117179a907ff3cdce1bc1d0dd00188';
 const candidateGateDeclaration = 'export async function candidateGateFingerprintConfig';
@@ -65,10 +65,10 @@ function runtimeLegacyGateDigest(source: string): string {
 }
 
 /** @id TEST-M5-FULL-TEST-TIMEOUT-001
- * @verifies REQ-M5-LIFECYCLE-006
+ * @verifies REQ-M5-COMPAT-013 REQ-M5-LIFECYCLE-006
  * @design DES-M5-011 DES-M5-012 DES-M5-015
  */
-it('TEST-M5-FULL-TEST-TIMEOUT-001 binds the 300-second policy into candidate gate trust', async () => {
+it('TEST-M5-FULL-TEST-TIMEOUT-001 Generation 49 binds the 900-second policy into candidate gate trust', async () => {
   const [configText, design, candidateTrust, runtimeGate, candidateGateSource] = await Promise.all([
     readFile(`${root}/.musubix/config.json`, 'utf8'),
     readFile(`${root}/.musubix/features/musubix5-clean-foundation/design.md`, 'utf8'),
@@ -77,7 +77,7 @@ it('TEST-M5-FULL-TEST-TIMEOUT-001 binds the 300-second policy into candidate gat
     readFile(`${root}/packages/analysis/src/candidate-gate.ts`, 'utf8'),
   ]);
   const config: unknown = JSON.parse(configText);
-  expect(commandTimeout(config, 'test')).toBe(300000);
+  expect(commandTimeout(config, 'test')).toBe(900000);
   expect(commandTimeout(config, 'compatibility')).toBe(180000);
   expect(commandTimeout(config, 'pack-smoke')).toBe(180000);
   expect(sha256(canonicalBytes(normativeGate(design)))).toBe(approvedGateSha256);

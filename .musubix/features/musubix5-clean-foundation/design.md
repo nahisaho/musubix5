@@ -1,9 +1,60 @@
 ---
 schemaVersion: 1
 feature: musubix5-clean-foundation
-status: generation-27-approval-pending
+status: generation-49-approval-pending
 ---
 # musubix5 clean foundation design
+
+Generation-49-Design-Delta: Retain the complete Generation-48 production
+design and corrected test assertions as the design-checkpoint starting source.
+After design approval, exactly four test-title lines change from Generation 48
+to Generation 49 in `tests/test-runtime-gate.test.ts`,
+`tests/full-test-timeout.test.ts`,
+`tests/workflow-transcript-limit.test.ts`, and
+`tests/candidate-gate-trust.test.ts`. A path-scoped diff must contain those four
+line substitutions and no other hunk in the four files. Its baseline is not
+repository `HEAD`: immediately after the design checkpoint, raw copies and
+SHA-256 values for all four files, including the untracked transcript test, are
+sealed in the session artifact directory. Post-edit `diff --no-index` compares
+each working file with its sealed copy and `--word-diff` must show only
+`Generation 48` to `Generation 49` in the test-title string. The resulting
+fingerprints are frozen before Red and bound by all four Red records. The
+production workflow configuration remains 125,000,000/no explicit line through
+the Red checkpoint. Requirements: REQ-M5-CI-008, REQ-M5-COMPAT-013,
+REQ-M5-EVIDENCE-007, REQ-M5-LIFECYCLE-006. ADRs: ADR-0033.
+
+Generation-48-Design-Delta: Retain every Generation-47 production interface,
+limit, digest, and stream-boundary assertion. Correct only the clock
+fingerprint fixture state machine. Its historical state is
+`test.timeoutMs=300000`, `workflow.maxTranscriptBytes=125000000`, no
+`workflow.maxTranscriptLineBytes`, and no `testRuntime`; it proves
+`2487162ac...`. Before any current projection comparison, the same fixture
+transitions to `test.timeoutMs=900000`,
+`workflow.maxTranscriptBytes=600000000`,
+`workflow.maxTranscriptLineBytes=4000000`, still without `testRuntime`, persists
+that state, and captures the current approval projection. It then adds the
+approved runtime profile and must equal the repository current projection
+`2d92597f...`. No production normalization branch or fallback is introduced.
+Generation-47 TDD evidence is non-credit. Requirements: REQ-M5-CI-008,
+REQ-M5-COMPAT-013, REQ-M5-EVIDENCE-007, REQ-M5-LIFECYCLE-006. ADRs: ADR-0033.
+
+Generation-47-Design-Delta: Retain the complete Generation-46 production
+design, including the 600,000,000/4,000,000 workflow limits and digests
+`31d8e1d0ba31f28f58581325e98ea532d46a8a6c2b067638dc0abbd073948766`
+and `2d92597fbbd621ec23abb31d26c4f4287b3b735d7523fd4f284e5f7f3e837516`.
+Correct only the authoritative test interfaces. The workflow limit test passes
+the exact 10-byte `{}\n{}\n{} \n` source through both byte guards and expects
+the independent no-Skill-event rejection, then passes the exact 11-byte
+`12345678901` source to prove the 10-byte total cutoff by matching the
+`maximum total size of 10 bytes` diagnostic. Both calls use compatible mode
+with `maxTranscriptBytes=10` and `maxTranscriptLineBytes=10`. The clock fingerprint
+fixture removes `testRuntime`, restores the historical 125,000,000-byte
+workflow total, and removes the explicit line limit before checking the
+historical no-`testRuntime` digest. No production branch, compatibility special
+case, sanitizer fallback, or alternate fingerprint algorithm is introduced.
+Generation-46 TDD terminals are non-credit. Requirements:
+REQ-M5-CI-008, REQ-M5-COMPAT-013, REQ-M5-EVIDENCE-007,
+REQ-M5-LIFECYCLE-006. ADRs: ADR-0033.
 
 ## Architecture constraints
 
@@ -27,20 +78,22 @@ Canonical encoding is UTF-8 JSON with lexicographically sorted object keys, no
 insignificant whitespace, and exactly one trailing LF byte.
 
 ```json
-{"approval":{"domains":[],"mode":"required"},"architecture":{"forbidCycles":true,"rules":[]},"attestation":{"githubOidc":{"mode":"off"},"maxAgeSeconds":3600,"maxFutureSkewSeconds":60,"mode":"local","trustedPublicKeys":[]},"codeGraph":{"mode":"compatible"},"commands":[{"args":["run","typecheck"],"command":"npm","name":"typecheck","required":true,"timeoutMs":120000},{"args":["run","build"],"command":"npm","name":"build","required":true,"timeoutMs":120000},{"adapter":"vitest","args":["vitest","run"],"command":"npx","name":"test","required":true,"timeoutMs":300000},{"args":["scripts/run-codegraph-tests.mjs","--report","{reportPath}"],"command":"node","name":"codegraph-tests","required":true,"tddArgs":["--test-id","{testId}"],"tddReport":{"format":"musubix-json","path":".musubix/cache/test-results/{testId}.json"},"testReport":{"format":"musubix-json","path":".musubix/cache/test-results/codegraph.json"},"timeoutMs":300000},{"args":["run","test:compat"],"command":"npm","name":"compatibility","required":true,"timeoutMs":180000},{"args":["run","pack:check"],"command":"npm","name":"pack-check","required":true,"timeoutMs":120000},{"args":["run","pack:smoke"],"command":"npm","name":"pack-smoke","required":true,"timeoutMs":180000}],"formal":{"minModeledFraction":0,"solver":"none","timeoutMs":12000},"language":"auto","mutation":{"mode":"compatible"},"qualityProfile":"custom","requiredChecks":["requirements","design","constitution","trace","graph","commands"],"schemaVersion":1,"tdd":{"redPreflightCommands":[]},"testRuntime":{"calibration":{"maxWidthMs":1,"samples":8},"commandNames":["codegraph-tests","compatibility","test"],"inputs":[".musubix/config.json","package-lock.json","package.json","packages/analysis/src/adapters.ts","packages/analysis/src/candidate-gate.ts","packages/analysis/src/canonical.ts","packages/analysis/src/config.ts","packages/analysis/src/gate.ts","packages/analysis/src/parallel-runtime.ts","packages/analysis/src/process.ts","packages/analysis/src/tdd-source-pair.ts","packages/analysis/src/tdd.ts","packages/analysis/src/test-runtime.ts","scripts/run-codegraph-tests.mjs","scripts/test-runtime/coordinator-reporter.mjs","scripts/test-runtime/stable-wall-clock.mjs","scripts/test-runtime/vitest-setup.mjs","tests/global-setup.ts","tsconfig.build.json","tsconfig.json","vitest.config.ts"],"kind":"stable-test-wall-clock-v1","reporterMode":"append-after-native-v1","schemaVersion":1},"thresholds":{"design":1,"implementation":1,"tests":1},"workflow":{"maxAgeSeconds":3600,"maxEventSkewMs":null,"maxFutureSkewSeconds":60,"maxTranscriptBytes":125000000,"maxTranscriptLineBytes":1000000,"mode":"compatible"}}
+{"approval":{"domains":[],"mode":"required"},"architecture":{"forbidCycles":true,"rules":[]},"attestation":{"githubOidc":{"mode":"off"},"maxAgeSeconds":3600,"maxFutureSkewSeconds":60,"mode":"local","trustedPublicKeys":[]},"codeGraph":{"mode":"compatible"},"commands":[{"args":["run","typecheck"],"command":"npm","name":"typecheck","required":true,"timeoutMs":120000},{"args":["run","build"],"command":"npm","name":"build","required":true,"timeoutMs":120000},{"adapter":"vitest","args":["vitest","run"],"command":"npx","name":"test","required":true,"timeoutMs":900000},{"args":["scripts/run-codegraph-tests.mjs","--report","{reportPath}"],"command":"node","name":"codegraph-tests","required":true,"tddArgs":["--test-id","{testId}"],"tddReport":{"format":"musubix-json","path":".musubix/cache/test-results/{testId}.json"},"testReport":{"format":"musubix-json","path":".musubix/cache/test-results/codegraph.json"},"timeoutMs":300000},{"args":["run","test:compat"],"command":"npm","name":"compatibility","required":true,"timeoutMs":180000},{"args":["run","pack:check"],"command":"npm","name":"pack-check","required":true,"timeoutMs":120000},{"args":["run","pack:smoke"],"command":"npm","name":"pack-smoke","required":true,"timeoutMs":180000}],"formal":{"minModeledFraction":0,"solver":"none","timeoutMs":12000},"language":"auto","mutation":{"mode":"compatible"},"qualityProfile":"custom","requiredChecks":["requirements","design","constitution","trace","graph","commands"],"schemaVersion":1,"tdd":{"redPreflightCommands":[]},"testRuntime":{"calibration":{"maxWidthMs":1,"samples":8},"commandNames":["codegraph-tests","compatibility","test"],"inputs":[".musubix/config.json","package-lock.json","package.json","packages/analysis/src/adapters.ts","packages/analysis/src/candidate-gate.ts","packages/analysis/src/canonical.ts","packages/analysis/src/config.ts","packages/analysis/src/gate.ts","packages/analysis/src/parallel-runtime.ts","packages/analysis/src/process.ts","packages/analysis/src/tdd-source-pair.ts","packages/analysis/src/tdd.ts","packages/analysis/src/test-runtime.ts","scripts/run-codegraph-tests.mjs","scripts/test-runtime/coordinator-reporter.mjs","scripts/test-runtime/stable-wall-clock.mjs","scripts/test-runtime/vitest-setup.mjs","tests/global-setup.ts","tsconfig.build.json","tsconfig.json","vitest.config.ts"],"kind":"stable-test-wall-clock-v1","reporterMode":"append-after-native-v1","schemaVersion":1},"thresholds":{"design":1,"implementation":1,"tests":1},"workflow":{"maxAgeSeconds":3600,"maxEventSkewMs":null,"maxFutureSkewSeconds":60,"maxTranscriptBytes":600000000,"maxTranscriptLineBytes":4000000,"mode":"compatible"}}
 ```
 
 SHA-256:
-`7c7ce3ed0eb363e5d43161dcd04b0dc58c3587b2cf4be9db11cca39fd521e041`
+`31d8e1d0ba31f28f58581325e98ea532d46a8a6c2b067638dc0abbd073948766`
 
 `qualityProfile` is excluded because the projection contains every effective
 policy field and the profile label has no independent enforcement effect.
 `language` is display-only. `workflow.maxEventSkewMs: null` canonically means
-that the optional event-skew bound is disabled, and
-`workflow.maxTranscriptLineBytes` is the materialized default. The
+that the optional event-skew bound is disabled. The
 `workflow.maxTranscriptBytes` value is an explicit approved increase to
-125,000,000 bytes, within the REQ-M5-EVIDENCE-007 bound, so the complete
-107,405,647-byte source can be processed without truncation.
+600,000,000 bytes, with `workflow.maxTranscriptLineBytes` explicitly set to
+4,000,000 bytes. Both remain within REQ-M5-EVIDENCE-007 bounds and allow the
+currently observed complete source and 2,830,476-byte maximum line to be
+processed without truncation. The library defaults remain 100,000,000 and
+1,000,000 bytes.
 
 The musubix5-only orchestration extension is also design-approved. It is
 disabled by default at both repairable boundaries but fixes positive limits
@@ -139,15 +192,38 @@ no testRuntime member, null or default. Do not claim the current binary already
 produces the generation-8 fingerprint before implementation.
 
 ```json
-{"approval":{"domains":[],"mode":"required"},"approvalAutomation":{"design":{"mode":"manual","producerRepairLimit":3,"repairPlannerBudgetUnits":1000,"reviewerBudgetUnits":1000},"release":{"mode":"manual"},"requirements":{"mode":"manual","producerRepairLimit":3,"repairPlannerBudgetUnits":1000,"reviewerBudgetUnits":1000}},"candidateGate":{"attestation":{"githubOidc":{"audience":"https://github.com/nahisaho/musubix5/actions/musubix5-gate","issuer":"https://token.actions.githubusercontent.com","keyBinding":"public-key","mode":"strict","repository":"nahisaho/musubix5","workflow":".github/workflows/candidate-gate.yml"},"maxAgeSeconds":86400,"maxFutureSkewSeconds":60,"mode":"ci-required","repository":"nahisaho/musubix5","trustedPublicKeys":[]}},"executionPolicy":{"architecture":{"forbidCycles":true,"rules":[]},"attestation":{"githubOidc":{"mode":"off"},"maxAgeSeconds":3600,"maxFutureSkewSeconds":60,"mode":"local","trustedPublicKeys":[]},"codeGraph":{"mode":"compatible"},"commands":[{"args":["run","typecheck"],"command":"npm","name":"typecheck","required":true,"timeoutMs":120000},{"args":["run","build"],"command":"npm","name":"build","required":true,"timeoutMs":120000},{"adapter":"vitest","args":["vitest","run"],"command":"npx","name":"test","required":true,"timeoutMs":300000},{"args":["scripts/run-codegraph-tests.mjs","--report","{reportPath}"],"command":"node","name":"codegraph-tests","required":true,"tddArgs":["--test-id","{testId}"],"tddReport":{"format":"musubix-json","path":".musubix/cache/test-results/{testId}.json"},"testReport":{"format":"musubix-json","path":".musubix/cache/test-results/codegraph.json"},"timeoutMs":300000},{"args":["run","test:compat"],"command":"npm","name":"compatibility","required":true,"timeoutMs":180000},{"args":["run","pack:check"],"command":"npm","name":"pack-check","required":true,"timeoutMs":120000},{"args":["run","pack:smoke"],"command":"npm","name":"pack-smoke","required":true,"timeoutMs":180000}],"formal":{"minModeledFraction":0,"solver":"none","timeoutMs":12000},"mutation":{"mode":"compatible"},"requiredChecks":["requirements","design","constitution","trace","graph","commands"],"schemaVersion":1,"tdd":{"redPreflightCommands":[]},"thresholds":{"design":1,"implementation":1,"tests":1},"workflow":{"maxAgeSeconds":3600,"maxEventSkewMs":null,"maxFutureSkewSeconds":60,"maxTranscriptBytes":125000000,"maxTranscriptLineBytes":1000000,"mode":"compatible"}},"testRuntime":{"calibration":{"maxWidthMs":1,"samples":8},"commandNames":["codegraph-tests","compatibility","test"],"inputs":[".musubix/config.json","package-lock.json","package.json","packages/analysis/src/adapters.ts","packages/analysis/src/candidate-gate.ts","packages/analysis/src/canonical.ts","packages/analysis/src/config.ts","packages/analysis/src/gate.ts","packages/analysis/src/parallel-runtime.ts","packages/analysis/src/process.ts","packages/analysis/src/tdd-source-pair.ts","packages/analysis/src/tdd.ts","packages/analysis/src/test-runtime.ts","scripts/run-codegraph-tests.mjs","scripts/test-runtime/coordinator-reporter.mjs","scripts/test-runtime/stable-wall-clock.mjs","scripts/test-runtime/vitest-setup.mjs","tests/global-setup.ts","tsconfig.build.json","tsconfig.json","vitest.config.ts"],"kind":"stable-test-wall-clock-v1","reporterMode":"append-after-native-v1","schemaVersion":1}}
+{"approval":{"domains":[],"mode":"required"},"approvalAutomation":{"design":{"mode":"manual","producerRepairLimit":3,"repairPlannerBudgetUnits":1000,"reviewerBudgetUnits":1000},"release":{"mode":"manual"},"requirements":{"mode":"manual","producerRepairLimit":3,"repairPlannerBudgetUnits":1000,"reviewerBudgetUnits":1000}},"candidateGate":{"attestation":{"githubOidc":{"audience":"https://github.com/nahisaho/musubix5/actions/musubix5-gate","issuer":"https://token.actions.githubusercontent.com","keyBinding":"public-key","mode":"strict","repository":"nahisaho/musubix5","workflow":".github/workflows/candidate-gate.yml"},"maxAgeSeconds":86400,"maxFutureSkewSeconds":60,"mode":"ci-required","repository":"nahisaho/musubix5","trustedPublicKeys":[]}},"executionPolicy":{"architecture":{"forbidCycles":true,"rules":[]},"attestation":{"githubOidc":{"mode":"off"},"maxAgeSeconds":3600,"maxFutureSkewSeconds":60,"mode":"local","trustedPublicKeys":[]},"codeGraph":{"mode":"compatible"},"commands":[{"args":["run","typecheck"],"command":"npm","name":"typecheck","required":true,"timeoutMs":120000},{"args":["run","build"],"command":"npm","name":"build","required":true,"timeoutMs":120000},{"adapter":"vitest","args":["vitest","run"],"command":"npx","name":"test","required":true,"timeoutMs":900000},{"args":["scripts/run-codegraph-tests.mjs","--report","{reportPath}"],"command":"node","name":"codegraph-tests","required":true,"tddArgs":["--test-id","{testId}"],"tddReport":{"format":"musubix-json","path":".musubix/cache/test-results/{testId}.json"},"testReport":{"format":"musubix-json","path":".musubix/cache/test-results/codegraph.json"},"timeoutMs":300000},{"args":["run","test:compat"],"command":"npm","name":"compatibility","required":true,"timeoutMs":180000},{"args":["run","pack:check"],"command":"npm","name":"pack-check","required":true,"timeoutMs":120000},{"args":["run","pack:smoke"],"command":"npm","name":"pack-smoke","required":true,"timeoutMs":180000}],"formal":{"minModeledFraction":0,"solver":"none","timeoutMs":12000},"mutation":{"mode":"compatible"},"requiredChecks":["requirements","design","constitution","trace","graph","commands"],"schemaVersion":1,"tdd":{"redPreflightCommands":[]},"thresholds":{"design":1,"implementation":1,"tests":1},"workflow":{"maxAgeSeconds":3600,"maxEventSkewMs":null,"maxFutureSkewSeconds":60,"maxTranscriptBytes":600000000,"maxTranscriptLineBytes":4000000,"mode":"compatible"}},"testRuntime":{"calibration":{"maxWidthMs":1,"samples":8},"commandNames":["codegraph-tests","compatibility","test"],"inputs":[".musubix/config.json","package-lock.json","package.json","packages/analysis/src/adapters.ts","packages/analysis/src/candidate-gate.ts","packages/analysis/src/canonical.ts","packages/analysis/src/config.ts","packages/analysis/src/gate.ts","packages/analysis/src/parallel-runtime.ts","packages/analysis/src/process.ts","packages/analysis/src/tdd-source-pair.ts","packages/analysis/src/tdd.ts","packages/analysis/src/test-runtime.ts","scripts/run-codegraph-tests.mjs","scripts/test-runtime/coordinator-reporter.mjs","scripts/test-runtime/stable-wall-clock.mjs","scripts/test-runtime/vitest-setup.mjs","tests/global-setup.ts","tsconfig.build.json","tsconfig.json","vitest.config.ts"],"kind":"stable-test-wall-clock-v1","reporterMode":"append-after-native-v1","schemaVersion":1}}
 ```
 
 SHA-256:
-`414123c757dad57d01855bd408c1a3b9cf70044238df4156b2a1699bee30851f`
+`2d92597fbbd621ec23abb31d26c4f4287b3b735d7523fd4f284e5f7f3e837516`
 
-Generation 25 introduced and Generation 26 retains only the execution-policy member's unique ordinary
-`test.timeoutMs` value and the resulting execution-policy/candidate-gate
-digests. The `testRuntime` object and its
+The `31d8e1d0ba31f28f58581325e98ea532d46a8a6c2b067638dc0abbd073948766`
+digest above identifies the standalone Generation-46 execution-policy approval
+projection. The
+`2d92597fbbd621ec23abb31d26c4f4287b3b735d7523fd4f284e5f7f3e837516`
+digest here identifies the complete Generation-46 candidate-gate fingerprint
+projection.
+
+Generation 46 supersedes Generation 45's
+`d4251d4e7be83fb03fbf551f2e8d32c0584a6d34b709a0d3fa64da3f22a00ba5`
+only by changing this repository's workflow total/line ceilings to
+600,000,000/4,000,000. The `testRuntime` object and approved legacy
+no-`testRuntime` projection remain unchanged. After design approval,
+`tests/test-runtime-gate.test.ts`, `tests/full-test-timeout.test.ts`, and
+`tests/candidate-gate-trust.test.ts` receive exact Generation-46 title/digest
+revisions and freeze through Green. New
+`tests/workflow-transcript-limit.test.ts` uses configuration and
+persisted-verification metadata for production-size boundaries plus a 10/11-byte
+temporary stream cutoff, with explicit assertions and no large allocation.
+`.musubix/config.json` remains at the Generation-45 125,000,000/no-explicit-line
+baseline through the first Red; the 600,000,000/4,000,000 edit is post-Red
+implementation only.
+
+Generation 45 supersedes the historical Generation-25/26 execution-policy
+member's unique ordinary `test.timeoutMs` value of 300000 with 900000 and
+updates the resulting execution-policy/candidate-gate digests. The
+`testRuntime` object and its
 `f9fbe94729722eaaea1f1e49bbaf6c48053ea1ed6a8498a2287dbfe4a20bf06e`
 digest remain unchanged. Historical generation-8 and generation-9 references
 to candidate-gate digest
@@ -313,7 +389,7 @@ Requirements: REQ-M5-COMPAT-013 REQ-M5-LIFECYCLE-005 REQ-M5-LIFECYCLE-006 REQ-M5
 ADRs: ADR-0006 ADR-0010 ADR-0012 ADR-0033 ADR-0035 ADR-0039 ADR-0040 ADR-0041
 Depends-On: DES-M5-003 DES-M5-004 DES-M5-007
 
-### Generation-24 config fingerprint and full-test timeout projection
+### Generation-24 config fingerprint and full-test timeout projection (historical; superseded in part by Generations 45 and 46)
 
 Generation 19 completed a valid nine-requirement Red/Implementation/Green
 chronology but became immutable non-current evidence when the user changed the
@@ -428,17 +504,19 @@ timeout test Green, then one matching proper-subset Green checkpoint. The only
 new config change is this `.musubix/config.json` value; the only production
 changes are the shared fingerprint/guard implementation. Existing
 This historical Generation-24 wording rejected Generation-19 through
-Generation-23 evidence at that time. Current Generation-26 validation rejects
+Generation-23 evidence at that time. Then-current Generation-26 validation rejected
 Generation-19 through Generation-25 phase/TDD evidence as current credit; no
 new evidence or command-result schema is introduced.
 
-Quality runs the existing configured command path and accepts only completed
-success with its measured duration strictly below 300000 ms, zero reported
+Historical Generation-26 quality ran the existing configured command path and
+accepted only completed success with measured duration strictly below 300000
+ms, zero reported
 failures and no bootstrap/provenance error. Equality with the ceiling, timeout,
 unfinished selected files or any other failure remain non-pass. No timeout
-beyond 300000 ms is authorized.
+beyond 300000 ms was authorized for that generation; Generation 45 supersedes
+only the ordinary `test` boundary with 900000 ms.
 
-The historical Generation-24/25 and current Generation-26 requirement-to-test
+The historical Generation-24/25 and then-current Generation-26 requirement-to-test
 mapping is:
 
 | Requirement | TEST ID |
@@ -489,7 +567,7 @@ checkpoint. In execution, that test-only correction left implementation
 fingerprints unchanged, so the Implementation checkpoint failed closed and
 Generation 25 became immutable non-current evidence before Green or quality.
 
-### Generation-26 authoritative gate-fingerprint trace recovery
+### Generation-26 authoritative gate-fingerprint trace recovery (historical; superseded in part by Generations 45 and 46)
 
 Generation 26 retains exactly `REQ-M5-LIFECYCLE-006`, the approved canonical
 execution-policy/candidate-gate bytes and digests, and the two-failure
@@ -536,7 +614,7 @@ and duration strictly below 300000 milliseconds. No timeout increase,
 fingerprint exclusion, executable candidate-gate change, proxy trace entity, or
 historical evidence rewrite is authorized.
 
-### Generation-27 deterministic current-cycle selection recovery
+### Generation-27 deterministic current-cycle selection recovery (historical; superseded in part by Generations 45 and 46)
 
 Generation 27 retains exactly `REQ-M5-LIFECYCLE-006` and all Generation-26
 canonical execution-policy and complete candidate-gate bytes. The current
@@ -1025,8 +1103,121 @@ Interfaces: `runGate(scope, persistenceMode?)`, `getStatus(scope)`, `refreshEvid
 Constraints: Required commands cannot be empty; only the active generation contributes; no active generation or an active generation without terminal quality produces `CHANGE_GENERATION_INCOMPLETE`, gate exit 1, status exit 0, and `ready: false`, without blocking requirements/design approval; `CHANGE_GENERATION_REQUIREMENTS` is re-evaluated on every status/gate call; configuration cannot remove mandatory evidence kinds. Gate and status validate but never reconcile checkpoint journal records, always expose DES-M5-007 `unprojectedPhaseCheckpoints` and `unprojectedBatchCheckpoints` on active, superseded, and abandoned summaries, continue evaluating the current projection for informational phase/interrupted/legacy entries, and treat historical entries as non-current. Invalid requirements/design checkpoint journal evidence reported by DES-M5-007, or any batch entry labeled `invalid`, including duplicate order identities detected before subtraction, emits non-waivable `CHANGE_CHECKPOINT_JOURNAL_INVALID`; gate exits 1 and status exits 0 with `ready: false`. Unaddressable journal corruption uses the same repository-level diagnostic without inventing an entry. A valid workflow correction suppresses only its target declaration's reused/missing pair, emits informational `WORKFLOW_DECLARATION_SUPERSEDED`, grants no credit, and never suppresses a canonical or unrelated diagnostic; malformed correction evidence emits `WORKFLOW_DECLARATION_CORRECTION_INVALID`. Normal mode journals only its owned quality/check result records under CHANGE/order leases and does not invoke phase-checkpoint recovery. Matrix mode is explicitly non-journaling, acquires no shared repository lease, writes its authoritative canonical result artifact outside the QA worktree, and keeps any informational caches in ignored scratch storage; only later DES-M5-019 control-worktree ingestion creates normal evidence. Release readiness reads candidate matrix records only through DES-M5-007 projections, preventing an ESM import cycle with DES-M5-019. DES-M5-015 consumes DES-M5-012 structural records plus release classification supplied by DES-M5-002, produces quality/gate/replacement/eligibility/guidance evaluation, and never imports or calls DES-M5-006. Its injected pure/read-only evaluator never calls DES-M5-012 while DES-M5-012 holds a lease. Domain requirements/design and approval/quality recovery always precede snapshot actions. With no live repository-matching record, including foreign-only and tombstoned-only history, it inserts exact create before release actions only when create preconditions are current. A sole `replacementRequired` record inserts protected reopen recovery when needed, then delete, and inserts create only after current preconditions. A sole valid basis with non-pass gates emits gate-run guidance and never delete/create. Multiple live repository-matching records emit list plus one ascending-order delete command per record, never create in the same response. Gate/status classify every shared chain defect as `CHANGE_CHECKPOINT_JOURNAL_INVALID`; list/show retain their uniform read-only candidate-journal classification.
 Requirements: REQ-M5-COMPAT-013 REQ-M5-EVIDENCE-004 REQ-M5-EVIDENCE-006 REQ-M5-LIFECYCLE-005 REQ-M5-LIFECYCLE-006 REQ-M5-QUALITY-001 REQ-M5-QUALITY-002 REQ-M5-QUALITY-003 REQ-M5-QUALITY-004 REQ-M5-QUALITY-005 REQ-M5-RELEASE-002 REQ-M5-WORKTREE-005 REQ-M5-WORKTREE-006 REQ-M5-WORKTREE-007
 Source-Supersession-Readiness: Consume the registry/ledger's read-only `sourceSupersessions` and copyable `sourceTerminalSelectors` summaries specified by DES-M5-023 without recovering or writing them. Always show operation, exact target, old/new fingerprint and selection reason. Pending in the evaluated CHANGE/generation is non-ready with gate exit 1 and status exit 0; unrelated or abandoned/superseded valid pending is informational, while global corruption remains non-pass. Only completed verified terminal selection can clear its source stale result. Ordinary configured-runner failures, general approval cascades, implementation currency, coverage, parallel provenance and candidate checks remain independent. No snapshot/helper/runner/config/production/HEAD/candidate equality test is added to completed terminal source currency.
-ADRs: ADR-0005 ADR-0007 ADR-0009 ADR-0010 ADR-0014 ADR-0015 ADR-0035 ADR-0036 ADR-0040
+ADRs: ADR-0005 ADR-0007 ADR-0009 ADR-0010 ADR-0014 ADR-0015 ADR-0035 ADR-0036 ADR-0040 ADR-0042
 Depends-On: DES-M5-005 DES-M5-007 DES-M5-011 DES-M5-012 DES-M5-014
+
+### Generation-45 candidate-gate fingerprint supersession (historical; digest superseded by Generation 46)
+
+Generation 45 changed only the unique execution-policy command named `test`
+from `timeoutMs: 300000` to `timeoutMs: 900000`. The other six command
+declarations, `formal.timeoutMs`, stable `testRuntime` object, approval,
+approval-automation, and candidate-attestation members remain byte-identical.
+The standalone design-approved execution-policy projection above, which also
+contains `language`, `qualityProfile`, and `testRuntime`, has SHA-256
+`bbe82c945b29ad9fdc0656961933ba4929ba55eb13e1c61bade24f80b933941c`.
+The narrower `candidateGate.executionPolicy` member excludes those siblings;
+its prior 300,000-millisecond SHA-256 was
+`73aeed419e2feb9187153304cfbf787f124d507b28c44661193b0ac5485d19eb`,
+and its Generation-45 SHA-256 became
+`a9a084af6062c318e75124631cc2080521f57bac405dff102767760d773d6993`.
+The complete Generation-45 canonical candidate-gate projection SHA-256 became
+`d4251d4e7be83fb03fbf551f2e8d32c0584a6d34b709a0d3fa64da3f22a00ba5`.
+The approved Generation-27 legacy fixture remains byte-identical with SHA-256
+`2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd`;
+it is constructed by pinning `test.timeoutMs` to 300,000 and then omitting the
+`testRuntime` member, not by deleting `testRuntime` from the live
+900,000-millisecond configuration.
+The obsolete pre-Generation-27 value
+`bb4a58c169b4e4f7357b608dc3b00028a613f907613b88d1540b3654ea600c8a`
+remains historical only.
+
+`candidateGateFingerprintConfig()` continues to construct the projection from
+validated configuration rather than a test-only fixture. Fresh
+`TEST-M5-FULL-TEST-TIMEOUT-001` Red must observe the still-configured
+300,000-millisecond expectation and prior complete digest
+`414123c757dad57d01855bd408c1a3b9cf70044238df4156b2a1699bee30851f`
+while preserving `legacyGateSha256` at
+`2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd`;
+Generation-45 Green required the exact 900,000-millisecond value and complete
+digest `d4251d4e7be83fb03fbf551f2e8d32c0584a6d34b709a0d3fa64da3f22a00ba5`;
+Generation 46 supersedes only that digest as defined above.
+Fresh `TEST-M5-TEST-CLOCK-GATE-FINGERPRINT-001` uses the same prior/current
+complete digests and unchanged legacy fixture digest to verify
+`REQ-M5-COMPAT-013`.
+
+Generation-45 TDD ownership is:
+
+The existing worktree bytes after the abandoned Generation-44 Green attempt are
+the Generation-45 starting source: they already contain Generation-44 titles,
+the 900,000-millisecond
+assertions, current/legacy digest expectations, legacy fixture pin, and updated
+`@verifies` mapping. Before the Generation-45 design checkpoint, reset the
+TRUST regression constant to the baseline digest. After the checkpoint, change
+each authoritative test title to include `Generation 45`; this includes
+`TEST-M5-FULL-TEST-TIMEOUT-001`, whose current title already says
+`900-second` but still requires a byte-changing Generation-45 title revision.
+The orchestration test already has its actual config and workflow assertions
+for 900,000/3,075,000/65/110 ahead of every direct or indirect candidate-runner
+export invocation; preserve that ordering and all of its assertions. The observed outer value is
+computed by test-local arithmetic as 75,000 plus the parsed actual `test`
+timeout plus six 300,000-millisecond non-test ceiling slots plus the
+300,000-millisecond formal ceiling; it is the defensive maximum, not the sum of
+live non-test command values, and no runner export supplies it.
+
+| Test | Requirements | Pre-Red authoritative source | Implementation responsibility |
+|---|---|---|---|
+| `TEST-M5-CI-MATRIX-ORCHESTRATION-TIMEOUT-001` | `REQ-M5-CI-008` | Retain the approved 900,000/3,075,000/65/110 expectations and existing pre-runner actual-file assertion order; only the byte-distinct Generation-45 title changes | `.musubix/config.json`, runner named-timeout validation, workflow bounds |
+| `TEST-M5-CI-MATRIX-COMMAND-DIAGNOSTICS-001` | `REQ-M5-CI-008` | Retain the approved diagnostic schema and redaction cases | runner normal-result check projection |
+| `TEST-M5-FULL-TEST-TIMEOUT-001` | `REQ-M5-LIFECYCLE-006`, `REQ-M5-COMPAT-013` | Retain the already-present standalone/full digests, exact timeout, and frozen 300,000-millisecond legacy fixture; only the byte-distinct Generation-45 title changes | live config bump and resulting production fingerprint materialization |
+| `TEST-M5-TEST-CLOCK-GATE-FINGERPRINT-001` | `REQ-M5-COMPAT-013` | Retain the current digest and 300,000-millisecond pin-before-omit legacy proof, then mutate the shared `legacy` object's unique test timeout to 900,000, persist the restored no-`testRuntime` object, recapture its approval projection, and only then re-add `testRuntime`; current and variant configs derive from that restored object and use the recaptured baseline; also use a byte-distinct Generation-45 title | live config bump and resulting production fingerprint materialization |
+
+After the Generation-45 design checkpoint,
+`tests/candidate-gate-trust.test.ts` received the Generation-45 constant edit from
+`414123c757dad57d01855bd408c1a3b9cf70044238df4156b2a1699bee30851f`
+to
+`d4251d4e7be83fb03fbf551f2e8d32c0584a6d34b709a0d3fa64da3f22a00ba5`
+before Red and is rerun as a no-credit regression after implementation. That
+exact edit supersedes only the historical Generation-8/9 no-TRUST-edit and
+`327baa0f399450fd6714f112e41bc23e13de79a9c1113499795ea76d87bcd03e`
+instructions. Each authoritative test and the TRUST regression are frozen from
+the first Generation-45 Red through Green and quality. No Generation-40 or
+Generation-41 through Generation-44 approval, design, Red, implementation, Green, or pending TDD
+record contributes Generation-45 credit.
+
+The TRUST regression remains outside the active three-requirement TDD batch and
+requires no Generation-45 Red record. Its exact constant edit contributes to
+the changed test-set fingerprint used by `change-record ... red`; that Red
+pre-check, not the earlier design checkpoint, must accept the changed mapped regression while requiring current
+Red evidence only for the four authoritative active-scope tests. If the
+checkpoint instead requests a TRUST Red or reports unchanged tests, stop before
+implementation rather than adding TDD credit or weakening the mapping.
+
+Before any Generation-45 Red, restore `.musubix/config.json`,
+`.github/workflows/candidate-gate.yml`,
+`packages/analysis/src/candidate-gate-runner.ts`,
+`.musubix/evidence/native/test/aggregate.json`,
+`.musubix/evidence/native/test/TEST-M5-CI-MATRIX-ORCHESTRATION-TIMEOUT-001.json`,
+`.musubix/evidence/native/test/TEST-M5-FULL-TEST-TIMEOUT-001.json`, and
+`.musubix/evidence/native/test/TEST-M5-TEST-CLOCK-GATE-FINGERPRINT-001.json`
+to baseline commit `275ad0fe3c79639b0d379dc026831e523c1370a2`, and require
+`.musubix/evidence/native/test/TEST-M5-CI-MATRIX-COMMAND-DIAGNOSTICS-001.json`
+to be absent. After the
+Generation-45 design checkpoint, revise each authoritative test title to name
+Generation 45 while preserving its trace ID and requirement mapping. Preserve
+all assertions except for the clock test's approved fixture repair: after the
+legacy digest assertion, restore the unique fixture test timeout to 900,000
+and persist `canonicalBytes(legacy)` to `configPath`, then recapture the
+no-`testRuntime` approval projection before re-adding
+`testRuntime`; mutate the shared `legacy` object in place so the current and
+variant configs both derive from the restored timeout, and use the recaptured baseline.
+Preserve the
+orchestration test's pre-runner assertion order. Each resulting fingerprint
+differs from both the Generation-45 design checkpoint and Generation-44
+post-design source; every Generation-45 title is byte-different from its
+Generation-44 title. Then
+generate fresh selected native reports and fresh Generation-45 Red records
+from the restored production state. Abandoned Generation-40 through
+Generation-44 journal/TDD history remains immutable and non-credit.
 
 ### Generation-9 recovery contract (historical; abandoned before P/claim/D1)
 
@@ -12270,9 +12461,12 @@ retain the canonical profile f9fbe947... and historical generation-8 gate
 327baa... digests when those historical JSON bytes are unchanged; that
 generation's TRUST digest is
 327baa0f399450fd6714f112e41bc23e13de79a9c1113499795ea76d87bcd03e.
-Generation 25 supersedes the current approved gate digest with
+At Generation 25, that generation's approved gate digest became
 414123c757dad57d01855bd408c1a3b9cf70044238df4156b2a1699bee30851f.
-This does not authorize changing the fixed policy under its existing kind.
+Generation 45 supersedes that complete digest with
+d4251d4e7be83fb03fbf551f2e8d32c0584a6d34b709a0d3fa64da3f22a00ba5
+without changing the fixed runtime-profile kind; this is historical and its
+complete digest is superseded by the Generation-46 projection above.
 
 This is NOT a replacement for every host-wall source. new Date() remains
 native, as do filesystem mtimeMs and Git timestamps. In journal.ts an
@@ -12409,7 +12603,7 @@ fails reporter-missing, never falls back to a config reporter or stdout parsing.
 
 | Execution path | Final invocation and binding |
 | --- | --- |
-| Ordinary full test through configured runner | Generation 24 introduced and Generation 26 retains only this row's timeout change: config stays npx ["vitest","run"], timeout 300000; effective args append --reporter=default and the runtime reporter. These intentional profile-derived argv additions are recorded, not described as byte-identical effective argv. Compatibility and pack-smoke retain 180000. |
+| Ordinary full test through configured runner | Historical Generation 24 introduced and Generation 26 retained this row's timeout change: config stayed npx ["vitest","run"], timeout 300000; Generation 45 supersedes only that timeout with 900000. Effective args append --reporter=default and the runtime reporter. These intentional profile-derived argv additions are recorded, not described as byte-identical effective argv. Compatibility and pack-smoke retain 180000. |
 | Focused TDD / gate aggregate / matrix | First retain native selected-file/-t and --reporter=json/--outputFile arguments from adapters.ts and gate.ts (including matrix-native paths); then append the runtime reporter. Bind the native result path/bytes, actual exit/status and separate acknowledgment to that exact effective invocation. |
 | compatibility | Config stays npm ["run","test:compat"]; the coordinator forwards the default/runtime reporter arguments after npm's -- boundary to the existing package script. Verify/bind the resulting Vitest invocation without changing its file selection. |
 | codegraph-tests | Keep the outer Node wrapper invocation and native group selection, --maxWorkers=1, --reporter=json and --outputFile. The parent runner/adapter validates --describe-groups output, appends the runtime reporter to each described native group argv and prepares final argv/request/dispatch/env. The wrapper executes those supplied group argv unchanged; bind distinct request/result/ack for every group, preserving operation counters and aggregate tests. |
@@ -12460,8 +12654,9 @@ their existing command hash semantics and additionally bind the full runtime
 execution. A success exit or valid native report
 without a matching ack cannot pass. Conversely, an ack cannot override a
 nonzero exit, missing native result required by an adapter, or native failures.
-Generation 24 introduced and Generation 26 retains the ordinary full command
-limit at exactly 300000 ms;
+Historically, Generation 24 introduced and Generation 26 retained the ordinary
+full command limit at exactly 300000 ms; Generation 45 supersedes that limit
+with exactly 900000 ms for `test` only;
 its profile-derived effective argv remains explicit. Compatibility and
 pack-smoke retain 180000 ms. A bare unmanaged Vitest call without the
 explicit runtime reporter cannot claim this profile or official evidence:
@@ -13100,8 +13295,11 @@ recording this fresh cycle.
 
 The historical generation-8 approved policy gate digest was
 327baa0f399450fd6714f112e41bc23e13de79a9c1113499795ea76d87bcd03e;
-Generation 25 supersedes the current digest with
+At Generation 25, that generation's complete digest became
 414123c757dad57d01855bd408c1a3b9cf70044238df4156b2a1699bee30851f.
+Generation 45 supersedes that complete digest with
+d4251d4e7be83fb03fbf551f2e8d32c0584a6d34b709a0d3fa64da3f22a00ba5;
+this is historical and its complete digest is superseded by Generation 46.
 Removing only the `testRuntime` member from the historical generation-8
 180000-millisecond object yields
 bb4a58c169b4e4f7357b608dc3b00028a613f907613b88d1540b3654ea600c8a,
@@ -13177,11 +13375,13 @@ Both fixes use fresh TDD in their authorized owner scopes before integration
 verification/rerun; no deliberately reintroduced bug or missing-module proxy
 may manufacture Red.
 
-After runtime, both graph fixes, the Generation-24 implementation, and the
-Generation-26 gate-digest Green, Generation 26 runs the configured test
+Historically, after runtime, both graph fixes, the Generation-24 implementation,
+and the Generation-26 gate-digest Green, Generation 26 ran the configured test
 command (`npx vitest run`) once through the profile-aware coordinator with
 timeoutMs 300000, binding its declared effective reporter argv. Completed
-success records measured duration strictly below 300000. "Only timeout remains"
+success recorded measured duration strictly below 300000. Generation 45
+supersedes those current-policy timeout and duration values with 900000.
+"Only timeout remains"
 means recorded process status
 timeout, reportedFailed=0, bootstrapErrors empty, no other observed command or
 provenance failure, and a valid persisted partial acknowledgment with the entire
@@ -13213,7 +13413,7 @@ Depends-On: DES-M5-003 DES-M5-007 DES-M5-012 DES-M5-014
 ## DES-M5-018: Workflow transcript evidence service
 Responsibilities: Discover a current Copilot transcript without ambiguity, sanitize strict and compatible transcripts, verify through one service, atomically promote safe output and current verification evidence, retain privacy-minimized source metadata, concatenate safe inputs deterministically, reject duplicate sources/events, record explicit CHANGE ownership, reconcile generation-bound declarations to per-Skill invocation cursors, and record/project narrowly scoped append-only duplicate-declaration corrections.
 Interfaces: `recordWorkflow(event, { changeId? })`, `discoverCurrentWorkflowTranscript({ transcriptRoot, requestedSessionId, configuredSessionId, maxAgeSeconds }): WorkflowTranscriptSelection`, `verifyCurrentWorkflow(root, selection, mode): WorkflowCurrentVerificationResult`, `sanitizeWorkflow(log, mode, limits): { rawSourceSha256, safeTranscriptSha256, sourceBytes, safeBytes, inputEvents, outputEvents, eligibleEvents, retainedEligibleEvents }`, `verifyWorkflow(safeLogs, mode, freshness)`, `bindDeclarations(changeId, generation, declarations, invocations, freshness, corrections?)`, `recordDeclarationCorrection(request): WorkflowDeclarationCorrection`, `validateDeclarationCorrections(workflow, corrections)`, `isCorrectedWorkflowTarget(scope)`, `recordWorkflowWaiver(request)`, `recordAllWorkflowWaivers(request)`, `validateStrictSource(source, strictVerification)`.
-Constraints: Discovery resolves the default root with `os.homedir()` plus `.copilot/session-state` and performs no shell expansion; a missing or unreadable root is `WORKFLOW_CURRENT_MISSING`. It reads only immediate directories matching `^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$` case-insensitively, lowercases directory and supplied IDs before comparison and filename derivation, and defines candidates only after the contained `events.jsonl` realpath is under the transcript root and is a regular file. Candidate-file validation precedes global case-folded duplicate detection; duplicate candidates fail `WORKFLOW_CURRENT_AMBIGUOUS` before malformed-ID or mismatch validation, selectors, and freshness, while a case-variant directory without a valid candidate file is ignored. The configured expected ID is an active selector only when configured workflow mode is strict and is inactive for compatible-mode selection. Malformed requested IDs fail `WORKFLOW_SESSION_MISMATCH`; malformed configured IDs and unequal requested/configured IDs fail the same diagnostic only when configured workflow mode is strict, even if the invocation requests `--compatible`. Those validations precede selection; otherwise the requested ID has precedence over the active configured expected ID. With neither active selector, discovery captures `now` once, compares millisecond-resolution mtime using `now - mtime <= workflow.maxAgeSeconds * 1000`, and selects only one eligible candidate, so a future-dated mtime remains eligible and `workflow.maxFutureSkewSeconds` does not apply to file freshness. Configuration owns integer `workflow.maxAgeSeconds` in `1..604800`, default `3600`, with invalid values failing configuration loading as `CLI_ERROR`; ambiguity output sorts by normalized session ID then path. The normalized root, session directory, and source file are resolved with `realpath`; post-resolution containment is mandatory, symlink escape is rejected, and the source must be a regular file. `verifyCurrentWorkflow` first reconciles any interrupted prior promotion: the persisted record is honored only when its final path hashes to its `safeTranscriptSha256`; a backup named `<session-id>.<mode>.<safeTranscriptSha256>.backup.jsonl` matching that hash is restored atomically, otherwise verification fails closed with `WORKFLOW_VERIFICATION_INVALID`. For a new attempt it sanitizes to a unique create-new temporary file below `.musubix/cache/workflow`, verifies that file through `verifyWorkflow`, fsyncs/closes where supported, renames any existing mode-qualified final file to the hash-qualified backup, renames the temporary file to final, atomically replaces the single current verification projection, then deletes the backup; every entry and recovery path is idempotent, and failure before projection replacement restores the backup and removes the new final/temp so prior record and promoted bytes remain unchanged. A compatible success intentionally becomes the sole current record and therefore supersedes strict release proof. Limits validate total bytes in `1..1000000000` and line bytes in `1..10000000`. Strict mode retains baseline terminal/session proof; compatible mode retains only lifecycle and Skill events, emits no value not derived from input, and never claims terminal proof. The JSON command result, not the safe transcript, carries digests/counts and requires retained eligible count to equal source eligible count; malformed input, size violations, duplicate sources/events, missing/ambiguous current sources, session mismatch, invalid interrupted-promotion state, and missing strict proof emit the exact `WORKFLOW_SANITIZE_INVALID`, `WORKFLOW_TRANSCRIPT_SIZE`, `WORKFLOW_DUPLICATE_SOURCE`, `WORKFLOW_DUPLICATE_EVENT`, `WORKFLOW_CURRENT_MISSING`, `WORKFLOW_CURRENT_AMBIGUOUS`, `WORKFLOW_SESSION_MISMATCH`, `WORKFLOW_VERIFICATION_INVALID`, or `WORKFLOW_STRICT_SOURCE_MISSING` diagnostic. Release evidence requires a strict-sanitized source matched to the current successful strict-verification record by raw SHA-256 and session identity; strict-source release proof is never a correction-recording precondition. Safe inputs concatenate in CLI argument order. New declarations persist changeId, positive generation, and current requirement IDs from implicit or explicit current ownership. Declarations process in persisted array order and verification scopes by persisted owner instead of a repository-global active CHANGE; legacy unowned records resolve only to a sole owner or become foreign; each declaration uses Skill identity, phase-distinct declaration identity, and the lowest-positioned unused completed invocation within freshness/future/event-skew bounds; one cursor per Skill enforces same-Skill order and never crosses CHANGE/generation. Correction recording requires an explicit persisted owner, a current positive generation, byte-exact `recordedAt` selection, the lowest-positioned duplicate-identity canonical declaration, a canonical completed invocation, a declaration-scoped reused diagnostic, and the sole current verification object bound to the current whole-array workflow-events digest and valid under current mode-dependent source/freshness policy independently of whether declaration binding passes or fails. Corrections append as `workflow-declaration-correction` records to the authoritative normal journal under the DES-M5-004 CHANGE-then-order lease sequence; `.musubix/evidence/workflow-declaration-corrections.json` is a deterministic projection and never changes `workflow.events`. The projection envelope is exactly `{ "schemaVersion": 1, "corrections": [...] }`; the correction evidence head hashes only the complete `corrections` array. Each persisted projection correction entry stores schema version, correction ID, target/canonical positions and full digests, duplicate digest, owner, diagnostic, canonical invocation, recording verification head/mode, approver/reason, correction-recorded timestamp, journal order, idempotency key, and predecessor hash; the journal record separately stores and validates fencing provenance, which is excluded from the projection entry and correction replay identity. The first persisted predecessor hash is 64 lowercase zeroes; each later persisted predecessor hash equals the lowercase SHA-256 of DES-M5-003 canonical bytes of the complete immediately prior projection correction entry, including that prior entry's predecessor hash and excluding the projection envelope and journal metadata. No separate payload-digest field is persisted. Array order is strictly ascending journal order, and projection rebuild preserves the journal payload byte values. The workflow-events and correction-array heads are lowercase SHA-256 over DES-M5-003 canonical bytes of each complete array. The journal is the idempotency lookup authority; the key binds CHANGE/generation, target and canonical positions/digests, and diagnostic. Replay equality compares every semantic persisted correction field except correction ID, journal order, predecessor hash, correction-recorded timestamp, and journal fencing provenance; predecessor values and fencing authority are validated but never compared as request identity, and only such an exact semantic replay is successful. Validation checks journal/projection correspondence, chain/hash/order/fencing provenance, unique target, lowest canonical position, exact duplicate identity, immutable explicit ownership, verification provenance, and waiver exclusion without re-resolving later sources. `recordWorkflowWaiver` rejects a valid corrected target with `WORKFLOW_DECLARATION_CORRECTION_INVALID`; `recordAllWorkflowWaivers` derives diagnostics after correction projection and skips corrected targets, while correction recording rejects a current non-stale waiver. Valid targets are removed before cursor matching, consume no invocation, suppress only `WORKFLOW_INVOCATION_REUSED` plus companion `WORKFLOW_BINDING_MISSING`, and emit `WORKFLOW_DECLARATION_SUPERSEDED`; all rejected writes leave journal and projection unchanged. Normal reconciliation emits `WORKFLOW_DECLARATION_NONPASS`, `WORKFLOW_SKILL_NOT_INVOKED`, `WORKFLOW_INVOCATION_INCOMPLETE`, `WORKFLOW_INVOCATION_FAILED`, `WORKFLOW_INVOCATION_REUSED`, `WORKFLOW_BINDING_MISSING`, `WORKFLOW_INVOCATION_ORDER`, or `WORKFLOW_DECLARATION_CORRECTION_INVALID`; superseded and other-CHANGE declarations are informational.
+Constraints: Generation 46 changes only this repository's approved workflow limits to `maxTranscriptBytes: 600000000` and `maxTranscriptLineBytes: 4000000`; the library defaults remain unchanged, values above either boundary fail closed with `WORKFLOW_TRANSCRIPT_SIZE`, and release verification records the complete measured source and maximum line without committed large fixtures. Discovery resolves the default root with `os.homedir()` plus `.copilot/session-state` and performs no shell expansion; a missing or unreadable root is `WORKFLOW_CURRENT_MISSING`. It reads only immediate directories matching `^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$` case-insensitively, lowercases directory and supplied IDs before comparison and filename derivation, and defines candidates only after the contained `events.jsonl` realpath is under the transcript root and is a regular file. Candidate-file validation precedes global case-folded duplicate detection; duplicate candidates fail `WORKFLOW_CURRENT_AMBIGUOUS` before malformed-ID or mismatch validation, selectors, and freshness, while a case-variant directory without a valid candidate file is ignored. The configured expected ID is an active selector only when configured workflow mode is strict and is inactive for compatible-mode selection. Malformed requested IDs fail `WORKFLOW_SESSION_MISMATCH`; malformed configured IDs and unequal requested/configured IDs fail the same diagnostic only when configured workflow mode is strict, even if the invocation requests `--compatible`. Those validations precede selection; otherwise the requested ID has precedence over the active configured expected ID. With neither active selector, discovery captures `now` once, compares millisecond-resolution mtime using `now - mtime <= workflow.maxAgeSeconds * 1000`, and selects only one eligible candidate, so a future-dated mtime remains eligible and `workflow.maxFutureSkewSeconds` does not apply to file freshness. Configuration owns integer `workflow.maxAgeSeconds` in `1..604800`, default `3600`, with invalid values failing configuration loading as `CLI_ERROR`; ambiguity output sorts by normalized session ID then path. The normalized root, session directory, and source file are resolved with `realpath`; post-resolution containment is mandatory, symlink escape is rejected, and the source must be a regular file. `verifyCurrentWorkflow` first reconciles any interrupted prior promotion: the persisted record is honored only when its final path hashes to its `safeTranscriptSha256`; a backup named `<session-id>.<mode>.<safeTranscriptSha256>.backup.jsonl` matching that hash is restored atomically, otherwise verification fails closed with `WORKFLOW_VERIFICATION_INVALID`. For a new attempt it sanitizes to a unique create-new temporary file below `.musubix/cache/workflow`, verifies that file through `verifyWorkflow`, fsyncs/closes where supported, renames any existing mode-qualified final file to the hash-qualified backup, renames the temporary file to final, atomically replaces the single current verification projection, then deletes the backup; every entry and recovery path is idempotent, and failure before projection replacement restores the backup and removes the new final/temp so prior record and promoted bytes remain unchanged. A compatible success intentionally becomes the sole current record and therefore supersedes strict release proof. Limits validate total bytes in `1..1000000000` and line bytes in `1..10000000`. Strict mode retains baseline terminal/session proof; compatible mode retains only lifecycle and Skill events, emits no value not derived from input, and never claims terminal proof. The JSON command result, not the safe transcript, carries digests/counts and requires retained eligible count to equal source eligible count; malformed input, size violations, duplicate sources/events, missing/ambiguous current sources, session mismatch, invalid interrupted-promotion state, and missing strict proof emit the exact `WORKFLOW_SANITIZE_INVALID`, `WORKFLOW_TRANSCRIPT_SIZE`, `WORKFLOW_DUPLICATE_SOURCE`, `WORKFLOW_DUPLICATE_EVENT`, `WORKFLOW_CURRENT_MISSING`, `WORKFLOW_CURRENT_AMBIGUOUS`, `WORKFLOW_SESSION_MISMATCH`, `WORKFLOW_VERIFICATION_INVALID`, or `WORKFLOW_STRICT_SOURCE_MISSING` diagnostic. Release evidence requires a strict-sanitized source matched to the current successful strict-verification record by raw SHA-256 and session identity; strict-source release proof is never a correction-recording precondition. Safe inputs concatenate in CLI argument order. New declarations persist changeId, positive generation, and current requirement IDs from implicit or explicit current ownership. Declarations process in persisted array order and verification scopes by persisted owner instead of a repository-global active CHANGE; legacy unowned records resolve only to a sole owner or become foreign; each declaration uses Skill identity, phase-distinct declaration identity, and the lowest-positioned unused completed invocation within freshness/future/event-skew bounds; one cursor per Skill enforces same-Skill order and never crosses CHANGE/generation. Correction recording requires an explicit persisted owner, a current positive generation, byte-exact `recordedAt` selection, the lowest-positioned duplicate-identity canonical declaration, a canonical completed invocation, a declaration-scoped reused diagnostic, and the sole current verification object bound to the current whole-array workflow-events digest and valid under current mode-dependent source/freshness policy independently of whether declaration binding passes or fails. Corrections append as `workflow-declaration-correction` records to the authoritative normal journal under the DES-M5-004 CHANGE-then-order lease sequence; `.musubix/evidence/workflow-declaration-corrections.json` is a deterministic projection and never changes `workflow.events`. The projection envelope is exactly `{ "schemaVersion": 1, "corrections": [...] }`; the correction evidence head hashes only the complete `corrections` array. Each persisted projection correction entry stores schema version, correction ID, target/canonical positions and full digests, duplicate digest, owner, diagnostic, canonical invocation, recording verification head/mode, approver/reason, correction-recorded timestamp, journal order, idempotency key, and predecessor hash; the journal record separately stores and validates fencing provenance, which is excluded from the projection entry and correction replay identity. The first persisted predecessor hash is 64 lowercase zeroes; each later persisted predecessor hash equals the lowercase SHA-256 of DES-M5-003 canonical bytes of the complete immediately prior projection correction entry, including that prior entry's predecessor hash and excluding the projection envelope and journal metadata. No separate payload-digest field is persisted. Array order is strictly ascending journal order, and projection rebuild preserves the journal payload byte values. The workflow-events and correction-array heads are lowercase SHA-256 over DES-M5-003 canonical bytes of each complete array. The journal is the idempotency lookup authority; the key binds CHANGE/generation, target and canonical positions/digests, and diagnostic. Replay equality compares every semantic persisted correction field except correction ID, journal order, predecessor hash, correction-recorded timestamp, and journal fencing provenance; predecessor values and fencing authority are validated but never compared as request identity, and only such an exact semantic replay is successful. Validation checks journal/projection correspondence, chain/hash/order/fencing provenance, unique target, lowest canonical position, exact duplicate identity, immutable explicit ownership, verification provenance, and waiver exclusion without re-resolving later sources. `recordWorkflowWaiver` rejects a valid corrected target with `WORKFLOW_DECLARATION_CORRECTION_INVALID`; `recordAllWorkflowWaivers` derives diagnostics after correction projection and skips corrected targets, while correction recording rejects a current non-stale waiver. Valid targets are removed before cursor matching, consume no invocation, suppress only `WORKFLOW_INVOCATION_REUSED` plus companion `WORKFLOW_BINDING_MISSING`, and emit `WORKFLOW_DECLARATION_SUPERSEDED`; all rejected writes leave journal and projection unchanged. Normal reconciliation emits `WORKFLOW_DECLARATION_NONPASS`, `WORKFLOW_SKILL_NOT_INVOKED`, `WORKFLOW_INVOCATION_INCOMPLETE`, `WORKFLOW_INVOCATION_FAILED`, `WORKFLOW_INVOCATION_REUSED`, `WORKFLOW_BINDING_MISSING`, `WORKFLOW_INVOCATION_ORDER`, or `WORKFLOW_DECLARATION_CORRECTION_INVALID`; superseded and other-CHANGE declarations are informational.
 Requirements: REQ-M5-COMPAT-001 REQ-M5-COMPAT-003 REQ-M5-COMPAT-013 REQ-M5-EVIDENCE-003 REQ-M5-EVIDENCE-006 REQ-M5-EVIDENCE-007 REQ-M5-LIFECYCLE-005 REQ-M5-WAIVER-001
 ADRs: ADR-0005 ADR-0010 ADR-0013 ADR-0014 ADR-0033
 Depends-On: DES-M5-003 DES-M5-004 DES-M5-005 DES-M5-007

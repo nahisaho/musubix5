@@ -38,6 +38,16 @@ interface CandidateCheck {
         path?: string;
     }>;
 }
+interface CandidateResultCheck {
+    name: string;
+    required: boolean;
+    status: 'pass' | 'fail' | 'skipped';
+    summary: string;
+    exitCode?: number | null;
+    stdoutTail?: string;
+    stderrTail?: string;
+    diagnostics?: CandidateCheck['diagnostics'];
+}
 type RunnerContext = CandidateGateContext & {
     job: {
         os: string;
@@ -73,7 +83,7 @@ export interface CandidateGateRunnerResult extends RunnerContext {
     childErrorMessage: string | null;
     stdoutTail?: string;
     stderrTail?: string;
-    checks?: CandidateCheck[];
+    checks?: CandidateResultCheck[];
     error?: {
         code: 'CANDIDATE_GATE_REPORT_INVALID';
         case: string;
@@ -84,6 +94,7 @@ const carryLimit = 8192;
 const tailLimit = 20000;
 const drainMs = 5000;
 const maxInnerTimeoutMs = 300000;
+const maxTestTimeoutMs = 900000;
 const probeRegionTimeoutMs = maxInnerTimeoutMs;
 const commandsRequired = ['typecheck', 'build', 'test', 'codegraph-tests', 'compatibility', 'pack-check', 'pack-smoke'];
 const causeOrder = ['runner-import-failure', 'runner-startup-failure', 'precondition-domain-failure', 'subprocess-error', 'runner-processing-failure', 'timeout',
@@ -141,6 +152,10 @@ export interface CandidateGateRunnerDependencies {
     fault?: (stage: CandidateGateFaultStage) => void;
 }
 function orchestrationRange(value: unknown): asserts value is number {
+    if (!Number.isSafeInteger(value) || (value as number) < 75107 || (value as number) > 3075000)
+        throw new CandidateGateStartupError();
+}
+function commandRange(value: unknown): asserts value is number {
     if (!Number.isSafeInteger(value) || (value as number) < 75107 || (value as number) > 2475000)
         throw new CandidateGateStartupError();
 }
@@ -149,7 +164,8 @@ export function candidateGateOrchestrationTimeout(commands: unknown, formalTimeo
         if (!Array.isArray(commands) || commands.length !== commandsRequired.length
             || !commands.every(command => object(command) && typeof command.name === 'string'
                 && commandsRequired.includes(command.name) && Number.isSafeInteger(command.timeoutMs)
-                && (command.timeoutMs as number) > 0 && (command.timeoutMs as number) <= maxInnerTimeoutMs)
+                && (command.timeoutMs as number) > 0
+                && (command.timeoutMs as number) <= (command.name === 'test' ? maxTestTimeoutMs : maxInnerTimeoutMs))
             || new Set(commands.map(command => command.name)).size !== commandsRequired.length
             || !Number.isSafeInteger(formalTimeout) || (formalTimeout as number) < 100 || (formalTimeout as number) > maxInnerTimeoutMs)
             throw new CandidateGateStartupError();
@@ -410,8 +426,11 @@ const commandTermination = new WeakMap<CandidateGateCommandOutcome, () => void>(
  * @implements REQ-M5-CI-008
  * @design DES-M5-CI-008
  */
-export async function runCandidateGateCommand(input: CommandInput): Promise<CandidateGateCommandOutcome> {
-    orchestrationRange(input.timeoutMs);
+export async function runCandidateGateCommand(input: CommandInput, outerTimeout = false): Promise<CandidateGateCommandOutcome> {
+    if (outerTimeout)
+        orchestrationRange(input.timeoutMs);
+    else
+        commandRange(input.timeoutMs);
     const dependencies = input.dependencies ?? {};
     const schedule = dependencies.setTimeout ?? setTimeout, cancel = dependencies.clearTimeout ?? clearTimeout;
     let spool: CandidateGateSpool;
@@ -694,13 +713,21 @@ export async function normalizeCandidateGateReport(outcome: CandidateGateCommand
             domainCode = 'GATE_SUBPROCESS_ERROR';
             domainMessage = outcome.childErrorMessage;
         }
-        const sanitizedChecks = checks.map(check => ({
-            name: check.name, required: check.required, status: check.status, summary: safeText(check.summary),
-            ...(check.diagnostics ? { diagnostics: check.diagnostics.map(diagnostic => ({
+        const sanitizedChecks: CandidateResultCheck[] = checks.map(check => {
+            const failedRequiredCommand = check.name.startsWith('command:') && check.required && check.status === 'fail';
+            return {
+                name: check.name, required: check.required, status: check.status, summary: safeText(check.summary),
+                ...(failedRequiredCommand ? {
+                    exitCode: check.exitCode ?? null,
+                    stdoutTail: safeText(check.stdout ?? ''),
+                    stderrTail: safeText(check.stderr ?? ''),
+                } : {}),
+                ...(check.diagnostics ? { diagnostics: check.diagnostics.map(diagnostic => ({
                     code: diagnostic.code, severity: diagnostic.severity, message: safeText(diagnostic.message),
                     ...(diagnostic.path !== undefined ? { path: safeText(diagnostic.path) } : {}),
                 })) } : {}),
-        }));
+            };
+        });
         const commands = checks.filter(check => check.name.startsWith('command:')).map(check => ({
             name: check.name.slice(8), exitCode: check.exitCode ?? -1,
             digest: sha256(canonicalBytes({ name: check.name.slice(8), exitCode: check.exitCode ?? -1,
@@ -947,7 +974,7 @@ export async function runCandidateGateWorkflow(input: CommandInput & NormalizeOp
     }
     let outcome: CandidateGateCommandOutcome;
     try {
-        outcome = await runCandidateGateCommand({ ...input, secrets });
+        outcome = await runCandidateGateCommand({ ...input, secrets }, true);
     }
     catch (cause) {
         if (cause instanceof CandidateGateStartupError) {

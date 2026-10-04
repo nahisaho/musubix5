@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "stage": "design",
   "changeId": "CHANGE-0017",
-  "generation": 39,
+  "generation": 49,
   "artifacts": {
     ".musubix/constitution.md": "f8b47fdc486f395bab05223a94821b145cf8df70ffde2c838a28f8d71fe0fa92",
     ".musubix/decisions/ADR-0002.md": "9f41d752530613cf6cc3ab6798709567e85650e5b97426dfca4147840eb35684",
@@ -36,16 +36,16 @@
     ".musubix/decisions/ADR-0030.md": "cc1a17eee7708368dd02d4b3ae78924edb74456c32ecda8543c67e6799192190",
     ".musubix/decisions/ADR-0031.md": "ed75274e4cdcb845bf47d033f70cf1004accb112df52e3ea5232441ea26c1659",
     ".musubix/decisions/ADR-0032.md": "6785464003a5bd017dec7d81ab836672b035f75aa1a338e06af76a3d6eebedfd",
-    ".musubix/decisions/ADR-0033.md": "7f2baaadbb873e4ebed54d6b9ad173dcad92ab9193496b4c8c6d1ab6f33654f9",
+    ".musubix/decisions/ADR-0033.md": "ceadfcec84f7e458223bacdd3d1303c944f61a316955f4162652f3a767e5b3b6",
     ".musubix/decisions/ADR-0034.md": "674cd7d3d33b8906bdaae214b970d81aabb50b3041b356d102ed73113a5bbe41",
     ".musubix/decisions/ADR-0035.md": "0ad8009d0738ba27fd2a0bcf34f6fbe597e45e35d4395f4cdcfb040b5f2a21f0",
     ".musubix/decisions/ADR-0036.md": "f71e78809568b910d396c9c53846ff736327e81aa5b0ab87f0653f5e310dc65b",
     ".musubix/decisions/ADR-0037.md": "20bce24b1dc74593843b551e2237c7a03d7d52d0ea2c2fa7deb0a6c046adf8a0",
     ".musubix/decisions/ADR-0038.md": "e59b6f0e18ecaa2db2ecdb36340fe205df42cec5b1c79dd81c3ea3b1d3232468",
     ".musubix/decisions/ADR-0039.md": "8812a9eb461b474504c4e25552be222af3d012125dc6ccfa6a7faaadb1c411f2",
-    ".musubix/decisions/ADR-0040.md": "1f1a241b102a1d5dcb6282191ebc84fa873c14f3284e5dc4343b0e937d842836",
+    ".musubix/decisions/ADR-0040.md": "d6f74ef2805516a99a410aac52318fc64a033c472df67fc71e4b1e0fd1848a52",
     ".musubix/decisions/ADR-0041.md": "1919f12be4545b9199f1febed358527fcb0b5bc702887e6690eaefa6d63a0468",
-    ".musubix/decisions/ADR-0042.md": "7b361af56907bd6c50b15eee736b04fcb897cc103a5524291e571ee85e11d796",
+    ".musubix/decisions/ADR-0042.md": "e685034419c1092b46d744bb0cb2f5d3051bed60c2d93678c67e123ff5704258",
     ".musubix/features/candidate-cleanup-policy/design.md": "54d32a6d446bbaed299860b164fe74d24362e0c5739862bc79df2e0acab20c1b",
     ".musubix/features/candidate-cleanup-policy/requirements.md": "253a36dbca0b76a81f452c845f2988e2b33163823095ee5ac1add81519dd5462",
     ".musubix/features/codegraph-performance/design.md": "a8461463b6c0a7e8ae11b9496ab5e724e5d98e2700dd32623e5fd6331187b175",
@@ -54,10 +54,10 @@
     ".musubix/features/evidence-selector-guards/requirements.md": "fdb70191e472f41e16eab793b2b2d86583587cd86a88db5627be59bf045ef601",
     ".musubix/features/multi-change-workspaces/design.md": "47b156ccad4d63e5ffa19bbc6296dedc0dc9973ec4d470b98edebf005e34a870",
     ".musubix/features/multi-change-workspaces/requirements.md": "9071c2c1f8a7ca49b9137cf074fe30b33343264536f41efcdddad0ab2a6cff4d",
-    ".musubix/features/musubix5-clean-foundation/design.md": "9cee7263faa38fbc78b21cbba83e74e37ca08c0f510fe39e4a23883d7ee09531",
-    ".musubix/features/musubix5-clean-foundation/requirements.md": "47be4910318f7b52f53b46839c549a4081a928110d9347617686cf019df4e1df",
-    ".musubix/features/node24-github-actions/design.md": "f379fb804abf82092a9afcef66e2fd04c059c825ca26ca0997d70a1990650328",
-    ".musubix/features/node24-github-actions/requirements.md": "50095ed8a3314155e88d5faa1816a8a8cd7f0ceb2e06eee33c6d52252cd9071c",
+    ".musubix/features/musubix5-clean-foundation/design.md": "f01269b39215ec2cd2cede21cb52b60504f4c3fdfae310126015667e8af7fe50",
+    ".musubix/features/musubix5-clean-foundation/requirements.md": "6af004d6fa5aeb32ca5f63d569cad3412155e79483e424c8f72583d73a862cf7",
+    ".musubix/features/node24-github-actions/design.md": "6ed60c5a9f6839a2cd0df53036bf52bebec2e3c53d1fc935b508ff42d5114ddc",
+    ".musubix/features/node24-github-actions/requirements.md": "2f87f118077e09b4f071a94a6de30003db0ad5ff74095c4b4336240b2d908565",
     ".musubix/features/npm-registry-deadline/design.md": "a46582fe0fd7e2c64ea36fcf7a50d24f1b45e7789cd2e75634da0ebf4cc29195",
     ".musubix/features/npm-registry-deadline/requirements.md": "89ba3f12e9dd5a66c4e1e21ba3a5ed087fdfc03353d7fd72c605439d8a0b9aab",
     ".musubix/features/parallel-agent-development/design.md": "2d3ee454f0f131cdd21a62932790fafa0b6edc3df68d43e473d74b294d1e8a5d",
@@ -111,7 +111,7 @@
         ],
         "adapter": "vitest",
         "required": true,
-        "timeoutMs": 300000
+        "timeoutMs": 900000
       },
       {
         "name": "codegraph-tests",
@@ -202,8 +202,8 @@
       "mode": "compatible",
       "maxAgeSeconds": 3600,
       "maxFutureSkewSeconds": 60,
-      "maxTranscriptBytes": 125000000,
-      "maxTranscriptLineBytes": 1000000,
+      "maxTranscriptBytes": 600000000,
+      "maxTranscriptLineBytes": 4000000,
       "maxEventSkewMs": null
     },
     "attestation": {
@@ -217,7 +217,7 @@
     }
   },
   "exclusions": [],
-  "artifactSha256": "9ce7baccda6d69960612bdd37203bba17ac09d3abe4b0f69177088324468ae1c",
+  "artifactSha256": "3b0a7eb2ecaf79d366e2549730e5c11bf6868a96d372e76d893f37ce026b4850",
   "approver": "nahisaho",
-  "approvedAt": "2026-10-04T07:36:06.359Z"
+  "approvedAt": "2026-10-04T20:11:30.518Z"
 }

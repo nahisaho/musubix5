@@ -34,7 +34,7 @@ permissions:
 jobs:
   verify:
     name: ${{ matrix.os }}-node${{ matrix.node }}
-    timeout-minutes: 100
+    timeout-minutes: 110
     strategy:
       fail-fast: false
       matrix:
@@ -100,7 +100,7 @@ jobs:
       - run: npm run build
         timeout-minutes: 6
       - name: Run closed verification matrix
-        timeout-minutes: 55
+        timeout-minutes: 65
         # @id CODE-M5-CI-MATRIX-WORKFLOW-001
         # @implements REQ-M5-CI-008
         # @design DES-M5-CI-008

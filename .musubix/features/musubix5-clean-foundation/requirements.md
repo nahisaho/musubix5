@@ -5,7 +5,150 @@ status: approval-pending
 ---
 # musubix5 clean foundation requirements
 
-Generation-27-Review-Delta: Proposed recovery of the Generation-26 quality failure, not approved and not retroactive before Generation-27 requirements approval. Generations 13 through 25 remain immutable non-credit recovery history for the reasons recorded by their approved deltas. Generation 26 has valid gate-digest Red/Implementation/Green chronology, authoritative trace identity and changed implementation fingerprints, but is immutable non-current evidence because quality found two independent failures: `tests/test-runtime-gate.test.ts` still expected historical no-`testRuntime` digest `bb4a58c169b4e4f7357b608dc3b00028a613f907613b88d1540b3654ea600c8a` instead of current 300000-millisecond digest `2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd`, and `TEST-M5-EVIDENCE-CURRENT-001` reached its unchanged native 60000-millisecond guard while `validateChangeEvidence()` redundantly selected current TDD cycles and could reclassify a fallback parallel cycle already classified during authoritative selection. Generation 27 retains the CHANGE `Requirements:` set exactly `REQ-M5-LIFECYCLE-006`. Its credited order is impact, approved requirements checkpoint, approved design checkpoint, both Reds, one Red checkpoint, Implementation checkpoint, both Greens, one Green checkpoint, then quality. A fresh Generation-27 revision of `TEST-M5-FULL-TEST-TIMEOUT-001` must fail only because the no-`testRuntime` constant is historical. New `TEST-M5-CHANGE-CURRENT-SELECTION-CACHE-001` uses `vi.mock` with `importOriginal` on the exact `../packages/analysis/src/parallel-tdd-evidence.js` module, resets its ledger immediately before validation, invokes `validateChangeEvidence()` against the current repository under an explicit 180000-millisecond diagnostic watchdog, and deterministically records each complete classifier context including root, change ID, generation, requirement ID, cycle ID, purpose and evidence root. Red requires every complete context to be observed at most once but the pre-implementation algorithm observes at least one context more than once, whether across the two validation loops, within authoritative/fallback selection, or both. Implementation changes the digest constant to `2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd`, memoizes `selectCurrentChangeTddCycleFromEvidence()` lazily on first sequential use once per `(changeId, requirementId)` within one `validateChangeEvidence()` invocation, and retains each parallel cycle classification result inside that one selector invocation so fallback selection reuses an already classified matching cycle rather than classifying it again. Both Maps are invocation-local; root, authoritative evidence root, purpose, change object and TDD evidence are invocation constants and never become module-level cache keys. No eager population, `Promise.all`, cross-invocation reuse or rejection swallowing is permitted. Green resets the operation ledger and invokes validation twice, proving each invocation independently observes every complete classifier context at most once. The 180000 watchdog is not performance evidence; the deterministic classifier operation count is primary proof. Existing `TEST-M5-EVIDENCE-CURRENT-001` remains unchanged as a secondary quality guard and must complete below its existing 60000-millisecond native limit. Full quality still requires the ordinary configured command to complete strictly below 300000 milliseconds. No timeout increase, evidence omission, history truncation, parallel-classification bypass, or candidate-gate fingerprint exclusion is authorized.
+Generation-49-Review-Delta: Generation 49 retains every Generation-48
+production obligation and corrected test assertion unchanged. Generation 48 is
+abandoned and non-credit because the corrected tests predated its design
+checkpoint, so its Red checkpoint lacked a post-design test-source change.
+After Generation-49 design approval, the four authoritative test titles shall
+change from Generation 48 to Generation 49 before fresh Red. Those title-only
+edits establish new source fingerprints; assertions, fixture transitions,
+trace links, expected digests, and production files remain unchanged. The
+Generation-49 sources are frozen from their first Red through Green.
+The Generation-48 evidence, freeze, exception, and Red-narrative clauses are
+historical for Generation 49. The design checkpoint seals the four Generation-48
+starting fingerprints; the only permitted post-design edit is the exact four
+title substitutions. A path-scoped diff shall prove exactly those four changed
+lines, and the resulting post-edit fingerprints shall be captured and frozen
+before any Red command. Each Red must bind those fingerprints. Production
+remains at 125,000,000 total bytes with no explicit line limit through all four
+Reds and the Red checkpoint; only afterward may implementation set
+600,000,000/4,000,000.
+
+Generation-48-Review-Delta: Generation 48 retains all Generation-47 and
+Generation-46 production obligations unchanged. Generation 47 is abandoned and
+non-credit because the clock fingerprint fixture restored the historical
+workflow policy for the legacy digest but did not restore the current
+600,000,000-byte total and 4,000,000-byte line policy before comparing the
+re-added `testRuntime` fixture with the current candidate-gate projection. The
+authoritative fixture shall perform both transitions explicitly: historical
+300,000/125,000,000/no-line/no-`testRuntime` before the `2487162a...` assertion,
+then current 900,000/600,000,000/4,000,000/no-`testRuntime` before capturing the
+current approval baseline and adding the approved runtime profile. No production
+normalization exception or policy-dependent fallback is authorized. Fresh
+Generation-48 Red-Green evidence is required for the unchanged CHANGE
+requirement set.
+The Generation-47 freeze, sole-exception, and Red-narrative clauses are
+historical for Generation 48. The Generation-48 fingerprinted sources for
+`TEST-M5-TEST-CLOCK-GATE-FINGERPRINT-001`,
+`TEST-M5-WORKFLOW-TRANSCRIPT-LIMIT-001`,
+`TEST-M5-FULL-TEST-TIMEOUT-001`, and
+`TEST-M5-RELEASE-002-TRUST-001` are the approved exceptions and are frozen from
+their first fresh Generation-48 Red through Green. At Red, the historical
+`2487162a...` projection and exact 10/11-byte stream assertions already pass;
+the repository config still yields Generation 45 digest `d4251d4e...`, so the
+current `2d92597f...` digest and 600,000,000/4,000,000 configuration assertions
+are the only intended failure causes.
+
+Generation-47-Review-Delta: Generation 47 preserves every normative workflow
+limit, failure boundary, projection digest, candidate-gate digest, and residual
+risk approved for Generation 46. Generation 46 is abandoned and non-credit
+because two authoritative Red tests contained test-only contradictions. For
+`TEST-M5-WORKFLOW-TRANSCRIPT-LIMIT-001`, the exact 10-byte source
+`{}\n{}\n{} \n` shall be asserted to advance beyond transcript-size validation
+and fail with the exact message `No Copilot Skill invocation events were found
+in the workflow transcript.`, not `WORKFLOW_TRANSCRIPT_SIZE`; the exact 11-byte
+source `12345678901` shall fail with `WORKFLOW_TRANSCRIPT_SIZE`. For
+`TEST-M5-TEST-CLOCK-GATE-FINGERPRINT-001`, the no-`testRuntime` fixture shall
+also restore `workflow.maxTranscriptBytes` to 125,000,000 and omit
+`workflow.maxTranscriptLineBytes` before asserting the historical
+`2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd`
+projection. These corrections change test validity only and do not authorize a
+sanitizer behavior change, candidate-gate normalization exception, limit
+increase, transcript truncation, or verification bypass. Fresh Generation-47
+Red-Green evidence is required under REQ-M5-CI-008, REQ-M5-COMPAT-013,
+REQ-M5-EVIDENCE-007, and REQ-M5-LIFECYCLE-006.
+The Generation-46 freeze, sole-exception, and Red-narrative clauses below are
+historical for Generation 47. The corrected
+`TEST-M5-WORKFLOW-TRANSCRIPT-LIMIT-001` and
+`TEST-M5-TEST-CLOCK-GATE-FINGERPRINT-001` sources are the approved exceptions
+to the Generation-45 freeze and are frozen from their first fresh
+Generation-47 Red through Green. Red evidence shall bind the corrected source
+fingerprints: the production-size configuration and `2d92597f...` fingerprint
+assertions fail against the unchanged baseline, while the exact 10/11-byte
+stream assertions and historical `2487162a...` projection assertion already
+pass and are retained sub-assertions rather than independent Red causes.
+
+Generation-46-Review-Delta: The complete live Copilot transcript is
+525,498,216 bytes and cannot be sanitized or verified under the previously
+approved 125,000,000-byte ceiling. Under REQ-M5-EVIDENCE-007, the configured
+`workflow.maxTranscriptBytes` shall be exactly 600,000,000, remain within the
+closed `1..1000000000` range, and `workflow.maxTranscriptLineBytes` shall be
+exactly 4,000,000 within its closed `1..10000000` range. The 525,498,216-byte value is a historical
+observation; release verification shall record `sourceBytes` equal to the
+complete live file size measured at verification and require it to be at most
+600,000,000 without truncating, splitting, or skipping any source byte before
+total-size and line-size evaluation. Only REQ-M5-EVIDENCE-007 sanitization may
+remove ineligible event content, and verification may not be bypassed. A larger
+source or any 4,000,001-byte line shall fail closed with
+`WORKFLOW_TRANSCRIPT_SIZE` and require a new approved change. The library
+defaults remain 100,000,000 total bytes and 1,000,000 line bytes; only
+this repository's approved configuration changes. No trusted policy baseline is
+configured; current requirements/design approval and the candidate-gate trust
+digest govern this change. Configuration fixtures shall prove the exact
+600,000,000/600,000,001 total-size and 4,000,000/4,000,001 line-size boundaries
+using generated configuration objects and synthetic size metadata without
+allocating or committing large payloads.
+The observed 526,452,885-byte source
+has a 2,830,476-byte maximum line; release verification shall remeasure and
+require every line to remain at most the approved 4,000,000-byte
+`workflow.maxTranscriptLineBytes`. All other workflow limits
+and Generation-45 timeout/diagnostic behavior are retained, while all
+Generation-45 lifecycle evidence remains non-credit for Generation 46. The
+accepted residual risk is increased bounded memory and processing time; no
+streaming implementation change is authorized in this generation.
+The complete Generation-46 candidate-gate fingerprint shall be
+`2d92597fbbd621ec23abb31d26c4f4287b3b735d7523fd4f284e5f7f3e837516`,
+superseding Generation 45's `d4251d4e7be83fb03fbf551f2e8d32c0584a6d34b709a0d3fa64da3f22a00ba5`
+while preserving the `testRuntime` profile and approved legacy/no-`testRuntime`
+projection. `TEST-M5-TEST-CLOCK-GATE-FINGERPRINT-001` and
+`TEST-M5-FULL-TEST-TIMEOUT-001` and `TEST-M5-RELEASE-002-TRUST-001` are the
+authoritative fingerprint regressions. Their Generation-46 Red expects
+`2d92597fbbd621ec23abb31d26c4f4287b3b735d7523fd4f284e5f7f3e837516`
+while the unchanged production config still yields
+`d4251d4e7be83fb03fbf551f2e8d32c0584a6d34b709a0d3fa64da3f22a00ba5`.
+`TEST-M5-WORKFLOW-TRANSCRIPT-LIMIT-001` is the authoritative
+REQ-M5-EVIDENCE-007 boundary test and generates temporary synthetic inputs for
+the exact total-size and line-size acceptance/rejection pairs without allocating
+or committing large payloads. Its authoritative source is
+`tests/workflow-transcript-limit.test.ts`; Red fails by assertion because the
+unchanged repository config rejects 125,000,001 total bytes and a
+4,000,000-byte line under the 1,000,000-byte default. It uses explicit
+rejection/resolution assertions so no expected throw escapes uncaught. The
+source is frozen from the first Red through Green.
+The production-sized cases cover configuration and persisted-verification
+metadata comparisons; the actual streaming cutoff is covered with a 10-byte
+limit and an 11-byte temporary source.
+
+Generation-46-Historical-Delta-Interpretation: Every Generation-45 statement
+that calls `d4251d4e7be83fb03fbf551f2e8d32c0584a6d34b709a0d3fa64da3f22a00ba5`
+the current or approved candidate-gate digest, requires a Red against
+`414123c757dad57d01855bd408c1a3b9cf70044238df4156b2a1699bee30851f`,
+or freezes TRUST against future edits is historical for Generation 46.
+Generation 46 supersedes those clauses under REQ-M5-CI-008,
+REQ-M5-COMPAT-013, REQ-M5-EVIDENCE-007, and REQ-M5-LIFECYCLE-006. The three
+authoritative Generation-46 fingerprint regressions and transcript-limit test
+named above are the sole approved exceptions to the Generation-45 test freeze.
+
+Generation-27-Review-Delta: Proposed recovery of the Generation-26 quality failure, not approved and not retroactive before Generation-27 requirements approval. Generations 13 through 25 remain immutable non-credit recovery history for the reasons recorded by their approved deltas. Generation 26 has valid gate-digest Red/Implementation/Green chronology, authoritative trace identity and changed implementation fingerprints, but is immutable non-current evidence because quality found two independent failures: `tests/test-runtime-gate.test.ts` still expected obsolete pre-Generation-27 no-`testRuntime` digest `bb4a58c169b4e4f7357b608dc3b00028a613f907613b88d1540b3654ea600c8a` instead of the Generation-27 then-current legacy/no-`testRuntime` projection digest `2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd`, and `TEST-M5-EVIDENCE-CURRENT-001` reached its unchanged native 60000-millisecond guard while `validateChangeEvidence()` redundantly selected current TDD cycles and could reclassify a fallback parallel cycle already classified during authoritative selection. Generation 27 retains the CHANGE `Requirements:` set exactly `REQ-M5-LIFECYCLE-006`. Its credited order is impact, approved requirements checkpoint, approved design checkpoint, both Reds, one Red checkpoint, Implementation checkpoint, both Greens, one Green checkpoint, then quality. A fresh Generation-27 revision of `TEST-M5-FULL-TEST-TIMEOUT-001` must fail only because the no-`testRuntime` constant is historical. New `TEST-M5-CHANGE-CURRENT-SELECTION-CACHE-001` uses `vi.mock` with `importOriginal` on the exact `../packages/analysis/src/parallel-tdd-evidence.js` module, resets its ledger immediately before validation, invokes `validateChangeEvidence()` against the current repository under an explicit 180000-millisecond diagnostic watchdog, and deterministically records each complete classifier context including root, change ID, generation, requirement ID, cycle ID, purpose and evidence root. Red requires every complete context to be observed at most once but the pre-implementation algorithm observes at least one context more than once, whether across the two validation loops, within authoritative/fallback selection, or both. Implementation changes the digest constant to `2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd`, memoizes `selectCurrentChangeTddCycleFromEvidence()` lazily on first sequential use once per `(changeId, requirementId)` within one `validateChangeEvidence()` invocation, and retains each parallel cycle classification result inside that one selector invocation so fallback selection reuses an already classified matching cycle rather than classifying it again. Both Maps are invocation-local; root, authoritative evidence root, purpose, change object and TDD evidence are invocation constants and never become module-level cache keys. No eager population, `Promise.all`, cross-invocation reuse or rejection swallowing is permitted. Green resets the operation ledger and invokes validation twice, proving each invocation independently observes every complete classifier context at most once. The 180000 watchdog is not performance evidence; the deterministic classifier operation count is primary proof. Existing `TEST-M5-EVIDENCE-CURRENT-001` remains unchanged as a secondary quality guard and must complete below its existing 60000-millisecond native limit. Full quality still requires the ordinary configured command to complete strictly below 300000 milliseconds. No timeout increase, evidence omission, history truncation, parallel-classification bypass, or candidate-gate fingerprint exclusion is authorized.
+
+Generation-45-Historical-Delta-Interpretation: The Generation-27 review delta
+above is immutable historical scope, not the current timeout or digest policy.
+Its 300,000-millisecond full-test boundary and then-current full
+candidate-gate digest binding are superseded only by the explicit
+Generation-45 clauses under REQ-M5-COMPAT-013 and REQ-M5-LIFECYCLE-006. The
+approved Generation-27 legacy/no-`testRuntime` projection digest
+`2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd`
+remains unchanged.
 
 ## REQ-M5-COMPAT-001: Preserve the command contract
 Priority: must
@@ -100,6 +243,40 @@ Acceptance: ADRs, migration-guide entries, additive help, command, JSON-field, a
 
 Stable-Test-Runtime-Governance: The system shall register optional TOP-LEVEL .musubix/config.json.testRuntime as an ADR-0009-style versioned extension, with kind/schemaVersion, exact commandNames, closed 21-path input inventory, calibration and reporterMode fixed in design before approval. Register test-runtime-ack-v1, command-provenance hashes, immutable blob schemas/store/transfer, environment policy, diagnostics and package isolation under COMPAT-013. TEST-M5-TEST-CLOCK-EVIDENCE-001 verifies policy mismatch, tamper/stale/missing/deleted/untransferred blobs and byte-identical legacy encoding; TEST-M5-TEST-CLOCK-AGGREGATE-001 covers reporter override and effective argv/exit/result/ack in ordinary, focused, gate/matrix and wrapper runs. Configured command argv/timeouts remain unchanged; explicitly bound profile-derived effective reporter arguments are an intentional extension, not silently identical argv. Non-test commands outside the Vitest tree retain ordinary clocks; descendants may inherit the preload. Ordinary source-supersession grammar/schemas/diagnostics/admission/terminals remain unchanged, with no new source authority or credit transfer.
 
+Generation-45-Test-Timeout-Extension: Generation 45 supersedes only the
+`Configured command argv/timeouts remain unchanged` clause above. The configured
+argv remains unchanged, while the closed `test` command timeout changes from
+300,000 to exactly 900,000 milliseconds under REQ-M5-CI-008; every other
+configured command timeout remains unchanged. This intentional compatibility
+extension changes the canonical candidate-gate configuration fingerprint to
+`d4251d4e7be83fb03fbf551f2e8d32c0584a6d34b709a0d3fa64da3f22a00ba5`.
+The approved Generation-27 legacy/no-`testRuntime` projection and its digest
+`2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd`
+remain byte-identical. `TEST-M5-TEST-CLOCK-GATE-FINGERPRINT-001` and
+`TEST-M5-FULL-TEST-TIMEOUT-001` shall bind the revised current fingerprint,
+the unchanged legacy projection, and the exact timeout split.
+`TEST-M5-TEST-CLOCK-GATE-FINGERPRINT-001` Red shall expect
+`d4251d4e7be83fb03fbf551f2e8d32c0584a6d34b709a0d3fa64da3f22a00ba5`
+but observe restored production digest
+`414123c757dad57d01855bd408c1a3b9cf70044238df4156b2a1699bee30851f`;
+Green shall observe the expected
+`d4251d4e7be83fb03fbf551f2e8d32c0584a6d34b709a0d3fa64da3f22a00ba5`
+digest while its
+`legacyGateSha256` remains
+`2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd`.
+`TEST-M5-RELEASE-002-TRUST-001` is a retained regression. After the
+Generation-45 design checkpoint and before the first Red, its sole source
+change replaces expected complete digest
+`414123c757dad57d01855bd408c1a3b9cf70044238df4156b2a1699bee30851f`
+with
+`d4251d4e7be83fb03fbf551f2e8d32c0584a6d34b709a0d3fa64da3f22a00ba5`;
+the file is then frozen through Green and quality. This clause supersedes only
+the historical `Fingerprint normal cycle` prohibitions on a TRUST source edit
+and its `327baa0f399450fd6714f112e41bc23e13de79a9c1113499795ea76d87bcd03e`
+expectation. The regression must pass after implementation in the repository's
+configured test evidence; it has no separate Red record and grants no
+independent Generation-45 TDD credit.
+
 Graph-Scope-Governance: Register the consumer-visible exclusion of exactly root-relative benchmarks/codegraph/labeled/** from ordinary repository graph index/cache/impact/gate in the compatibility surface and migration guide, including its effect on other repositories using this reserved prefix. Explicit corpus-root indexing retains intentional cycles and metrics; unrelated benchmarks and production cycles are not suppressed. TEST-M5-GRAPH-BENCHMARK-SCOPE-001 covers both modes and diagnostic preservation.
 
 Generation-19-Distribution-Governance: Proposed acceptance extension: register ADR-0039's Git LFS canonical pointer/logical-byte binding at the existing blob path, exact per-digest attributes, Git LFS >=3.4.1 prerequisite, scoped unpublished-history migration and local non-credit migration receipt. Register exit-1 `CANDIDATE_GIT_TREE_OVERSIZE`, `CANDIDATE_GIT_HISTORY_OVERSIZE`, `CANDIDATE_GIT_REF_INVALID`, `CANDIDATE_GIT_OBJECT_SCAN_FAILED`, `TDD_SOURCE_LFS_UNAVAILABLE`, `TDD_SOURCE_LFS_INVALID`, `TDD_SOURCE_LFS_MIGRATION_CONFLICT`, and `TDD_SOURCE_LFS_MIGRATION_PENDING`; preserve existing source attribute/query diagnostic classes specified in DES-M5-023. TEST-M5-TDD-SOURCE-LFS-001 and TEST-M5-CANDIDATE-GIT-DISTRIBUTION-001 cover the additions; implementation must update migration-guide and diagnostic registries. No arbitrary filter, public success-JSON shape, release ancestry check, external-operation authorization, or historical TDD credit is relaxed.
@@ -166,7 +343,45 @@ Type: functional
 Pattern: event-driven
 Statement: When a command writes or recovers CHANGE-owned lifecycle state, the system shall use serialized journal-first checkpoint recovery and approved verified journal-first TDD source-terminal updates without inventing or duplicating monotonic evidence.
 Acceptance: Before reserving or consuming shared state, a workspace-backed writer permits the dirty source tree required by Red and Implementation and captures its workspace HEAD, canonical fingerprints, a canonical workspace-state digest over the HEAD plus the sorted relevant path, mode, size, and content-hash tuples used by those fingerprints, and a canonical hash of only the control-root TDD entries for the selected CHANGE, generation, and requirement set that contribute to those fingerprints. Every impact, requirements, design, full-set or proper-subset Red/Implementation/Green, quality, abandon, reopen, and checkpoint-recovery path that performs a read-modify-write of `.musubix/evidence/changes.json` acquires the selected CHANGE lease followed by one repository-wide change-projection lease, retries acquisition every 25 milliseconds for at most 10 seconds, reloads the writable projection, and holds both leases through validation, journal lookup or append, order lookup or append, and atomic projection replacement; this requirement adds serialization to the existing REQ-M5-LIFECYCLE-005 command behavior without changing its lifecycle eligibility or checkpoint semantics. After reload it re-resolves sole-active or explicit CHANGE selection, then performs replay lookup before new-checkpoint duplicate, predecessor, and unchanged-fingerprint validation. Replay validates generation, requirement subset, and predecessor consistency from the persisted journal payload and is not rejected by current-workspace duplicate or unchanged checks; when a proper-subset replay was created by another workspace invocation, the current invocation exits 0 after completing only that persisted checkpoint and a later invocation may allocate a new scope for the caller's current state, while a full-set phase is singular within the generation and a later attempt is rejected by the existing duplicate-phase diagnostic. For a new checkpoint with no replay record, before the first requested-checkpoint journal, order, or projection persistence it verifies the workspace HEAD, recomputed workspace-state digest, and canonical selected TDD-entry hash without rebuilding trace or graph indexes; mismatch exits 1 `CHANGE_WORKSPACE_DRIFT` and writes no record for the requested checkpoint, while unrelated pending requirements/design recovery already completed under REQ-M5-LIFECYCLE-005 may remain persisted. Both leases retain a 30-second TTL and renew by compare-and-set of their existing token and fencing value every 10 seconds; failed renewal aborts before the next persistence mutation. An expired CHANGE or change-projection lease is reclaimed by atomically replacing the stale lease directory and incrementing its durable fencing token, and a stale holder cannot renew or authorize a later rename; tests inject an already-expired lease to exercise reclaim independently of the 10-second acquisition budget. The projection storage helper syncs a create-new temporary file, authorizes its atomic rename only when both persisted lease owners still match the expected tokens and unexpired fencing values, and then replaces the projection. The enumerated `changes.json` read-modify-write paths map timeout acquiring their CHANGE or change-projection lease to exit 1 `CHANGE_PROJECTION_LEASE_BUSY`. Every change-projection lease timeout, including candidate writers and integration finalization, uses that same diagnostic; other existing CHANGE-lease consumers retain their prior diagnostics. Failed renewal or write-time authorization is exit 1 `LEASE_FENCED`, with no successful persistence after lease loss. The projection-lease critical section performs no repository-wide trace build or graph index, reuses the pre-lease per-path hash table and re-hashes only changed relevant paths, checks lease-loss state immediately after drift verification and before each persistence boundary, and deterministic tests with exactly four same-CHANGE writers, two writers for different CHANGEs, and injected critical-section delays of at most 100 milliseconds complete all checkpoints within the 10-second acquisition budget without lost projection or cross-CHANGE overwrite.
-Config-Implementation-Fingerprint: Normative acceptance detail: Generations 24 through 26 remain immutable non-current evidence after their recorded quality/checkpoint failures. After current Generation-27 requirements/design approval, run fresh Reds for the Generation-27 source revision of `TEST-M5-FULL-TEST-TIMEOUT-001` and new `TEST-M5-CHANGE-CURRENT-SELECTION-CACHE-001`. The timeout-policy Red passes config, canonical candidate-gate, authoritative source projection and approved main gate digest checks, then fails only on historical no-`testRuntime` digest `bb4a58c169b4e4f7357b608dc3b00028a613f907613b88d1540b3654ea600c8a` versus current `2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd`. The cache Red completes validation and fails only because at least one full classifier context count is greater than one; malformed evidence, module, reporter, bootstrap, watchdog timeout, or validation rejection is not Red. Freeze both test sources through Green. Implementation changes only the historical no-`testRuntime` constant, lazy invocation-local cycle-selection memoization in `validateChangeEvidence()`, and selector-local reuse of an authoritative classification when fallback chooses the same cycle; the approved shared config fingerprint and candidate-gate behavior remain unchanged.
+Config-Implementation-Fingerprint: Normative acceptance detail: Generations 24 through 26 remain immutable non-current evidence after their recorded quality/checkpoint failures. After current Generation-27 requirements/design approval, run fresh Reds for the Generation-27 source revision of `TEST-M5-FULL-TEST-TIMEOUT-001` and new `TEST-M5-CHANGE-CURRENT-SELECTION-CACHE-001`. The timeout-policy Red passes config, canonical candidate-gate, authoritative source projection and approved main gate digest checks, then fails only on historical no-`testRuntime` digest `bb4a58c169b4e4f7357b608dc3b00028a613f907613b88d1540b3654ea600c8a` versus the Generation-27 then-current legacy projection `2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd`. The cache Red completes validation and fails only because at least one full classifier context count is greater than one; malformed evidence, module, reporter, bootstrap, watchdog timeout, or validation rejection is not Red. Freeze both test sources through Green. Implementation changes only the historical no-`testRuntime` constant, lazy invocation-local cycle-selection memoization in `validateChangeEvidence()`, and selector-local reuse of an authoritative classification when fallback chooses the same cycle; the approved shared config fingerprint and candidate-gate behavior remain unchanged.
+
+Generation-45-Config-Fingerprint: Generation 45 supersedes only the final
+`approved shared config fingerprint and candidate-gate behavior remain
+unchanged` constraint above. The approved REQ-M5-CI-008 timeout correction
+changes `.musubix/config.json`, the canonical candidate-gate execution-policy
+projection, and the current projection digest to
+`d4251d4e7be83fb03fbf551f2e8d32c0584a6d34b709a0d3fa64da3f22a00ba5`.
+It does not change the historical no-`testRuntime` projection or digest.
+The Generation-45 Red for `TEST-M5-FULL-TEST-TIMEOUT-001` shall expect the
+approved 900,000-millisecond `test` timeout and full candidate-gate digest
+`d4251d4e7be83fb03fbf551f2e8d32c0584a6d34b709a0d3fa64da3f22a00ba5`
+but observe restored production values 300,000 milliseconds and
+`414123c757dad57d01855bd408c1a3b9cf70044238df4156b2a1699bee30851f`;
+its `legacyGateSha256` shall remain
+`2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd`
+in both Red and Green. Green shall require exactly 900,000 milliseconds,
+unchanged non-test command timeouts, and revised current digest
+`d4251d4e7be83fb03fbf551f2e8d32c0584a6d34b709a0d3fa64da3f22a00ba5`.
+After the Generation-45 design checkpoint and before Red,
+`TEST-M5-FULL-TEST-TIMEOUT-001` and
+`TEST-M5-TEST-CLOCK-GATE-FINGERPRINT-001` shall receive Generation-45 title
+revisions that preserve their exact `TEST-*` IDs and requirement mappings
+while changing their test fingerprints from the design
+checkpoint. `CHANGE_TESTS_UNCHANGED_AT_RECORD` is not an admissible
+Generation-45 Red outcome. The clock-fingerprint test shall preserve the
+300,000-millisecond pin while proving the legacy/no-`testRuntime` digest, then
+restore its unique fixture `test` command to exactly 900,000 milliseconds
+and recapture the no-`testRuntime` approval projection before re-adding
+`testRuntime`. The restored no-`testRuntime` object shall be persisted to
+`configPath` before the approval projection is recaptured. The current and runtime-profile variant comparisons shall use
+that recaptured approval baseline and shall derive from the same in-place
+restored `legacy` object while the legacy digest assertion continues to use the
+300,000-millisecond pin. No Generation-40 through Generation-44 approval, design
+checkpoint, Red, implementation, Green, or pending TDD evidence grants credit.
+Generation-44 post-design test-source edits are non-credit starting source only;
+each Generation-45 post-design test fingerprint shall differ from both its
+Generation-45 design-checkpoint fingerprint and its Generation-44 post-design
+fingerprint.
 
 When `.musubix/config.json` exists as a readable regular project file, `currentChangeFingerprints` and every workspace-backed Red/Implementation/Green fingerprint calculation include its path and content hash in the aggregate `implementation` fingerprint in addition to traced non-test code paths, and include the same entry in the sorted `requirementImplementations[requirementId].paths` and content-hash snapshot for every requested requirement. The existing workspace-state digest independently retains path mode and size for drift detection. The config path appears exactly once even if another source contributes it. A missing config preserves the existing code-only projection. A symbolic link, non-regular entry or unreadable config fails closed before checkpoint persistence with exit 2 and exact message `Change fingerprint input .musubix/config.json must be a readable regular file.`; it is never treated as missing or followed to an external target. Changing only `.musubix/config.json` changes the aggregate implementation fingerprint and every requested requirement's implementation snapshot without changing requirements, design or tests fingerprints; this intentionally makes a later config edit relevant to every requirement requested by that calculation, but authorizes no config or timeout change beyond the separately approved requirement.
 
@@ -241,13 +456,41 @@ Foreign-Generation-Negative: Preserve TEST-M5-TEST-CLOCK-EVIDENCE-001 and its g7
 - **Host-wall boundary and exact timeout contract:** new Date(), filesystem mtimeMs and Git timestamps remain native. Ownerless lease admission continues to compare mtimeMs + leaseTtlMs with stable Date.now. In TEST-M5-TEST-CLOCK-HOST-BOUNDARY-001, set only a fixture-owned ownerless directory's mtime to the fixture epoch + 2*leaseTtlMs (60,000 ms) while the explicit local Date.now mock stays at that epoch. The waiting acquireChangeLease(fixture, "CHANGE-0017") attempt shall reject on exhaustion of the existing monotonic acquisition policy. Only within that test's @id block and the exact approved assertion region, obtain LeaseAcquisitionTimeout through await import('../packages/analysis/src/journal.js'), retaining the line-8 imports byte-identically. The constructor and throwing acquisition API used by the assertion must resolve to the same module instance through that exact specifier, without alternate paths, cache-busting query/fragment imports, mock classes or adapters. Prove the caught rejection with toBeInstanceOf(LeaseAcquisitionTimeout), plus exact code === "LEASE_ACQUISITION_TIMEOUT", leaseKind === "change", leaseName === "change-CHANGE-0017", and message === "Timed out acquiring change lease change-CHANGE-0017.". A fulfilled acquisition must fail the test; name, constructor.name, /BUSY/ or CLI-rendered diagnostic shorthand cannot prove class identity. Then fixture epoch - 2*leaseTtlMs shall permit the existing takeover and a positive fencing token; retain raw-wall model jumps, native Date/timer identities, owner-bearing expiry controls and local-mock restoration. No production predicate, retry/TTL policy, class/code/message remapping, OS wall-clock change, suppressed failure or test-runtime exception adapter is allowed.
 - **Source-bound acquisition-window evidence:** Before any g9 Red, the system shall bind and verify the complete packages/analysis/src/journal.ts source SHA-256 14f5e66f6709d5dd8be485a3cc773c0ff6e85d8acb9e99d9bdc8f6632787e1fe, leaseRetryMs = 25, leaseAttempts = 400, deadline = performance.now() + leaseAttempts * leaseRetryMs, the attempt bound and performance.now() >= deadline termination guard, and the unchanged forward-ownerless wait/retry-to-LeaseAcquisitionTimeout path. Persist this source-bound consistency result with the exact diagnostic inventory in g9 preflight; mismatch blocks Red. This conservative source proof establishes the configured 10,000 ms monotonic acquisition budget, not a promised exception-delivery time. Do not require an exact/minimum/maximum elapsed assertion in HOST-BOUNDARY or infer the acquisition window from wall time. Its behavioral proof remains actual rejection with the exact class/fields/message followed by backdated takeover. The unchanged 60,000 ms test-runner timeout is solely a watchdog: watchdog expiration fails the diagnostic and supplies neither timeout-contract proof nor a passing result.
 - **Evidence and distribution:** Use the exact 21-path policy and canonical ack/request/input/worker/dispatch/result schemas. Authoritative blobs belong to the journal-root CONTROL .musubix/evidence/test-runtime/v1/blobs/<sha256>. Before child/detached/source-pair cleanup/reset/removal, the parent shall collect and rehash/schema/context-verify the closure, publish it atomically to control, then append journal/result references; collection/publication failure rejects blob-io without success fallback. POSIX requires file+directory fsync; win32 explicitly lacks directory fsync and requires file flush + atomic no-replace + post-write rehash, preserving the existing matrix contract. Reuse only exact bytes. Evidence-input exclusion avoids source-fingerprint feedback. Control commits published blobs and references before new plan clean checks, never through assignment commits. Integration/handoff resolves the full closure in control before acceptance/cleanup. Profiled source-pair manifests bind hashes through the existing output contract after parent publication, without changing ordinary source terminal/approval schemas. BLOB-PLATFORM-001 and EVIDENCE-001 cover platform/cleanup/deletion/tamper/untransferred failures. Development retains sealed inputs; authoritative execution requires committed runtime bytes.
-- **Reporter and aggregate binding:** The parent runner/adapter resolves profile/groups and prepares request/dispatch/env/final argv before the pure .mjs codegraph wrapper executes process.execPath plus the root-local vitest.mjs; no wrapper import of TypeScript is permitted. Compose reporters after native option selection but before a Vitest terminator, reusing an existing npm -- and never generating a second separator. Retain JSON/default reporters/output paths/file/-t selection/counters/exits. Ack remains separate; no config-reporter fallback. AGGREGATE-001 covers the closed launcher expansions, existing focused separators, CLI JSON override and all ordinary/gate/matrix/grouped paths. Missing reporter/group/ack or argv/exit/result mismatch rejects. Outer command shapes are unchanged; only the configured ordinary full-test limit changes from 180000 ms to exactly 300000 ms.
+- **Reporter and aggregate binding:** The parent runner/adapter resolves profile/groups and prepares request/dispatch/env/final argv before the pure .mjs codegraph wrapper executes process.execPath plus the root-local vitest.mjs; no wrapper import of TypeScript is permitted. Compose reporters after native option selection but before a Vitest terminator, reusing an existing npm -- and never generating a second separator. Retain JSON/default reporters/output paths/file/-t selection/counters/exits. Ack remains separate; no config-reporter fallback. AGGREGATE-001 covers the closed launcher expansions, existing focused separators, CLI JSON override and all ordinary/gate/matrix/grouped paths. Missing reporter/group/ack or argv/exit/result mismatch rejects. Outer command shapes are unchanged. Generation 27 changed the configured ordinary full-test limit from 180000 ms to exactly 300000 ms; Generation 45 supersedes that historical limit with exactly 900000 ms under REQ-M5-CI-008 while leaving argv and non-test command limits unchanged.
 - **Typed script boundary:** All scripts/test-runtime inputs are the three enumerated .mjs files, validated with node --check, checked-JS via the explicit tsc command in DES-M5-015 and real Vitest/preload imports. No undeclared .d.ts or TS script/loader is allowed. Typed coordination and the expected-digest constant live in the inventoried packages/analysis/src/test-runtime.ts under existing typecheck/build. Keep the clock implementation out of dist/exports/tarballs and use clean-env consumer isolation.
 - **Fingerprint normal cycle:** Assign TEST-M5-RELEASE-002-TRUST-001 at tests/candidate-gate-trust.test.ts to serial REQ-M5-COMPAT-013, not parallel APPROVAL-007 ownership. After g9 requirements/design approval and checkpoints, verify without editing that its g8-frozen bytes retain digest 327baa0f399450fd6714f112e41bc23e13de79a9c1113499795ea76d87bcd03e, requirement annotation, TEST ID/path and unsigned-artifact assertions. Rebuild/check trace; only after the actual post-design HOST-BOUNDARY correction, twelve-pass scratch diagnostic, new g9 preflight/freeze and verified control-runtime absence may its fresh ordinary g9 Red run. Its admissible failure remains actual legacy digest bb4a58c169b4e4f7357b608dc3b00028a613f907613b88d1540b3654ea600c8a versus expected 327baa..., not a missing-module/setup failure. Keep the whole file unchanged through Green. No TRUST source edit, source supersession, source approval or historical/diagnostic credit transfer is permitted. Existing greatest-verified-terminal selection and genuine current Red/Green/integration obligations remain unchanged; temporary preparation staleness is not a passing gate. GATE-FINGERPRINT-001 has separate fresh evidence; QUALITY-COMPLETENESS-001 remains unchanged.
 - **Regression and lifecycle:** Use the closed twelve focused regressions for installation, clock progression, child origin, mock/restore, idempotency, timers, evidence and host-wall boundaries. Apart from the explicit isolated non-credit scratch diagnostic, no pre-Red runtime API skeleton/config implementation is permitted; control remains runtime-absent for genuine selected native failures through existing hooks, and a new helper loads only after its feature-presence assertion succeeds. Missing-module/setup failure is not Red. Enable the control profile only after fresh g9 batch Red and implementation intent. Run TEST-M5-TDD-WRITER-DIAGNOSTIC-001, TEST-M5-CHECKPOINT-CLI-DIAGNOSTICS-001 and TEST-M5-CONCURRENCY-LEASE-CONTRACT-001 unchanged. Keep TEST-M5-LEASE-RENEWAL-BACKWARD-001 and TEST-M5-LIFECYCLE-004 unchanged as explicit expiry/fencing controls. Frozen fingerprints and historical evidence are not edited or credited to a new generation.
-- **Full verification boundary:** This clause takes effect only with current Generation-27 requirements approval. After the stable runtime, both graph fixes, the shared config implementation fingerprint, the 300000-millisecond timeout projection, the current no-`testRuntime` digest, and both Generation-27 Greens, run the configured test command (`npx vitest run`) once through the existing profile-aware coordinator with configured timeout exactly 300000 ms, binding the existing declared effective reporter argv and ordinary command result. Success requires completed process status, measured duration strictly below 300000 ms, zero reported failures and no bootstrap/provenance error, and records both measured duration and integer headroom `300000 - durationMs`. `TEST-M5-EVIDENCE-CURRENT-001` must independently complete below its unchanged 60000-millisecond native limit. A duration equal to or above either applicable limit, observed timeout, unfinished selected file or any other failure is non-pass. Timeout-only STOP requires observed process timeout, `reportedFailed === 0`, empty `bootstrapErrors`, no other command or provenance failure, valid acknowledgments for every started worker, and a complete selected-file inventory that identifies every unfinished file; it prepares only the minimal timeout projection for human approval, and no further increase is pre-authorized. Unknown or missing observations do not count as zero, unfinished files are not passed, and every non-timeout failure requires genuine correction.
+- **Full verification boundary:** This clause takes effect only with current Generation-27 requirements approval. After the stable runtime, both graph fixes, the shared config implementation fingerprint, the 300000-millisecond timeout projection, the approved Generation-27 legacy/no-`testRuntime` digest, and both Generation-27 Greens, run the configured test command (`npx vitest run`) once through the existing profile-aware coordinator with configured timeout exactly 300000 ms, binding the existing declared effective reporter argv and ordinary command result. Success requires completed process status, measured duration strictly below 300000 ms, zero reported failures and no bootstrap/provenance error, and records both measured duration and integer headroom `300000 - durationMs`. `TEST-M5-EVIDENCE-CURRENT-001` must independently complete below its unchanged 60000-millisecond native limit. A duration equal to or above either applicable limit, observed timeout, unfinished selected file or any other failure is non-pass. Timeout-only STOP requires observed process timeout, `reportedFailed === 0`, empty `bootstrapErrors`, no other command or provenance failure, valid acknowledgments for every started worker, and a complete selected-file inventory that identifies every unfinished file; it prepares only the minimal timeout projection for human approval, and no further increase is pre-authorized. Unknown or missing observations do not count as zero, unfinished files are not passed, and every non-timeout failure requires genuine correction.
 
   `TEST-M5-FULL-TEST-TIMEOUT-001` provides the Generation-27 policy-digest Red/Green proof with source bytes distinct from its Generation-26 source. It retains the live timeout, canonical candidate-gate, approved main digest, source projection and trace checks, extracts `legacyGateSha256` from `tests/test-runtime-gate.test.ts`, and expects `2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd`. Red observes only historical `bb4a58c169b4e4f7357b608dc3b00028a613f907613b88d1540b3654ea600c8a`; Green changes only that constant. `TEST-M5-CHANGE-CURRENT-SELECTION-CACHE-001` verifies REQ-M5-LIFECYCLE-006 and records a deterministic operation ledger from the real classifier contexts; Red observes one or more duplicate complete contexts, while Green observes every complete context at most once independently in two consecutive validation invocations after both validation-level and selector-level duplicate work are removed. Existing `TEST-M5-EVIDENCE-CURRENT-001` is byte-identical and remains the 60000-millisecond secondary regression guard. Compatibility, pack-smoke and all other command limits remain unchanged; no further timeout increase is pre-authorized. ADR-0040 records this bounded projection decision. Other failures require genuine correction.
+
+Generation-45-Full-Verification-Supersession: For Generation 45 only, the
+Generation-27 `Full verification boundary` and its immediately following
+`TEST-M5-FULL-TEST-TIMEOUT-001` paragraph are superseded where they bind the
+ordinary full-test timeout, headroom, timeout-only STOP boundary, current
+candidate-gate digest, and the claim that Green changes only one constant. The
+configured full `test` timeout is exactly 900,000 milliseconds; success requires
+measured duration strictly below 900,000 milliseconds and records integer
+headroom `900000 - durationMs`; timeout-only STOP applies at 900,000 milliseconds
+under the otherwise unchanged completion, acknowledgment, inventory, and
+failure-classification conditions. The approved current canonical
+candidate-gate digest is
+`d4251d4e7be83fb03fbf551f2e8d32c0584a6d34b709a0d3fa64da3f22a00ba5`.
+The line above that expects
+`2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd`
+continues to govern only the approved Generation-27 `legacyGateSha256`
+projection, which
+remains unchanged. Generation-45 Green therefore changes the authoritative
+timeout expectation and current digest bindings while preserving that legacy
+constant, all non-test command limits, and the 900,000-millisecond maximum
+approved by REQ-M5-CI-008; no increase beyond that maximum is pre-authorized.
+Fresh `TEST-M5-FULL-TEST-TIMEOUT-001` Red/Green evidence verifies
+REQ-M5-LIFECYCLE-006 and REQ-M5-COMPAT-013, while fresh
+`TEST-M5-TEST-CLOCK-GATE-FINGERPRINT-001` Red/Green evidence independently
+verifies REQ-M5-COMPAT-013. The post-design source-revision rule in
+`Generation-45-Config-Fingerprint` applies to both tests. Generation-40 through
+Generation-44 approvals, design checkpoints, Red, implementation, Green, and
+pending TDD evidence provide no credit.
 
 ## REQ-M5-APPROVAL-001: Preserve manual exact-hash approval
 Priority: must

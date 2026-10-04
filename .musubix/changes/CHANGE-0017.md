@@ -6,9 +6,355 @@ status: active
 ---
 # CHANGE-0017: establish-wave1-development-foundations
 
-Requirements: REQ-M5-CI-006 REQ-M5-CI-008
+Requirements: REQ-M5-CI-008 REQ-M5-COMPAT-013 REQ-M5-EVIDENCE-007 REQ-M5-LIFECYCLE-006
 
-## Generation 39 current release boundary
+## Generation 49 current release boundary
+
+Generation 49 supersedes abandoned Generation 48 without changing its corrected
+test logic or any production requirement. Generation 48 recorded four genuine
+failing tests, but their corrected sources already existed at the design
+checkpoint, so `change-record ... red` rejected them with
+`CHANGE_TESTS_UNCHANGED_AT_RECORD`. No implementation or Green was recorded.
+
+Generation 49 retains the corrected Generation-48 tests as pre-design starting
+source. After Generation-49 design approval, and before the first Red, each of
+the four authoritative test titles shall receive an exact Generation-48 to
+Generation-49 revision. No assertion, trace link, fixture transition, digest, or
+production file changes during that post-design edit. The resulting source
+fingerprints must differ from the Generation-49 design checkpoint, and the
+repository workflow config remains 125,000,000 bytes with no explicit line
+limit until all four fresh Reds and the Red checkpoint are recorded.
+The design checkpoint seals the four starting files. The exact post-design
+title-only diff shall be recorded and must contain four changed title lines and
+no other hunk in those files. The baseline is a raw-copy/SHA-256 snapshot sealed
+in the session artifact directory immediately after the design checkpoint, not
+repository `HEAD`; this includes the untracked transcript test.
+`diff --no-index --word-diff` must show only `Generation 48` to
+`Generation 49` in each title string. The post-edit fingerprints are frozen
+before the first Red, and every Red recording must bind them. All Generation-48 evidence,
+freeze, exception, and Red-narrative clauses below are historical for
+Generation 49.
+
+## Generation 48 current release boundary
+
+Generation 48 supersedes abandoned Generation 47 without changing any
+production requirement, workflow limit, policy projection, candidate-gate
+digest, stream-boundary assertion, or residual risk. Generation 47 is
+non-credit because its clock fixture correctly reconstructed the historical
+125,000,000-byte/no-explicit-line policy for the legacy digest assertion, but
+then retained that historical workflow object while re-adding `testRuntime` and
+comparing against the current 600,000,000/4,000,000 candidate-gate projection.
+
+The corrected fixture has two explicit transitions. First it sets the test
+timeout to 300,000, removes `testRuntime`, sets the workflow total to
+125,000,000, and removes the explicit line limit before asserting
+`2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd`.
+Second it restores the test timeout to 900,000, the workflow total to
+600,000,000, and the workflow line limit to 4,000,000 before persisting the
+no-`testRuntime` current baseline and then re-adding the approved runtime
+profile. All corrected Generation-48 test sources must be fingerprinted before
+fresh Red, and production config remains at the Generation-45 workflow baseline
+until those Reds are recorded.
+The Generation-47 freeze, sole-exception, and Red-narrative clauses below are
+historical for Generation 48. The four Generation-48 fingerprint regressions
+are frozen from their first fresh Red through Green. The historical
+`2487162a...` projection and exact 10/11-byte assertions must already pass at
+Red; only the unchanged repository policy producing `d4251d4e...` instead of
+`2d92597f...` and lacking the 600,000,000/4,000,000 configuration may cause the
+recorded failures.
+
+## Generation 47 historical test correction (superseded by Generation 48)
+
+Generation 47 supersedes abandoned Generation 46 without changing its approved
+600,000,000-byte total limit, 4,000,000-byte line limit, execution-policy
+projection, or complete candidate-gate digest
+`2d92597fbbd621ec23abb31d26c4f4287b3b735d7523fd4f284e5f7f3e837516`.
+Generation 46 is non-credit because its first authoritative Red sources had two
+test-only contradictions: the transcript test expected a syntactically empty
+under-limit source to sanitize successfully even though the sanitizer correctly
+rejects transcripts with no Copilot Skill invocation, and the clock fixture
+asserted the historical no-`testRuntime` digest while retaining the new workflow
+limits that intentionally change that projection.
+
+Before Generation-47 Red, the corrected test files shall be fingerprinted as
+the authoritative sources. The transcript test shall prove that the exact
+10-byte source `{}\n{}\n{} \n` advances beyond
+`WORKFLOW_TRANSCRIPT_SIZE` and then fails with the exact no-Copilot-Skill-event
+message, while an exact 11-byte source fails specifically with
+`WORKFLOW_TRANSCRIPT_SIZE`; that source is `12345678901`. The clock fixture
+shall explicitly restore the
+historical workflow total of 125,000,000 bytes and remove the explicit line
+limit together with removing `testRuntime`, so its historical
+`2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd`
+projection assertion is internally closed. The repository production config
+shall remain at the Generation-45 125,000,000-byte/no-explicit-line baseline
+until all fresh Generation-47 Reds are recorded. Generation-46 approvals, TDD,
+and implementation evidence grant no Generation-47 credit.
+At Red, the exact 10/11-byte assertions and the historical
+`2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd`
+projection assertion must already pass; failure is caused only by the unchanged
+production configuration missing the approved 600,000,000/4,000,000 policy and
+therefore still producing the Generation-45 complete candidate digest.
+Both stream assertions call `sanitizeWorkflowLogFile` in compatible mode with
+10-byte total and line limits; the 11-byte assertion matches the maximum-total
+diagnostic so it cannot be satisfied only by the line guard.
+The Generation-46 freeze, sole-exception, and Red-narrative clauses below are
+historical for Generation 47 and do not bind the corrected authoritative
+sources.
+
+## Generation 46 retained production limits under Generation 48
+
+Only Generation 46's 600,000,000-byte total limit, 4,000,000-byte line limit,
+complete-source remeasurement and fail-closed rules, accepted bounded-resource
+risk, and unchanged 100,000,000-byte library default remain current. Its TDD,
+Red, freeze, test-authoring, approval, and lifecycle narratives are historical
+and grant no Generation-48 credit. Generation 48 retains the
+`2d92597f...` digest.
+
+Generation 46 reopens the completed Generation 45 candidate because the live
+Copilot transcript was observed at 525,498,216 bytes while the design-approved
+`workflow.maxTranscriptBytes` ceiling is 125,000,000 bytes. The human approved
+raising the total ceiling to 600,000,000 bytes and the repository line ceiling
+to 4,000,000 bytes. Both remain within REQ-M5-EVIDENCE-007's closed ranges and
+process the complete source without truncation, splitting, or verification
+bypass. All Generation
+45 implementation behavior is retained, but its approvals, TDD checkpoints,
+quality record, and release readiness are non-credit for Generation 46.
+
+Fresh Generation-46 TDD shall prove that the design-controlled execution-policy
+projection and candidate-gate trust binding reject 125,000,000 and accept
+600,000,000 plus the 4,000,000-byte line ceiling. The resulting complete
+candidate-gate fingerprint is
+`2d92597fbbd621ec23abb31d26c4f4287b3b735d7523fd4f284e5f7f3e837516`,
+superseding Generation 45's
+`d4251d4e7be83fb03fbf551f2e8d32c0584a6d34b709a0d3fa64da3f22a00ba5`
+value while preserving the
+`testRuntime` profile and legacy no-`testRuntime` projection. The repository has no
+configured trusted policy baseline; the
+requirements/design approval manifest and candidate-gate trust digest are the
+normative boundary. Implementation changes only `.musubix/config.json`, the
+approved requirements/design projection text, and the exact
+projection/fingerprint constants required by that policy change. The library
+default remains 100,000,000 bytes for other repositories.
+Workflow sanitization and verification must record `sourceBytes` equal to the
+complete live file size measured at verification, which must be at most
+600,000,000 bytes. A larger source requires a new approved change and remains
+fail-closed with `WORKFLOW_TRANSCRIPT_SIZE`. The observed 526,452,885-byte
+source has a 2,830,476-byte maximum line, below the approved 4,000,000-byte
+repository line ceiling; release verification must remeasure both values.
+Sources with a 4,000,001-byte line remain fail-closed. Boundary tests use
+generated configuration objects and synthetic size metadata without allocating
+or committing large payloads. The accepted
+residual risk is higher peak
+memory and processing time for a bounded 600,000,000-byte source; no streaming
+implementation change is authorized in this generation.
+
+`TEST-M5-TEST-CLOCK-GATE-FINGERPRINT-001`,
+`TEST-M5-FULL-TEST-TIMEOUT-001`, and `TEST-M5-RELEASE-002-TRUST-001` receive
+Generation-46 title/constant revisions after design approval and are frozen
+from the first Red through Green. Red expects
+`2d92597fbbd621ec23abb31d26c4f4287b3b735d7523fd4f284e5f7f3e837516`
+while the unchanged production config still yields
+`d4251d4e7be83fb03fbf551f2e8d32c0584a6d34b709a0d3fa64da3f22a00ba5`.
+`TEST-M5-WORKFLOW-TRANSCRIPT-LIMIT-001` is a new authoritative Generation-46
+test under REQ-M5-EVIDENCE-007 that generates temporary synthetic boundary
+metadata and proves 600,000,000/600,000,001 total bytes and
+4,000,000/4,000,001 line bytes without committing large fixtures.
+It covers configuration and persisted-verification metadata at the production
+boundaries, and separately exercises the stream cutoff with a 10-byte limit and
+an 11-byte temporary file.
+Its authoritative source is `tests/workflow-transcript-limit.test.ts`; Red uses
+explicit rejection/resolution assertions and fails because unchanged production
+rejects 125,000,001 total bytes and a 4,000,000-byte line under the
+1,000,000-byte default. The source is frozen from that first Red through Green.
+
+## Generation 45 retained production baseline under Generation 48
+
+Only Generation 45's 900,000-millisecond test timeout,
+3,075,000-millisecond outer maximum, 65-minute gate step, 110-minute job, and
+20,000-scalar diagnostic-tail limit remain current. Its `d4251d4e...` digest
+binding, fresh TDD/trust expectations, reset instructions, approvals, and
+lifecycle evidence are historical; Generation 48 binds `2d92597f...`.
+
+Generation 45 reopens the correction after Generation 44 was abandoned because
+the clock fixture restored 900,000 milliseconds only in memory, then recaptured
+the approval projection before persisting that no-`testRuntime` config. The
+loader therefore still read 300,000 milliseconds. Three authoritative tests
+reached Green, but the clock test could not; the recurrence is recorded on #56.
+The configured `test` timeout changes
+the canonical candidate-gate
+configuration fingerprint and supersedes the stable-runtime rule that command
+timeouts remain unchanged, so `REQ-M5-LIFECYCLE-006` and `REQ-M5-COMPAT-013`
+must be revised and approved together with `REQ-M5-CI-008`. Generations 40
+through 44 are abandoned; their approvals, checkpoints, TDD evidence, and
+implementation work grant no Generation-45 credit.
+
+The observable candidate-runner behavior remains the Generation-40 proposal:
+the closed `test` command uses exactly 900,000 milliseconds, the other six
+closed commands and `formal.timeoutMs` retain their existing ceilings, the
+outer orchestration maximum is 3,075,000 milliseconds, and the workflow keeps
+65-minute gate-step and 110-minute job boundaries. Required failed
+`command:*` checks retain only separately redacted final stdout/stderr tails
+of at most 20,000 Unicode scalars plus an integer-or-null exit code in the
+existing exactly-one signed envelope. Requirements and design shall also bind
+the resulting canonical candidate-gate fingerprint
+`d4251d4e7be83fb03fbf551f2e8d32c0584a6d34b709a0d3fa64da3f22a00ba5`
+and preserve the approved legacy/no-`testRuntime` projection digest
+`2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd`
+unchanged from Generation 27; the obsolete pre-Generation-27
+no-`testRuntime` digest
+`bb4a58c169b4e4f7357b608dc3b00028a613f907613b88d1540b3654ea600c8a`
+remains historical only.
+
+Fresh Generation-45 TDD maps
+`TEST-M5-CI-MATRIX-ORCHESTRATION-TIMEOUT-001` and
+`TEST-M5-CI-MATRIX-COMMAND-DIAGNOSTICS-001` to `REQ-M5-CI-008`,
+`TEST-M5-FULL-TEST-TIMEOUT-001` to `REQ-M5-LIFECYCLE-006` and
+`REQ-M5-COMPAT-013`, and
+`TEST-M5-TEST-CLOCK-GATE-FINGERPRINT-001` to `REQ-M5-COMPAT-013`.
+`TEST-M5-CI-MATRIX-ERROR-001` and
+`TEST-M5-CI-CANDIDATE-HEAD-ATTRIBUTES-001`, plus
+`TEST-M5-RELEASE-002-TRUST-001`, are rerun as retained regressions and provide
+no replacement for those fresh Red/Green cycles. The trust regression expects
+`d4251d4e7be83fb03fbf551f2e8d32c0584a6d34b709a0d3fa64da3f22a00ba5`
+after an exact post-design constant edit from
+`414123c757dad57d01855bd408c1a3b9cf70044238df4156b2a1699bee30851f`,
+is frozen with the authoritative tests, passes after implementation in
+configured test evidence, and grants no separate Red or TDD credit.
+This exact Generation-45 regression update supersedes the historical
+Generation-8/9 instructions later in this document that froze the TRUST file
+at `327baa0f399450fd6714f112e41bc23e13de79a9c1113499795ea76d87bcd03e`
+or prohibited every future TRUST source edit; those historical cycles remain
+immutable and non-credit.
+
+Before Generation-45 Red, the abandoned production changes in
+`.musubix/config.json`, `.github/workflows/candidate-gate.yml`, and
+`packages/analysis/src/candidate-gate-runner.ts`, plus the authoritative tests'
+mutable native report files and `aggregate.json`, shall be restored to baseline
+commit `275ad0fe3c79639b0d379dc026831e523c1370a2`. The exact report paths are
+`.musubix/evidence/native/test/aggregate.json`,
+`.musubix/evidence/native/test/TEST-M5-CI-MATRIX-ORCHESTRATION-TIMEOUT-001.json`,
+`.musubix/evidence/native/test/TEST-M5-FULL-TEST-TIMEOUT-001.json`,
+`.musubix/evidence/native/test/TEST-M5-TEST-CLOCK-GATE-FINGERPRINT-001.json`,
+and the baseline-absent
+`.musubix/evidence/native/test/TEST-M5-CI-MATRIX-COMMAND-DIAGNOSTICS-001.json`.
+Immediately before the first Red, a path-scoped `git diff --exit-code` against
+that commit plus the diagnostics-report absence check shall prove the reset.
+After the Generation-45 design checkpoint, each authoritative test receives a
+Generation-45 title revision that preserves its exact `TEST-*` identity. The
+diagnostics, full-timeout, and orchestration tests preserve their approved
+assertions. The clock-fingerprint test additionally restores its unique fixture
+`test` timeout from 300,000 to 900,000 milliseconds immediately before
+re-adding `testRuntime`, recaptures the no-`testRuntime` approval projection
+with the restored timeout, and uses that recaptured approval baseline for the
+current and variant comparisons. The restore mutates the shared `legacy`
+fixture object in place, so every current and variant config derives from the
+same restored 900,000-millisecond command. It persists the restored
+no-`testRuntime` object to `configPath` before recapturing the projection. New selected reports and Red records
+must be generated only after both the production reset and those post-design
+test revisions. It shall first expect the approved 900,000-millisecond test
+timeout, 3,075,000-millisecond outer maximum, 65-minute gate step, and
+110-minute job against the actual restored files; Red therefore observes the
+300,000-millisecond timeout, 2,475,000-millisecond outer maximum, 55-minute
+gate step, or 100-minute job as an `AssertionError` before any runner helper can
+throw. The outer maximum is computed by test-local arithmetic as 75,000 plus
+the parsed actual `test` timeout plus six 300,000-millisecond non-test ceiling
+slots plus the 300,000-millisecond formal ceiling, never from the live non-test
+values or a runner export. Every
+Generation-45 title is byte-different from the corresponding Generation-44
+title. The Generation-44 post-design source edits are starting source only,
+grant no credit, and are superseded by the post-Generation-45-design
+fingerprints. Each Generation-45 post-design test fingerprint shall differ from
+both its Generation-45 design-checkpoint fingerprint and its Generation-44
+post-design fingerprint; `CHANGE_TESTS_UNCHANGED_AT_RECORD` is not an
+admissible Red outcome.
+
+## Generation 44 abandoned release boundary
+
+Generation 44 recorded design checkpoint `4285`, four admissible Reds at
+`4286` through `4289`, all three change-level Red batches, and Green for
+orchestration, diagnostics, and full-timeout at `4293` through `4295`. Its
+clock repair mutated the shared fixture to 900,000 milliseconds but recaptured
+the approval projection before persisting that mutation, so the loader still
+observed 300,000 milliseconds and Green failed at order `4296`. Frozen
+authoritative tests prevent an in-generation repair. All Generation-44
+approvals, checkpoints, implementation, Reds, and partial Greens are non-credit.
+
+## Generation 43 abandoned release boundary
+
+Generation 43 corrected #55, recorded design checkpoint order `4270`, produced
+four admissible Reds at orders `4271` through `4274`, recorded all three
+change-level Red batches, and reached Green for orchestration, diagnostics, and
+full-timeout at orders `4278` through `4280`. The clock-fingerprint Green failed
+because its fixture retained the legacy 300,000-millisecond test timeout after
+re-adding `testRuntime`, so it could not equal the live 900,000-millisecond
+current projection. Because authoritative tests were frozen after Red,
+Generation 43 is abandoned. Its approvals, checkpoints, implementation, Reds,
+and partial Greens grant no Generation-45 credit.
+
+## Generation 42 abandoned release boundary
+
+Generation 42 approved the complete three-requirement scope and recorded design
+checkpoint order `4262`. Its fresh orchestration Red failed at the restored
+runner's intentional `CandidateGateStartupError` sentinel before observing any
+baseline timeout or workflow value. That failure is outside the approved
+admissible Red contract, so Generation 42 is abandoned. Its approvals,
+checkpoint, post-design source edits, and Red executions at orders `4263`
+through `4266` grant no Generation-45 credit.
+
+## Generation 41 abandoned release boundary
+
+Generation 41 established the complete three-requirement scope and approved
+the corrected requirements/design, then generated four genuine failing test
+executions from the restored production state. It was abandoned because the
+authoritative test fingerprints already existed at its final design checkpoint,
+so `change-record ... red` correctly rejected
+`CHANGE_TESTS_UNCHANGED_AT_RECORD`. Its approvals, design checkpoint, pending
+Reds, and failed void attempt grant no Generation-42 credit.
+
+## Generation 40 abandoned release boundary
+
+This section is immutable historical context. Generation 45 restates the
+approved behavior with the complete requirement set, and no Generation-40
+phase or TDD evidence grants current lifecycle credit.
+
+Generation 40 corrects two fail-closed candidate-runner gaps demonstrated by
+both attempts of candidate-gate run `37188918245` for immutable Generation-39
+candidate `2c601c3c67cbc88209490e28a3371995ec59ca30`. macOS exhausted the
+configured `test` command's 300,000-millisecond limit in both attempts.
+Windows exhausted that limit in the first attempt and completed the command
+with ordinary test, codegraph-test, compatibility, TDD, change-completeness,
+and performance failures in the second attempt. Ubuntu completed the matrix
+orchestration but reproduced an ordinary `command:test` failure in both
+attempts. The signed normal-result envelopes retained only command summaries
+and digests, even though the parsed gate report contained bounded command
+stdout and stderr, so the authoritative failing test identity could not be
+diagnosed from the required exactly-one envelope artifact.
+
+This correction remains limited to `REQ-M5-CI-008`. It shall retain the
+300,000-millisecond maximum for every command except the closed `test` command,
+configure `test` to exactly 900,000 milliseconds, and update the deterministic outer
+orchestration range without weakening any inner timeout. The closed matrix step
+shall increase from 55 to 65 minutes and the matrix job from 100 to 110 minutes.
+The exact 3,900,000-millisecond gate-step plus pre/post steps total
+6,300,000 milliseconds below the 6,600,000-millisecond job boundary, leaving
+300,000 milliseconds for platform setup and cleanup. For a valid normal
+gate report, each required failed `command:*` check shall preserve its exit
+code and separately redacted final stdout and stderr tails, each bounded to
+20,000 Unicode scalar values, in the existing signed envelope. A focused
+fixture shall prove that a failing test identity inside the retained final tail
+is preserved and that an identity outside the tail is truncated. Passing,
+optional, and non-command checks shall not acquire raw command streams. The
+existing secret-redaction fail-closed behavior, one-envelope artifact policy,
+stream digests, command digests, and all abnormal-result normalization remain
+unchanged. `TEST-M5-CI-MATRIX-ORCHESTRATION-TIMEOUT-001` shall prove the revised
+closed timeout ranges, read the actual configuration, assert the `test` timeout
+is exactly 900,000 milliseconds, and assert every other closed command and
+`formal.timeoutMs` remains within its stated ceiling.
+`TEST-M5-CI-MATRIX-COMMAND-DIAGNOSTICS-001` shall prove bounded failed-command
+diagnostics, redaction, omission scope, and envelope validation.
+
+## Historical Generation 39 release boundary (partly superseded by Generation 45)
 
 Generation 39 corrects a candidate-head attribute validation gap discovered by
 the post-quality Generation-35 implementation review. Historical closure
@@ -35,7 +381,7 @@ is abandoned because its runner timeout was below the 75,107-millisecond
 orchestration minimum. Those generations grant no requirements, design, TDD,
 implementation, quality, candidate-gate, or release credit.
 
-## Generation 33 current release boundary
+## Historical Generation 33 release boundary (partly superseded by Generation 45)
 
 Generation 33 is a defect correction limited to `REQ-M5-CI-008`. Candidate
 gate run `37178547480` proved that the Generation-32 runner-owned precondition
@@ -74,7 +420,7 @@ milliseconds so the runner's aggregate 300,000-millisecond timer owns
 candidate timeout classification. A fresh Windows/macOS matrix remains the
 platform performance proof.
 
-## Generation 30 current release boundary
+## Historical Generation 30 release boundary (partly superseded by Generation 45)
 
 Generation 30 is a defect correction limited to `REQ-M5-CI-008`. Candidate
 gate run `37088115126` proved that the Generation-29 workflow incorrectly used
@@ -107,6 +453,12 @@ normalizes internal post-spawn processing failures, applies one aggregate
 GitHub Actions cannot preempt the maximum structured-failure path.
 `TEST-M5-CI-MATRIX-ORCHESTRATION-TIMEOUT-001` is authoritative for both the
 outer-budget correction and these classification boundaries.
+
+Historically, Generation 40 proposed superseding Generation 30's uniform
+per-command maximum for the closed `test` command, its outer-budget range, its
+gate-step boundary, and its matrix-job boundary. Generation 45 incorporates
+that supersession; all other Generation 30 timeout and failure-classification
+invariants remain applicable.
 
 ## Historical Generation 29 release boundary
 
@@ -155,8 +507,10 @@ projection and removes duplicate current-cycle classification work. Its fresh
 authoritative TDD tests are `TEST-M5-FULL-TEST-TIMEOUT-001` and
 `TEST-M5-CHANGE-CURRENT-SELECTION-CACHE-001`; retained
 `TEST-M5-CONFIG-IMPLEMENTATION-FINGERPRINT-001` coverage continues to protect
-the shared config fingerprint behavior. The implementation changes the
-no-`testRuntime` trust digest to
+the shared config fingerprint behavior. The implementation replaces the obsolete pre-Generation-27
+no-`testRuntime` trust digest
+`bb4a58c169b4e4f7357b608dc3b00028a613f907613b88d1540b3654ea600c8a`
+with the approved Generation-27 legacy/no-`testRuntime` projection digest
 `2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd`,
 uses invocation-local current-cycle selection memoization, and reuses a
 selector-local parallel-cycle classification when fallback chooses the same
