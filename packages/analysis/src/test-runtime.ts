@@ -7,6 +7,36 @@ import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 import { canonicalBytes, canonicalRepositoryIdentity, sha256 } from './canonical.js';
 import { files } from './files.js';
+import {
+  candidateCommandNames, extractCandidateFailedTests, mergeCandidateFailedTestGroups, type CandidateFailedTest,
+} from './adapters.js';
+
+/** @id CODE-M5-CI-TRANSIENT-FAILURES-001
+ * @implements REQ-M5-CI-008
+ * @design DES-M5-CI-009
+ */
+const candidateFailures = Symbol('candidate-command-failures');
+type TransientCandidateResult = { [candidateFailures]?: readonly CandidateFailedTest[] };
+
+export function getCandidateFailedTests(result: object): readonly CandidateFailedTest[] | undefined {
+  return (result as TransientCandidateResult)[candidateFailures];
+}
+
+export function formatIncompleteCommand(command: unknown, result?: unknown): string {
+  // Legacy shape: incomplete command ${command.name} (${execution.status}); use trusted key/value fields instead.
+  let message = 'acknowledgment-binding: incomplete command';
+  if (result === null || typeof result !== 'object' || Array.isArray(result)) return message;
+  const observed = result as Record<string, unknown>;
+  if (candidateCommandNames.some(name => name === command)) message += ` command=${command}`;
+  if (['completed', 'missing', 'timeout', 'error'].some(status => status === observed.status)) message += ` status=${observed.status}`;
+  if (observed.exitCode === null || Number.isSafeInteger(observed.exitCode)) message += ` exitCode=${observed.exitCode}`;
+  if (Number.isSafeInteger(observed.durationMs) && (observed.durationMs as number) >= 0) message += ` durationMs=${observed.durationMs}`;
+  return message;
+}
+
+function incompleteCommand(command: unknown, result?: unknown): never {
+  invalid('acknowledgment-binding', formatIncompleteCommand(command, result).slice('acknowledgment-binding: '.length));
+}
 
 interface CommandConfig {
   name: string;
@@ -961,7 +991,8 @@ function nativeReportPath(args: string[], cwd: string): string | null {
  */
 export async function runTestRuntimeCommand(
   root: string, command: CommandConfig, args: string[],
-  options: Parameters<Runner>[2], runner: Runner, context: TestRuntimeContext,
+  options: Parameters<Runner>[2] & { collectCandidateFailures?: boolean; candidateReportPath?: string },
+  runner: Runner, context: TestRuntimeContext,
   controlRoot = root,
 ): Promise<ProcessResult & { testRuntime: TestRuntimeProvenance }> {
   root = resolve(root);
@@ -1064,12 +1095,14 @@ export async function runTestRuntimeCommand(
       { ...options, env: entry.env });
   }
   if (execution.status !== 'completed') {
-    invalid('acknowledgment-binding', `incomplete command ${command.name} (${execution.status}); exit code ${execution.exitCode}; duration ${execution.durationMs} ms`);
+    incompleteCommand(command.name, execution);
   }
   const runs: TestRuntimeProvenance['runs'] = [];
+  const failedGroups: Array<{ ordinal: number; failures: CandidateFailedTest[] | null }> = [];
   for (const entry of prepared) {
     let native = execution;
     let report: Buffer | null = null;
+    let candidateReportBound = command.name === 'codegraph-tests';
     if (command.name === 'codegraph-tests') {
       const result = object(JSON.parse((await regular(entry.resultPath)).toString('utf8')), 'acknowledgment-binding',
         ['status', 'exitCode', 'durationMs', 'nativeReportBase64']);
@@ -1082,13 +1115,17 @@ export async function runTestRuntimeCommand(
     } else {
       const path = nativeReportPath(entry.executionBinding.resolvedInvocation.args, options.cwd);
       if (path) {
-        try { report = await regular(path); } catch (cause) {
+        try {
+          report = await regular(path);
+          candidateReportBound = options.candidateReportPath !== undefined
+            && path === resolve(options.candidateReportPath);
+        } catch (cause) {
           if (!errno(cause, 'ENOENT')) throw cause;
         }
       }
     }
     if (native.status !== 'completed') {
-      invalid('acknowledgment-binding', `incomplete command ${command.name} (${native.status}); exit code ${native.exitCode}; duration ${native.durationMs} ms`);
+      incompleteCommand(command.name, native);
     }
     let ackBytes: Buffer;
     try {
@@ -1098,7 +1135,7 @@ export async function runTestRuntimeCommand(
       throw cause;
     }
     const ack = blobSchema(JSON.parse(ackBytes.toString('utf8')));
-    if (ack.complete !== true) invalid('acknowledgment-binding', 'incomplete command');
+    if (ack.complete !== true) incompleteCommand(command.name, native);
     const acknowledgmentSha256 = await durableBlob(transport, ackBytes, process.platform);
     const resultSha256 = await durableBlob(transport, canonicalBytes({
       schemaVersion: 1, kind: 'test-runtime-result-v1', runId: entry.runId, requestSha256: entry.requestSha256,
@@ -1108,6 +1145,11 @@ export async function runTestRuntimeCommand(
     }), process.platform);
     runs.push({ ordinal: entry.group.ordinal, runId: entry.runId, requestSha256: entry.requestSha256,
       anchorSha256: hash(anchor), acknowledgmentSha256, resultSha256 });
+    if (options.collectCandidateFailures === true) {
+      failedGroups.push({ ordinal: entry.group.ordinal, failures: candidateReportBound
+        && report && report.length > 0 && report.length <= 4_000_000
+        ? extractCandidateFailedTests(report.toString('utf8'), { root }) : null });
+    }
   }
   const addresses = new Set<string>([snapshot.profileSha256, snapshot.inputsSha256, dispatchSha256, hash(anchor),
     ...snapshot.entries.map((entry) => entry.blobSha256)]);
@@ -1125,7 +1167,12 @@ export async function runTestRuntimeCommand(
   };
   await publishTestRuntimeClosure({ sourceRoot: transport, controlRoot, provenance, context, platform: process.platform });
   await transportJson(join(transport, 'provenance.json'), provenance, true);
-  return { ...execution, testRuntime: provenance };
+  const result = { ...execution, testRuntime: provenance };
+  if (options.collectCandidateFailures === true) {
+    const failures = mergeCandidateFailedTestGroups(failedGroups);
+    if (failures) Object.defineProperty(result, candidateFailures, { value: failures, enumerable: false });
+  }
+  return result;
 }
 
 /** @id CODE-M5-TEST-RUNTIME-PROVIDER-001

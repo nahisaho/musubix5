@@ -1,8 +1,131 @@
-import { dirname, posix } from 'node:path';
+import { dirname, isAbsolute, posix, relative, resolve } from 'node:path';
 import { mkdir, readdir, readFile, rm, unlink, writeFile } from 'node:fs/promises';
 import { exists } from './files.js';
 import type { CommandConfig } from './config.js';
 import type { MusubixTestReport } from './test-report.js';
+import { canonicalBytes } from './canonical.js';
+
+/** @id CODE-M5-CI-FAILED-TEST-EXTRACTION-001
+ * @implements REQ-M5-CI-008
+ * @design DES-M5-CI-009
+ */
+export interface CandidateFailedTest {
+  testId: string;
+  title: string;
+  nativeMessage: string;
+  index: number;
+  path?: string;
+}
+
+export type CandidateFailureCarrier =
+  | { schemaVersion: 1; command: string; testId: string; title: string; nativeMessage: string }
+  | { schemaVersion: 1; command: string; omitted: number };
+
+export const candidateCommandNames = [
+  'typecheck', 'build', 'test', 'codegraph-tests', 'compatibility', 'pack-check', 'pack-smoke',
+] as const;
+const candidateId = /^TEST-[A-Z0-9][A-Z0-9-]{0,122}$/;
+const candidateStatuses = new Set(['passed', 'failed', 'pending', 'skipped', 'todo', 'disabled']);
+const candidateObject = (value: unknown): value is Record<string, unknown> =>
+  value !== null && typeof value === 'object' && !Array.isArray(value);
+
+export function isCandidateTestId(value: unknown): value is string {
+  return typeof value === 'string' && candidateId.test(value);
+}
+
+export function isCandidateDiagnosticPath(value: unknown): value is string {
+  return typeof value === 'string' && value.length > 0 && !value.includes('\\')
+    && !value.includes('\0') && !value.startsWith('/')
+    && value.split('/').every(part => part !== '' && part !== '.' && part !== '..' && !part.includes(':'));
+}
+
+function candidateSuitePath(value: unknown, root: string): string | undefined {
+  if (typeof value !== 'string' || value.includes('\0')) return undefined;
+  const source = value.replaceAll('\\', '/');
+  const base = resolve(root).replaceAll('\\', '/');
+  const suffix = isAbsolute(value)
+    ? source.startsWith(base + '/') ? source.slice(base.length + 1) : undefined
+    : source;
+  if (!isCandidateDiagnosticPath(suffix)) return undefined;
+  const path = relative(resolve(root), resolve(root, value)).replaceAll('\\', '/');
+  return isCandidateDiagnosticPath(path) ? path : undefined;
+}
+
+function strictCandidateIds(value: unknown): string[] | null {
+  if (value === undefined) return [];
+  if (typeof value !== 'string') return null;
+  const ids = value.match(/TEST-[^\s()[\]{}"'`,:;.]+/gu) ?? [];
+  return ids.every(isCandidateTestId) ? ids : null;
+}
+
+export function extractCandidateFailedTests(text: string, options: { root: string }): CandidateFailedTest[] | null {
+  try {
+    if (Buffer.byteLength(text, 'utf8') > 4_000_000) return null;
+    const report: unknown = JSON.parse(text);
+    if (!candidateObject(report) || !Array.isArray(report.testResults)) return null;
+    const failures: CandidateFailedTest[] = [];
+    const seen = new Set<string>();
+    let index = 0;
+    for (const suite of report.testResults) {
+      if (!candidateObject(suite) || !Array.isArray(suite.assertionResults)) return null;
+      const path = candidateSuitePath(suite.name, options.root);
+      for (const assertion of suite.assertionResults) {
+        const traversal = index++;
+        if (!candidateObject(assertion) || typeof assertion.status !== 'string'
+          || !candidateStatuses.has(assertion.status)) return null;
+        if (assertion.status !== 'failed') continue;
+        if (typeof assertion.title !== 'string' || !Array.isArray(assertion.failureMessages)
+          || !assertion.failureMessages.every((entry: unknown) => typeof entry === 'string')) return null;
+        const titleIds = strictCandidateIds(assertion.title), fullIds = strictCandidateIds(assertion.fullName);
+        if (!titleIds || !fullIds || titleIds.length > 1 || fullIds.length > 1) return null;
+        const testId = titleIds[0] ?? fullIds[0];
+        if (!testId || titleIds.length && fullIds.length && titleIds[0] !== fullIds[0] || seen.has(testId)) return null;
+        seen.add(testId);
+        failures.push({ testId, title: assertion.title, nativeMessage: assertion.failureMessages.join('\n'),
+          index: traversal, ...(path ? { path } : {}) });
+      }
+    }
+    return failures;
+  } catch {
+    return null;
+  }
+}
+
+export function mergeCandidateFailedTestGroups(
+  groups: ReadonlyArray<{ ordinal: number; failures: readonly CandidateFailedTest[] | null }>,
+): CandidateFailedTest[] | null {
+  const merged: CandidateFailedTest[] = [], seen = new Set<string>(), ordinals = new Set<number>();
+  for (const group of [...groups].sort((a, b) => a.ordinal - b.ordinal)) {
+    if (!Number.isSafeInteger(group.ordinal) || group.ordinal < 0 || ordinals.has(group.ordinal) || group.failures === null) return null;
+    ordinals.add(group.ordinal);
+    for (const entry of group.failures) {
+      if (seen.has(entry.testId)) return null;
+      seen.add(entry.testId);
+      merged.push(entry);
+    }
+  }
+  return merged;
+}
+
+export function parseCandidateFailureCarrier(message: string, code: string): CandidateFailureCarrier | null {
+  try {
+    const value: unknown = JSON.parse(message);
+    if (!candidateObject(value) || value.schemaVersion !== 1 || typeof value.command !== 'string'
+      || !candidateCommandNames.some(command => command === value.command)
+      || canonicalBytes(value).toString('utf8') !== message) return null;
+    const keys = Object.keys(value).sort().join(',');
+    if (code === 'CANDIDATE_COMMAND_TEST_FAILED'
+      && keys === 'command,nativeMessage,schemaVersion,testId,title'
+      && isCandidateTestId(value.testId) && typeof value.title === 'string' && typeof value.nativeMessage === 'string') {
+      return value as CandidateFailureCarrier;
+    }
+    if (code === 'CANDIDATE_COMMAND_TESTS_OMITTED' && keys === 'command,omitted,schemaVersion'
+      && Number.isSafeInteger(value.omitted) && (value.omitted as number) > 0) return value as CandidateFailureCarrier;
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 export type TestAdapter = NonNullable<CommandConfig['adapter']>;
 

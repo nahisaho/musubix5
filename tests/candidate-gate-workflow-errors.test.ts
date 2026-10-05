@@ -8,6 +8,194 @@ import { PassThrough } from 'node:stream';
 import { parse } from 'yaml';
 import { expect, it, vi } from 'vitest';
 import type { CandidateGateCommandOutcome, CandidateGateRunnerDependencies, CandidateGateRunnerResult } from '../packages/analysis/src/candidate-gate-runner.js';
+/** @id TEST-M5-CI-MATRIX-FAILED-TEST-DIAG-001
+ * @verifies REQ-M5-CI-008
+ * @design DES-M5-CI-009
+ */
+it('TEST-M5-CI-MATRIX-FAILED-TEST-DIAG-001 bounds provenance-only matrix enrichment without changing failures', async () => {
+    if (process.env.MUSUBIX5_G50_FAILURE_FIXTURE === '1') throw new Error('current bound fixture failure');
+    const { extractCandidateFailedTests: extract, mergeCandidateFailedTestGroups: merge } = await import('../packages/analysis/src/adapters.js');
+    const { createCandidateFailureProjector } = await import('../packages/analysis/src/gate.js');
+    const { getCandidateFailedTests, runTestRuntimeCommand, testRuntimeExecutionContext } = await import('../packages/analysis/src/test-runtime.js');
+    const { canonicalBytes } = await import('../packages/analysis/src/canonical.js');
+    const root = process.cwd();
+    const native = (entries: unknown[], path: unknown = join(root, 'tests', 'suite.test.ts')) =>
+        JSON.stringify({ testResults: [{ name: path, assertionResults: entries }] });
+    const failure = (id = 'TEST-Z', extra: Record<string, unknown> = {}) => ({
+        status: 'failed', title: `${id} title`, fullName: `suite ${id} title`, failureMessages: ['first', 'second'], ...extra,
+    });
+    const extractReport = (entries: unknown[], path?: unknown) => extract(native(entries, path), { root });
+    const extracted = extractReport([failure()])!;
+    expect(extracted).toEqual([{ testId: 'TEST-Z', title: 'TEST-Z title', nativeMessage: 'first\nsecond', index: 0, path: 'tests/suite.test.ts' }]);
+    for (const status of ['passed', 'pending', 'skipped', 'todo', 'disabled']) expect(extractReport([{ status }, failure()])![0]?.index).toBe(1);
+    for (const status of ['unknown', null, 1]) expect(extractReport([{ status }, failure()])).toBeNull();
+    for (const extra of [
+        { title: null }, { failureMessages: null }, { failureMessages: [1] },
+        { title: 'no id', fullName: 'no id' }, { title: 'TEST-A TEST-B' },
+        { title: 'TEST-A', fullName: 'TEST-B' }, { fullName: 'TEST-Z TEST-B' },
+        { title: 'TEST-abc', fullName: 'TEST-abc' }, { title: 'TEST-' + 'A'.repeat(124), fullName: '' },
+        { title: 'TEST-A_bad', fullName: '' }, { title: 'TEST-A-', fullName: 'TEST-A' },
+    ]) expect(extractReport([failure('TEST-Z', extra)])).toBeNull();
+    expect(extractReport([failure('TEST-' + 'A'.repeat(123), { fullName: '' })])).not.toBeNull();
+    expect(extractReport([failure('TEST-A', { title: 'ordinary title' })])![0]?.testId).toBe('TEST-A');
+    expect(extractReport([failure('TEST-A', { fullName: '', failureMessages: [] })])![0]?.nativeMessage).toBe('');
+    expect(extractReport([failure(), failure()])).toBeNull();
+    for (const path of ['../outside.ts', '/outside.ts', 'C:\\outside.ts', 'tests/../outside.ts', 'tests//suite.ts', 'tests/./suite.ts', null])
+        expect(extractReport([failure()], path)![0]).not.toHaveProperty('path');
+    expect(extractReport([failure()], 'tests/suite.test.ts')![0]?.path).toBe('tests/suite.test.ts');
+    expect(extract('{', { root })).toBeNull();
+    expect(extract('{}', { root })).toBeNull();
+    const exact = native([failure()]);
+    expect(extract(exact + ' '.repeat(4_000_000 - Buffer.byteLength(exact)), { root })).not.toBeNull();
+    expect(extract(exact + ' '.repeat(4_000_001 - Buffer.byteLength(exact)), { root })).toBeNull();
+    expect(merge([{ ordinal: 1, failures: extractReport([failure('TEST-B')]) }, { ordinal: 0, failures: extracted }])?.map(entry => entry.testId))
+        .toEqual(['TEST-Z', 'TEST-B']);
+    expect(merge([{ ordinal: 0, failures: extracted }, { ordinal: 1, failures: extracted }])).toBeNull();
+    expect(merge([{ ordinal: 0, failures: extracted }, { ordinal: 1, failures: null }])).toBeNull();
+    const many = Array.from({ length: 105 }, (_, index) => ({ ...extracted[0]!, testId: `TEST-${String(104 - index).padStart(3, '0')}` }));
+    const projected = createCandidateFailureProjector()('test', many);
+    expect(projected).toHaveLength(100);
+    expect(JSON.parse(projected[0]!.message).testId).toBe('TEST-000');
+    expect(projected[0]!.severity).toBe('error');
+    expect(projected[99]!.code).toBe('CANDIDATE_COMMAND_TESTS_OMITTED');
+    expect(JSON.parse(projected[99]!.message)).toEqual({ command: 'test', omitted: 6, schemaVersion: 1 });
+    expect(projected[0]!.message).toBe(canonicalBytes(JSON.parse(projected[0]!.message)).toString('utf8'));
+    expect(createCandidateFailureProjector()('test', extracted)).toHaveLength(1);
+    const gateSource = readFileSync(join(root, 'packages/analysis/src/gate.ts'), 'utf8');
+    expect(gateSource).toContain('collectCandidateFailures: matrixMode');
+    expect(gateSource).toContain("result.status === 'completed' && result.exitCode !== null && result.exitCode !== 0");
+    expect(gateSource).toContain('command.required');
+    // Worst-case carrier escaping is charged a second time by the enclosing diagnostics array.
+    const budgetRecord = { ...extracted[0]!, title: '', nativeMessage: '"\\'.repeat(900_000) };
+    const budgetCommands = ['test', 'codegraph-tests', 'compatibility'];
+    const sample = budgetCommands.map(command => createCandidateFailureProjector()(command, [budgetRecord]));
+    const bytes = (value: unknown) => Buffer.byteLength(JSON.stringify(value), 'utf8');
+    const padding = 24_000_000 - bytes(sample.flat());
+    expect(padding).toBeGreaterThan(0);
+    const boundaryRecords = budgetCommands.map((_, index) => ({ ...budgetRecord, nativeMessage: budgetRecord.nativeMessage + (index === 2 ? 'a'.repeat(padding) : '') }));
+    for (const overflow of [0, 1]) {
+        const project = createCandidateFailureProjector();
+        const output = budgetCommands.map((command, index) => project(command, [{ ...boundaryRecords[index]!, nativeMessage: boundaryRecords[index]!.nativeMessage + (index === 2 ? 'x'.repeat(overflow) : '') }]));
+        expect(output[0]).toHaveLength(1);
+        expect(output[1]).toHaveLength(1);
+        expect(output[2]).toHaveLength(overflow ? 0 : 1);
+        if (!overflow) expect(bytes(output.flat())).toBe(24_000_000);
+        else expect(project('test', extracted)).toEqual([]);
+        expect(budgetRecord.nativeMessage).toBe('"\\'.repeat(900_000));
+    }
+    const base = join(root, '.test-work', 'g50-diagnostics');
+    mkdirSync(base, { recursive: true });
+    const directory = mkdtempSync(join(base, 'case-'));
+    const { normalizeCandidateGateReport: normalize } = await import('../packages/analysis/src/candidate-gate-runner.js');
+    const names = ['typecheck', 'build', 'test', 'codegraph-tests', 'compatibility', 'pack-check', 'pack-smoke'];
+    const context = { repositoryId: 'repository:' + 'a'.repeat(64), changeId: 'CHANGE-0017', generation: 50,
+        candidateCommit: 'b'.repeat(40), gateInputFingerprint: 'c'.repeat(64), job: { os: 'ubuntu', nodeMajor: 24 } };
+    const sha = (text: string) => createHash('sha256').update(text).digest('hex');
+    const normalizeDiagnostics = async (diagnostics: ReturnType<ReturnType<typeof createCandidateFailureProjector>>, secrets: string[] = [], extra: Record<string, unknown> = {}) => {
+        const checks = names.map(name => ({ name: 'command:' + name, required: true, status: name === 'test' ? 'fail' : 'pass', summary: 'original failure', exitCode: name === 'test' ? 1 : 0,
+            ...(name === 'test' ? { stdout: 'original output', stderr: 'original error', diagnostics, ...extra } : {}) }));
+        const stdout = JSON.stringify({ checks });
+        const stdoutPath = join(directory, 'stdout'), stderrPath = join(directory, 'stderr');
+        writeFileSync(stdoutPath, stdout);
+        writeFileSync(stderrPath, '');
+        return normalize({ stdoutPath, stderrPath, stdoutTail: '', stderrTail: '', stdoutSha256: sha(stdout), stderrSha256: sha(''),
+            tailsDropped: false, resultTextDropped: false, drainTruncated: false, streamCapTerminated: false, exitCode: 1, signal: null,
+            timedOut: false, spawned: true, childErrorMessage: null },
+            { resultPath: join(directory, 'result.json'), context, secrets, preTreeMatchesCandidate: true, postTreeMatchesCandidate: true });
+    };
+    const commandDiagnostics = (result: CandidateGateRunnerResult) => result.checks?.find(check => check.name === 'command:test')?.diagnostics ?? [];
+    try {
+        const normalized = await normalizeDiagnostics(projected);
+        expect(normalized.status).toBe('fail');
+        expect(commandDiagnostics(normalized)).toHaveLength(100);
+        expect(commandDiagnostics(normalized)[0]!.message).toContain('command=test testId=TEST-000');
+        expect(commandDiagnostics(normalized)[99]!.message).toContain('6');
+        expect(normalized.checks?.find(check => check.name === 'command:test')?.stdoutTail).toBe('original output');
+        for (const message of [
+            'not json', '{"schemaVersion":1}', projected[0]!.message + ' ',
+            JSON.stringify({ ...JSON.parse(projected[0]!.message), foreign: true }),
+            canonicalBytes({ ...JSON.parse(projected[0]!.message), command: 'build' }).toString(),
+            canonicalBytes({ ...JSON.parse(projected[0]!.message), testId: 'TEST-A_bad' }).toString(),
+        ]) expect(commandDiagnostics(await normalizeDiagnostics([{ ...projected[0]!, message }]))).toEqual([]);
+        expect(commandDiagnostics(await normalizeDiagnostics(projected, ['TEST-000']))).toEqual([]);
+        expect(commandDiagnostics(await normalizeDiagnostics(projected, ['test']))).toEqual([]);
+        expect(commandDiagnostics(await normalizeDiagnostics(projected, [], { status: 'pass', exitCode: 0 }))).toEqual([]);
+        const secret = 'hidden-value';
+        const long = createCandidateFailureProjector()('test', [{ ...extracted[0]!, path: `tests/${secret}.ts`,
+            title: '😀'.repeat(485) + secret + 'Z'.repeat(100), nativeMessage: 'Z'.repeat(100) + secret + '😀'.repeat(985) }]);
+        const bounded = commandDiagnostics(await normalizeDiagnostics(long, [secret]))[0]!;
+        expect(bounded).not.toHaveProperty('path');
+        expect(bounded.message).not.toContain(secret);
+        expect(bounded.message).not.toMatch(/REDACTED\]|"\[RED/);
+        expect(bounded.message).toContain('[TRUNCATED]');
+        expect(Array.from(bounded.message).length).toBeLessThanOrEqual(1800);
+        const capRecords = Array.from({ length: 105 }, (_, index) => ({ ...extracted[0]!, testId: `TEST-${String(index).padStart(3, '0')}`,
+            title: '😀'.repeat(700), nativeMessage: '😀'.repeat(1400) }));
+        const checks = names.map(name => ({ name: 'command:' + name, required: true, status: 'fail', summary: 'failed', exitCode: 1,
+            diagnostics: createCandidateFailureProjector()(name, capRecords) }));
+        // Deliberately shuffle the checks; the cap follows configured command order.
+        const stdout = JSON.stringify({ checks: [...checks].reverse() });
+        const stdoutPath = join(directory, 'stdout'), stderrPath = join(directory, 'stderr');
+        writeFileSync(stdoutPath, stdout); writeFileSync(stderrPath, '');
+        const capped = await normalize({ stdoutPath, stderrPath, stdoutTail: '', stderrTail: '', stdoutSha256: sha(stdout), stderrSha256: sha(''),
+            tailsDropped: false, resultTextDropped: false, drainTruncated: false, streamCapTerminated: false,
+            exitCode: 1, signal: null, timedOut: false, spawned: true, childErrorMessage: null },
+            { resultPath: join(directory, 'result.json'), context, secrets: [] });
+        const all = names.flatMap(name => capped.checks?.find(check => check.name === 'command:' + name)?.diagnostics ?? []);
+        expect(all.reduce((sum, entry) => sum + Array.from(entry.message).length, 0)).toBeLessThanOrEqual(200_000);
+        const final = all.at(-1)!;
+        expect(final.code).toBe('CANDIDATE_COMMAND_TESTS_OMITTED');
+        expect(final.message).toContain(String(700 - (all.length - 1)));
+        expect(capped.checks?.find(check => check.name === 'command:pack-smoke')?.diagnostics ?? []).toEqual([]);
+        const unsafe = await normalizeDiagnostics(createCandidateFailureProjector()('test', [{ ...extracted[0]!, nativeMessage: 'Authorization: ' + 'x'.repeat(9000) }]));
+        expect(unsafe).toMatchObject({ tailsDropped: true, resultTextDropped: true, status: 'fail' });
+        expect(unsafe).not.toHaveProperty('checks');
+        const { loadConfig } = await import('../packages/analysis/src/config.js');
+        const { runProcess } = await import('../packages/analysis/src/process.js');
+        const command = (await loadConfig(root)).commands.find(entry => entry.name === 'test')!;
+        const runtimeContext = await testRuntimeExecutionContext(root, 'command', runProcess);
+        const transports: string[] = [];
+        const reportRoot = mkdtempSync(join(process.env.TMPDIR ?? '/tmp', 'musubix-g50-report-'));
+        const reportPath = join(reportRoot, 'report.json');
+        const runner = async (...args: Parameters<typeof runProcess>) => {
+            if (args[2].env?.MUSUBIX5_TEST_RUNTIME_REQUEST) transports.push(args[2].env.MUSUBIX5_TEST_RUNTIME_REQUEST);
+            return runProcess(...args);
+        };
+        try {
+            for (const enabled of [false, true]) {
+                const result = await runTestRuntimeCommand(root, command,
+                    ['vitest', 'run', 'tests/candidate-gate-workflow-errors.test.ts', '-t', 'TEST-M5-CI-MATRIX-FAILED-TEST-DIAG-001',
+                        '--maxWorkers=1', '--reporter=json', `--outputFile=${reportPath}`],
+                    { cwd: root, timeoutMs: 120_000, env: { ...process.env, MUSUBIX5_G50_FAILURE_FIXTURE: '1' },
+                        collectCandidateFailures: enabled, candidateReportPath: reportPath },
+                    runner, runtimeContext);
+                expect(result).toMatchObject({ status: 'completed', exitCode: 1 });
+                expect(getCandidateFailedTests(result)?.map(entry => entry.testId) ?? []).toEqual(enabled ? ['TEST-M5-CI-MATRIX-FAILED-TEST-DIAG-001'] : []);
+                expect(JSON.stringify(result)).toBe(JSON.stringify({ ...result }));
+                expect(canonicalBytes(result)).toEqual(canonicalBytes({ ...result }));
+                expect(getCandidateFailedTests({ ...result })).toBeUndefined();
+                expect(JSON.stringify(result.testRuntime)).not.toContain('current bound fixture failure');
+                if (enabled) {
+                    const symbols = Object.getOwnPropertySymbols(result);
+                    expect(symbols).toHaveLength(1);
+                    expect(Object.getOwnPropertyDescriptor(result, symbols[0]!)?.enumerable).toBe(false);
+                }
+            }
+            const mismatched = await runTestRuntimeCommand(root, command,
+                ['vitest', 'run', 'tests/candidate-gate-workflow-errors.test.ts', '-t', 'TEST-M5-CI-MATRIX-FAILED-TEST-DIAG-001',
+                    '--maxWorkers=1', '--reporter=json', `--outputFile=${reportPath}`],
+                { cwd: root, timeoutMs: 120_000, env: { ...process.env, MUSUBIX5_G50_FAILURE_FIXTURE: '1' },
+                    collectCandidateFailures: true, candidateReportPath: join(reportRoot, 'other.json') },
+                runner, runtimeContext);
+            expect(getCandidateFailedTests(mismatched)).toBeUndefined();
+        } finally {
+            for (const request of transports) rmSync(join(request, '..'), { recursive: true, force: true });
+            rmSync(reportRoot, { recursive: true, force: true });
+        }
+    } finally {
+        rmSync(directory, { recursive: true, force: true });
+    }
+}, 300_000);
 /** @id TEST-M5-CI-MATRIX-ERROR-001
  * @verifies REQ-M5-CI-008
  * @design DES-M5-CI-008

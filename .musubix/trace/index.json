@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "kind": "repository-trace-index",
-  "generatedAt": "2026-10-04T15:41:15.206Z",
+  "generatedAt": "2026-10-05T00:29:19.368Z",
   "nodes": [
     {
       "id": "ADR-0002",
@@ -250,6 +250,12 @@
       "line": 1
     },
     {
+      "id": "ADR-0043",
+      "kind": "adr",
+      "path": ".musubix/decisions/ADR-0043.md",
+      "line": 1
+    },
+    {
       "id": "CODE-M5-APPROVAL-001",
       "kind": "code",
       "path": "packages/analysis/src/native-approval.ts",
@@ -445,7 +451,7 @@
       "id": "CODE-M5-CANDIDATE-STATUS-001",
       "kind": "code",
       "path": "packages/analysis/src/gate.ts",
-      "line": 160
+      "line": 197
     },
     {
       "id": "CODE-M5-CHANGE-CURRENT-001",
@@ -559,19 +565,19 @@
       "id": "CODE-M5-CI-ARCHIVED-RUNTIME-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 607
+      "line": 637
     },
     {
       "id": "CODE-M5-CI-CANDIDATE-CAPTURE-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-gate-runner.ts",
-      "line": 425
+      "line": 426
     },
     {
       "id": "CODE-M5-CI-CANDIDATE-NORMALIZER-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-gate-runner.ts",
-      "line": 610
+      "line": 713
     },
     {
       "id": "CODE-M5-CI-CANDIDATE-PRECONDITION-PROBE-001",
@@ -589,7 +595,7 @@
       "id": "CODE-M5-CI-CANDIDATE-WORKFLOW-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-gate-runner.ts",
-      "line": 915
+      "line": 1027
     },
     {
       "id": "CODE-M5-CI-CANDIDATE-WRAPPER-001",
@@ -622,16 +628,34 @@
       "line": 178
     },
     {
+      "id": "CODE-M5-CI-FAILED-TEST-CARRIERS-001",
+      "kind": "code",
+      "path": "packages/analysis/src/gate.ts",
+      "line": 31
+    },
+    {
+      "id": "CODE-M5-CI-FAILED-TEST-EXTRACTION-001",
+      "kind": "code",
+      "path": "packages/analysis/src/adapters.ts",
+      "line": 8
+    },
+    {
+      "id": "CODE-M5-CI-FAILED-TEST-NORMALIZATION-001",
+      "kind": "code",
+      "path": "packages/analysis/src/candidate-gate-runner.ts",
+      "line": 612
+    },
+    {
       "id": "CODE-M5-CI-LIVE-RUNTIME-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 615
+      "line": 645
     },
     {
       "id": "CODE-M5-CI-MATRIX-INPUTS-001",
       "kind": "code",
       "path": "packages/analysis/src/gate.ts",
-      "line": 33
+      "line": 70
     },
     {
       "id": "CODE-M5-CI-MATRIX-PROVENANCE-001",
@@ -662,6 +686,12 @@
       "kind": "code",
       "path": "tests/fixtures/short-unix-socket.ts",
       "line": 40
+    },
+    {
+      "id": "CODE-M5-CI-TRANSIENT-FAILURES-001",
+      "kind": "code",
+      "path": "packages/analysis/src/test-runtime.ts",
+      "line": 14
     },
     {
       "id": "CODE-M5-CI-TREE-PORTABILITY-001",
@@ -781,7 +811,7 @@
       "id": "CODE-M5-EVIDENCE-SKILL-CURRENCY-001",
       "kind": "code",
       "path": "packages/analysis/src/gate.ts",
-      "line": 126
+      "line": 163
     },
     {
       "id": "CODE-M5-EVIDENCE-SKILL-INPUT-001",
@@ -1063,7 +1093,7 @@
       "id": "CODE-M5-INTEGRATION-GATE-CONTEXT-001",
       "kind": "code",
       "path": "packages/analysis/src/gate.ts",
-      "line": 183
+      "line": 220
     },
     {
       "id": "CODE-M5-INTEGRATION-GATE-DIAGNOSTIC-001",
@@ -1075,7 +1105,7 @@
       "id": "CODE-M5-INTEGRATION-STATUS-CONTEXT-001",
       "kind": "code",
       "path": "packages/analysis/src/gate.ts",
-      "line": 216
+      "line": 253
     },
     {
       "id": "CODE-M5-LEASE-RENEWAL-BACKWARD-001",
@@ -1657,7 +1687,7 @@
       "id": "CODE-M5-SOURCE-QUALITY-SNAPSHOT-001",
       "kind": "code",
       "path": "packages/analysis/src/gate.ts",
-      "line": 111
+      "line": 148
     },
     {
       "id": "CODE-M5-SOURCE-READ-FENCE-001",
@@ -1777,7 +1807,7 @@
       "id": "CODE-M5-STATUS-GUIDANCE-001",
       "kind": "code",
       "path": "packages/analysis/src/gate.ts",
-      "line": 941
+      "line": 990
     },
     {
       "id": "CODE-M5-TDD-001",
@@ -1849,19 +1879,19 @@
       "id": "CODE-M5-TEST-RUNTIME-ACTIVATION-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 729
+      "line": 759
     },
     {
       "id": "CODE-M5-TEST-RUNTIME-AUGMENTATION-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 221
+      "line": 251
     },
     {
       "id": "CODE-M5-TEST-RUNTIME-BLOBS-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 603
+      "line": 633
     },
     {
       "id": "CODE-M5-TEST-RUNTIME-BUILD-ISOLATION-001",
@@ -1873,7 +1903,7 @@
       "id": "CODE-M5-TEST-RUNTIME-COMMAND-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 958
+      "line": 988
     },
     {
       "id": "CODE-M5-TEST-RUNTIME-GLOBAL-SETUP-001",
@@ -1885,13 +1915,13 @@
       "id": "CODE-M5-TEST-RUNTIME-PROFILE-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 140
+      "line": 170
     },
     {
       "id": "CODE-M5-TEST-RUNTIME-PROVIDER-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 1131
+      "line": 1178
     },
     {
       "id": "CODE-M5-TEST-RUNTIME-REPORTER-001",
@@ -2294,6 +2324,12 @@
       "kind": "design",
       "path": ".musubix/features/node24-github-actions/design.md",
       "line": 58
+    },
+    {
+      "id": "DES-M5-CI-009",
+      "kind": "design",
+      "path": ".musubix/features/node24-github-actions/design.md",
+      "line": 112
     },
     {
       "id": "DES-M5-EVIDENCE-SKILL-001",
@@ -2738,56 +2774,56 @@
       "id": "REQ-M5-CI-001",
       "kind": "requirement",
       "path": ".musubix/features/node24-github-actions/requirements.md",
-      "line": 3,
+      "line": 98,
       "mandatory": true
     },
     {
       "id": "REQ-M5-CI-002",
       "kind": "requirement",
       "path": ".musubix/features/node24-github-actions/requirements.md",
-      "line": 10,
+      "line": 105,
       "mandatory": true
     },
     {
       "id": "REQ-M5-CI-003",
       "kind": "requirement",
       "path": ".musubix/features/node24-github-actions/requirements.md",
-      "line": 17,
+      "line": 112,
       "mandatory": true
     },
     {
       "id": "REQ-M5-CI-004",
       "kind": "requirement",
       "path": ".musubix/features/node24-github-actions/requirements.md",
-      "line": 24,
+      "line": 119,
       "mandatory": true
     },
     {
       "id": "REQ-M5-CI-005",
       "kind": "requirement",
       "path": ".musubix/features/node24-github-actions/requirements.md",
-      "line": 31,
+      "line": 126,
       "mandatory": true
     },
     {
       "id": "REQ-M5-CI-006",
       "kind": "requirement",
       "path": ".musubix/features/node24-github-actions/requirements.md",
-      "line": 38,
+      "line": 133,
       "mandatory": true
     },
     {
       "id": "REQ-M5-CI-007",
       "kind": "requirement",
       "path": ".musubix/features/node24-github-actions/requirements.md",
-      "line": 45,
+      "line": 140,
       "mandatory": true
     },
     {
       "id": "REQ-M5-CI-008",
       "kind": "requirement",
       "path": ".musubix/features/node24-github-actions/requirements.md",
-      "line": 52,
+      "line": 147,
       "mandatory": true
     },
     {
@@ -3905,10 +3941,16 @@
       "line": 432
     },
     {
+      "id": "TEST-M5-CI-INCOMPLETE-COMMAND-DIAG-001",
+      "kind": "test",
+      "path": "tests/test-runtime-incomplete-command.test.ts",
+      "line": 47
+    },
+    {
       "id": "TEST-M5-CI-MATRIX-COMMAND-DIAGNOSTICS-001",
       "kind": "test",
       "path": "tests/candidate-gate-workflow-errors.test.ts",
-      "line": 312
+      "line": 500
     },
     {
       "id": "TEST-M5-CI-MATRIX-ENVIRONMENT-001",
@@ -3918,6 +3960,12 @@
     },
     {
       "id": "TEST-M5-CI-MATRIX-ERROR-001",
+      "kind": "test",
+      "path": "tests/candidate-gate-workflow-errors.test.ts",
+      "line": 199
+    },
+    {
+      "id": "TEST-M5-CI-MATRIX-FAILED-TEST-DIAG-001",
       "kind": "test",
       "path": "tests/candidate-gate-workflow-errors.test.ts",
       "line": 11
@@ -3938,7 +3986,7 @@
       "id": "TEST-M5-CI-MATRIX-ORCHESTRATION-TIMEOUT-001",
       "kind": "test",
       "path": "tests/candidate-gate-workflow-errors.test.ts",
-      "line": 423
+      "line": 611
     },
     {
       "id": "TEST-M5-CI-MATRIX-PRECONDITION-THROWN-VALUE-001",
@@ -7535,6 +7583,11 @@
       "relation": "decides"
     },
     {
+      "from": "ADR-0043",
+      "to": "DES-M5-CI-009",
+      "relation": "decides"
+    },
+    {
       "from": "CODE-M5-APPROVAL-001",
       "to": "DES-M5-006",
       "relation": "implements"
@@ -8445,6 +8498,36 @@
       "relation": "implements"
     },
     {
+      "from": "CODE-M5-CI-FAILED-TEST-CARRIERS-001",
+      "to": "DES-M5-CI-009",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-CI-FAILED-TEST-CARRIERS-001",
+      "to": "REQ-M5-CI-008",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-CI-FAILED-TEST-EXTRACTION-001",
+      "to": "DES-M5-CI-009",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-CI-FAILED-TEST-EXTRACTION-001",
+      "to": "REQ-M5-CI-008",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-CI-FAILED-TEST-NORMALIZATION-001",
+      "to": "DES-M5-CI-009",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-CI-FAILED-TEST-NORMALIZATION-001",
+      "to": "REQ-M5-CI-008",
+      "relation": "implements"
+    },
+    {
       "from": "CODE-M5-CI-LIVE-RUNTIME-001",
       "to": "DES-M5-CI-003",
       "relation": "implements"
@@ -8522,6 +8605,16 @@
     {
       "from": "CODE-M5-CI-SHORT-SOCKET-001",
       "to": "REQ-M5-CI-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-CI-TRANSIENT-FAILURES-001",
+      "to": "DES-M5-CI-009",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-CI-TRANSIENT-FAILURES-001",
+      "to": "REQ-M5-CI-008",
       "relation": "implements"
     },
     {
@@ -14780,6 +14873,26 @@
       "relation": "satisfies"
     },
     {
+      "from": "DES-M5-CI-009",
+      "to": "DES-M5-015",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-CI-009",
+      "to": "DES-M5-CI-004",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-CI-009",
+      "to": "DES-M5-CI-008",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-CI-009",
+      "to": "REQ-M5-CI-008",
+      "relation": "satisfies"
+    },
+    {
       "from": "DES-M5-EVIDENCE-SKILL-001",
       "to": "DES-M5-TRACE-SKILL-001",
       "relation": "depends-on"
@@ -17110,6 +17223,16 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-CI-INCOMPLETE-COMMAND-DIAG-001",
+      "to": "DES-M5-CI-009",
+      "relation": "implements"
+    },
+    {
+      "from": "TEST-M5-CI-INCOMPLETE-COMMAND-DIAG-001",
+      "to": "REQ-M5-CI-008",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-CI-MATRIX-COMMAND-DIAGNOSTICS-001",
       "to": "DES-M5-CI-008",
       "relation": "implements"
@@ -17131,6 +17254,16 @@
     },
     {
       "from": "TEST-M5-CI-MATRIX-ERROR-001",
+      "to": "REQ-M5-CI-008",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-CI-MATRIX-FAILED-TEST-DIAG-001",
+      "to": "DES-M5-CI-009",
+      "relation": "implements"
+    },
+    {
+      "from": "TEST-M5-CI-MATRIX-FAILED-TEST-DIAG-001",
       "to": "REQ-M5-CI-008",
       "relation": "verifies"
     },
@@ -21591,6 +21724,7 @@
     ".musubix/decisions/ADR-0040.md": "d6f74ef2805516a99a410aac52318fc64a033c472df67fc71e4b1e0fd1848a52",
     ".musubix/decisions/ADR-0041.md": "1919f12be4545b9199f1febed358527fcb0b5bc702887e6690eaefa6d63a0468",
     ".musubix/decisions/ADR-0042.md": "e685034419c1092b46d744bb0cb2f5d3051bed60c2d93678c67e123ff5704258",
+    ".musubix/decisions/ADR-0043.md": "562458fcf480483a8f109bcad546f58c457ce0f8f7de77fcd919c2444e91669c",
     ".musubix/features/candidate-cleanup-policy/design.md": "54d32a6d446bbaed299860b164fe74d24362e0c5739862bc79df2e0acab20c1b",
     ".musubix/features/candidate-cleanup-policy/requirements.md": "253a36dbca0b76a81f452c845f2988e2b33163823095ee5ac1add81519dd5462",
     ".musubix/features/codegraph-performance/design.md": "a8461463b6c0a7e8ae11b9496ab5e724e5d98e2700dd32623e5fd6331187b175",
@@ -21601,8 +21735,8 @@
     ".musubix/features/multi-change-workspaces/requirements.md": "9071c2c1f8a7ca49b9137cf074fe30b33343264536f41efcdddad0ab2a6cff4d",
     ".musubix/features/musubix5-clean-foundation/design.md": "f01269b39215ec2cd2cede21cb52b60504f4c3fdfae310126015667e8af7fe50",
     ".musubix/features/musubix5-clean-foundation/requirements.md": "6af004d6fa5aeb32ca5f63d569cad3412155e79483e424c8f72583d73a862cf7",
-    ".musubix/features/node24-github-actions/design.md": "6ed60c5a9f6839a2cd0df53036bf52bebec2e3c53d1fc935b508ff42d5114ddc",
-    ".musubix/features/node24-github-actions/requirements.md": "2f87f118077e09b4f071a94a6de30003db0ad5ff74095c4b4336240b2d908565",
+    ".musubix/features/node24-github-actions/design.md": "530fb0e98b50f87275723b42f8b83b1b418bb7c6ff7893876d1f0068957e6b97",
+    ".musubix/features/node24-github-actions/requirements.md": "ca280587f46f7c71331d7140502bdc115df9db26a4f36c6ab0c96da425079fe8",
     ".musubix/features/npm-registry-deadline/design.md": "a46582fe0fd7e2c64ea36fcf7a50d24f1b45e7789cd2e75634da0ebf4cc29195",
     ".musubix/features/npm-registry-deadline/requirements.md": "89ba3f12e9dd5a66c4e1e21ba3a5ed087fdfc03353d7fd72c605439d8a0b9aab",
     ".musubix/features/parallel-agent-development/design.md": "2d3ee454f0f131cdd21a62932790fafa0b6edc3df68d43e473d74b294d1e8a5d",
@@ -21623,7 +21757,7 @@
     ".musubix/features/trace-skill-source-selection/requirements.md": "94fe7ab9c31b7b3e6ee7455039b71eaa66f622715db71cce155b2ca1f438c1fb",
     ".musubix/features/wave0-release-operations/design.md": "63bc20e1a428f5a20f99e797caa1551934a1690a48e79e45e9285591cece48ba",
     ".musubix/features/wave0-release-operations/requirements.md": "185c3d6d7d4520361d9b969825e96e985f0bdc195d98fd9d74e529987b0d6dae",
-    "packages/analysis/src/adapters.ts": "4db9916f432a92d27520a7aa9af575db67897a729fbbed623331ddc00c020b95",
+    "packages/analysis/src/adapters.ts": "bd69973deaeab1e20108a77195b7d79c14bc79f8de676735ee3a07a18c2eaff8",
     "packages/analysis/src/approval-boundary.ts": "ec0c2da68cff776388126e4d34db112d529462bd7dfcfe4691d2bc5701a81090",
     "packages/analysis/src/approval-domains.ts": "56363d8d7fe0158df596a09abf2688f439815c38dd582fd5970c1bb30e6c5994",
     "packages/analysis/src/approval-normative.ts": "18fea120444b05d5ef507985e221f4e6a739e1a7d65e468b992e8c6467979904",
@@ -21633,7 +21767,7 @@
     "packages/analysis/src/bootstrap-runner.ts": "4167b10f413af1cdc39858f16f94110e407b7778ca8c09d8c0179e497f52550e",
     "packages/analysis/src/budget-ledger.ts": "c7e4fa74032e066491708685359ca7115ab34c44a0d2af18337bd15a4da25590",
     "packages/analysis/src/candidate-evidence-binding.ts": "b1a0f978e747939dcae508f8a91e1fd8a6681d98c6d3887b9ee43468cf7d307a",
-    "packages/analysis/src/candidate-gate-runner.ts": "d72b368e586b5b70a6902d6bdfe2a4e68dc5470da8992e76b47290eb1d68926f",
+    "packages/analysis/src/candidate-gate-runner.ts": "c4926b87c52c4b40b74830b78c7e80ba99e69dd1789cdcc870f1af7475dfc4b2",
     "packages/analysis/src/candidate-gate.ts": "677a3d7ca3706881da529c5fbb6a43feef5a280345ac643a403ea71f66675620",
     "packages/analysis/src/candidate-git-distribution.ts": "2113ac7caca2b77c3405e2d2063b7da1aae8b6273ec1296ed2491c9460a99d0b",
     "packages/analysis/src/candidate-integration.ts": "4f51cbef136e023493349979466a8ccdb88577832c32f0cf7c96819ee7982caa",
@@ -21650,7 +21784,7 @@
     "packages/analysis/src/evidence-registry.ts": "41bdd3f05c91734baf22cccf5289a9906eae30bfd1356236bc98c96be47da660",
     "packages/analysis/src/files.ts": "96f941115256bcd644130fff3f9e0b6363813c8b4180543a53d6351c8d38c71d",
     "packages/analysis/src/formal.ts": "5adc1531fa0c9b81d858c9e29bf9cd380268d23d483098a3ae316347b4b80653",
-    "packages/analysis/src/gate.ts": "581edb915a371eef63166046c7baab0eac815b8e1176dfc6c40bcee617b5b504",
+    "packages/analysis/src/gate.ts": "7973280feb71d59163545431178b5c1f1afbc74d23b34b4cfa925d37df8f940f",
     "packages/analysis/src/generation10-recovery.ts": "301bb78d16a6903701139a3d0ab3e65c9aa7827976d1f27e739e2f10a50e13da",
     "packages/analysis/src/generation11-recovery.ts": "74a40131873fcb801a7b54b15781bf80e80d876d374b871a3088977d195dbab0",
     "packages/analysis/src/git-status.ts": "ad35d3df9faf11035998ed3c2373a366f2b2e9a4bb61a0f0195c869a836a2b00",
@@ -21691,7 +21825,7 @@
     "packages/analysis/src/tdd-types.ts": "83fc67aa4db7dd1a2df42e56a8cb63ffc11a6185bd12a9f191ba4f5b20e12103",
     "packages/analysis/src/tdd.ts": "3d37ec493c02bc35a51fb77b05db6bac0bc3f6631dafedff51266263f07f3db9",
     "packages/analysis/src/test-report.ts": "c4389c1a73b8ff61beae2061c1eaaeeadc4c5cc529befc059111ea5430d602c4",
-    "packages/analysis/src/test-runtime.ts": "e2d303cc80e6665397b289aadd485bb15874f3aec183a6f0847bda1708e6c99c",
+    "packages/analysis/src/test-runtime.ts": "273793724088877c2fc08d3f30df8e1b57c51c9330a4869fb824fcdc360173dc",
     "packages/analysis/src/trace.ts": "9f95196dead55f62357d60c1107012b8c460f9204db21343bc847c0467385f47",
     "packages/analysis/src/workflow-correction.ts": "63fddf07315b8af34b7a96a542c68f82eee5ba8a321795a24bafe1ca8033e2f6",
     "packages/analysis/src/workflow-types.ts": "4fa0d85248bd9373eed4dc7043f1320c9b918f08fc8874dd982c528876b74783",
@@ -21743,7 +21877,7 @@
     "tests/candidate-gate-eol.test.ts": "db72054d71bb5bb2cb986c7a5ccb7b31d714b6c863e5901fd7d1fe723e8a1ad4",
     "tests/candidate-gate-orchestration-boundaries.test.ts": "8f7c5fd2c3f35a47e7a5353cfbc54a7094ef553f02f5521862fe8edf1a3fa5a2",
     "tests/candidate-gate-trust.test.ts": "790141f932ae4a397ee3900d731181f5781206835e9e1a62f4342be5925ef7ba",
-    "tests/candidate-gate-workflow-errors.test.ts": "d5b15434b32f025db83140edc19ede48fa8beb68c72273ac76497894813bb084",
+    "tests/candidate-gate-workflow-errors.test.ts": "b7d2eca957e2709ef9d360c854b2a79e1a9c2ba27b35ad29e2b9eb1f758b13fd",
     "tests/candidate-gate.test.ts": "631aff9c100e48b935e258883d67dc266ba4facea7181d31a1c1c76613f173ba",
     "tests/candidate-integration-dependencies.test.ts": "cf7b57b88909268baceb4d17eb0a5acab080011e20c37739746502d7758e5553",
     "tests/candidate-integration-determinism.test.ts": "72dd197925de5226dcacae00cac1187b9cf1cdbeb7970b199849e2113ae185f6",
@@ -21888,7 +22022,7 @@
     "tests/test-harness-portability.test.ts": "644252711db925d5a45ceed8b5f0bb9b0108ec726aebb80d1a833493df585ee3",
     "tests/test-runtime-evidence.test.ts": "134ab968cea1a167b1d9676cded63d54a242e228b91f8c6a5e7633604e690654",
     "tests/test-runtime-gate.test.ts": "4ac04766c49d24707047ce3a36ec554a7aaa181dc274eef519e81646720cd726",
-    "tests/test-runtime-incomplete-command.test.ts": "f7f90d40441ea450b519c5ba90de6f6f808cfb5898f409fd33452756a60adf0b",
+    "tests/test-runtime-incomplete-command.test.ts": "3029a53ce1a09281324d02c6827aebb0045cd33f89862a131f7ff5b2146435b9",
     "tests/test-runtime-timers.test.ts": "537545a730e760093cba4cc272802560aed507c6f0e23cb7737918afb4a30457",
     "tests/test-runtime-worker.test.ts": "5591efa0440a03a201df78c47b547b61939b118f68ef83e6b88237c24ab0a600",
     "tests/trace-namespace.test.ts": "8597797fe0fa237f52c6831c1d541ed0666b5789b11d3fc04a72b8c6d3fd9b4e",

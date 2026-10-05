@@ -1,5 +1,100 @@
 # Node.js 24 GitHub Actions requirements
 
+Generation-50-Review-Delta: Generation 50 retains the Generation 49 candidate
+source, approved workflow limits, and one-envelope-per-matrix-job transport,
+but supersedes its release candidacy after the immutable candidate failed the
+required Ubuntu, Windows, and macOS Node.js 24 matrix twice. The following
+paragraph is a Generation-50 acceptance extension of REQ-M5-CI-008 and is
+verified by `TEST-M5-CI-MATRIX-FAILED-TEST-DIAG-001` for failed-test
+enrichment and `TEST-M5-CI-INCOMPLETE-COMMAND-DIAG-001` for incomplete-command
+enrichment.
+
+In the normal-report processing path, when a required command fails and its
+current matrix-run structured adapter report passes the REQ-M5-CI-004
+repository, candidate commit, platform, Node major, run ID, command fingerprint,
+report-path, report-digest, and exit provenance checks, the system shall add
+bounded informational failed-test diagnostics to that command's existing
+`checks[].diagnostics` array before the candidate runner sanitizes the check.
+The report must be a non-symbolic regular file no larger than 4,000,000 bytes
+under the current matrix-run command directory. For the configured Vitest
+adapter, `testResults[].assertionResults[]` recognizes only `passed`, `failed`,
+`pending`, `skipped`, `todo`, and `disabled`; only entries whose status is
+`failed` are consumed and the other recognized statuses are ignored. Every consumed
+entry must expose `fullName` or `title` containing exactly one string ID matching
+`^TEST-[A-Z0-9][A-Z0-9-]{0,122}$`, a string `title`, an array
+`failureMessages` containing only strings, and a nonnegative traversal index
+derived from array order. Failure strings are joined with LF; an empty array is
+an empty native message. An assertion entry with any other status, or a failed
+entry with a missing, duplicate, overlength, or malformed ID or field, a foreign
+or path-escaping report, or a binding or digest mismatch invalidates the
+complete enrichment source. An invalid or unreadable enrichment source emits no failed-test
+diagnostics and never changes the original command output, failure cause, or
+status.
+
+Valid failed tests have unique IDs and are sorted by UTF-8 byte order of test
+ID. At most 100 diagnostic entries are emitted per command. If more than 100
+tests failed, entries 1 through 99 describe the first 99 sorted failures and
+entry 100 uses code
+`CANDIDATE_COMMAND_TESTS_OMITTED` to report the exact omitted count; otherwise
+every entry uses code `CANDIDATE_COMMAND_TEST_FAILED`. Each entry has severity
+`error`. Its optional path is emitted only when the report path is a safe
+repo-relative POSIX-normalized path with no empty, dot, dot-dot, drive, or
+absolute component and redaction leaves it unchanged; otherwise the path field
+is omitted without invalidating the report. The closed configured command name
+and validated test ID form an identity prefix of at most 200 Unicode scalar
+values and are never truncated. If the existing secret redactor would change
+that command or ID, the complete enrichment source is invalid. The redactor is
+then applied independently to the test title and native failure message; a
+redactor carry-safety failure invokes the existing result-wide
+`tailsDropped: true` and `resultTextDropped: true` behavior, which may remove
+original command tails as well as enrichment text and emits no partial
+diagnostic. The redacted title retains at most its first 500 Unicode scalar
+values including a final `[TRUNCATED]` marker, and the redacted native message
+retains at most its final 1,000 Unicode scalar values including an initial
+`[TRUNCATED]` marker. A `[REDACTED]` marker intersecting a truncation boundary
+is removed as a whole before the applicable `[TRUNCATED]` marker is added.
+Fixed labels plus the identity prefix contain at most 300 Unicode scalar values,
+so the composed message that names command, test ID, bounded title, and bounded
+native message is at most 1,800 Unicode scalar values.
+
+Commands are processed in the closed configured order. First, each command's
+sorted failure list is reduced to its at-most-100-entry form above. Then entries
+are emitted while the sum of all emitted diagnostic-message scalar counts,
+including omission messages, remains at most 200,000. Before the first entry
+that would exceed the envelope-wide cap, processing stops for all commands and,
+when its bounded message fits, emits one final
+`CANDIDATE_COMMAND_TESTS_OMITTED` entry on the current command naming the exact
+number of not-emitted diagnostic entries from the current and all later
+commands; otherwise it emits no partial entry. No later command receives
+another omission entry. Serialization or enrichment-internal failure drops all
+enrichment diagnostics and retains the original failed candidate result. These
+diagnostics remain inside the single signed envelope required by
+REQ-M5-CI-001, are informational, are not inputs to pass computation or
+candidate-gate acceptance, and create no additional workflow artifact.
+
+When acknowledgment validation reaches the existing incomplete-command branch,
+its unredacted message begins with the exact substring
+`acknowledgment-binding: incomplete command`, preserving the existing
+REQ-M5-CI-008 cause classification. It appends only trusted runner-observed
+fields from the per-command `ProcessResult`, never values copied from an invalid
+acknowledgment:
+` command=<name>` when the name is one of the seven closed required commands,
+` status=<status>` when status is one of `completed`, `missing`, `timeout`, or
+`error`, ` exitCode=<integer|null>` when the exit value is null or a safe integer
+and null is rendered as the literal `null`,
+and ` durationMs=<integer>` when duration is a nonnegative safe integer.
+Invalid or unavailable fields are omitted independently. Redaction precedes
+the existing 20,000-scalar domain-message bound. The command name comes only
+from the runner's closed configured command identity associated with the
+`ProcessResult` being processed, never from the acknowledgment. If that result
+is unavailable or its name is not one of the seven closed commands,
+` command=` is omitted; every other field is still appended independently when
+valid. The generic prefix alone is emitted only when no field is valid.
+CLI-error remains the primary overlapping cause and incomplete runtime
+acknowledgment remains listed once. Neither failed-test enrichment nor
+incomplete-command enrichment can convert a failed command, invalid
+acknowledgment, or candidate envelope to pass.
+
 ## REQ-M5-CI-001: Standardize GitHub Actions on Node.js 24
 Priority: must
 Type: non-functional

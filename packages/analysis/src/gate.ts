@@ -24,7 +24,44 @@ import { activeWaivers, waiverEvidenceDiagnostics } from './change-waiver.js';
 import { deriveWorkflowWaiverAudit } from './workflow-waiver.js';
 import { changedFiles, runProcess, type Runner } from './process.js';
 import { buildTrace, checkTrace } from './trace.js';
-import { adapterInvocation, clearAdapterOutput, mergeAdapterArgs, normalizeAdapterReport, readAdapterOutput } from './adapters.js';
+import { adapterInvocation, clearAdapterOutput, mergeAdapterArgs, normalizeAdapterReport, readAdapterOutput,
+  candidateCommandNames, type CandidateFailedTest } from './adapters.js';
+import { canonicalBytes } from './canonical.js';
+
+/** @id CODE-M5-CI-FAILED-TEST-CARRIERS-001
+ * @implements REQ-M5-CI-008
+ * @design DES-M5-CI-009
+ */
+export function createCandidateFailureProjector(): (command: string, failures: readonly CandidateFailedTest[]) => Diagnostic[] {
+  let projected: Diagnostic[] = [], stopped = false;
+  return (command, failures) => {
+    if (stopped || !candidateCommandNames.some(name => name === command) || !failures.length) return [];
+    try {
+      const sorted = [...failures].sort((a, b) => Buffer.compare(Buffer.from(a.testId, 'utf8'), Buffer.from(b.testId, 'utf8')));
+      const selected = sorted.length > 100 ? sorted.slice(0, 99) : sorted;
+      const diagnostics: Diagnostic[] = selected.map(entry => ({
+        code: 'CANDIDATE_COMMAND_TEST_FAILED', severity: 'error',
+        message: canonicalBytes({ schemaVersion: 1, command, testId: entry.testId, title: entry.title,
+          nativeMessage: entry.nativeMessage }).toString('utf8'),
+        ...(entry.path !== undefined ? { path: entry.path } : {}),
+      }));
+      if (sorted.length > 100) diagnostics.push({
+        code: 'CANDIDATE_COMMAND_TESTS_OMITTED', severity: 'error',
+        message: canonicalBytes({ schemaVersion: 1, command, omitted: sorted.length - 99 }).toString('utf8'),
+      });
+      const candidateDiagnostics = [...projected, ...diagnostics];
+      if (Buffer.byteLength(JSON.stringify(candidateDiagnostics), 'utf8') > 24_000_000) {
+        stopped = true;
+        return [];
+      }
+      projected = candidateDiagnostics;
+      return diagnostics;
+    } catch {
+      stopped = true;
+      return [];
+    }
+  };
+}
 import {
   createPerformanceExecution, performanceCommandSha256, validatePerformanceEvidence,
   writePerformanceEvidence, matrixPerformanceReportRoot, type MatrixPerformanceContext, type PerformanceExecution,
@@ -65,7 +102,7 @@ import {
 } from './approval.js';
 import { listCandidateSnapshotRecords } from './workspace-manager.js';
 import { requiredCommandDiagnostics } from './quality-policy.js';
-import { runTestRuntimeCommand, testRuntimeExecutionContext } from './test-runtime.js';
+import { getCandidateFailedTests, runTestRuntimeCommand, testRuntimeExecutionContext } from './test-runtime.js';
 
 export interface GateReport {
   schemaVersion: 1;
@@ -468,6 +505,7 @@ export async function runGate(root: string, options: {
   const testReportDiagnostics: Diagnostic[] = [];
   const mutationReportDiagnostics: Diagnostic[] = [];
   let configuredTestReports = 0;
+  const candidateFailureDiagnostics = createCandidateFailureProjector();
   for (const [commandIndex, command] of config.commands.entries()) {
     let reportPath: string | undefined;
     let adapterOutput: ReturnType<typeof adapterInvocation> | undefined;
@@ -507,7 +545,11 @@ export async function runGate(root: string, options: {
       : configuredArgs;
     const executionOptions = { cwd: commandCwd(root, command), timeoutMs: command.timeoutMs, env: environment };
     const result = config.testRuntime?.commandNames.some((name) => name === command.name)
-      ? await runTestRuntimeCommand(root, command, args, executionOptions, runner,
+      ? await runTestRuntimeCommand(root, command, args, {
+        ...executionOptions,
+        collectCandidateFailures: matrixMode,
+        ...(matrixMode && reportPath ? { candidateReportPath: await safePath(root, reportPath) } : {}),
+      }, runner,
         await testRuntimeExecutionContext(root, options.evidenceContext && 'integrationId' in options.evidenceContext
           ? 'integration' : 'command', runner, validationContext ?? null))
       : await runner(command.command, args, executionOptions);
@@ -519,6 +561,13 @@ export async function runGate(root: string, options: {
       ...(result.testRuntime ? { testRuntime: result.testRuntime } : {}),
     };
     commandChecks.push(commandCheck);
+    if (matrixMode && command.required && result.status === 'completed' && result.exitCode !== null && result.exitCode !== 0) {
+      const failures = getCandidateFailedTests(result);
+      if (failures) {
+        const diagnostics = candidateFailureDiagnostics(command.name, failures);
+        if (diagnostics.length) commandCheck.diagnostics = diagnostics;
+      }
+    }
     if (reportPath && result.status === 'completed' && result.exitCode === 0) {
       const reportText = adapterOutput
         ? await readAdapterOutput(adapterOutput, await safePath(root, reportPath), result.stdout)

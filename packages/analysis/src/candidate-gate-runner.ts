@@ -6,6 +6,7 @@ import { dirname, join, resolve } from 'node:path';
 import { StringDecoder } from 'node:string_decoder';
 import type { CandidateGateContext } from './candidate-gate.js';
 import { canonicalBytes, canonicalRepositoryIdentity, sha256 } from './canonical.js';
+import { isCandidateDiagnosticPath, parseCandidateFailureCarrier, type CandidateFailureCarrier } from './adapters.js';
 export interface CandidateGateCommandOutcome {
     stdoutPath: string;
     stderrPath: string;
@@ -259,7 +260,7 @@ class TailRedactor {
     unsafe: boolean;
     dropped = false;
     private readonly lookbehind: number;
-    constructor(private readonly secrets: readonly string[]) {
+    constructor(private readonly secrets: readonly string[], private readonly limit = tailLimit) {
         this.unsafe = secrets.some(value => scalars(value).length > carryLimit);
         this.lookbehind = Math.min(carryLimit, secrets.reduce((maximum, value) => Math.max(maximum, scalars(value).length), 16));
     }
@@ -329,8 +330,8 @@ class TailRedactor {
         parts.push(text.slice(consumed, cut));
         const safe = parts.join('');
         const combined = scalars(this.tail + safe);
-        this.dropped ||= combined.length > tailLimit;
-        this.tail = combined.slice(-tailLimit).join('');
+        this.dropped ||= combined.length > this.limit;
+        this.tail = combined.slice(-this.limit).join('');
     }
     private merge(ranges: Array<{
         start: number;
@@ -607,6 +608,108 @@ interface NormalizeOptions {
 class PrimaryPersistenceError extends Error {
     constructor() { super('Candidate gate result persistence failed.'); }
 }
+
+/** @id CODE-M5-CI-FAILED-TEST-NORMALIZATION-001
+ * @implements REQ-M5-CI-008
+ * @design DES-M5-CI-009
+ */
+const candidateDiagnosticCodes = new Set(['CANDIDATE_COMMAND_TEST_FAILED', 'CANDIDATE_COMMAND_TESTS_OMITTED']);
+
+function boundCandidateText(text: string, limit: number, end: 'head' | 'tail'): string {
+    const points = scalars(text);
+    if (points.length <= limit) return text;
+    const marker = '[TRUNCATED]', retained = limit - marker.length;
+    let cut = end === 'head' ? retained : points.length - retained;
+    // Never retain a fragment of a redaction marker at either truncation boundary.
+    for (let index = 0; index < points.length; index++) {
+        if (points.slice(index, index + 10).join('') !== '[REDACTED]') continue;
+        if (index < cut && index + 10 > cut) cut = end === 'head' ? index : index + 10;
+    }
+    return end === 'head' ? points.slice(0, cut).join('') + marker : marker + points.slice(cut).join('');
+}
+
+function candidateDiagnosticEnrichment(
+    checks: CandidateCheck[], redact: (text: string) => string,
+): Map<CandidateCheck, NonNullable<CandidateCheck['diagnostics']>> {
+    const enriched = new Map<CandidateCheck, NonNullable<CandidateCheck['diagnostics']>>();
+    try {
+        const sources: Array<{ check: CandidateCheck; entries: NonNullable<CandidateCheck['diagnostics']> }> = [];
+        for (const command of commandsRequired) {
+            const matching = checks.filter(check => check.name === `command:${command}`);
+            if (matching.length !== 1) continue;
+            const check = matching[0]!;
+            if (!check.required || check.status !== 'fail' || !Number.isSafeInteger(check.exitCode) || check.exitCode === 0) continue;
+            const diagnostics = check.diagnostics?.filter(entry => candidateDiagnosticCodes.has(entry.code)) ?? [];
+            if (!diagnostics.length || diagnostics.length > 100) continue;
+            const parsed: Array<{ diagnostic: (typeof diagnostics)[number]; carrier: CandidateFailureCarrier }> = [];
+            const ids = new Set<string>();
+            let invalid = false, omitted = false;
+            for (const diagnostic of diagnostics) {
+                const carrier = parseCandidateFailureCarrier(diagnostic.message, diagnostic.code);
+                if (!carrier || carrier.command !== command || diagnostic.severity !== 'error'
+                    || redact(carrier.command) !== carrier.command) {
+                    invalid = true;
+                    break;
+                }
+                if ('testId' in carrier) {
+                    if (omitted || ids.has(carrier.testId) || redact(carrier.testId) !== carrier.testId
+                        || scalars(`command=${command} testId=${carrier.testId}`).length > 200) {
+                        invalid = true;
+                        break;
+                    }
+                    ids.add(carrier.testId);
+                } else {
+                    if (omitted || parsed.length !== 99 || diagnostics.length !== 100 || diagnostic.path !== undefined) {
+                        invalid = true;
+                        break;
+                    }
+                    omitted = true;
+                }
+                parsed.push({ diagnostic, carrier });
+            }
+            if (invalid) continue;
+            parsed.sort((a, b) => 'testId' in a.carrier && 'testId' in b.carrier
+                ? Buffer.compare(Buffer.from(a.carrier.testId, 'utf8'), Buffer.from(b.carrier.testId, 'utf8'))
+                : 'testId' in a.carrier ? -1 : 'testId' in b.carrier ? 1 : 0);
+            const entries = parsed.map(({ diagnostic, carrier }) => {
+                if (!('testId' in carrier)) return {
+                    code: diagnostic.code, severity: 'error' as const,
+                    message: `command=${command} omitted=${carrier.omitted} failed tests`,
+                };
+                const title = boundCandidateText(redact(carrier.title), 500, 'head');
+                const nativeMessage = boundCandidateText(redact(carrier.nativeMessage), 1000, 'tail');
+                const message = `command=${command} testId=${carrier.testId}\ntitle=${title}\nnativeMessage=${nativeMessage}`;
+                if (scalars(message).length > 1800) throw new Error('candidate diagnostic bound');
+                const path = isCandidateDiagnosticPath(diagnostic.path) && redact(diagnostic.path) === diagnostic.path
+                    ? diagnostic.path : undefined;
+                return { code: diagnostic.code, severity: 'error' as const, message, ...(path !== undefined ? { path } : {}) };
+            });
+            sources.push({ check, entries });
+        }
+        let remaining = sources.reduce((total, source) => total + source.entries.length, 0), count = 0;
+        for (const { check, entries } of sources) {
+            const selected: NonNullable<CandidateCheck['diagnostics']> = [];
+            enriched.set(check, selected);
+            for (const entry of entries) {
+                const size = scalars(entry.message).length;
+                if (count + size > 200_000) {
+                    const command = check.name.slice(8);
+                    const message = `command=${command} omitted=${remaining} diagnostic entries`;
+                    if (count + scalars(message).length <= 200_000) selected.push({
+                        code: 'CANDIDATE_COMMAND_TESTS_OMITTED', severity: 'error', message,
+                    });
+                    return enriched;
+                }
+                selected.push(entry);
+                count += size;
+                remaining--;
+            }
+        }
+        return enriched;
+    } catch {
+        return new Map();
+    }
+}
 /** @id CODE-M5-CI-CANDIDATE-NORMALIZER-001
  * @implements REQ-M5-CI-008
  * @design DES-M5-CI-008
@@ -624,6 +727,14 @@ export async function normalizeCandidateGateReport(outcome: CandidateGateCommand
         redactor.append('', true);
         omitText ||= redactor.unsafe;
         textDiscarded ||= redactor.dropped;
+        return redactor.tail;
+    };
+    const safeCandidateText = (text: string) => {
+        const redactor = new TailRedactor(secrets, Infinity);
+        for (let offset = 0; offset < text.length; offset += 32768)
+            redactor.append(text.slice(offset, offset + 32768));
+        redactor.append('', true);
+        omitText ||= redactor.unsafe;
         return redactor.tail;
     };
     const causes = new Set<string>();
@@ -713,6 +824,7 @@ export async function normalizeCandidateGateReport(outcome: CandidateGateCommand
             domainCode = 'GATE_SUBPROCESS_ERROR';
             domainMessage = outcome.childErrorMessage;
         }
+        const enrichment = candidateDiagnosticEnrichment(checks, safeCandidateText);
         const sanitizedChecks: CandidateResultCheck[] = checks.map(check => {
             const failedRequiredCommand = check.name.startsWith('command:') && check.required && check.status === 'fail';
             return {
@@ -722,10 +834,10 @@ export async function normalizeCandidateGateReport(outcome: CandidateGateCommand
                     stdoutTail: safeText(check.stdout ?? ''),
                     stderrTail: safeText(check.stderr ?? ''),
                 } : {}),
-                ...(check.diagnostics ? { diagnostics: check.diagnostics.map(diagnostic => ({
+                ...(check.diagnostics ? { diagnostics: [...check.diagnostics.filter(diagnostic => !candidateDiagnosticCodes.has(diagnostic.code)).map(diagnostic => ({
                     code: diagnostic.code, severity: diagnostic.severity, message: safeText(diagnostic.message),
                     ...(diagnostic.path !== undefined ? { path: safeText(diagnostic.path) } : {}),
-                })) } : {}),
+                })), ...enrichment.get(check) ?? []] } : {}),
             };
         });
         const commands = checks.filter(check => check.name.startsWith('command:')).map(check => ({

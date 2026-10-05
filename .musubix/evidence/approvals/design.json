@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "stage": "design",
   "changeId": "CHANGE-0017",
-  "generation": 49,
+  "generation": 50,
   "artifacts": {
     ".musubix/constitution.md": "f8b47fdc486f395bab05223a94821b145cf8df70ffde2c838a28f8d71fe0fa92",
     ".musubix/decisions/ADR-0002.md": "9f41d752530613cf6cc3ab6798709567e85650e5b97426dfca4147840eb35684",
@@ -46,6 +46,7 @@
     ".musubix/decisions/ADR-0040.md": "d6f74ef2805516a99a410aac52318fc64a033c472df67fc71e4b1e0fd1848a52",
     ".musubix/decisions/ADR-0041.md": "1919f12be4545b9199f1febed358527fcb0b5bc702887e6690eaefa6d63a0468",
     ".musubix/decisions/ADR-0042.md": "e685034419c1092b46d744bb0cb2f5d3051bed60c2d93678c67e123ff5704258",
+    ".musubix/decisions/ADR-0043.md": "562458fcf480483a8f109bcad546f58c457ce0f8f7de77fcd919c2444e91669c",
     ".musubix/features/candidate-cleanup-policy/design.md": "54d32a6d446bbaed299860b164fe74d24362e0c5739862bc79df2e0acab20c1b",
     ".musubix/features/candidate-cleanup-policy/requirements.md": "253a36dbca0b76a81f452c845f2988e2b33163823095ee5ac1add81519dd5462",
     ".musubix/features/codegraph-performance/design.md": "a8461463b6c0a7e8ae11b9496ab5e724e5d98e2700dd32623e5fd6331187b175",
@@ -56,8 +57,8 @@
     ".musubix/features/multi-change-workspaces/requirements.md": "9071c2c1f8a7ca49b9137cf074fe30b33343264536f41efcdddad0ab2a6cff4d",
     ".musubix/features/musubix5-clean-foundation/design.md": "f01269b39215ec2cd2cede21cb52b60504f4c3fdfae310126015667e8af7fe50",
     ".musubix/features/musubix5-clean-foundation/requirements.md": "6af004d6fa5aeb32ca5f63d569cad3412155e79483e424c8f72583d73a862cf7",
-    ".musubix/features/node24-github-actions/design.md": "6ed60c5a9f6839a2cd0df53036bf52bebec2e3c53d1fc935b508ff42d5114ddc",
-    ".musubix/features/node24-github-actions/requirements.md": "2f87f118077e09b4f071a94a6de30003db0ad5ff74095c4b4336240b2d908565",
+    ".musubix/features/node24-github-actions/design.md": "530fb0e98b50f87275723b42f8b83b1b418bb7c6ff7893876d1f0068957e6b97",
+    ".musubix/features/node24-github-actions/requirements.md": "ca280587f46f7c71331d7140502bdc115df9db26a4f36c6ab0c96da425079fe8",
     ".musubix/features/npm-registry-deadline/design.md": "a46582fe0fd7e2c64ea36fcf7a50d24f1b45e7789cd2e75634da0ebf4cc29195",
     ".musubix/features/npm-registry-deadline/requirements.md": "89ba3f12e9dd5a66c4e1e21ba3a5ed087fdfc03353d7fd72c605439d8a0b9aab",
     ".musubix/features/parallel-agent-development/design.md": "2d3ee454f0f131cdd21a62932790fafa0b6edc3df68d43e473d74b294d1e8a5d",
@@ -217,7 +218,7 @@
     }
   },
   "exclusions": [],
-  "artifactSha256": "3b0a7eb2ecaf79d366e2549730e5c11bf6868a96d372e76d893f37ce026b4850",
+  "artifactSha256": "8c10589927d720918a8cee522521dc658c47cbd4d52c9c5d942187c04921e7d1",
   "approver": "nahisaho",
-  "approvedAt": "2026-10-04T20:11:30.518Z"
+  "approvedAt": "2026-10-05T00:26:12.646Z"
 }

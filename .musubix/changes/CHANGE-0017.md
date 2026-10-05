@@ -6,7 +6,42 @@ status: active
 ---
 # CHANGE-0017: establish-wave1-development-foundations
 
-Requirements: REQ-M5-CI-008 REQ-M5-COMPAT-013 REQ-M5-EVIDENCE-007 REQ-M5-LIFECYCLE-006
+Requirements: REQ-M5-CI-008
+
+## Generation 50 current release boundary
+
+Generation 50 supersedes the Generation 49 release candidate without changing
+its approved workflow limits or local implementation behavior. The immutable
+Generation 49 candidate passed local quality but failed the required Ubuntu,
+Windows, and macOS Node.js 24 candidate matrix in two attempts. The signed
+failure envelopes preserve bounded command tails, but the Ubuntu full-test
+failure names only its structured aggregate path and the macOS failure reports
+an incomplete runtime acknowledgment without the command identity. Generation
+50 changes only candidate-failure diagnostics under `REQ-M5-CI-008`: a failed
+structured command shall expose bounded failed-test identities and messages
+from its current-run report, and an incomplete acknowledgment shall name the
+affected command and terminal execution state. Generation 49 approvals, TDD,
+quality, candidate snapshot, and remote matrix attempts grant no Generation 50
+credit.
+
+Generation 50 recorded Red at order 4375 and Green at order 4379 for the two
+diagnostic tests, then passed the complete local suite (176 files, 483 tests),
+strict trace coverage, and the changed quality gate apart from the intentionally
+pending release approval. Quality orders 4382 (`g50:quality`) and 4383
+(`g50:quality:2`) are superseded audit iterations; the final checkpoint is
+order 4385 (`g50:quality:4`).
+Workflow review used compatible mode only because the preserved Copilot source
+transcript has no terminal `session.shutdown` event; it did not truncate or edit
+the source. The earlier preserved segment contains 485 completed Skill
+invocations; its sanitized transcript SHA-256 is
+`205ceccce0f5bec6e4b4d0c013dabe0041613e82ac89cdb3437c65e2ac9bc553`, its
+verified event projection SHA-256 is
+`6d8a18bef8aec62f95594f3bb09cfca8438cd4690f162202c84cd2f357fa4743`.
+The current combined verification adds the two later Generation 50 Skill
+invocations, for 487 completed invocations, and binds source SHA-256
+`351faedd64e3dc839657b72171aae68d2e21573524a03395f7e191e6b50d5855`
+to event projection SHA-256
+`96dc81eaa761adb6e0aa6acb73f0d8fa5e6e42eb2229915c338a1da4620409c7`.
 
 ## Generation 49 current release boundary
 
