@@ -50,3 +50,16 @@ it('TEST-M5-CI-CALIBRATION-INTEGRATION-001 binds workflow mode budgets and rejec
     observationsDigest: manifest.observationsDigest, apiTimingDigest: manifest.apiTimingDigest, approvalSha256: 'f'.repeat(64),
   })).toThrow();
 });
+
+/** @id TEST-M5-CI-CALIBRATION-FAILURE-ENVELOPE-001
+ * @verifies REQ-M5-CI-EFFICIENCY-004 REQ-M5-CI-EFFICIENCY-005
+ * @design DES-M5-CI-EFFICIENCY-004 DES-M5-CI-EFFICIENCY-006
+ */
+it('TEST-M5-CI-CALIBRATION-FAILURE-ENVELOPE-001 preserves a generated failure result for signing', async () => {
+  const workflow = await readFile('.github/workflows/candidate-calibration.yml', 'utf8');
+  const readResult = workflow.indexOf("result=JSON.parse(readFileSync(join(e.RUNNER_TEMP,'candidate-gate-result.json'),'utf8'))");
+  const validateOutcome = workflow.indexOf("if((e.GATE_STEP_OUTCOME==='success')!==(result.status==='pass')) throw new Error('outcome')");
+  expect(readResult).toBeGreaterThanOrEqual(0);
+  expect(validateOutcome).toBeGreaterThan(readResult);
+  expect(workflow).not.toContain("if(e.GATE_STEP_OUTCOME!=='success') throw new Error('incomplete calibration stage')");
+});

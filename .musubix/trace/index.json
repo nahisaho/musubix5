@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "kind": "repository-trace-index",
-  "generatedAt": "2026-10-06T01:19:03.539Z",
+  "generatedAt": "2026-10-06T02:15:19.107Z",
   "nodes": [
     {
       "id": "ADR-0002",
@@ -4131,6 +4131,12 @@
       "kind": "test",
       "path": "tests/test-runtime-evidence.test.ts",
       "line": 75
+    },
+    {
+      "id": "TEST-M5-CI-CALIBRATION-FAILURE-ENVELOPE-001",
+      "kind": "test",
+      "path": "tests/candidate-calibration-integration.test.ts",
+      "line": 54
     },
     {
       "id": "TEST-M5-CI-CALIBRATION-INPUT-CLOSURE-001",
@@ -18156,6 +18162,26 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-CI-CALIBRATION-FAILURE-ENVELOPE-001",
+      "to": "DES-M5-CI-EFFICIENCY-004",
+      "relation": "implements"
+    },
+    {
+      "from": "TEST-M5-CI-CALIBRATION-FAILURE-ENVELOPE-001",
+      "to": "DES-M5-CI-EFFICIENCY-006",
+      "relation": "implements"
+    },
+    {
+      "from": "TEST-M5-CI-CALIBRATION-FAILURE-ENVELOPE-001",
+      "to": "REQ-M5-CI-EFFICIENCY-004",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-CI-CALIBRATION-FAILURE-ENVELOPE-001",
+      "to": "REQ-M5-CI-EFFICIENCY-005",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-CI-CALIBRATION-INPUT-CLOSURE-001",
       "to": "DES-M5-CI-EFFICIENCY-001",
       "relation": "implements"
@@ -22965,7 +22991,7 @@
     ".github/skills/sdd-quality/SKILL.md": "b9451e41ce6598ca90284a7b439aa3a8b98cf4c47f5e90659754b6dfe8c5f712",
     ".github/skills/sdd-requirements/SKILL.md": "c5d07dcc445c38b8b79c1144934b12c575189a02b0999aa57cf85abcf825b59a",
     ".github/skills/sdd-traceability/SKILL.md": "923c6c8915f3c2464cc2732392cbf2675485070fd5a78b2a502ef4aaa4852cdd",
-    ".github/workflows/candidate-calibration.yml": "294540cb26b9f4e2d71a9174157b7b86de9358ef8bdd481a5455ea83bc0e9299",
+    ".github/workflows/candidate-calibration.yml": "a23d97f5068defeb511852c96d0904aaed96a3d1e552d4603d57790ba5ddfe06",
     ".github/workflows/candidate-gate.yml": "27b75ed63f5546a4e67bcdf6dc8ad636570e616b822f303d6c937f96ddc210ed",
     ".github/workflows/npm-publish.yml": "6d1b7c5a13c384864c45bac7b876b06216ca691f7ae431991ee8a279426cbcbf",
     ".github/workflows/release.yml": "aa1a48f56ad5e361e15a563f8bd3cf1c28d2a8be522ba305641fa4aef48c51b7",
@@ -23163,7 +23189,7 @@
     "tests/budget-reservation.test.ts": "f6e2a8e70103140b6f6feb063b0eb13e80df7500244ed604a6d85cea1caf4c52",
     "tests/budget-usage.test.ts": "62a656deb6e48e7f63302ac5900407f01b07cbf6d1963acdf6bffb8c27454807",
     "tests/candidate-calibration-input-closure.test.ts": "bcb660ce6025a59152b17c8a8c5ec531e3571a2c644646122b8c17e0a03825e4",
-    "tests/candidate-calibration-integration.test.ts": "251a5feaf7624faa5135f4fdd4840dd1278fa008318a9d14b789bfc8f2bb4da9",
+    "tests/candidate-calibration-integration.test.ts": "9c1b273c33c36db6174f94f1d16ca7aecd9c17dd072dd91fa359b3f51f3c906b",
     "tests/candidate-calibration-source-final.test.ts": "432b87ed53c3ca93fb4c432def8c9063926189f6bd7df67baff7e0caeac89ab5",
     "tests/candidate-cleanup-policy.test.ts": "5e913e01f82acb7a976985e404ca37ef5bf63f5d61bb7a4b5893c72fbebfd51d",
     "tests/candidate-codegraph-batching.test.ts": "b09716c92c340c2668b1f0ce0a6694e341add650503b2732739a4c27a9ba66f1",
@@ -23185,7 +23211,7 @@
     "tests/candidate-gate-efficient-timeout.test.ts": "04570d74120dc96f55fc3d8329dfd044df28c6c8e9ee566b4789f459729d38eb",
     "tests/candidate-gate-eol.test.ts": "db72054d71bb5bb2cb986c7a5ccb7b31d714b6c863e5901fd7d1fe723e8a1ad4",
     "tests/candidate-gate-orchestration-boundaries.test.ts": "8f7c5fd2c3f35a47e7a5353cfbc54a7094ef553f02f5521862fe8edf1a3fa5a2",
-    "tests/candidate-gate-trust.test.ts": "e86dd224bd632b3b7d6a7a9faedfcd773e705eef1410de6e8b07a2edcd137800",
+    "tests/candidate-gate-trust.test.ts": "1fa24a86f94b4dea16114f48739ad5879dd1138d3d6f93387cc3117644502d22",
     "tests/candidate-gate-workflow-errors.test.ts": "7e2948b49714ef352effc3eb678496858ff3c90f81947facd1d41c30f88f4403",
     "tests/candidate-gate.test.ts": "ba1dcd780fdebf6c9d03fe71deb672cf29d66b224ac335d19d51db603280a2d7",
     "tests/candidate-integration-dependencies.test.ts": "cf7b57b88909268baceb4d17eb0a5acab080011e20c37739746502d7758e5553",
@@ -23252,7 +23278,7 @@
     "tests/fixtures/portable-path.ts": "03d7c64e1636efe1d008fccb62aeea0fde2474668128dd8e2a5d4043e173eca8",
     "tests/fixtures/portable-paths.ts": "08f08667a406a20f05e574225c39dc934b36d950786fc82dd5ee770c473d749f",
     "tests/fixtures/short-unix-socket.ts": "8b6e158c7a9880b2db6d3c3d87d533e208660f7b611089e08152a8689958a803",
-    "tests/full-test-timeout.test.ts": "f41c8c4b4d103771229f507cf44dfd81b71c4eeaaa64cfca1e7780958303afa3",
+    "tests/full-test-timeout.test.ts": "8af8631b7376aab4641b5ab6c279305fef6832eee40a81d1bd212347fb66f811",
     "tests/generation10-recovery-accounting.test.ts": "e55f536251eedd89b4d4f6c4dd427f66ddc197f2bfcdda34ae061514a6a9fbcb",
     "tests/generation10-recovery-completion.test.ts": "777f8a18fe452c29b9ade2ff17a5a2da2e86622550c0695791eea5faaf358d55",
     "tests/generation10-recovery-contract.test.ts": "a68f1797bd02fcba08de4f6f9aee5336994f188d8c0cb328621e11fe6873ba89",
