@@ -10,7 +10,7 @@ import { performance } from 'node:perf_hooks';
  */
 export async function launchCountedProcess(command, args, {
   env = process.env, cwd = process.cwd(), timeoutMs = 120_000,
-  partition = 'standalone', maxWorkers = 1, stdio = 'inherit', onChild,
+  partition = 'standalone', maxWorkers = 1, stdio = 'inherit', captureBytes = 0, onChild,
 } = {}) {
   const started = performance.now();
   const deadline = Date.now() + timeoutMs;
@@ -26,12 +26,21 @@ export async function launchCountedProcess(command, args, {
   const lease = ledger ? await acquireCandidateSlots(ledger, { nonce: ledger.nonce, pid: process.pid, partition },
     1 + maxWorkers + (process.platform === 'win32' ? 1 : 0)) : null;
   let child, termination, cleanup, closed = false;
+  let stdoutTail = Buffer.alloc(0), stderrTail = Buffer.alloc(0);
+  const appendTail = (current, chunk) => Buffer.concat([current, chunk]).subarray(-captureBytes);
   try {
     const remaining = deadline - Date.now();
     if (remaining <= 0) throw new Error('CANDIDATE_PARTITION_DEADLINE');
     return await new Promise((accept) => {
       let timer, error, timedOut = false;
-      child = spawn(command, args, { env, cwd, stdio, shell: false, detached: process.platform !== 'win32' });
+      child = spawn(command, args, {
+        env, cwd, stdio: captureBytes ? ['ignore', 'pipe', 'pipe'] : stdio,
+        shell: false, detached: process.platform !== 'win32',
+      });
+      if (captureBytes) {
+        child.stdout.on('data', chunk => { stdoutTail = appendTail(stdoutTail, chunk); });
+        child.stderr.on('data', chunk => { stderrTail = appendTail(stderrTail, chunk); });
+      }
       onChild?.(child);
       child.once('error', cause => { error = cause; });
       const stop = () => {
@@ -55,7 +64,8 @@ export async function launchCountedProcess(command, args, {
         closed = true;
         clearTimeout(timer);
         accept({ status: error ? 'error' : timedOut ? 'timeout' : 'completed', exitCode, signal,
-          error, durationMs: Math.max(0, Math.round(performance.now() - started)) });
+          error, durationMs: Math.max(0, Math.round(performance.now() - started)),
+          stdoutTail: stdoutTail.toString('utf8'), stderrTail: stderrTail.toString('utf8') });
       });
     });
   } finally {

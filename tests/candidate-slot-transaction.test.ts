@@ -94,3 +94,14 @@ it('TEST-M5-CI-SLOT-OBSERVATION-BOUNDED-001 reads large slot ledgers without unb
   expect(source).toContain('for (const name of names.filter((name) => /^observation-/.test(name)))');
   expect(source).not.toContain("Promise.all(names.filter((name) => /^observation-/.test(name))");
 });
+
+/** @id TEST-M5-CI-NATIVE-OWNER-DIAGNOSTIC-001
+ * @verifies REQ-M5-CI-EFFICIENCY-004
+ * @design DES-M5-CI-EFFICIENCY-006
+ */
+it('TEST-M5-CI-NATIVE-OWNER-DIAGNOSTIC-001 identifies the unreleased native process owner', async () => {
+  const source = await readFile('packages/analysis/src/candidate-execution-plan.ts', 'utf8');
+  expect(source).toContain('leaked native owner partition=${lease.partition}');
+  expect(source).toContain('callerPid=${lease.pid}');
+  expect(source).toContain('childPid=${native?.childPid ?? "missing"}');
+});

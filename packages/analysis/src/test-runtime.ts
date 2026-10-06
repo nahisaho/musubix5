@@ -1203,7 +1203,18 @@ export async function runTestRuntimeCommand(
         const missing = [];
         if (!await exists(join(entry.run, 'ack.json'))) missing.push('ack');
         if (!await exists(entry.resultPath)) missing.push('result');
-        if (missing.length) missingPartitions.push(`partition-${entry.group.ordinal}:${missing.join('+')}`);
+        if (missing.length) {
+          let suffix = '';
+          if (await exists(entry.resultPath)) {
+            const detail = JSON.parse((await regular(entry.resultPath)).toString('utf8'));
+            const output = detail.stderrTail ?? detail.stdoutTail ?? detail.childErrorMessage;
+            const bounded = typeof output === 'string'
+              ? output.replace(/[\u0000-\u001f\u007f]+/g, ' ').trim().slice(-2048) : '';
+            suffix = `:status=${String(detail.status)}:exitCode=${String(detail.exitCode)}`
+              + (bounded ? `:output=${JSON.stringify(bounded)}` : '');
+          }
+          missingPartitions.push(`partition-${entry.group.ordinal}:${missing.join('+')}${suffix}`);
+        }
       }
       if (missingPartitions.length) {
         invalid('acknowledgment-binding', `partition manifest missing: ${missingPartitions.join(',')}`);

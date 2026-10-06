@@ -140,3 +140,16 @@ it('TEST-M5-CI-PARTITION-MISSING-DIAGNOSTIC-001 identifies missing partition ack
   const source = await readFile('packages/analysis/src/test-runtime.ts', 'utf8');
   expect(source).toContain("partition manifest missing: ${missingPartitions.join(',')}");
 });
+
+/** @id TEST-M5-CI-PARTITION-CHILD-DIAGNOSTIC-001
+ * @verifies REQ-M5-CI-EFFICIENCY-004
+ * @design DES-M5-CI-EFFICIENCY-006
+ */
+it('TEST-M5-CI-PARTITION-CHILD-DIAGNOSTIC-001 preserves bounded child output for missing acknowledgments', async () => {
+  const scheduler = await readFile('scripts/test-runtime/partition-scheduler.mjs', 'utf8');
+  const runtime = await readFile('packages/analysis/src/test-runtime.ts', 'utf8');
+  expect(scheduler).toContain('captureBytes: 4096');
+  expect(scheduler).toContain('stdoutTail: result.stdoutTail');
+  expect(scheduler).toContain('stderrTail: result.stderrTail');
+  expect(runtime).toContain("detail.stderrTail ?? detail.stdoutTail ?? detail.childErrorMessage");
+});

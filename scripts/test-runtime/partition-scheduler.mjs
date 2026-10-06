@@ -54,13 +54,15 @@ export async function runPartitionScheduler(commandName) {
       if (group.ordinal !== partition.ordinal || group.command !== process.execPath) throw new Error(`CANDIDATE_PARTITION_DISPATCH_INVALID: ${partition.id}`);
       const startedAt = Number(process.hrtime.bigint()) / 1_000_000;
       const result = await launchCountedProcess(group.command, group.args, {
-        env: group.env, partition: partition.id, maxWorkers: partition.maxWorkers, timeoutMs: partition.timeoutMs,
+        env: group.env, partition: partition.id, maxWorkers: partition.maxWorkers,
+        timeoutMs: partition.timeoutMs, captureBytes: 4096,
       });
       const path = resolve(dirname(reportPath), `partition-${partition.id}.json`);
       let nativeReportBase64 = null;
       try { nativeReportBase64 = (await readFile(path)).toString('base64'); } catch {}
       await writeFile(group.resultPath, `${JSON.stringify({ status: result.status, exitCode: result.exitCode,
-        durationMs: result.durationMs, nativeReportBase64, startedAt,
+        durationMs: result.durationMs, nativeReportBase64, stdoutTail: result.stdoutTail,
+        stderrTail: result.stderrTail, childErrorMessage: result.error?.message ?? null, startedAt,
         completedAt: Number(process.hrtime.bigint()) / 1_000_000 })}\n`, { flag: 'wx', mode: 0o600 });
       failed ||= result.status !== 'completed' || result.exitCode !== 0;
     }));
