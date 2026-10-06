@@ -9,7 +9,7 @@ it('TEST-M5-CI-CALIBRATION-INTEGRATION-001 binds workflow mode budgets and rejec
   const api = await import('../packages/analysis/src/candidate-calibration.js');
   for (const [name, shape, maximum] of [
     ['candidate-gate', [1, 2, 14, 1, 1], 21],
-    ['candidate-calibration', [1, 2, 28, 1, 1], 35],
+    ['candidate-calibration', [1, 2, 31, 1, 1], 38],
   ] as const) {
     const workflow = parse(await readFile(`.github/workflows/${name}.yml`, 'utf8'));
     expect(workflow.permissions).toEqual({ contents: 'read', actions: 'read', 'id-token': 'write' });

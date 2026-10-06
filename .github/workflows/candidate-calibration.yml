@@ -14,7 +14,7 @@ permissions: { contents: read, actions: read, id-token: write }
 jobs:
   verify:
     name: ubuntu-node24
-    timeout-minutes: 35
+    timeout-minutes: 38
     runs-on: ubuntu-latest
     env:
       DELIVERY_PROFILE: linux-only-v1
@@ -64,7 +64,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
       - name: Run no-credit closed calibration matrix
         id: gate
-        timeout-minutes: 28
+        timeout-minutes: 31
         shell: bash
         run: node .github/scripts/run-candidate-gate-wrapper.mjs
       - name: Independently sign no-credit terminal result

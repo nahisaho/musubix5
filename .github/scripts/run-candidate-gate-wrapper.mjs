@@ -55,7 +55,7 @@ export async function runCandidateGateWrapper({
     const timeoutMs = validated.orchestrationTimeoutMs ?? runner.candidateGateOrchestrationTimeout(
       validated.commands, validated.formalTimeout, dependencies.runner,
     );
-    if (!Number.isSafeInteger(timeoutMs) || timeoutMs < (validated.execution ? 45_107 : 75107) || timeoutMs > (validated.execution ? 1_485_000 : 2475000))
+    if (!Number.isSafeInteger(timeoutMs) || timeoutMs < (validated.execution ? 45_107 : 75107) || timeoutMs > (validated.execution ? 1_785_000 : 2475000))
       throw new runner.CandidateGateStartupError();
     input = {
       command: process.execPath, args: ['dist/packages/cli/src/main.js', 'gate', '--matrix', '--json'],

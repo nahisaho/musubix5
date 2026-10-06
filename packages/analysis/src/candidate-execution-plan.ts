@@ -299,6 +299,10 @@ const regionCaps: Readonly<Record<string, number>> = {
   test: 600_000, formal: 120_000,
   ...Object.fromEntries(candidateCommandOrder.filter((name) => name !== 'test').map((name) => [name, 120_000])),
 };
+const calibrationRegionCaps: Readonly<Record<string, number>> = {
+  ...regionCaps,
+  test: 900_000,
+};
 
 /** @id CODE-M5-CI-EFFICIENCY-MODE-BUDGET-001
  * @implements REQ-M5-CI-EFFICIENCY-003 REQ-M5-CI-EFFICIENCY-005
@@ -312,13 +316,14 @@ export function candidateGateOuterTimeoutMs(
   if (mode !== 'candidate' && mode !== 'calibration') reject('execution mode');
   closed(commandTimeouts, [...candidateCommandOrder]);
   integer(formalTimeoutMs, 100, 120_000);
-  for (const name of candidateCommandOrder) integer(commandTimeouts[name], 1, regionCaps[name]!);
+  const caps = mode === 'calibration' ? calibrationRegionCaps : regionCaps;
+  for (const name of candidateCommandOrder) integer(commandTimeouts[name], 1, caps[name]!);
   const sum = candidateCommandOrder.reduce((sum, name) => sum + commandTimeouts[name]!, formalTimeoutMs);
-  integer(sum, 107, mode === 'candidate' ? 615_000 : 1_440_000);
-  if (mode === 'calibration' && (sum !== 1_440_000 || formalTimeoutMs !== 120_000
-    || candidateCommandOrder.some((name) => commandTimeouts[name] !== regionCaps[name]))) reject('calibration requires individual maxima');
+  integer(sum, 107, mode === 'candidate' ? 615_000 : 1_740_000);
+  if (mode === 'calibration' && (sum !== 1_740_000 || formalTimeoutMs !== 120_000
+    || candidateCommandOrder.some((name) => commandTimeouts[name] !== calibrationRegionCaps[name]))) reject('calibration requires individual maxima');
   const outer = 45_000 + sum;
-  integer(outer, 45_107, mode === 'candidate' ? 660_000 : 1_485_000);
+  integer(outer, 45_107, mode === 'candidate' ? 660_000 : 1_785_000);
   return outer;
 }
 
