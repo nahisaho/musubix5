@@ -4,6 +4,7 @@ describe('evidence kind separation', () => {
   /**
    * @id TEST-M5-EVIDENCE-001
    * @verifies REQ-M5-EVIDENCE-001
+   * @supersededBy TEST-M5-EVIDENCE-TRACE-001
    */
   it('TEST-M5-EVIDENCE-001 assigns independent storage and freshness policies', async () => {
     const { evidenceKinds, evidencePolicy } =

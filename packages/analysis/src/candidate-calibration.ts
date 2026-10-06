@@ -6,7 +6,7 @@ import { runProcess, type Runner } from './process.js';
 import type { CandidateCompletedRegion } from './candidate-execution-plan.js';
 
 export interface CandidateCalibrationManifest {
-  schemaVersion: 1; mode: 'calibration'; noCredit: true; runId: string; runAttempt: 1;
+  schemaVersion: 2; deliveryProfile: 'linux-only-v1'; mode: 'calibration'; noCredit: true; runId: string; runAttempt: 1;
   sourceCommit: string; sourceTree: string; policyDigest: string; observationsDigest: string;
   apiTimingDigest: string; envelopeDigests: string[];
   approval: { artifactSha256: string; approver: string; approved: true };
@@ -15,7 +15,7 @@ export interface CandidateCalibrationContext {
   sourceCommit: string; sourceTree: string; policyDigest: string; observationsDigest: string;
   apiTimingDigest: string; approvalSha256: string;
 }
-function fail(reason: string): never { throw new Error(`CANDIDATE_CALIBRATION_INVALID: ${reason}`); }
+function fail(reason: string): never { throw new Error(`LINUX_DELIVERY_EVIDENCE_INVALID: ${reason}`); }
 export const candidateCalibrationDigest = (value: unknown) => sha256(canonicalBytes(value));
 
 export function candidateRegionsWithApiTiming(result: Record<string, unknown>, job: Record<string, unknown>): Record<string, CandidateCompletedRegion> {
@@ -43,9 +43,10 @@ export function candidateRegionsWithApiTiming(result: Record<string, unknown>, j
 export function validateCandidateCalibrationManifest(value: unknown, context: CandidateCalibrationContext): CandidateCalibrationManifest {
   if (!value || typeof value !== 'object' || Array.isArray(value)) fail('schema');
   const manifest = value as CandidateCalibrationManifest;
-  const keys = ['schemaVersion', 'mode', 'noCredit', 'runId', 'runAttempt', 'sourceCommit', 'sourceTree',
+  const keys = ['schemaVersion', 'deliveryProfile', 'mode', 'noCredit', 'runId', 'runAttempt', 'sourceCommit', 'sourceTree',
     'policyDigest', 'observationsDigest', 'apiTimingDigest', 'envelopeDigests', 'approval'];
-  if (Object.keys(manifest).sort().join() !== keys.sort().join() || manifest.schemaVersion !== 1
+  if (Object.keys(manifest).sort().join() !== keys.sort().join() || manifest.schemaVersion !== 2
+    || manifest.deliveryProfile !== 'linux-only-v1'
     || manifest.mode !== 'calibration' || manifest.noCredit !== true || manifest.runAttempt !== 1
     || !/^[1-9][0-9]*$/.test(manifest.runId)) fail('first-attempt diagnostic mode');
   for (const key of ['sourceCommit', 'sourceTree', 'policyDigest', 'observationsDigest', 'apiTimingDigest'] as const) {
@@ -55,8 +56,8 @@ export function validateCandidateCalibrationManifest(value: unknown, context: Ca
   if (!manifest.approval || Object.keys(manifest.approval).sort().join() !== ['artifactSha256', 'approver', 'approved'].sort().join()
     || manifest.approval.approved !== true || !manifest.approval.approver
     || !/^[a-f0-9]{64}$/.test(context.approvalSha256) || manifest.approval.artifactSha256 !== context.approvalSha256
-    || !Array.isArray(manifest.envelopeDigests) || manifest.envelopeDigests.length !== 3
-    || new Set(manifest.envelopeDigests).size !== 3 || manifest.envelopeDigests.some((digest) => !/^[a-f0-9]{64}$/.test(digest))) fail('approval or envelope inventory');
+    || !Array.isArray(manifest.envelopeDigests) || manifest.envelopeDigests.length !== 1
+    || new Set(manifest.envelopeDigests).size !== 1 || manifest.envelopeDigests.some((digest) => !/^[a-f0-9]{64}$/.test(digest))) fail('approval or envelope inventory');
   return structuredClone(manifest);
 }
 

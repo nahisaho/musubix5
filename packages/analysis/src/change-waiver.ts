@@ -469,6 +469,7 @@ export function reportWaiverEvidenceDiagnostics(
   waiverContext: WaiverContext,
   _evidence: ChangeEvidence | null,
   _tdd: TddEvidence | null,
+  inactiveChangeIds: ReadonlySet<string> = new Set(),
 ): Diagnostic[] {
   const loaded = waiverContext.loaded;
   if (!loaded) return [];
@@ -490,6 +491,7 @@ export function reportWaiverEvidenceDiagnostics(
       ));
       continue;
     }
+    if (inactiveChangeIds.has(record.changeId)) continue;
     const scopeKey = JSON.stringify([record.changeId, record.code, record.requirementId, record.detail]);
     if (groupsSeen.has(scopeKey)) continue;
     groupsSeen.add(scopeKey);

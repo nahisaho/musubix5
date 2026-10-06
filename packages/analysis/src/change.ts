@@ -812,10 +812,25 @@ export async function validateChangeEvidence(
   const evidence = await loadChangeEvidence(authoritativeEvidenceRoot);
   const tdd = await loadTddEvidence(authoritativeEvidenceRoot);
   const waiverContext = await buildWaiverContext(authoritativeEvidenceRoot, evidence, tdd);
-  const waiverDiagnostics = reportWaiverEvidenceDiagnostics(waiverContext, evidence, tdd);
-  const documents = (await files(root))
-    .filter((path) => /^\.musubix\/changes\/CHANGE-\d+\.md$/.test(path))
-    .map((path) => path.split('/').at(-1)!.replace(/\.md$/, ''));
+  const documentPaths = (await files(root))
+    .filter((path) => /^\.musubix\/changes\/CHANGE-\d+\.md$/.test(path));
+  const documentStatuses = new Map(await Promise.all(documentPaths.map(async (path) => {
+    const changeId = path.split('/').at(-1)!.replace(/\.md$/, '');
+    const source = await readText(root, path);
+    const status = /^status:\s*(active|completed|superseded)\s*$/m.exec(source)?.[1];
+    return [changeId, { status, source }] as const;
+  })));
+  const documents = [...documentStatuses.keys()];
+  const activeDocuments = [...documentStatuses.values()]
+    .filter(({ status }) => status === 'active').map(({ source }) => source);
+  const supersededChanges = new Set([...documentStatuses]
+    .filter(([changeId, { status }]) => status === 'superseded'
+      && activeDocuments.some((source) =>
+        new RegExp(`\\bsupersedes\\b[^\\n]*\\b${changeId}\\b`, 'i').test(source)))
+    .map(([changeId]) => changeId));
+  const waiverDiagnostics = reportWaiverEvidenceDiagnostics(
+    waiverContext, evidence, tdd, supersededChanges,
+  );
   if (!evidence?.changes.length) {
     const missingDiagnostics = [
       ...documents.map((changeId) => waivedDiagnostic(waiverContext, 'CHANGE_RECORD_MISSING',
@@ -878,6 +893,7 @@ export async function validateChangeEvidence(
     }
   }
   for (const change of evidence.changes) {
+    if (supersededChanges.has(change.changeId)) continue;
     const activeGeneration = activeChangeGeneration(change);
     if (activeGeneration === null) {
       diagnostics.push(error(
@@ -1123,7 +1139,22 @@ export async function validateChangeCompleteness(
   const evidence = await loadChangeEvidence(authoritativeEvidenceRoot);
   const tdd = await loadTddEvidence(authoritativeEvidenceRoot);
   const waiverContext = await buildWaiverContext(authoritativeEvidenceRoot, evidence, tdd);
-  const waiverDiagnostics = reportWaiverEvidenceDiagnostics(waiverContext, evidence, tdd);
+  const changeDocuments = await Promise.all((await files(root))
+    .filter((entry) => /^\.musubix\/changes\/CHANGE-\d+\.md$/.test(entry))
+    .map(async (path) => ({
+      changeId: path.split('/').at(-1)!.replace(/\.md$/, ''),
+      source: await readText(root, path),
+    })));
+  const activeDocuments = changeDocuments
+    .filter(({ source }) => /^status:\s*active\s*$/m.test(source));
+  const supersededChanges = new Set(changeDocuments
+    .filter(({ changeId, source }) => /^status:\s*superseded\s*$/m.test(source)
+      && activeDocuments.some(({ source: activeSource }) =>
+        new RegExp(`\\bsupersedes\\b[^\\n]*\\b${changeId}\\b`, 'i').test(activeSource)))
+    .map(({ changeId }) => changeId));
+  const waiverDiagnostics = reportWaiverEvidenceDiagnostics(
+    waiverContext, evidence, tdd, supersededChanges,
+  );
   if (!evidence?.changes.length) {
     return {
       present: false,
@@ -1148,6 +1179,7 @@ export async function validateChangeCompleteness(
   const performance = await validatePerformanceEvidence(root, performanceReportRoot);
   const changes: ChangeCompleteness[] = [];
   for (const change of evidence.changes) {
+    if (supersededChanges.has(change.changeId)) continue;
     const diagnosticStart = diagnostics.length;
     const changePath = `.musubix/changes/${change.changeId}.md`;
     const declaredRequirements = await exists(within(root, changePath))

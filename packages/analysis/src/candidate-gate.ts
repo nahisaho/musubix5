@@ -17,11 +17,10 @@ import {
   type CandidateEvidenceBinding,
   type CandidateEvidenceContext,
 } from './candidate-evidence-binding.js';
+import { LINUX_DELIVERY_PROFILE } from './candidate-delivery-profile.js';
 
 export const candidateMatrixJobs = [
   { os: 'ubuntu', nodeMajor: 24 },
-  { os: 'windows', nodeMajor: 24 },
-  { os: 'macos', nodeMajor: 24 },
 ] as const;
 
 // The workflow runs verification under runner.temp so macOS Unix socket paths stay within platform limits.
@@ -152,7 +151,8 @@ export function candidateDispatchGuidance(
 }
 
 export interface CandidateGateJobResult extends CandidateGateContext {
-  schemaVersion: 1;
+  schemaVersion: 1 | 2;
+  deliveryProfile?: 'linux-only-v1';
   job: CandidateGateJob;
   producer: string;
   runtime: { os: string; nodeMajor: number };
@@ -164,7 +164,7 @@ export interface CandidateGateJobResult extends CandidateGateContext {
 }
 
 export interface CandidateGateEnvelope {
-  schemaVersion: 1;
+  schemaVersion: 1 | 2;
   result: CandidateGateJobResult;
   attestation: EvidenceAttestation | null;
 }
@@ -364,6 +364,11 @@ function isCurrentJob(value: CandidateGateJob): value is typeof candidateMatrixJ
     job.os === value.os && job.nodeMajor === value.nodeMajor);
 }
 
+function requiresLinuxDeliveryProfile(changeId: unknown): boolean {
+  const match = typeof changeId === 'string' ? /^CHANGE-(\d+)$/.exec(changeId) : null;
+  return match !== null && Number(match[1]) >= 19;
+}
+
 function parseCandidateGateResult(
   value: unknown,
   acceptedJobs: readonly CandidateGateJob[],
@@ -374,7 +379,9 @@ function parseCandidateGateResult(
     throw new Error('RELEASE_GATE_EVIDENCE_STALE: calibration runs never grant candidate credit.');
   }
   if (!isRecord(value)
-    || value.schemaVersion !== 1
+    || ![1, 2].includes(Number(value.schemaVersion))
+    || requiresLinuxDeliveryProfile(value.changeId)
+      && (value.schemaVersion !== 2 || value.deliveryProfile !== 'linux-only-v1')
     || typeof value.repositoryId !== 'string'
     || !value.repositoryId
     || typeof value.changeId !== 'string'
@@ -538,8 +545,8 @@ export function validateCandidateGateSet(
 }
 
 /** @id CODE-M5-CANDIDATE-GATE-FINGERPRINT-CONFIG-001
- * @implements REQ-M5-LIFECYCLE-006 REQ-M5-CI-EFFICIENCY-002 REQ-M5-CI-EFFICIENCY-005
- * @design DES-M5-015 DES-M5-CI-EFFICIENCY-001
+ * @implements REQ-M5-LIFECYCLE-006 REQ-M5-CI-EFFICIENCY-002 REQ-M5-CI-EFFICIENCY-005 REQ-M5-LINUX-DELIVERY-001
+ * @design DES-M5-015 DES-M5-CI-EFFICIENCY-001 DES-M5-LINUX-DELIVERY-001
  */
 export async function candidateGateFingerprintConfig(root: string): Promise<Record<string, unknown>> {
   const config = await loadConfig(root);
@@ -580,6 +587,7 @@ export async function candidateGateFingerprintConfig(root: string): Promise<Reco
     } else candidateExecution = { planDigest: null, calibrationDigest: null };
   }
   return {
+    ...(config.testRuntime?.calibratedPlan?.required ? { deliveryProfile: LINUX_DELIVERY_PROFILE } : {}),
     approval,
     approvalAutomation: approvalAutomationPolicy(raw.approvalAutomation),
     candidateGate: candidateGatePolicy(raw.candidateGate),
@@ -666,7 +674,8 @@ export async function ingestCandidateGateEnvelopes(
 ): Promise<CandidateGateJobResult[]> {
   if (envelopes.some((envelope) =>
     !isRecord(envelope)
-    || envelope.schemaVersion !== 1
+    || ![1, 2].includes(Number(envelope.schemaVersion))
+    || requiresLinuxDeliveryProfile(envelope.result?.changeId) && envelope.schemaVersion !== 2
     || !isRecord(envelope.attestation)
     || !isRecord(envelope.attestation.ci)
     || typeof envelope.attestation.ci.provider !== 'string'

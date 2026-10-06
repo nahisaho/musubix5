@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 /** @id TEST-M5-CI-EFFICIENT-ORCHESTRATION-TIMEOUT-001
  * @verifies REQ-M5-CI-EFFICIENCY-003 REQ-M5-CI-EFFICIENCY-005
  */
-it('TEST-M5-CI-EFFICIENT-ORCHESTRATION-TIMEOUT-001 calibrates completed three-platform maxima with exact 3/2 margins and rejects censored or over-cap regions', async () => {
+it('TEST-M5-CI-EFFICIENT-ORCHESTRATION-TIMEOUT-001 calibrates one completed Ubuntu observation with exact 3/2 margins and rejects censored or over-cap regions', async () => {
   const api = await import('../packages/analysis/src/candidate-execution-plan.js');
   const regions = {
     bootstrap: 40_000, preparation: 80_000, signing: 40_000, upload: 40_000,
@@ -12,7 +12,7 @@ it('TEST-M5-CI-EFFICIENT-ORCHESTRATION-TIMEOUT-001 calibrates completed three-pl
     typecheck: 1_000, build: 1_000, test: 100_000, 'codegraph-tests': 10_000,
     compatibility: 10_000, 'pack-check': 10_000, 'pack-smoke': 10_000, formal: 1_000,
   };
-  const jobs = ['ubuntu', 'windows', 'macos'].map((os) => ({
+  const jobs = ['ubuntu'].map((os) => ({
     os, nodeMajor: 24, runAttempt: 1, status: 'pass', noCredit: true,
     regions: Object.fromEntries(Object.entries(regions).map(([name, durationMs]) => [name, {
       durationMs, status: 'completed', exitCode: 0, reportComplete: true, acknowledgmentComplete: true,
@@ -31,9 +31,7 @@ it('TEST-M5-CI-EFFICIENT-ORCHESTRATION-TIMEOUT-001 calibrates completed three-pl
   expect(api.candidateGateOuterTimeoutMs('calibration', Object.fromEntries(
     api.candidateCommandOrder.map((name) => [name, name === 'test' ? 600_000 : 120_000])), 120_000)).toBe(1_485_000);
   const boundary = structuredClone(jobs);
-  boundary[1]!.regions.test!.durationMs = 1_001;
-  boundary[0]!.regions.test!.durationMs = 1_000;
-  boundary[2]!.regions.test!.durationMs = 1_000;
+  boundary[0]!.regions.test!.durationMs = 1_001;
   expect(api.calibrateCandidateTimeouts(boundary).timeouts.test).toBe(3_000);
   for (const durationMs of [40_001, 80_001]) {
     const changed = structuredClone(jobs);
@@ -56,8 +54,8 @@ it('TEST-M5-CI-EFFICIENT-ORCHESTRATION-TIMEOUT-001 calibrates completed three-pl
     mutate(changed[0]!);
     expect(() => api.calibrateCandidateTimeouts(changed)).toThrow();
   }
-  expect(() => api.calibrateCandidateTimeouts(jobs.slice(1))).toThrow();
-  expect(() => api.calibrateCandidateTimeouts([jobs[0]!, jobs[0]!, jobs[2]!])).toThrow();
+  expect(() => api.calibrateCandidateTimeouts([])).toThrow();
+  expect(() => api.calibrateCandidateTimeouts([jobs[0]!, jobs[0]!])).toThrow();
   const aggregate = structuredClone(jobs);
   for (const job of aggregate) {
     for (const name of api.candidateCommandOrder) job.regions[name]!.durationMs = name === 'test' ? 400_000 : 80_000;

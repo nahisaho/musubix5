@@ -323,12 +323,12 @@ export function candidateGateOuterTimeoutMs(
 }
 
 /** @id CODE-M5-CI-EFFICIENCY-TIMEOUT-CALIBRATION-001
- * @implements REQ-M5-CI-EFFICIENCY-003 REQ-M5-CI-EFFICIENCY-005
- * @design DES-M5-CI-EFFICIENCY-001 DES-M5-CI-EFFICIENCY-004
+ * @implements REQ-M5-CI-EFFICIENCY-003 REQ-M5-CI-EFFICIENCY-005 REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-CI-EFFICIENCY-001 DES-M5-CI-EFFICIENCY-004 DES-M5-LINUX-DELIVERY-002
  */
 export function calibrateCandidateTimeouts(observations: unknown): CandidateTimeoutCalibration {
-  if (!Array.isArray(observations) || observations.length !== 3) reject('three calibration platforms required');
-  const expectedPlatforms = new Set(['ubuntu', 'windows', 'macos']);
+  if (!Array.isArray(observations) || observations.length !== 1) reject('one Ubuntu calibration observation required');
+  const expectedPlatforms = new Set(['ubuntu']);
   const maxima: Record<string, number> = {};
   let expectedRegions: string[] | undefined;
   for (const observation of observations) {

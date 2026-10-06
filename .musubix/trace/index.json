@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "kind": "repository-trace-index",
-  "generatedAt": "2026-10-06T08:31:25.339Z",
+  "generatedAt": "2026-10-06T14:14:27.087Z",
   "nodes": [
     {
       "id": "ADR-0002",
@@ -262,6 +262,12 @@
       "line": 1
     },
     {
+      "id": "ADR-0045",
+      "kind": "adr",
+      "path": ".musubix/decisions/ADR-0045.md",
+      "line": 1
+    },
+    {
       "id": "CODE-M5-APPROVAL-001",
       "kind": "code",
       "path": "packages/analysis/src/native-approval.ts",
@@ -397,13 +403,13 @@
       "id": "CODE-M5-CANDIDATE-GATE-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-gate.ts",
-      "line": 487
+      "line": 494
     },
     {
       "id": "CODE-M5-CANDIDATE-GATE-FINGERPRINT-CONFIG-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-gate.ts",
-      "line": 540
+      "line": 547
     },
     {
       "id": "CODE-M5-CANDIDATE-HISTORICAL-LFS-CLOSURE-001",
@@ -571,7 +577,7 @@
       "id": "CODE-M5-CI-ABSOLUTE-DEADLINE-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-calibration.ts",
-      "line": 63
+      "line": 64
     },
     {
       "id": "CODE-M5-CI-ARCHIVED-RUNTIME-001",
@@ -595,7 +601,7 @@
       "id": "CODE-M5-CI-CALIBRATION-SOURCE-FINAL-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-calibration.ts",
-      "line": 116
+      "line": 117
     },
     {
       "id": "CODE-M5-CI-CALIBRATION-WORKFLOW-001",
@@ -649,7 +655,7 @@
       "id": "CODE-M5-CI-CODEGRAPH-SCHEDULER-001",
       "kind": "code",
       "path": "scripts/run-codegraph-tests.mjs",
-      "line": 235
+      "line": 243
     },
     {
       "id": "CODE-M5-CI-COMPOSITE-PARTITION-ACK-001",
@@ -739,7 +745,7 @@
       "id": "CODE-M5-CI-GITHUB-REST-STABILITY-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-stability.ts",
-      "line": 250
+      "line": 258
     },
     {
       "id": "CODE-M5-CI-INDEPENDENT-REPORT-MERGER-001",
@@ -829,19 +835,19 @@
       "id": "CODE-M5-CI-STABILITY-CURRENT-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-gate.ts",
-      "line": 828
+      "line": 837
     },
     {
       "id": "CODE-M5-CI-STABILITY-PROOF-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-stability.ts",
-      "line": 108
+      "line": 114
     },
     {
       "id": "CODE-M5-CI-STABILITY-TIMING-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-stability.ts",
-      "line": 83
+      "line": 84
     },
     {
       "id": "CODE-M5-CI-TRANSIENT-FAILURES-001",
@@ -1255,7 +1261,7 @@
       "id": "CODE-M5-INTEGRATION-GATE-DIAGNOSTIC-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-gate.ts",
-      "line": 448
+      "line": 455
     },
     {
       "id": "CODE-M5-INTEGRATION-STATUS-CONTEXT-001",
@@ -1346,6 +1352,18 @@
       "kind": "code",
       "path": "packages/analysis/src/change-evidence.ts",
       "line": 117
+    },
+    {
+      "id": "CODE-M5-LINUX-DELIVERY-PROFILE-001",
+      "kind": "code",
+      "path": "packages/analysis/src/candidate-delivery-profile.ts",
+      "line": 1
+    },
+    {
+      "id": "CODE-M5-LINUX-RUN-INVENTORY-001",
+      "kind": "code",
+      "path": "packages/analysis/src/candidate-delivery-profile.ts",
+      "line": 31
     },
     {
       "id": "CODE-M5-MULTI-CHANGE-CANDIDATE-001",
@@ -1555,7 +1573,7 @@
       "id": "CODE-M5-QUALITY-COMPLETENESS-001",
       "kind": "code",
       "path": "packages/analysis/src/change.ts",
-      "line": 1105
+      "line": 1121
     },
     {
       "id": "CODE-M5-QUALITY-SUPERSESSION-001",
@@ -2101,7 +2119,7 @@
       "id": "CODE-M5-WAVE0-CANDIDATE-REF-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-gate.ts",
-      "line": 83
+      "line": 82
     },
     {
       "id": "CODE-M5-WAVE0-COMPLETION-CONTEXT-001",
@@ -2552,6 +2570,30 @@
       "kind": "design",
       "path": ".musubix/features/codegraph-performance/design.md",
       "line": 32
+    },
+    {
+      "id": "DES-M5-LINUX-DELIVERY-001",
+      "kind": "design",
+      "path": ".musubix/features/linux-only-candidate-release/design.md",
+      "line": 3
+    },
+    {
+      "id": "DES-M5-LINUX-DELIVERY-002",
+      "kind": "design",
+      "path": ".musubix/features/linux-only-candidate-release/design.md",
+      "line": 11
+    },
+    {
+      "id": "DES-M5-LINUX-DELIVERY-003",
+      "kind": "design",
+      "path": ".musubix/features/linux-only-candidate-release/design.md",
+      "line": 19
+    },
+    {
+      "id": "DES-M5-LINUX-DELIVERY-004",
+      "kind": "design",
+      "path": ".musubix/features/linux-only-candidate-release/design.md",
+      "line": 27
     },
     {
       "id": "DES-M5-MULTI-CHANGE-001",
@@ -3275,6 +3317,34 @@
       "kind": "requirement",
       "path": ".musubix/features/musubix5-clean-foundation/requirements.md",
       "line": 340,
+      "mandatory": true
+    },
+    {
+      "id": "REQ-M5-LINUX-DELIVERY-001",
+      "kind": "requirement",
+      "path": ".musubix/features/linux-only-candidate-release/requirements.md",
+      "line": 20,
+      "mandatory": true
+    },
+    {
+      "id": "REQ-M5-LINUX-DELIVERY-002",
+      "kind": "requirement",
+      "path": ".musubix/features/linux-only-candidate-release/requirements.md",
+      "line": 26,
+      "mandatory": true
+    },
+    {
+      "id": "REQ-M5-LINUX-DELIVERY-003",
+      "kind": "requirement",
+      "path": ".musubix/features/linux-only-candidate-release/requirements.md",
+      "line": 32,
+      "mandatory": true
+    },
+    {
+      "id": "REQ-M5-LINUX-DELIVERY-004",
+      "kind": "requirement",
+      "path": ".musubix/features/linux-only-candidate-release/requirements.md",
+      "line": 39,
       "mandatory": true
     },
     {
@@ -4238,7 +4308,7 @@
       "id": "TEST-M5-CI-CODEGRAPH-SCHEDULER-001",
       "kind": "test",
       "path": "tests/candidate-codegraph-scheduler.test.ts",
-      "line": 136
+      "line": 144
     },
     {
       "id": "TEST-M5-CI-CODEGRAPH-STREAM-SCHEMA-001",
@@ -4286,7 +4356,7 @@
       "id": "TEST-M5-CI-DEFAULT-TMPDIR-001",
       "kind": "test",
       "path": "tests/candidate-gate.test.ts",
-      "line": 404
+      "line": 403
     },
     {
       "id": "TEST-M5-CI-EFFICIENT-ORCHESTRATION-TIMEOUT-001",
@@ -4304,7 +4374,7 @@
       "id": "TEST-M5-CI-HISTORICAL-GATES-001",
       "kind": "test",
       "path": "tests/candidate-gate.test.ts",
-      "line": 432
+      "line": 431
     },
     {
       "id": "TEST-M5-CI-INCOMPLETE-COMMAND-DIAG-001",
@@ -4400,7 +4470,7 @@
       "id": "TEST-M5-CI-NESTED-WORKER-TIMEOUT-001",
       "kind": "test",
       "path": "tests/candidate-gate-efficient-timeout.test.ts",
-      "line": 73
+      "line": 71
     },
     {
       "id": "TEST-M5-CI-NODE24-001",
@@ -5213,6 +5283,54 @@
       "line": 173
     },
     {
+      "id": "TEST-M5-LINUX-CALIBRATION-001",
+      "kind": "test",
+      "path": "tests/candidate-calibration-integration.test.ts",
+      "line": 86
+    },
+    {
+      "id": "TEST-M5-LINUX-CALIBRATION-OWNERSHIP-001",
+      "kind": "test",
+      "path": "tests/candidate-stability.test.ts",
+      "line": 125
+    },
+    {
+      "id": "TEST-M5-LINUX-CANDIDATE-WORKFLOW-001",
+      "kind": "test",
+      "path": "tests/candidate-calibration-integration.test.ts",
+      "line": 67
+    },
+    {
+      "id": "TEST-M5-LINUX-RELEASE-001",
+      "kind": "test",
+      "path": "tests/candidate-stability.test.ts",
+      "line": 92
+    },
+    {
+      "id": "TEST-M5-LINUX-RELEASE-OWNERSHIP-001",
+      "kind": "test",
+      "path": "tests/candidate-stability.test.ts",
+      "line": 153
+    },
+    {
+      "id": "TEST-M5-LINUX-RUN-OWNERSHIP-001",
+      "kind": "test",
+      "path": "tests/candidate-stability.test.ts",
+      "line": 112
+    },
+    {
+      "id": "TEST-M5-LINUX-STABILITY-001",
+      "kind": "test",
+      "path": "tests/candidate-stability.test.ts",
+      "line": 70
+    },
+    {
+      "id": "TEST-M5-LINUX-STABILITY-OWNERSHIP-001",
+      "kind": "test",
+      "path": "tests/candidate-stability.test.ts",
+      "line": 138
+    },
+    {
       "id": "TEST-M5-MULTI-CHANGE-CANDIDATE-001",
       "kind": "test",
       "path": "tests/candidate-workspace-lifecycle.test.ts",
@@ -5714,13 +5832,13 @@
       "id": "TEST-M5-RELEASE-002",
       "kind": "test",
       "path": "tests/candidate-gate.test.ts",
-      "line": 503
+      "line": 518
     },
     {
       "id": "TEST-M5-RELEASE-002-APPROVAL-001",
       "kind": "test",
       "path": "tests/candidate-gate.test.ts",
-      "line": 542
+      "line": 557
     },
     {
       "id": "TEST-M5-RELEASE-002-EOL-001",
@@ -5732,7 +5850,7 @@
       "id": "TEST-M5-RELEASE-002-GATE-DIAGNOSTIC-001",
       "kind": "test",
       "path": "tests/candidate-gate.test.ts",
-      "line": 573
+      "line": 588
     },
     {
       "id": "TEST-M5-RELEASE-002-TRUST-001",
@@ -8140,6 +8258,26 @@
       "relation": "decides"
     },
     {
+      "from": "ADR-0045",
+      "to": "DES-M5-LINUX-DELIVERY-001",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0045",
+      "to": "DES-M5-LINUX-DELIVERY-002",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0045",
+      "to": "DES-M5-LINUX-DELIVERY-003",
+      "relation": "decides"
+    },
+    {
+      "from": "ADR-0045",
+      "to": "DES-M5-LINUX-DELIVERY-004",
+      "relation": "decides"
+    },
+    {
       "from": "CODE-M5-APPROVAL-001",
       "to": "DES-M5-006",
       "relation": "implements"
@@ -8506,6 +8644,11 @@
     },
     {
       "from": "CODE-M5-CANDIDATE-GATE-FINGERPRINT-CONFIG-001",
+      "to": "DES-M5-LINUX-DELIVERY-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-CANDIDATE-GATE-FINGERPRINT-CONFIG-001",
       "to": "REQ-M5-CI-EFFICIENCY-002",
       "relation": "implements"
     },
@@ -8517,6 +8660,11 @@
     {
       "from": "CODE-M5-CANDIDATE-GATE-FINGERPRINT-CONFIG-001",
       "to": "REQ-M5-LIFECYCLE-006",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-CANDIDATE-GATE-FINGERPRINT-CONFIG-001",
+      "to": "REQ-M5-LINUX-DELIVERY-001",
       "relation": "implements"
     },
     {
@@ -9041,12 +9189,32 @@
     },
     {
       "from": "CODE-M5-CI-CALIBRATION-WORKFLOW-001",
+      "to": "DES-M5-LINUX-DELIVERY-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-CI-CALIBRATION-WORKFLOW-001",
+      "to": "DES-M5-LINUX-DELIVERY-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-CI-CALIBRATION-WORKFLOW-001",
       "to": "REQ-M5-CI-EFFICIENCY-003",
       "relation": "implements"
     },
     {
       "from": "CODE-M5-CI-CALIBRATION-WORKFLOW-001",
       "to": "REQ-M5-CI-EFFICIENCY-005",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-CI-CALIBRATION-WORKFLOW-001",
+      "to": "REQ-M5-LINUX-DELIVERY-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-CI-CALIBRATION-WORKFLOW-001",
+      "to": "REQ-M5-LINUX-DELIVERY-002",
       "relation": "implements"
     },
     {
@@ -9276,12 +9444,22 @@
     },
     {
       "from": "CODE-M5-CI-EFFICIENCY-TIMEOUT-CALIBRATION-001",
+      "to": "DES-M5-LINUX-DELIVERY-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-CI-EFFICIENCY-TIMEOUT-CALIBRATION-001",
       "to": "REQ-M5-CI-EFFICIENCY-003",
       "relation": "implements"
     },
     {
       "from": "CODE-M5-CI-EFFICIENCY-TIMEOUT-CALIBRATION-001",
       "to": "REQ-M5-CI-EFFICIENCY-005",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-CI-EFFICIENCY-TIMEOUT-CALIBRATION-001",
+      "to": "REQ-M5-LINUX-DELIVERY-002",
       "relation": "implements"
     },
     {
@@ -9307,6 +9485,11 @@
     {
       "from": "CODE-M5-CI-EFFICIENT-WORKFLOW-001",
       "to": "DES-M5-CI-EFFICIENCY-004",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-CI-EFFICIENT-WORKFLOW-001",
+      "to": "DES-M5-LINUX-DELIVERY-001",
       "relation": "implements"
     },
     {
@@ -9337,6 +9520,11 @@
     {
       "from": "CODE-M5-CI-EFFICIENT-WORKFLOW-001",
       "to": "REQ-M5-CI-EFFICIENCY-005",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-CI-EFFICIENT-WORKFLOW-001",
+      "to": "REQ-M5-LINUX-DELIVERY-001",
       "relation": "implements"
     },
     {
@@ -10982,6 +11170,61 @@
     {
       "from": "CODE-M5-LIFECYCLE-005",
       "to": "REQ-M5-LIFECYCLE-005",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-LINUX-DELIVERY-PROFILE-001",
+      "to": "DES-M5-LINUX-DELIVERY-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-LINUX-DELIVERY-PROFILE-001",
+      "to": "DES-M5-LINUX-DELIVERY-004",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-LINUX-DELIVERY-PROFILE-001",
+      "to": "REQ-M5-LINUX-DELIVERY-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-LINUX-DELIVERY-PROFILE-001",
+      "to": "REQ-M5-LINUX-DELIVERY-004",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-LINUX-RUN-INVENTORY-001",
+      "to": "DES-M5-LINUX-DELIVERY-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-LINUX-RUN-INVENTORY-001",
+      "to": "DES-M5-LINUX-DELIVERY-003",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-LINUX-RUN-INVENTORY-001",
+      "to": "DES-M5-LINUX-DELIVERY-004",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-LINUX-RUN-INVENTORY-001",
+      "to": "REQ-M5-LINUX-DELIVERY-001",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-LINUX-RUN-INVENTORY-001",
+      "to": "REQ-M5-LINUX-DELIVERY-002",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-LINUX-RUN-INVENTORY-001",
+      "to": "REQ-M5-LINUX-DELIVERY-003",
+      "relation": "implements"
+    },
+    {
+      "from": "CODE-M5-LINUX-RUN-INVENTORY-001",
+      "to": "REQ-M5-LINUX-DELIVERY-004",
       "relation": "implements"
     },
     {
@@ -16115,6 +16358,91 @@
       "relation": "satisfies"
     },
     {
+      "from": "DES-M5-LINUX-DELIVERY-001",
+      "to": "DES-M5-CI-EFFICIENCY-001",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-LINUX-DELIVERY-001",
+      "to": "DES-M5-CI-EFFICIENCY-004",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-LINUX-DELIVERY-001",
+      "to": "REQ-M5-LINUX-DELIVERY-001",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-LINUX-DELIVERY-001",
+      "to": "REQ-M5-LINUX-DELIVERY-004",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-LINUX-DELIVERY-002",
+      "to": "DES-M5-CI-EFFICIENCY-001",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-LINUX-DELIVERY-002",
+      "to": "DES-M5-CI-EFFICIENCY-004",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-LINUX-DELIVERY-002",
+      "to": "DES-M5-LINUX-DELIVERY-001",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-LINUX-DELIVERY-002",
+      "to": "REQ-M5-LINUX-DELIVERY-002",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-LINUX-DELIVERY-003",
+      "to": "DES-M5-CI-EFFICIENCY-005",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-LINUX-DELIVERY-003",
+      "to": "DES-M5-LINUX-DELIVERY-001",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-LINUX-DELIVERY-003",
+      "to": "DES-M5-LINUX-DELIVERY-002",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-LINUX-DELIVERY-003",
+      "to": "REQ-M5-LINUX-DELIVERY-003",
+      "relation": "satisfies"
+    },
+    {
+      "from": "DES-M5-LINUX-DELIVERY-004",
+      "to": "DES-M5-019",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-LINUX-DELIVERY-004",
+      "to": "DES-M5-LINUX-DELIVERY-001",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-LINUX-DELIVERY-004",
+      "to": "DES-M5-LINUX-DELIVERY-002",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-LINUX-DELIVERY-004",
+      "to": "DES-M5-LINUX-DELIVERY-003",
+      "relation": "depends-on"
+    },
+    {
+      "from": "DES-M5-LINUX-DELIVERY-004",
+      "to": "REQ-M5-LINUX-DELIVERY-004",
+      "relation": "satisfies"
+    },
+    {
       "from": "DES-M5-MULTI-CHANGE-001",
       "to": "DES-M5-003",
       "relation": "depends-on"
@@ -20335,6 +20663,46 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-LINUX-CALIBRATION-001",
+      "to": "REQ-M5-LINUX-DELIVERY-002",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-LINUX-CALIBRATION-OWNERSHIP-001",
+      "to": "REQ-M5-LINUX-DELIVERY-002",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-LINUX-CANDIDATE-WORKFLOW-001",
+      "to": "REQ-M5-LINUX-DELIVERY-001",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-LINUX-RELEASE-001",
+      "to": "REQ-M5-LINUX-DELIVERY-004",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-LINUX-RELEASE-OWNERSHIP-001",
+      "to": "REQ-M5-LINUX-DELIVERY-004",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-LINUX-RUN-OWNERSHIP-001",
+      "to": "REQ-M5-LINUX-DELIVERY-001",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-LINUX-STABILITY-001",
+      "to": "REQ-M5-LINUX-DELIVERY-003",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-LINUX-STABILITY-OWNERSHIP-001",
+      "to": "REQ-M5-LINUX-DELIVERY-003",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-MULTI-CHANGE-CANDIDATE-001",
       "to": "REQ-M5-MULTI-CHANGE-001",
       "relation": "verifies"
@@ -23479,8 +23847,8 @@
     ".github/skills/sdd-quality/SKILL.md": "b9451e41ce6598ca90284a7b439aa3a8b98cf4c47f5e90659754b6dfe8c5f712",
     ".github/skills/sdd-requirements/SKILL.md": "c5d07dcc445c38b8b79c1144934b12c575189a02b0999aa57cf85abcf825b59a",
     ".github/skills/sdd-traceability/SKILL.md": "923c6c8915f3c2464cc2732392cbf2675485070fd5a78b2a502ef4aaa4852cdd",
-    ".github/workflows/candidate-calibration.yml": "a23d97f5068defeb511852c96d0904aaed96a3d1e552d4603d57790ba5ddfe06",
-    ".github/workflows/candidate-gate.yml": "27b75ed63f5546a4e67bcdf6dc8ad636570e616b822f303d6c937f96ddc210ed",
+    ".github/workflows/candidate-calibration.yml": "37d1ee5c22b14c02dfcbcba520f8d87d859c38368b81d5fb6cd178a57cd3a0ff",
+    ".github/workflows/candidate-gate.yml": "fba2e689298ba5b3e7ddceea74e6286fc6910518ddd6b4a177b8ed8818d8fb1b",
     ".github/workflows/npm-publish.yml": "6d1b7c5a13c384864c45bac7b876b06216ca691f7ae431991ee8a279426cbcbf",
     ".github/workflows/release.yml": "aa1a48f56ad5e361e15a563f8bd3cf1c28d2a8be522ba305641fa4aef48c51b7",
     ".musubix/decisions/ADR-0002.md": "9f41d752530613cf6cc3ab6798709567e85650e5b97426dfca4147840eb35684",
@@ -23525,7 +23893,8 @@
     ".musubix/decisions/ADR-0041.md": "1919f12be4545b9199f1febed358527fcb0b5bc702887e6690eaefa6d63a0468",
     ".musubix/decisions/ADR-0042.md": "e685034419c1092b46d744bb0cb2f5d3051bed60c2d93678c67e123ff5704258",
     ".musubix/decisions/ADR-0043.md": "562458fcf480483a8f109bcad546f58c457ce0f8f7de77fcd919c2444e91669c",
-    ".musubix/decisions/ADR-0044.md": "a45d920363fb25f254115e05fdde851c09e50c4af604195719bf97a74db9c56b",
+    ".musubix/decisions/ADR-0044.md": "b285ec7bf9b022cb040519171702470f2ec9bda20792e6afee8fdad48fb69718",
+    ".musubix/decisions/ADR-0045.md": "83c440b27b9224222a27164b26829d9a2f2fe307c086d7970689b6bc852bea1f",
     ".musubix/features/candidate-cleanup-policy/design.md": "54d32a6d446bbaed299860b164fe74d24362e0c5739862bc79df2e0acab20c1b",
     ".musubix/features/candidate-cleanup-policy/requirements.md": "253a36dbca0b76a81f452c845f2988e2b33163823095ee5ac1add81519dd5462",
     ".musubix/features/candidate-gate-efficiency/design.md": "478f2f034497bce81fe7cfd9df71061606cf926aa2e57d4fda6cf59ff9f2b7cf",
@@ -23534,6 +23903,8 @@
     ".musubix/features/codegraph-performance/requirements.md": "c6e62a96471c7a89c179e368d574f91f604624f2d70ff9639c94a9379ffdb7ea",
     ".musubix/features/evidence-selector-guards/design.md": "f6477ad027e055d5b7760e876164f316fb529d665af54eefaa965d2b69656b29",
     ".musubix/features/evidence-selector-guards/requirements.md": "fdb70191e472f41e16eab793b2b2d86583587cd86a88db5627be59bf045ef601",
+    ".musubix/features/linux-only-candidate-release/design.md": "ee76a65c65b74cba97f604f6ebed6561e32b6467226ed5dc69a8a71d0a13a7df",
+    ".musubix/features/linux-only-candidate-release/requirements.md": "09368a3564d529afebbacc34a711994c35a126e76c51535d6108548dc4e6dc69",
     ".musubix/features/multi-change-workspaces/design.md": "47b156ccad4d63e5ffa19bbc6296dedc0dc9973ec4d470b98edebf005e34a870",
     ".musubix/features/multi-change-workspaces/requirements.md": "9071c2c1f8a7ca49b9137cf074fe30b33343264536f41efcdddad0ab2a6cff4d",
     ".musubix/features/musubix5-clean-foundation/design.md": "f01269b39215ec2cd2cede21cb52b60504f4c3fdfae310126015667e8af7fe50",
@@ -23569,24 +23940,25 @@
     "packages/analysis/src/attestation.ts": "a062a7acd7b2c67c544dac10e401173157f560bb5dee70bdb0116e865e903f36",
     "packages/analysis/src/bootstrap-runner.ts": "4167b10f413af1cdc39858f16f94110e407b7778ca8c09d8c0179e497f52550e",
     "packages/analysis/src/budget-ledger.ts": "c7e4fa74032e066491708685359ca7115ab34c44a0d2af18337bd15a4da25590",
-    "packages/analysis/src/candidate-calibration.ts": "05a7941ed4a3a778477c5e8b75d994812178dcbd073b65a87fde27f702d8b7be",
+    "packages/analysis/src/candidate-calibration.ts": "6abcd62164d5e23bcc5a8653810a7544d7fd635769e322b09b64537a165baeee",
+    "packages/analysis/src/candidate-delivery-profile.ts": "c4c40353e48e1b45a4c4eb2a9a3621f1add3f950de6e2acd2839694851ed1a90",
     "packages/analysis/src/candidate-evidence-binding.ts": "b1a0f978e747939dcae508f8a91e1fd8a6681d98c6d3887b9ee43468cf7d307a",
-    "packages/analysis/src/candidate-execution-plan.ts": "fc9508a85ddf96e770eb4d51cceeed4c1a4bf64065c0e3dfb1e7d2b44fb4979b",
+    "packages/analysis/src/candidate-execution-plan.ts": "83a746ef0d0b1c8c88ed156506761a0f2d890d78cda35f08ef7d15bdb491a90f",
     "packages/analysis/src/candidate-gate-runner.ts": "081e27b13233adc0d7d3f1774f59b74c0ecf8808e9b77ea9b8783cacf0308bec",
-    "packages/analysis/src/candidate-gate.ts": "61c4d71ad73d810b7f192abc6b35934a2614fe5073bf3cf50945264ac91b2efb",
+    "packages/analysis/src/candidate-gate.ts": "786d686f9b5170b97d06e05e07fa795778d65181094003ade62d6fb3efec98fb",
     "packages/analysis/src/candidate-git-distribution.ts": "c3fafc714db7becf4e0b64f5a4592352588cefa28daee73a737c0bd4b320e83b",
     "packages/analysis/src/candidate-integration.ts": "10513d69a26b0411f7ba09fc132e107c7e899ff961201077939c2bf70af39ef4",
     "packages/analysis/src/candidate-partitions.ts": "dd99c641e3e6b5110ebdfa9336e93c2a7aef19ade50b9cd5c60b1478ea718e97",
     "packages/analysis/src/candidate-path.ts": "12be923afca597681dfae8edea1bb143f33d148ebb79bfbf5c0e4d2e0e8123b3",
     "packages/analysis/src/candidate-portability.ts": "04143bb47a205d4cfb8dd1634c972110d4ee44ff02f0eaa02e32c08cd305e27f",
-    "packages/analysis/src/candidate-stability.ts": "7cb23d4e28182e33473a77f1163915a6e1ed9db4fb81b197734abc336ce99a56",
+    "packages/analysis/src/candidate-stability.ts": "798ebd0c9cdba060582bd2d6191dde4df6e8176cbf5f667ea292bfaa04a343a3",
     "packages/analysis/src/candidate-state.ts": "10b52f6d47f33af6bf899243acc17c0d78b009bbdfea3acd40796d3012855a76",
     "packages/analysis/src/canonical.ts": "4135d7521ba529d61a695586a206e71081b4e300938a5ae160dcfda770e73195",
     "packages/analysis/src/change-evidence.ts": "2d52072cffbf77ffdcb07df725d54fae9bced88f5a470dba7014f5c4b5c29f4c",
-    "packages/analysis/src/change-generation.ts": "34622e366b1e5f53f826331562ba31a2fd46cd40b9367f22263a11af547cfd33",
+    "packages/analysis/src/change-generation.ts": "deab9138c81e67fa1ff45698ed3a299ab8c3b4d4f779296b6164b4e44e043a6c",
     "packages/analysis/src/change-phase-checkpoint.ts": "af6159307d6b3d2d785ed9cf6684818967bb8e005b156bdd084b24f2b233b9a1",
-    "packages/analysis/src/change-waiver.ts": "1b880c29a16080445f324265e0da067dd8537e64cb42f360369fd2a1eda0f9c3",
-    "packages/analysis/src/change.ts": "db067f598b1a066b1455b4c552aa1933d19438faaf61ee44537a300a2b68b40b",
+    "packages/analysis/src/change-waiver.ts": "9960f2923d9b4c92150d8db2fab9ae57c5c9b377dd17d36ce1445ae8483a9d7f",
+    "packages/analysis/src/change.ts": "f2845cf212243334a4e02cb25ff16875ff262bf720b13e62871ec1e42179ea07",
     "packages/analysis/src/compatibility-oracle.ts": "b826d3ede71d2f4a2df644bff456e0810b6e7be3465f1dc1ded7b90e37272ab1",
     "packages/analysis/src/config.ts": "1217d5837cfa6a615363eca6c784213c8ef3eeb8fc82d82bcc8a8cfbd639c7fb",
     "packages/analysis/src/evidence-registry.ts": "34193bd5fdd1a467cc38c4507107c840f454af3680b3bfcdec15d04f06a0c1e1",
@@ -23631,7 +24003,7 @@
     "packages/analysis/src/tdd-source-types.ts": "6425d988461149ce62b8907e94c2b2268c9b4194f0a25de5b0ea82f5b21e7d66",
     "packages/analysis/src/tdd-test-source.ts": "1250ba6c960b9ec73ade2de53f752e3e6f7e6091bd010f428620895d19d0c073",
     "packages/analysis/src/tdd-types.ts": "83fc67aa4db7dd1a2df42e56a8cb63ffc11a6185bd12a9f191ba4f5b20e12103",
-    "packages/analysis/src/tdd.ts": "ff979aef842bad3cb8b29a939f7d0c71f5d464db096ad1b1390928997bcda930",
+    "packages/analysis/src/tdd.ts": "7cef740f0a030d316442316df6da0320a3cbaf750001d94f89e75b259c0103cd",
     "packages/analysis/src/test-report.ts": "c4389c1a73b8ff61beae2061c1eaaeeadc4c5cc529befc059111ea5430d602c4",
     "packages/analysis/src/test-runtime.ts": "6e48f650af307992eebd06f6e7fec3aec031d6bc51db8f946df4f679f5afebd5",
     "packages/analysis/src/trace.ts": "b2dd6c6e73cb209c8b45bc1749440a3444fd1b65891ad6ee0f87c30c38c08715",
@@ -23651,7 +24023,7 @@
     "scripts/check-lfs-tool.mjs": "1996502c4b2c96e16121b53175b273d97795debf66aa3e00feb7990df5acfb2e",
     "scripts/check-package.mjs": "b817a08296efb0f2f90be012df55c598f59aaaf5230c8501c1af02b900546593",
     "scripts/run-candidate-tests.mjs": "a1646e4571f3389b3f31eab09311a90dd07712e6db803c315526acd3b41ed9ea",
-    "scripts/run-codegraph-tests.mjs": "72ba919d93cee8d59c33b8564a9902dc0cdbeeddf799e45a64903f1d708ec7b8",
+    "scripts/run-codegraph-tests.mjs": "ce74f670d922c1edda2927e265191b320d637753b20cb3e5833473a8a52d0b1e",
     "scripts/run-compatibility-tests.mjs": "562a6c818ff94c013cb8a9f69a5c9dd2bdfb609c7ae90a3cd17c24aa96f35db9",
     "scripts/run-concurrency-load.mjs": "6ac4ab549f52c750d952be44984d4afe049a71b64fd54bd3b9c78557f7431600",
     "scripts/smoke-package.mjs": "b5f69bc4c0109632acdd266717695065dbce04e4d7f8d543eb164c1596a1568c",
@@ -23677,12 +24049,12 @@
     "tests/budget-reservation.test.ts": "f6e2a8e70103140b6f6feb063b0eb13e80df7500244ed604a6d85cea1caf4c52",
     "tests/budget-usage.test.ts": "62a656deb6e48e7f63302ac5900407f01b07cbf6d1963acdf6bffb8c27454807",
     "tests/candidate-calibration-input-closure.test.ts": "bcb660ce6025a59152b17c8a8c5ec531e3571a2c644646122b8c17e0a03825e4",
-    "tests/candidate-calibration-integration.test.ts": "9c1b273c33c36db6174f94f1d16ca7aecd9c17dd072dd91fa359b3f51f3c906b",
+    "tests/candidate-calibration-integration.test.ts": "083f26e132f4a2e06461090a819394d458d90997b07145d4eac0816a13422951",
     "tests/candidate-calibration-source-final.test.ts": "432b87ed53c3ca93fb4c432def8c9063926189f6bd7df67baff7e0caeac89ab5",
     "tests/candidate-cleanup-policy.test.ts": "5e913e01f82acb7a976985e404ca37ef5bf63f5d61bb7a4b5893c72fbebfd51d",
     "tests/candidate-codegraph-batching.test.ts": "b09716c92c340c2668b1f0ce0a6694e341add650503b2732739a4c27a9ba66f1",
     "tests/candidate-codegraph-mixed-report.test.ts": "209df8323549378fe7ef8f50a8c968734edcbc60e9bb749f15670508e1a43f7d",
-    "tests/candidate-codegraph-scheduler.test.ts": "621867377e08fc9fbc669edd95448d1b2efffe6bb3a563ddc921fab1cd7e8b46",
+    "tests/candidate-codegraph-scheduler.test.ts": "77bbcfdc8185e963c8dfe3b53c0a1cad38f750183bae336bfae8f6853315bee0",
     "tests/candidate-counted-fixture.test.ts": "8fc87d828d2e375c5af74f8bfff3217e0479f6e2d5e2ba75c6a4a7db73eec20c",
     "tests/candidate-counted-native.test.ts": "cc0a8dd2cc182389266fe87c4e3485b8b3af359f6fce4ea4c0651b6b4cfa9864",
     "tests/candidate-counted-scheduler.test.ts": "c20fd4ae868309949cd9a412ddf6276ec65a08b96632751a56c9c704236ccb59",
@@ -23696,12 +24068,12 @@
     "tests/candidate-finalization-durability.test.ts": "c11ee3e6422a3094d46eee3e353c4bd9e2656d732cb4f5caacb741eb467aa10b",
     "tests/candidate-finalization-state.test.ts": "31648bfc434cf87c6536b5b3ef0ca227814cb372b2923335a10b957fff34b397",
     "tests/candidate-first-failure-ledger.test.ts": "456b533191da1adfb0bd3502c8677b1d1e8daa1807365cee23a0217e44ebcb32",
-    "tests/candidate-gate-efficient-timeout.test.ts": "04570d74120dc96f55fc3d8329dfd044df28c6c8e9ee566b4789f459729d38eb",
+    "tests/candidate-gate-efficient-timeout.test.ts": "4bbe8f39040ffa7eedff399b381d1587d471eb114ad08dc6a7cb20099f559bb1",
     "tests/candidate-gate-eol.test.ts": "db72054d71bb5bb2cb986c7a5ccb7b31d714b6c863e5901fd7d1fe723e8a1ad4",
     "tests/candidate-gate-orchestration-boundaries.test.ts": "8f7c5fd2c3f35a47e7a5353cfbc54a7094ef553f02f5521862fe8edf1a3fa5a2",
-    "tests/candidate-gate-trust.test.ts": "ff3aa30a6f9656e8232a048132c0dc205b80e9fa390ca03ce25b392c5290f433",
+    "tests/candidate-gate-trust.test.ts": "5c558634c87ed808afff604cb54f77e0c1444bc9684c461bd6ad9e5a6a8578e6",
     "tests/candidate-gate-workflow-errors.test.ts": "7e2948b49714ef352effc3eb678496858ff3c90f81947facd1d41c30f88f4403",
-    "tests/candidate-gate.test.ts": "ba1dcd780fdebf6c9d03fe71deb672cf29d66b224ac335d19d51db603280a2d7",
+    "tests/candidate-gate.test.ts": "f15781ea2cdb8e60a951ea4fec96c30128d5a1bfc0bd5985bfccd70daca6b551",
     "tests/candidate-integration-dependencies.test.ts": "cf7b57b88909268baceb4d17eb0a5acab080011e20c37739746502d7758e5553",
     "tests/candidate-integration-determinism.test.ts": "72dd197925de5226dcacae00cac1187b9cf1cdbeb7970b199849e2113ae185f6",
     "tests/candidate-integration-evidence-context.test.ts": "851dca5786e5778387e570b1c44b3280c7fa90e27c728c7ceef0e75187fef88a",
@@ -23720,7 +24092,7 @@
     "tests/candidate-snapshot-lifecycle.test.ts": "c1a864c9e4f99c1d2b9388cfd0fd0db6fb5a6bfa190352dda1c1cdeadeba36a0",
     "tests/candidate-snapshot-repository-binding.test.ts": "e3c606cad49a5199aa3f8ff0dbff4d124519cc0bf14ca6f948e27128ff01288a",
     "tests/candidate-stability-artifact.test.ts": "817d56055e81df3a6f7a99c1e66be246251a5d65161f95b97b71adc32c94aa19",
-    "tests/candidate-stability.test.ts": "0966056e8a89c7c9ea6b6cf4236c2383b1529bbb5013fdc2c26f6d96c54250e6",
+    "tests/candidate-stability.test.ts": "2ddd9b3704b886b4c64fbb4af7c1622ce18b5ef92c78ece8fe4d7e1a101e2294",
     "tests/candidate-state-context.test.ts": "e1aee8c5114fd144abce621fa04816dc7cafa297cf1d6f9505564e7d3498adf4",
     "tests/candidate-state-current.test.ts": "141ed03ca18c918f1f007967d3054f1b109bfd4b8305c92cb8ca1a2ba42bf4c1",
     "tests/candidate-state-lifecycle.test.ts": "38c00e9750cdfa648a4a359cf223015c03a8cb6d2ed94dad025cb11724461b40",
@@ -23743,7 +24115,7 @@
     "tests/change-generation-resume.test.ts": "0bc4735b173c000ee5530165d2a152ec4e97e201a2aaa90804a14456315e1741",
     "tests/change-generation.test.ts": "acad6bc9e438dd793a0018f8ccd66b7580850d081a4f032c23960df7912a7284",
     "tests/change-lease-sharing-violation.test.ts": "3a54aa04155a01379e856214d132bc0f760b686f1ac7a9028531e67ec04d0836",
-    "tests/change-lease.test.ts": "08ff2f4546584fc0ea0606dfcef312db4c3a62579e245c645787fd60b0b33265",
+    "tests/change-lease.test.ts": "702b17c5d6a8ccfd3cc9c2435c5690f72fdd2c7b6e366151e74b5383d32ee518",
     "tests/change-phase-checkpoint-operation.test.ts": "9d1ce8a5219551d62f7599265c088e93519254669f7c7056fe49d161a0d666b6",
     "tests/checkpoint-clock.test.ts": "8fedede65c04d54ca0ee104955ed358b27536d8066d54b137f775437700dd540",
     "tests/cli-help-contract.test.ts": "01d05729d2ff955c19bcfb8df7a19bb69d75ce75d56e83574ee93e065f288efb",
@@ -23757,7 +24129,7 @@
     "tests/cross-change-candidate-branch.test.ts": "cc102055defa3f7ac3d05be0b864a0db0a54bda687b490aefb65add7a316f675",
     "tests/evidence-binding.test.ts": "b8358263d909ba51625da8f769ea9325a8f8cdab6a69de92adcbc0a10fbed4f3",
     "tests/evidence-identity.test.ts": "3467588120ed4b23c73dd5f0aff0be4b3ff83d38867ff18beda6bcceae98a899",
-    "tests/evidence-kinds.test.ts": "af4404199f788d57592d08b1bdbf77c5a5366b4c7aa48b03e59487b5bfdf8fae",
+    "tests/evidence-kinds.test.ts": "4c8d52b30de0701ce18a698c420e54d726cac83af80f18d449f64075bc8dc8e6",
     "tests/evidence-selector-guards.test.ts": "c4c867c16b915d2139b9ff02f58b1ecc477324af8b252d10691bbea1a3c819d8",
     "tests/evidence-skill-inputs.test.ts": "4424371d801f4c5806ce533d1def34d2e95f8325f0de1a7854870062bfe20dcb",
     "tests/evidence-supersession.test.ts": "6731f6b0fc3694aeb5ecef6de5fddfbd59d0c8f5ba07a3faa410bf925e67c9cd",
@@ -23766,7 +24138,7 @@
     "tests/fixtures/portable-path.ts": "03d7c64e1636efe1d008fccb62aeea0fde2474668128dd8e2a5d4043e173eca8",
     "tests/fixtures/portable-paths.ts": "08f08667a406a20f05e574225c39dc934b36d950786fc82dd5ee770c473d749f",
     "tests/fixtures/short-unix-socket.ts": "8b6e158c7a9880b2db6d3c3d87d533e208660f7b611089e08152a8689958a803",
-    "tests/full-test-timeout.test.ts": "95b4be2a1dd2915caf3984dd8f5f344f5042251416aa1f676ad303b490fa45c4",
+    "tests/full-test-timeout.test.ts": "71d2033699d5d31b20b4e30c580ec5216c7f59049d95b895a9f952e4255bff16",
     "tests/generation10-recovery-accounting.test.ts": "e55f536251eedd89b4d4f6c4dd427f66ddc197f2bfcdda34ae061514a6a9fbcb",
     "tests/generation10-recovery-completion.test.ts": "777f8a18fe452c29b9ade2ff17a5a2da2e86622550c0695791eea5faaf358d55",
     "tests/generation10-recovery-contract.test.ts": "a68f1797bd02fcba08de4f6f9aee5336994f188d8c0cb328621e11fe6873ba89",
@@ -23839,7 +24211,7 @@
     "tests/short-unix-socket.test.ts": "87a2c5a24abc90c9fb440214b65254dc849664163b1c589312229da96a5b10c8",
     "tests/source-blob-admission.test.ts": "f2c56365d9dfd45dea86829ba7a43159a00121c8eee1316681f4284667bc500a",
     "tests/source-blob-git.test.ts": "75980eaf41348d5bcd37b2f7eea72db24be7467bb8c35f40dadf3e1562eb2392",
-    "tests/tdd-batch-recording.test.ts": "c02bcb70664c7cc075016a90c2eea5f4b1ae0ba60072fb3947510c5f41252d0b",
+    "tests/tdd-batch-recording.test.ts": "85f653fa6c8b279050766df4a5feee33da5e55774298dbbfe058031bb760c64d",
     "tests/tdd-cycle-repair.test.ts": "97085dc0d59df9cc94aac642c61b60deb410aaec38fc0500101a538ec7437ae6",
     "tests/tdd-cycle-resolver.test.ts": "e97858964eb27b9b5aa5108ae0b40cafe8ba5053cbc38aceec3a2069458ac885",
     "tests/tdd-generation-scope.test.ts": "ca6be09781cc00ea47cb255ac469c7e618fd237652435778f3cbd29ea0ee9442",

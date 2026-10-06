@@ -133,6 +133,7 @@ describe('CHANGE writer lease',() => {
   /**
    * @id TEST-M5-LIFECYCLE-004
    * @verifies REQ-M5-LIFECYCLE-004
+   * @supersededBy TEST-M5-LIFECYCLE-LEASE-SHARING-001
    */
   it('TEST-M5-LIFECYCLE-004 excludes concurrent writers and fences expired holders',async () => {
     const root=mkdtempSync(join(tmpdir(),'musubix5-change-lease-'));

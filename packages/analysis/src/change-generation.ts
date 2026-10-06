@@ -10,7 +10,7 @@ export interface ChangeContextSelection {
   changeId: string;
   generation: number | null;
   requirementIds: string[];
-  documentStatus: 'active' | 'completed';
+  documentStatus: 'active' | 'completed' | 'superseded';
 }
 
 export interface ChangeContextOptions {
@@ -33,13 +33,13 @@ function activeGeneration(change: StoredChangeGeneration): number | null {
   return change.activeGeneration ?? change.generation ?? 1;
 }
 
-type ChangeDocumentStatus = 'active' | 'completed' | 'unspecified';
+type ChangeDocumentStatus = 'active' | 'completed' | 'superseded' | 'unspecified';
 
 function changeDocumentStatus(source: string): ChangeDocumentStatus {
   const frontmatter = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/.exec(source)?.[1];
   const status = frontmatter === undefined
     ? null
-    : /^status:\s*(active|completed)\s*$/m.exec(frontmatter)?.[1];
+    : /^status:\s*(active|completed|superseded)\s*$/m.exec(frontmatter)?.[1];
   return (status as ChangeDocumentStatus | undefined) ?? 'unspecified';
 }
 
@@ -117,7 +117,7 @@ export async function resolveChangeContext(
       ? [...statuses.entries()]
         .filter(([changeId, status]) => {
           if (status === 'active') return true;
-          if (status === 'completed') return false;
+          if (status === 'completed' || status === 'superseded') return false;
           const stored = changes.find((change) => change.changeId === changeId);
           return stored !== undefined && activeGeneration(stored) !== null;
         })

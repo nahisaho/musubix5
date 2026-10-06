@@ -2866,12 +2866,71 @@ export async function validateTddEvidence(
   }
   const sourceTextCache = new Map<string, Promise<string>>();
   const fingerprintCache = new Map<string, Promise<string>>();
+  const currencyCandidates = effectiveCycles
+    .filter((cycle) =>
+      (!cycle.cycleId || !provenanceSupersededIds.has(cycle.cycleId))
+      && cycle.green?.valid && (!activeChange || activeCycle(cycle)))
+    .map((cycle) => ({ cycle, terminal: terminalFingerprintEvidence(currencyIndex, cycle) }))
+    .filter((entry): entry is { cycle: TddCycle; terminal: EffectiveTddCurrencySelection } =>
+      entry.terminal !== undefined);
+  const allCurrencyCandidates = effectiveCycles
+    .map((cycle) => ({ cycle, terminal: terminalFingerprintEvidence(currencyIndex, cycle) }))
+    .filter((entry): entry is { cycle: TddCycle; terminal: EffectiveTddCurrencySelection } =>
+      entry.terminal !== undefined);
+  const explicitlySupersededTests = new Set<string>();
+  for (const test of trace.nodes.filter((node) => node.kind === 'test')) {
+    let sourceText = sourceTextCache.get(test.path);
+    if (!sourceText) {
+      sourceText = readText(root, test.path);
+      sourceTextCache.set(test.path, sourceText);
+    }
+    const source = await sourceText;
+    const escapedId = test.id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const block = new RegExp(`/\\*\\*[\\s\\S]*?@id\\s+${escapedId}\\b[\\s\\S]*?\\*/`).exec(source)?.[0];
+    const replacements = block
+      ? [...block.matchAll(/@supersededBy\s+([^\r\n*]+)/g)]
+        .flatMap((match) => match[1]!.match(/TEST-[A-Z0-9-]+/g) ?? [])
+      : [];
+    if (!replacements.length) continue;
+    const requirements = new Set(allCurrencyCandidates
+      .filter(({ cycle }) => cycle.testId === test.id)
+      .map(({ cycle }) => cycle.requirementId));
+    let covered = requirements.size > 0;
+    for (const requirementId of requirements) {
+      let requirementCovered = false;
+      for (const replacementId of replacements) {
+        const replacement = trace.nodes.find((node) =>
+          node.kind === 'test' && node.id === replacementId);
+        const terminals = allCurrencyCandidates.filter(({ cycle }) =>
+          cycle.testId === replacementId && cycle.requirementId === requirementId);
+        if (!replacement || !terminals.length) continue;
+        let current = fingerprintCache.get(replacementId);
+        if (!current) {
+          let replacementSource = sourceTextCache.get(replacement.path);
+          if (!replacementSource) {
+            replacementSource = readText(root, replacement.path);
+            sourceTextCache.set(replacement.path, replacementSource);
+          }
+          current = replacementSource.then((text) => testFingerprintFromText(replacement, text));
+          fingerprintCache.set(replacementId, current);
+        }
+        const currentFingerprint = await current;
+        if (terminals.some(({ terminal }) => terminal.fingerprint === currentFingerprint)) {
+          requirementCovered = true;
+          break;
+        }
+      }
+      if (!requirementCovered) {
+        covered = false;
+        break;
+      }
+    }
+    if (covered) explicitlySupersededTests.add(test.id);
+  }
   const currencyTargets = new Set(
-    effectiveCycles
-      .filter((cycle) =>
-        (!cycle.cycleId || !provenanceSupersededIds.has(cycle.cycleId))
-        && cycle.green?.valid && (!activeChange || activeCycle(cycle)))
-      .map((cycle) => cycle.testId),
+    currencyCandidates
+      .filter(({ cycle }) => !explicitlySupersededTests.has(cycle.testId))
+      .map(({ cycle }) => cycle.testId),
   );
   for (const testId of currencyTargets) {
     const unbounded = effectiveLatestCycle(currencyIndex, testId);

@@ -1,6 +1,6 @@
 # @id CODE-M5-CI-EFFICIENT-WORKFLOW-001
-# @implements REQ-M5-CI-001 REQ-M5-CI-002 REQ-M5-CI-006 REQ-M5-CI-008 REQ-M5-CI-EFFICIENCY-003 REQ-M5-CI-EFFICIENCY-005
-# @design DES-M5-CI-001 DES-M5-CI-002 DES-M5-CI-006 DES-M5-CI-008 DES-M5-CI-EFFICIENCY-004
+# @implements REQ-M5-CI-001 REQ-M5-CI-002 REQ-M5-CI-006 REQ-M5-CI-008 REQ-M5-CI-EFFICIENCY-003 REQ-M5-CI-EFFICIENCY-005 REQ-M5-LINUX-DELIVERY-001
+# @design DES-M5-CI-001 DES-M5-CI-002 DES-M5-CI-006 DES-M5-CI-008 DES-M5-CI-EFFICIENCY-004 DES-M5-LINUX-DELIVERY-001
 name: Candidate gate
 on:
   workflow_dispatch:
@@ -13,23 +13,17 @@ on:
 permissions: { contents: read, actions: read, id-token: write }
 jobs:
   verify:
-    name: ${{ matrix.os }}-node24
+    name: ubuntu-node24
     timeout-minutes: 21
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { runner: ubuntu-latest, os: ubuntu, node: 24 }
-          - { runner: windows-latest, os: windows, node: 24 }
-          - { runner: macos-latest, os: macos, node: 24 }
-    runs-on: ${{ matrix.runner }}
+    runs-on: ubuntu-latest
     env:
+      DELIVERY_PROFILE: linux-only-v1
       CANDIDATE_MODE: candidate
       CANDIDATE_COMMIT: ${{ inputs.candidateCommit }}
       CHANGE_ID: ${{ inputs.changeId }}
       GENERATION: ${{ inputs.generation }}
       GATE_INPUT_FINGERPRINT: ${{ inputs.gateInputFingerprint }}
-      MATRIX_OS: ${{ matrix.os }}
+      MATRIX_OS: ubuntu
       MATRIX_NODE: 24
       REPOSITORY_ID: ${{ inputs.repositoryId }}
     steps:
@@ -88,7 +82,7 @@ jobs:
           const e = process.env, canonical = v => Array.isArray(v) ? `[${v.map(canonical).join(',')}]` : v && typeof v === 'object' ? `{${Object.entries(v).sort(([a],[b])=>Buffer.compare(Buffer.from(a),Buffer.from(b))).map(([k,x])=>`${JSON.stringify(k)}:${canonical(x)}`).join(',')}}` : JSON.stringify(v);
           const hash = v => createHash('sha256').update(`${canonical(v)}\n`).digest('hex');
           const audienceBase = 'https://github.com/nahisaho/musubix5/actions/musubix5-gate';
-          const context = {repositoryId:e.REPOSITORY_ID,changeId:e.CHANGE_ID,generation:Number(e.GENERATION),candidateCommit:e.CANDIDATE_COMMIT,gateInputFingerprint:e.GATE_INPUT_FINGERPRINT,job:{os:e.MATRIX_OS,nodeMajor:24}};
+          const context = {repositoryId:e.REPOSITORY_ID,changeId:e.CHANGE_ID,generation:Number(e.GENERATION),candidateCommit:e.CANDIDATE_COMMIT,gateInputFingerprint:e.GATE_INPUT_FINGERPRINT,deliveryProfile:e.DELIVERY_PROFILE,job:{os:e.MATRIX_OS,nodeMajor:24}};
           let result;
           try {
             if (e.GATE_STEP_OUTCOME !== 'success') throw new Error('incomplete gate stage');
@@ -99,11 +93,11 @@ jobs:
             const manifest=JSON.parse(readFileSync(join(e.RUNNER_TEMP,'candidate-lfs-closure.json'),'utf8'));
             if (result.lfsManifestDigest !== hash(manifest) || result.mode !== 'candidate' || result.runAttempt !== 1 || result.runId !== e.GITHUB_RUN_ID) throw new Error('manifest');
           } catch {
-            result={schemaVersion:1,...context,producer:'github-actions',runtime:context.job,status:'fail',commands:['typecheck','build','test','codegraph-tests','compatibility','pack-check','pack-smoke'].map(name=>({name,exitCode:1,digest:hash({name}),status:'fail'})),commandsPassed:false,preTreeMatchesCandidate:false,postTreeMatchesCandidate:false,stdoutSha256:hash(''),stderrSha256:hash(''),gateReportDigest:hash(''),exitCode:1,signal:null,timedOut:false,drainTruncated:false,tailsDropped:false,resultTextDropped:false,matchedCauses:['workflow-stage-failure'],originalDomainCode:'CANDIDATE_GATE_REPORT_INVALID',originalDomainMessage:'Workflow stage failed.',childErrorMessage:null};
+            result={schemaVersion:2,...context,producer:'github-actions',runtime:context.job,status:'fail',commands:['typecheck','build','test','codegraph-tests','compatibility','pack-check','pack-smoke'].map(name=>({name,exitCode:1,digest:hash({name}),status:'fail'})),commandsPassed:false,preTreeMatchesCandidate:false,postTreeMatchesCandidate:false,stdoutSha256:hash(''),stderrSha256:hash(''),gateReportDigest:hash(''),exitCode:1,signal:null,timedOut:false,drainTruncated:false,tailsDropped:false,resultTextDropped:false,matchedCauses:['workflow-stage-failure'],originalDomainCode:'CANDIDATE_GATE_REPORT_INVALID',originalDomainMessage:'Workflow stage failed.',childErrorMessage:null};
           }
           const now=Date.now(), started=Number(e.CANDIDATE_JOB_STARTED_AT);
           if (!Number.isSafeInteger(started) || now<started || now-started>1_080_000) result.status='fail';
-          result={...result,mode:'candidate',noCredit:false,runId:e.GITHUB_RUN_ID,runAttempt:Number(e.GITHUB_RUN_ATTEMPT),jobTimingDigest:e.CANDIDATE_JOB_TIMING_DIGEST??null,preSigningCompletedAt:new Date(now).toISOString(),preSigningElapsedMs:Number.isSafeInteger(started)?Math.max(0,now-started):null};
+          result={...result,schemaVersion:2,deliveryProfile:e.DELIVERY_PROFILE,mode:'candidate',noCredit:false,runId:e.GITHUB_RUN_ID,runAttempt:Number(e.GITHUB_RUN_ATTEMPT),jobTimingDigest:e.CANDIDATE_JOB_TIMING_DIGEST??null,preSigningCompletedAt:new Date(now).toISOString(),preSigningElapsedMs:Number.isSafeInteger(started)?Math.max(0,now-started):null};
           const {privateKey,publicKey}=generateKeyPairSync('ed25519'), publicKeyPem=publicKey.export({type:'spki',format:'pem'}).toString();
           const audience=`${audienceBase}#musubix3-key-sha256=${createHash('sha256').update(publicKey.export({type:'spki',format:'der'})).digest('base64url')}`;
           const url=new URL(e.ACTIONS_ID_TOKEN_REQUEST_URL); url.searchParams.set('audience',audience);
@@ -111,7 +105,7 @@ jobs:
           if (!response.ok) throw new Error('OIDC request failed');
           const unsigned={schemaVersion:1,repository:e.GITHUB_REPOSITORY,commitSha:e.CANDIDATE_COMMIT,ci:{provider:'github',runId:e.GITHUB_RUN_ID},evidenceHeads:{candidateGate:hash(result)},issuedAt:new Date().toISOString(),keyId:`candidate-gate-${e.MATRIX_OS}-node24-${e.GITHUB_RUN_ID}`,githubOidc:{token:(await response.json()).value,publicKey:publicKeyPem}};
           const attestation={...unsigned,signature:sign(null,Buffer.from(canonical(unsigned)),privateKey).toString('base64')};
-          writeFileSync(join(e.RUNNER_TEMP,'candidate-gate-envelope.json'),`${canonical({schemaVersion:1,result,attestation})}\n`);
+          writeFileSync(join(e.RUNNER_TEMP,'candidate-gate-envelope.json'),`${canonical({schemaVersion:2,result,attestation})}\n`);
           if (result.status!=='pass') process.exitCode=1;
           NODE
       - name: Upload signed envelope
@@ -119,6 +113,6 @@ jobs:
         timeout-minutes: 1
         if: ${{ always() }}
         with:
-          name: candidate-gate-${{ matrix.os }}-node${{ matrix.node }}
+          name: candidate-gate-ubuntu-node24
           path: ${{ runner.temp }}/candidate-gate-envelope.json
           if-no-files-found: error

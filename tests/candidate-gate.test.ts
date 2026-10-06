@@ -348,16 +348,15 @@ describe('candidate-bound matrix gates', () => {
       'utf8',
     )) as { jobs: { verify: Record<string, unknown> } };
     const verify = candidateWorkflow.jobs.verify;
-    const matrix = (verify.strategy as Record<string, unknown>).matrix as {
-      include: Array<Record<string, unknown>>;
-    };
-    expect(matrix.include).toEqual([
-      { runner: 'ubuntu-latest', os: 'ubuntu', node: 24 },
-      { runner: 'windows-latest', os: 'windows', node: 24 },
-      { runner: 'macos-latest', os: 'macos', node: 24 },
-    ]);
-    expect(matrix.include.map(({ os, node }) => ({ os, nodeMajor: node })))
-      .toEqual(candidateMatrixJobs);
+    expect(verify.strategy).toBeUndefined();
+    expect(verify.name).toBe('ubuntu-node24');
+    expect(verify['runs-on']).toBe('ubuntu-latest');
+    expect(verify.env).toMatchObject({
+      DELIVERY_PROFILE: 'linux-only-v1',
+      MATRIX_OS: 'ubuntu',
+      MATRIX_NODE: 24,
+    });
+    expect(candidateMatrixJobs).toEqual([{ os: 'ubuntu', nodeMajor: 24 }]);
     const verificationStep = (verify.steps as Array<Record<string, unknown>>)
       .find((step) => step.name === 'Run closed verification matrix');
     expect(verificationStep).toBeDefined();
@@ -367,7 +366,7 @@ describe('candidate-bound matrix gates', () => {
         && step.uses.toLowerCase().startsWith('actions/upload-artifact@'));
     expect(uploads).toEqual([expect.objectContaining({
       with: {
-        name: 'candidate-gate-${{ matrix.os }}-node${{ matrix.node }}',
+        name: 'candidate-gate-ubuntu-node24',
         path: '${{ runner.temp }}/candidate-gate-envelope.json',
         'if-no-files-found': 'error',
       },
@@ -474,6 +473,22 @@ describe('candidate-bound matrix gates', () => {
       },
     }])).rejects.toThrow(
       'RELEASE_GATE_EVIDENCE_STALE: candidate gate ubuntu-node20 is outside the current candidate matrix.',
+    );
+    await expect(candidateGate.ingestCandidateGateEnvelopes(ingestion.root, [{
+      schemaVersion: 1,
+      result: { ...gateResult(ingestion.context, { os: 'ubuntu', nodeMajor: 24 }), changeId: 'CHANGE-0020' },
+      attestation: {
+        schemaVersion: 1,
+        repository: 'nahisaho/musubix5',
+        commitSha: ingestion.context.candidateCommit,
+        ci: { provider: 'github', runId: 'legacy-change-0020' },
+        evidenceHeads: { candidateGate: 'e'.repeat(64) },
+        issuedAt: '2026-09-25T00:00:00.000Z',
+        keyId: 'legacy-change-0020',
+        signature: 'invalid',
+      },
+    }])).rejects.toThrow(
+      'RELEASE_GATE_EVIDENCE_STALE: candidate gate artifact is not attested.',
     );
     expect(readdirSync(journalDirectory)).toEqual(before);
 

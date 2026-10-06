@@ -263,6 +263,7 @@ describe('TDD batch recording',() => {
   /**
    * @id TEST-M5-TDD-002
    * @verifies REQ-M5-TDD-002 REQ-M5-TDD-003
+   * @supersededBy TEST-M5-TDD-001
    */
   it('TEST-M5-TDD-002 appends a new scope after a complete batch',async () => {
     const complete: ChangeTddBatch={

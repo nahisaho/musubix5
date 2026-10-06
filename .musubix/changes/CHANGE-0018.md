@@ -2,11 +2,21 @@
 schemaVersion: 1
 id: CHANGE-0018
 summary: Stabilize and accelerate candidate verification
-status: active
+status: completed
 ---
 # CHANGE-0018: stabilize-and-accelerate-candidate-verification
 
 Requirements: REQ-M5-CI-EFFICIENCY-001 REQ-M5-CI-EFFICIENCY-002 REQ-M5-CI-EFFICIENCY-003 REQ-M5-CI-EFFICIENCY-004 REQ-M5-CI-EFFICIENCY-005 REQ-M5-CI-EFFICIENCY-006
+
+## Superseded release closure
+
+CHANGE-0018 completed its implementation and local quality evidence but did not
+produce an approved calibration, stable candidate pair, or release. The user
+replaced its three-platform candidate and release boundary with Linux-only
+delivery under CHANGE-0019. Run `37437846314` and every earlier CHANGE-0018
+calibration remain diagnostic-only and grant no calibration, stability, or
+release credit. Here `completed` means administratively closed and superseded,
+not released.
 
 ## Classification
 

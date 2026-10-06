@@ -1,16 +1,16 @@
 {
   "schemaVersion": 2,
-  "runId": "0a53129f-168d-45de-a4bb-ebbdf9c41080",
-  "generatedAt": "2026-10-06T08:39:55.447Z",
+  "runId": "7dc81730-4f8d-4755-a712-522c42324baf",
+  "generatedAt": "2026-10-06T14:43:16.484Z",
   "executions": [
     {
-      "runId": "0a53129f-168d-45de-a4bb-ebbdf9c41080",
-      "executionId": "89b88e5a9f10e47aebbe70cedf189640c831bb948a7f2667247ff7c4df01bcbb",
+      "runId": "7dc81730-4f8d-4755-a712-522c42324baf",
+      "executionId": "b99fd8e1898dcc4259ecc0679587609cc23e47c084b71f4facea820d02178d11",
       "commandName": "codegraph-tests",
       "commandSha256": "367841ceaa4c4655755dd32b6963719d0cc36c88dc15ca491ac13e1e5d3850a1",
       "reportPath": ".musubix/cache/test-results/codegraph.json",
       "sourceKind": "file",
-      "reportSha256": "be755aef5b2916115fc7e730bbd0f25f51a4419e62f519505799a589d8df492d",
+      "reportSha256": "5f610504a760ae145e1c9524dbe2d327ca7cc590829279bdac16f13f3db83930",
       "processStatus": "completed",
       "exitCode": 0,
       "tests": [
@@ -47,6 +47,14 @@
           "status": "passed"
         },
         {
+          "id": "TEST-M5-LINUX-CANDIDATE-WORKFLOW-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-LINUX-CALIBRATION-001",
+          "status": "passed"
+        },
+        {
           "id": "TEST-M5-CI-CALIBRATION-SOURCE-FINAL-001",
           "status": "passed"
         },
@@ -60,6 +68,30 @@
         },
         {
           "id": "TEST-M5-CI-STABILITY-PROOF-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-LINUX-STABILITY-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-LINUX-RELEASE-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-LINUX-RUN-OWNERSHIP-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-LINUX-CALIBRATION-OWNERSHIP-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-LINUX-STABILITY-OWNERSHIP-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-LINUX-RELEASE-OWNERSHIP-001",
           "status": "passed"
         },
         {
@@ -307,7 +339,7 @@
           "status": "passed"
         }
       ],
-      "recordSha256": "e266f68f2468e66ead74f83de92a032bfe5f77f89cf13a12aab820af534f8698"
+      "recordSha256": "5986fcbe4ff68c3e412b23aae3e92d518a3db2041ce1f1d9fe1f5a4ebee605b5"
     }
   ],
   "observations": [
@@ -319,21 +351,21 @@
       "maximum": 16,
       "status": "pass",
       "provenance": {
-        "runId": "0a53129f-168d-45de-a4bb-ebbdf9c41080",
-        "executionId": "89b88e5a9f10e47aebbe70cedf189640c831bb948a7f2667247ff7c4df01bcbb",
+        "runId": "7dc81730-4f8d-4755-a712-522c42324baf",
+        "executionId": "b99fd8e1898dcc4259ecc0679587609cc23e47c084b71f4facea820d02178d11",
         "commandName": "codegraph-tests",
         "commandSha256": "367841ceaa4c4655755dd32b6963719d0cc36c88dc15ca491ac13e1e5d3850a1",
         "reportPath": ".musubix/cache/test-results/codegraph.json",
         "sourceKind": "file",
-        "reportSha256": "be755aef5b2916115fc7e730bbd0f25f51a4419e62f519505799a589d8df492d",
+        "reportSha256": "5f610504a760ae145e1c9524dbe2d327ca7cc590829279bdac16f13f3db83930",
         "testId": "TEST-M5-CI-RESOURCE-PLAN-001",
         "testStatus": "passed",
         "counter": "candidatePlannedExecutionSlots",
         "value": 16,
         "processStatus": "completed",
         "exitCode": 0,
-        "executionRecordSha256": "e266f68f2468e66ead74f83de92a032bfe5f77f89cf13a12aab820af534f8698",
-        "recordSha256": "3cdb9cb1c70890f39289e9a8f3bf341b89b896cf93a5a9aa53d03f1beafe5e72"
+        "executionRecordSha256": "5986fcbe4ff68c3e412b23aae3e92d518a3db2041ce1f1d9fe1f5a4ebee605b5",
+        "recordSha256": "31fe35ba4b63636ed965741c3737170522fc5da7d61e0caf3ef2f660030f6dc0"
       }
     },
     {
@@ -344,21 +376,21 @@
       "maximum": 13,
       "status": "pass",
       "provenance": {
-        "runId": "0a53129f-168d-45de-a4bb-ebbdf9c41080",
-        "executionId": "89b88e5a9f10e47aebbe70cedf189640c831bb948a7f2667247ff7c4df01bcbb",
+        "runId": "7dc81730-4f8d-4755-a712-522c42324baf",
+        "executionId": "b99fd8e1898dcc4259ecc0679587609cc23e47c084b71f4facea820d02178d11",
         "commandName": "codegraph-tests",
         "commandSha256": "367841ceaa4c4655755dd32b6963719d0cc36c88dc15ca491ac13e1e5d3850a1",
         "reportPath": ".musubix/cache/test-results/codegraph.json",
         "sourceKind": "file",
-        "reportSha256": "be755aef5b2916115fc7e730bbd0f25f51a4419e62f519505799a589d8df492d",
+        "reportSha256": "5f610504a760ae145e1c9524dbe2d327ca7cc590829279bdac16f13f3db83930",
         "testId": "TEST-M5-GRAPH-TRAVERSAL-001",
         "testStatus": "passed",
         "counter": "forwardAdjacencyVisits",
         "value": 13,
         "processStatus": "completed",
         "exitCode": 0,
-        "executionRecordSha256": "e266f68f2468e66ead74f83de92a032bfe5f77f89cf13a12aab820af534f8698",
-        "recordSha256": "10aec9b5fb48aa85df73fddbb70ba66c0ceff0b8c90f11a45fc86d287fe04fb3"
+        "executionRecordSha256": "5986fcbe4ff68c3e412b23aae3e92d518a3db2041ce1f1d9fe1f5a4ebee605b5",
+        "recordSha256": "b91aa203f39ab7f8d332a3cbcbc4b9962dbe585367df306ff782ad44cf853c63"
       }
     }
   ]

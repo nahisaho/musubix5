@@ -50,10 +50,18 @@ const expectedIds = [
     'TEST-M5-CI-COUNTED-NATIVE-001',
     'TEST-M5-CI-COUNTED-FIXTURE-001',
     'TEST-M5-CI-CALIBRATION-INTEGRATION-001',
+    'TEST-M5-LINUX-CANDIDATE-WORKFLOW-001',
+    'TEST-M5-LINUX-CALIBRATION-001',
     'TEST-M5-CI-CALIBRATION-SOURCE-FINAL-001',
     'TEST-M5-CI-CALIBRATION-INPUT-CLOSURE-001',
     'TEST-M5-CI-PORTABLE-EXECUTION-001',
     'TEST-M5-CI-STABILITY-PROOF-001',
+    'TEST-M5-LINUX-STABILITY-001',
+    'TEST-M5-LINUX-RELEASE-001',
+    'TEST-M5-LINUX-RUN-OWNERSHIP-001',
+    'TEST-M5-LINUX-CALIBRATION-OWNERSHIP-001',
+    'TEST-M5-LINUX-STABILITY-OWNERSHIP-001',
+    'TEST-M5-LINUX-RELEASE-OWNERSHIP-001',
     'TEST-M5-CI-COUNTED-SCHEDULER-001',
     'TEST-M5-CI-RESOURCE-PLAN-001',
     'TEST-M5-CI-EFFICIENT-ORCHESTRATION-TIMEOUT-001',
@@ -155,6 +163,8 @@ it('TEST-M5-CI-CODEGRAPH-SCHEDULER-001 bounds real wrapper scheduling without lo
             await writeFile(join(root, file), ids.map((id) => `/** @id ${id} */`).join('\n'));
         }
         expect([...fileById.keys()].sort()).toEqual([...expectedIds].sort());
+        expect(expectedIds.filter((id) => id.includes('LINUX-') && id.includes('OWNERSHIP')))
+          .toHaveLength(4);
         const report = join(root, 'reports', 'wrapper.json');
         const descriptionArgs = ['--report', report, '--describe-groups'];
         const first = await runWrapper(root, descriptionArgs);

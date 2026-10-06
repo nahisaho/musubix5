@@ -10,6 +10,7 @@ import { candidateCalibrationDigest, verifyCandidateCalibrationSourceFinal, load
 import { candidateExecutionPlanDigest, loadCandidateExecutionPlan } from './candidate-execution-plan.js';
 import { verifyCandidateLfsClosureManifest } from './candidate-portability.js';
 import { runProcess } from './process.js';
+import { LINUX_DELIVERY_PROFILE, validateSingleUbuntuRunInventory } from './candidate-delivery-profile.js';
 
 export interface GitHubCandidateRun {
   id: number; workflow_id: number; path: string; head_sha: string; run_attempt: number;
@@ -34,14 +35,14 @@ export interface CandidateStabilityOptions {
 }
 export interface CandidateRunTiming { os: string; jobId: number; artifactId: number; startedAt: string; createdAt: string; durationMs: number }
 export interface CandidateStabilityEvidence {
-  schemaVersion: 1; context: CandidateStabilityContext; runIds: [number, number];
+  schemaVersion: 2; deliveryProfile: 'linux-only-v1'; context: CandidateStabilityContext; runIds: [number, number];
   workflow: ApiObject; adjacencyCursor: number[]; apiDigest: string; envelopeDigest: string;
   projections: unknown[]; envelopes: unknown[]; verifiedAt: string;
 }
 const candidatePath = '.github/workflows/candidate-gate.yml';
 const calibrationPath = '.github/workflows/candidate-calibration.yml';
-const platforms = ['ubuntu', 'windows', 'macos'];
-function fail(reason: string): never { throw new Error(`CANDIDATE_STABILITY_INVALID: ${reason}`); }
+const platforms = ['ubuntu'];
+function fail(reason: string): never { throw new Error(`LINUX_DELIVERY_EVIDENCE_INVALID: ${reason}`); }
 function object(value: unknown): ApiObject {
   if (!value || typeof value !== 'object' || Array.isArray(value)) fail('API schema');
   return value as ApiObject;
@@ -84,8 +85,13 @@ export const fetchCandidateArtifacts = (repository: string, id: number, options:
  * @implements REQ-M5-CI-EFFICIENCY-003 REQ-M5-CI-EFFICIENCY-006
  * @design DES-M5-CI-EFFICIENCY-005
  */
-export function verifyCandidateRunTiming(jobs: ApiObject[], artifacts: ApiObject[], mode: 'candidate' | 'calibration'): CandidateRunTiming[] {
-  if (jobs.length !== 3 || artifacts.length !== 3) fail('exactly three jobs and artifacts');
+export function verifyCandidateRunTiming(
+  jobs: ApiObject[],
+  artifacts: ApiObject[],
+  mode: 'candidate' | 'calibration',
+  runId: number,
+): CandidateRunTiming[] {
+  validateSingleUbuntuRunInventory(jobs, artifacts, mode, runId);
   return platforms.map((os) => {
     const matchingJobs = jobs.filter((job) => job.name === `${os}-node24`);
     const matchingArtifacts = artifacts.filter((artifact) => artifact.name === `candidate-${mode === 'candidate' ? 'gate' : 'calibration'}-${os}-node24`);
@@ -145,7 +151,7 @@ export async function verifyCandidateStabilityPair(
     const source = calibration ? context.calibrationSourceCommit : context.candidateCommit;
     validateRun(run, id, runWorkflow, source);
     validateRun(attempt, id, runWorkflow, source);
-    const timing = verifyCandidateRunTiming(jobs, artifacts, calibration ? 'calibration' : 'candidate');
+    const timing = verifyCandidateRunTiming(jobs, artifacts, calibration ? 'calibration' : 'candidate', id);
     projections.push({ workflow: runWorkflow, run, attempt, jobs, artifacts, timing });
     for (const artifact of artifacts) {
       const os = platforms.find((os) => String(artifact.name).includes(`-${os}-node24`))!;
@@ -162,13 +168,15 @@ export async function verifyCandidateStabilityPair(
     if (!options.verifySourceFinal) fail('source/final verification unavailable');
     await options.verifySourceFinal(context.calibrationSourceCommit, context.candidateCommit);
   }
-  return { schemaVersion: 1, context: structuredClone(context), runIds: [first, second],
+  return { schemaVersion: 2, deliveryProfile: LINUX_DELIVERY_PROFILE.profile,
+    context: structuredClone(context), runIds: [first, second],
     workflow, adjacencyCursor: ordered.map((run) => Number(run.id)), apiDigest: digest(projections),
     envelopeDigest: digest(envelopes), projections, envelopes, verifiedAt: new Date().toISOString() };
 }
 
 export async function revalidateCandidateStability(evidence: CandidateStabilityEvidence, context: CandidateStabilityContext, options: CandidateStabilityOptions) {
-  if (evidence.schemaVersion !== 1 || digest(evidence.context) !== digest(context)
+  if (evidence.schemaVersion !== 2 || evidence.deliveryProfile !== LINUX_DELIVERY_PROFILE.profile
+    || digest(evidence.context) !== digest(context)
     || evidence.apiDigest !== digest(evidence.projections) || evidence.envelopeDigest !== digest(evidence.envelopes)) fail('stale evidence');
   const current = await verifyCandidateStabilityPair(...evidence.runIds, context, options);
   if (current.apiDigest !== evidence.apiDigest || current.envelopeDigest !== evidence.envelopeDigest
@@ -301,7 +309,9 @@ export async function createGitHubCandidateStabilityOptions(root: string, contex
         || jobTiming.runId !== String(runId) || jobTiming.runAttempt !== 1
         || jobTiming.name !== `${binding.os}-node24` || jobTiming.startedAt !== timing.startedAt
         || !Number.isSafeInteger(jobTiming.observedAt) || Number(jobTiming.observedAt) < Date.parse(String(timing.startedAt))) fail('authoritative job timing projection');
-      if (envelope.schemaVersion !== 1 || result.status !== 'pass' || result.producer !== 'github-actions'
+      if (envelope.schemaVersion !== 2 || result.schemaVersion !== 2
+        || result.deliveryProfile !== LINUX_DELIVERY_PROFILE.profile
+        || result.status !== 'pass' || result.producer !== 'github-actions'
         || result.commandsPassed !== true || result.preTreeMatchesCandidate !== true || result.postTreeMatchesCandidate !== true
         || result.repositoryId !== context.repositoryId || result.generation !== context.generation
         || result.candidateCommit !== binding.candidateCommit || result.runId !== String(runId) || result.runAttempt !== 1

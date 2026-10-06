@@ -30,10 +30,10 @@ it('TEST-M5-CI-CALIBRATION-INTEGRATION-001 binds workflow mode budgets and rejec
     mode: 'candidate', jobStartedAt: Number.MAX_SAFE_INTEGER - 1, now: Number.MAX_SAFE_INTEGER, signingReserveMs: 120_000,
   })).toThrow();
   const manifest = {
-    schemaVersion: 1, mode: 'calibration', noCredit: true, runId: '44', runAttempt: 1,
+    schemaVersion: 2, deliveryProfile: 'linux-only-v1', mode: 'calibration', noCredit: true, runId: '44', runAttempt: 1,
     sourceCommit: 'a'.repeat(40), sourceTree: 'b'.repeat(40), policyDigest: 'c'.repeat(64),
     observationsDigest: 'd'.repeat(64), apiTimingDigest: 'e'.repeat(64),
-    envelopeDigests: ['1'.repeat(64), '2'.repeat(64), '3'.repeat(64)],
+    envelopeDigests: ['1'.repeat(64)],
     approval: { artifactSha256: 'f'.repeat(64), approver: 'human', approved: true },
   };
   expect(api.validateCandidateCalibrationManifest(manifest, {
@@ -62,4 +62,48 @@ it('TEST-M5-CI-CALIBRATION-FAILURE-ENVELOPE-001 preserves a generated failure re
   expect(readResult).toBeGreaterThanOrEqual(0);
   expect(validateOutcome).toBeGreaterThan(readResult);
   expect(workflow).not.toContain("if(e.GATE_STEP_OUTCOME!=='success') throw new Error('incomplete calibration stage')");
+});
+
+/** @id TEST-M5-LINUX-CANDIDATE-WORKFLOW-001
+ * @verifies REQ-M5-LINUX-DELIVERY-001
+ */
+it('TEST-M5-LINUX-CANDIDATE-WORKFLOW-001 defines one immutable Ubuntu Node.js 24 delivery job', async () => {
+  for (const name of ['candidate-gate', 'candidate-calibration']) {
+    const source = await readFile(`.github/workflows/${name}.yml`, 'utf8');
+    const workflow = parse(source);
+    expect(workflow.jobs.verify.name).toBe('ubuntu-node24');
+    expect(workflow.jobs.verify['runs-on']).toBe('ubuntu-latest');
+    expect(workflow.jobs.verify.strategy).toBeUndefined();
+    expect(workflow.jobs.verify.env.DELIVERY_PROFILE).toBe('linux-only-v1');
+    expect(source).not.toMatch(/windows-latest|macos-latest|matrix\./);
+  }
+  const profile = await import('../packages/analysis/src/candidate-delivery-profile.js');
+  expect(profile.LINUX_DELIVERY_PROFILE).toEqual({ profile: 'linux-only-v1', os: 'ubuntu', nodeMajor: 24 });
+  expect(() => profile.validateLinuxDeliveryProfile({ profile: 'three-platform-v1', os: 'ubuntu', nodeMajor: 24 }))
+    .toThrow(/LINUX_DELIVERY_EVIDENCE_INVALID/);
+});
+
+/** @id TEST-M5-LINUX-CALIBRATION-001
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-CALIBRATION-001 accepts one version-2 Linux envelope digest and rejects prior matrix manifests', async () => {
+  const api = await import('../packages/analysis/src/candidate-calibration.js');
+  const manifest = {
+    schemaVersion: 2, deliveryProfile: 'linux-only-v1', mode: 'calibration', noCredit: true,
+    runId: '44', runAttempt: 1, sourceCommit: 'a'.repeat(40), sourceTree: 'b'.repeat(40),
+    policyDigest: 'c'.repeat(64), observationsDigest: 'd'.repeat(64), apiTimingDigest: 'e'.repeat(64),
+    envelopeDigests: ['1'.repeat(64)],
+    approval: { artifactSha256: 'f'.repeat(64), approver: 'human', approved: true },
+  };
+  const context = {
+    sourceCommit: manifest.sourceCommit, sourceTree: manifest.sourceTree,
+    policyDigest: manifest.policyDigest, observationsDigest: manifest.observationsDigest,
+    apiTimingDigest: manifest.apiTimingDigest, approvalSha256: 'f'.repeat(64),
+  };
+  expect(api.validateCandidateCalibrationManifest(manifest, context).deliveryProfile).toBe('linux-only-v1');
+  expect(() => api.validateCandidateCalibrationManifest({ ...manifest, schemaVersion: 1 }, context))
+    .toThrow(/LINUX_DELIVERY_EVIDENCE_INVALID/);
+  expect(() => api.validateCandidateCalibrationManifest({
+    ...manifest, envelopeDigests: ['1'.repeat(64), '2'.repeat(64), '3'.repeat(64)],
+  }, context)).toThrow(/LINUX_DELIVERY_EVIDENCE_INVALID/);
 });

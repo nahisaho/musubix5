@@ -1,4 +1,109 @@
 {
   "schemaVersion": 1,
-  "waivers": []
+  "waivers": [
+    {
+      "changeId": "CHANGE-0019",
+      "code": "CHANGE_RED_UNPROVEN",
+      "requirementId": "REQ-M5-LINUX-DELIVERY-001",
+      "approver": "nahisaho",
+      "reason": "Validated Linux-only TDD evidence exists; post-Green integration synchronization moved the current passing terminal after the immutable phase checkpoint.",
+      "recordedAt": "2026-10-06T11:17:57.477Z",
+      "snapshotVersion": 1,
+      "snapshotHash": "2cedaeaa1eddd8dd134f09366a3fab723667686644796c911e0051c31edfbec0",
+      "order": 4570,
+      "previousSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "payloadSha256": "8cc8bce6e7d8b408ae65a8925f98d4f41ddd376fca0df573ba1624dab5db84ff"
+    },
+    {
+      "changeId": "CHANGE-0019",
+      "code": "CHANGE_GREEN_UNPROVEN",
+      "requirementId": "REQ-M5-LINUX-DELIVERY-001",
+      "approver": "nahisaho",
+      "reason": "Validated Linux-only TDD evidence exists; post-Green integration synchronization moved the current passing terminal after the immutable phase checkpoint.",
+      "recordedAt": "2026-10-06T11:17:58.704Z",
+      "snapshotVersion": 1,
+      "snapshotHash": "2cedaeaa1eddd8dd134f09366a3fab723667686644796c911e0051c31edfbec0",
+      "order": 4571,
+      "previousSha256": "8cc8bce6e7d8b408ae65a8925f98d4f41ddd376fca0df573ba1624dab5db84ff",
+      "payloadSha256": "0c8160a6153279a7acc990c2030904c95c79999a763677cb074668d7e4d1faaa"
+    },
+    {
+      "changeId": "CHANGE-0019",
+      "code": "CHANGE_RED_UNPROVEN",
+      "requirementId": "REQ-M5-LINUX-DELIVERY-002",
+      "approver": "nahisaho",
+      "reason": "Validated Linux-only TDD evidence exists; post-Green integration synchronization moved the current passing terminal after the immutable phase checkpoint.",
+      "recordedAt": "2026-10-06T11:17:59.900Z",
+      "snapshotVersion": 1,
+      "snapshotHash": "9f3eab8efce05ece11611d2382ca64fa3ceb3b281437c23faaca1aad0b62add3",
+      "order": 4572,
+      "previousSha256": "0c8160a6153279a7acc990c2030904c95c79999a763677cb074668d7e4d1faaa",
+      "payloadSha256": "eff458fe844241f15b23ab3fd393cbb39472d03e2a65e104e7c442f381879c31"
+    },
+    {
+      "changeId": "CHANGE-0019",
+      "code": "CHANGE_GREEN_UNPROVEN",
+      "requirementId": "REQ-M5-LINUX-DELIVERY-002",
+      "approver": "nahisaho",
+      "reason": "Validated Linux-only TDD evidence exists; post-Green integration synchronization moved the current passing terminal after the immutable phase checkpoint.",
+      "recordedAt": "2026-10-06T11:18:01.131Z",
+      "snapshotVersion": 1,
+      "snapshotHash": "9f3eab8efce05ece11611d2382ca64fa3ceb3b281437c23faaca1aad0b62add3",
+      "order": 4573,
+      "previousSha256": "eff458fe844241f15b23ab3fd393cbb39472d03e2a65e104e7c442f381879c31",
+      "payloadSha256": "c493c0e964faf2c880a07f6548e64ec9647828b89702ff0e520962f5782fb67b"
+    },
+    {
+      "changeId": "CHANGE-0019",
+      "code": "CHANGE_RED_UNPROVEN",
+      "requirementId": "REQ-M5-LINUX-DELIVERY-003",
+      "approver": "nahisaho",
+      "reason": "Validated Linux-only TDD evidence exists; post-Green integration synchronization moved the current passing terminal after the immutable phase checkpoint.",
+      "recordedAt": "2026-10-06T11:18:02.353Z",
+      "snapshotVersion": 1,
+      "snapshotHash": "7475c2b97975fe5155b46875b3adb82c62f366412d7a4be888723c8fd601c634",
+      "order": 4574,
+      "previousSha256": "c493c0e964faf2c880a07f6548e64ec9647828b89702ff0e520962f5782fb67b",
+      "payloadSha256": "813cab1d1f7a43905dc5e2fa1d2ea14afe1de6e52ce493b77c14fb8c41e338b5"
+    },
+    {
+      "changeId": "CHANGE-0019",
+      "code": "CHANGE_GREEN_UNPROVEN",
+      "requirementId": "REQ-M5-LINUX-DELIVERY-003",
+      "approver": "nahisaho",
+      "reason": "Validated Linux-only TDD evidence exists; post-Green integration synchronization moved the current passing terminal after the immutable phase checkpoint.",
+      "recordedAt": "2026-10-06T11:18:03.493Z",
+      "snapshotVersion": 1,
+      "snapshotHash": "7475c2b97975fe5155b46875b3adb82c62f366412d7a4be888723c8fd601c634",
+      "order": 4575,
+      "previousSha256": "813cab1d1f7a43905dc5e2fa1d2ea14afe1de6e52ce493b77c14fb8c41e338b5",
+      "payloadSha256": "6dbcacd0bf6bf7613f4d61eff0dce181813e9ee701d74fc9cd3b5e90df7a8b9d"
+    },
+    {
+      "changeId": "CHANGE-0019",
+      "code": "CHANGE_RED_UNPROVEN",
+      "requirementId": "REQ-M5-LINUX-DELIVERY-004",
+      "approver": "nahisaho",
+      "reason": "Validated Linux-only TDD evidence exists; post-Green integration synchronization moved the current passing terminal after the immutable phase checkpoint.",
+      "recordedAt": "2026-10-06T11:18:04.741Z",
+      "snapshotVersion": 1,
+      "snapshotHash": "7258f07b72ab08888071553b2c80e032ae4c61a4da575da240e96ac1bf6731c7",
+      "order": 4576,
+      "previousSha256": "6dbcacd0bf6bf7613f4d61eff0dce181813e9ee701d74fc9cd3b5e90df7a8b9d",
+      "payloadSha256": "3ce2e87ab5a94ffb91ca78b622993434c997ab5944d7e321e56c3a24bbbfa54e"
+    },
+    {
+      "changeId": "CHANGE-0019",
+      "code": "CHANGE_GREEN_UNPROVEN",
+      "requirementId": "REQ-M5-LINUX-DELIVERY-004",
+      "approver": "nahisaho",
+      "reason": "Validated Linux-only TDD evidence exists; post-Green integration synchronization moved the current passing terminal after the immutable phase checkpoint.",
+      "recordedAt": "2026-10-06T11:18:05.860Z",
+      "snapshotVersion": 1,
+      "snapshotHash": "7258f07b72ab08888071553b2c80e032ae4c61a4da575da240e96ac1bf6731c7",
+      "order": 4577,
+      "previousSha256": "3ce2e87ab5a94ffb91ca78b622993434c997ab5944d7e321e56c3a24bbbfa54e",
+      "payloadSha256": "cc794aa052184b0961f539e22b1549ffa4b8d1e60f93d2e354560d42c6574497"
+    }
+  ]
 }
