@@ -34,7 +34,9 @@ export async function runPartitionScheduler(commandName) {
   const command = plan.commands.find(command => command.name === commandName);
   if (!command?.partitions.length) throw new Error('CANDIDATE_PARTITION_INVENTORY_MISSING');
   const plannedPartitionBudget = command.partitions.reduce((sum, partition) => sum + partition.timeoutMs, 0);
-  const calibrationPartitionBudget = commandName === 'test' && process.env.CANDIDATE_MODE === 'calibration'
+  const calibrationFromEnvironment = commandName === 'test' && process.env.CANDIDATE_MODE === 'calibration';
+  const calibrationPartitionBudget = commandName === 'test'
+    && (option('--candidate-mode') === 'calibration' || calibrationFromEnvironment)
     ? 900_000 - command.mergeAllowanceMs - command.terminationAllowanceMs
     : plannedPartitionBudget;
   let allocatedCalibrationBudget = 0;

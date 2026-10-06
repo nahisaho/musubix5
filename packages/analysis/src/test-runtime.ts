@@ -1031,8 +1031,8 @@ function nativeReportPath(args: string[], cwd: string): string | null {
 }
 
 /** @id CODE-M5-TEST-RUNTIME-COMMAND-001
- * @implements REQ-M5-COMPAT-013 REQ-M5-LIFECYCLE-006
- * @design DES-M5-015
+ * @implements REQ-M5-COMPAT-013 REQ-M5-LIFECYCLE-006 REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-015 DES-M5-LINUX-DELIVERY-002
  */
 export async function runTestRuntimeCommand(
   root: string, command: CommandConfig, args: string[],
@@ -1051,7 +1051,8 @@ export async function runTestRuntimeCommand(
   const grouped = partitioned || command.name === 'codegraph-tests';
   const scheduler = partitioned ? { command: process.execPath,
     args: [join(root, `scripts/run-${command.name === 'test' ? 'candidate' : 'compatibility'}-tests.mjs`),
-      '--report', options.candidateReportPath ?? nativeReportPath(args, options.cwd) ?? join(transport, 'aggregate.json')] }
+      '--report', options.candidateReportPath ?? nativeReportPath(args, options.cwd) ?? join(transport, 'aggregate.json'),
+      '--candidate-mode', environment.CANDIDATE_MODE!] }
     : { command: command.command, args };
   const candidatePlan = matrix ? (await loadCandidateExecutionPlan(root)).plan : undefined;
   const ledger = matrix ? await createCandidateSlotLedger(transport, environment.CANDIDATE_DISPATCH_NONCE!, 16) : undefined;

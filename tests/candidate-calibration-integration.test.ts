@@ -61,6 +61,19 @@ it('TEST-M5-LINUX-CALIBRATION-PARTITION-BUDGET-001 expands only calibration test
   expect(scheduler).toContain('timeoutMs: partitionTimeouts[partition.ordinal]');
 });
 
+/** @id TEST-M5-LINUX-CALIBRATION-MODE-BINDING-001
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-CALIBRATION-MODE-BINDING-001 binds calibration mode into the partition scheduler command', async () => {
+  const [runtime, scheduler] = await Promise.all([
+    readFile('packages/analysis/src/test-runtime.ts', 'utf8'),
+    readFile('scripts/test-runtime/partition-scheduler.mjs', 'utf8'),
+  ]);
+  expect(runtime).toContain("'--candidate-mode', environment.CANDIDATE_MODE");
+  expect(scheduler).toContain("option('--candidate-mode') === 'calibration'");
+});
+
 /** @id TEST-M5-LINUX-CALIBRATION-WRAPPER-DIAGNOSTIC-001
  * @verifies REQ-M5-LINUX-DELIVERY-002
  * @design DES-M5-LINUX-DELIVERY-002
