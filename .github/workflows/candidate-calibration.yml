@@ -89,8 +89,8 @@ jobs:
           const context={repositoryId:e.REPOSITORY_ID,changeId:e.CHANGE_ID,generation:Number(e.GENERATION),candidateCommit:e.CANDIDATE_COMMIT,gateInputFingerprint:e.GATE_INPUT_FINGERPRINT,job:{os:e.MATRIX_OS,nodeMajor:24}};
           let result;
           try{
-            if(e.GATE_STEP_OUTCOME!=='success') throw new Error('incomplete calibration stage');
             result=JSON.parse(readFileSync(join(e.RUNNER_TEMP,'candidate-gate-result.json'),'utf8'));
+            if((e.GATE_STEP_OUTCOME==='success')!==(result.status==='pass')) throw new Error('outcome');
             const cfg=JSON.parse(readFileSync('.musubix/config.json','utf8'));
             if(cfg.candidateGate&&cfg.candidateGate.attestation.githubOidc.audience!==audienceBase) throw new Error('audience');
             if(Object.entries(context).some(([k,v])=>canonical(result[k])!==canonical(v))||result.producer!=='github-actions'||result.mode!=='calibration'||result.runAttempt!==1||result.runId!==e.GITHUB_RUN_ID) throw new Error('context');
