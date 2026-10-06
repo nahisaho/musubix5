@@ -223,6 +223,11 @@ async function atomicWrite(path: string, bytes: Uint8Array): Promise<void> {
         await rm(directory, { recursive: true, force: true });
     }
 }
+
+/** @id CODE-M5-LINUX-CALIBRATION-REGION-BUDGET-001
+ * @implements REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
 export async function validateCandidateGateWrapperInput(input: {
     cwd: string;
     env: NodeJS.ProcessEnv;
@@ -279,7 +284,8 @@ export async function validateCandidateGateWrapperInput(input: {
                 lfsManifestDigest, jobTimingDigest: env.CANDIDATE_JOB_TIMING_DIGEST!, jobStartedAt, gateDeadline: budget.gateDeadline,
                 regionTimeouts: {
                     preconditions: calibration?.budgets.timeouts.preconditions ?? 60_000,
-                    postconditions: calibration?.budgets.timeouts.postconditions ?? 60_000,
+                    postconditions: mode === 'calibration' ? 120_000
+                        : calibration?.budgets.timeouts.postconditions ?? 60_000,
                     persistence: calibration?.budgets.timeouts.persistence ?? 60_000,
                 } };
             return { context, commands, formalTimeout, temporaryDirectory: env.RUNNER_TEMP, execution,

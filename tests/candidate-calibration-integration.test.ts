@@ -84,6 +84,16 @@ it('TEST-M5-LINUX-CALIBRATION-SCHEDULER-TIMEOUT-001 fixes the calibration schedu
   expect(runtime).toContain('timeoutMs: schedulerTimeoutMs');
 });
 
+/** @id TEST-M5-LINUX-CALIBRATION-POSTCONDITION-BUDGET-001
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-CALIBRATION-POSTCONDITION-BUDGET-001 gives calibration postconditions a bounded 120-second observation window', async () => {
+  const runner = await readFile('packages/analysis/src/candidate-gate-runner.ts', 'utf8');
+  expect(runner).toContain("postconditions: mode === 'calibration' ? 120_000");
+  expect(runner).toContain('persistence: calibration?.budgets.timeouts.persistence ?? 60_000');
+});
+
 /** @id TEST-M5-LINUX-CALIBRATION-WRAPPER-DIAGNOSTIC-001
  * @verifies REQ-M5-LINUX-DELIVERY-002
  * @design DES-M5-LINUX-DELIVERY-002
