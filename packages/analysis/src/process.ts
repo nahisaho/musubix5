@@ -1,8 +1,177 @@
-import { spawn } from 'node:child_process';
+import * as childProcess from 'node:child_process';
+import { syncBuiltinESMExports } from 'node:module';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { promisify } from 'node:util';
 import { join, win32 } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { pathToFileURL } from 'node:url';
-import type { TestRuntimeProvenance } from './test-runtime.js';
+import { readFile } from 'node:fs/promises';
+import { acquireCandidateSlots, releaseCandidateSlots, acquireCandidateFixtureSlotSync,
+  releaseCandidateFixtureSlotSync, completeCandidateNativeTerminationsSync,
+  type CandidateSlotLedger, type CandidateSlotLease } from './candidate-execution-plan.js';
+import { remainingCandidateDeadline } from './candidate-portability.js';
+export interface TestRuntimeProvenance {
+  kind: 'stable-test-wall-clock-v1';
+  profileSha256: string;
+  inputsSha256: string;
+  dispatchSha256: string;
+  runs: Array<{
+    ordinal: number; runId: string; requestSha256: string; anchorSha256: string;
+    acknowledgmentSha256: string; resultSha256: string;
+  }>;
+  publication: {
+    durability: 'posix-file-directory-fsync' | 'win32-file-flush-no-replace-rehash';
+    closureSha256: string;
+  };
+  activation?: Record<string, unknown>;
+}
+const nativeKey = Symbol.for('musubix5.candidateNativeFunctions.v1');
+const sharedNative = globalThis as typeof globalThis & { [nativeKey]?: typeof childProcess };
+const native = sharedNative[nativeKey] ?? Object.freeze({ ...childProcess });
+if (!sharedNative[nativeKey]) Object.defineProperty(sharedNative, nativeKey, { value: native, configurable: false, writable: false });
+
+function invocationSlotCount(args: unknown[]): number {
+  const argv = args.flatMap(arg => Array.isArray(arg) ? arg.filter(item => typeof item === 'string') : typeof arg === 'string' ? [arg] : []);
+  if (!argv.some(arg => /(?:^|[/\\])vitest(?:\.mjs)?$/.test(arg))) return 1;
+  const index = argv.indexOf('--maxWorkers');
+  const workers = Number(index >= 0 ? argv[index + 1] : argv.find(arg => arg.startsWith('--maxWorkers='))?.split('=')[1]);
+  if (!Number.isSafeInteger(workers) || workers < 1 || workers > 15) throw new Error('CANDIDATE_WORKER_CAPACITY_UNBOUND');
+  return workers + 1;
+}
+
+/** @id CODE-M5-CI-COUNTED-PRODUCT-PROCESS-001
+ * @implements REQ-M5-CI-EFFICIENCY-001 REQ-M5-CI-EFFICIENCY-002
+ * @design DES-M5-CI-EFFICIENCY-002 DES-M5-CI-EFFICIENCY-003
+ */
+type SlotRelease = (() => void) & { bindNative?: (child: childProcess.ChildProcess) => void; environment?: NodeJS.ProcessEnv };
+function processSlotLeases(args: unknown[], shell = false, cleanup = false): SlotRelease {
+  // A verified Vitest coordinator's pool is already reserved atomically by its launcher.
+  if (/[\\/]node_modules[\\/]vitest[\\/]vitest\.mjs$/.test(process.argv[1] ?? '')
+    && args.flatMap(arg => Array.isArray(arg) ? arg : [arg]).some(arg =>
+      typeof arg === 'string' && /[\\/]tinypool[\\/]dist[\\/]entry[\\/]process\.js$/.test(arg))) return () => {};
+  const options = args.find(value => value && typeof value === 'object' && !Array.isArray(value)) as { env?: NodeJS.ProcessEnv } | undefined;
+  const environments = [process.env, options?.env].filter((env): env is NodeJS.ProcessEnv => Boolean(env));
+  const ledgers = new Map<string, CandidateSlotLedger>();
+  for (const env of environments) {
+    const chain = JSON.parse(env.MUSUBIX5_CANDIDATE_LEDGER_CHAIN ?? '[]') as Array<{ path: string; nonce: string }>;
+    if (!Array.isArray(chain) || chain.length > 16) throw new Error('CANDIDATE_LEDGER_CHAIN_INVALID');
+    for (const ancestor of chain) {
+      const ledger = JSON.parse(readFileSync(ancestor.path, 'utf8')) as CandidateSlotLedger;
+      if (ledger.nonce !== ancestor.nonce) throw new Error('CANDIDATE_SLOT_NONCE_MISMATCH');
+      ledgers.set(ledger.root, ledger);
+    }
+    if (!env.MUSUBIX5_CANDIDATE_SLOT_LEDGER) continue;
+    const ledger = JSON.parse(readFileSync(env.MUSUBIX5_CANDIDATE_SLOT_LEDGER, 'utf8')) as CandidateSlotLedger;
+    if (ledger.nonce !== env.CANDIDATE_DISPATCH_NONCE) throw new Error('CANDIDATE_SLOT_NONCE_MISMATCH');
+    ledgers.set(ledger.root, ledger);
+  }
+  const leases: Array<{ ledger: CandidateSlotLedger; lease: CandidateSlotLease }> = [];
+  try {
+    for (const ledger of ledgers.values()) {
+      completeCandidateNativeTerminationsSync(ledger);
+      leases.push({ ledger, lease: acquireCandidateFixtureSlotSync(ledger,
+        options?.env?.MUSUBIX5_CANDIDATE_PARTITION ?? process.env.MUSUBIX5_CANDIDATE_PARTITION ?? 'product',
+        invocationSlotCount(args) + (shell || typeof args[0] === 'string' && /(?:^|[/\\])(?:sh|bash|cmd(?:\.exe)?|powershell(?:\.exe)?)$/.test(args[0]) ? 1 : 0) + (cleanup ? 1 : 0)) });
+    }
+  } catch (cause) {
+    for (const { ledger, lease } of leases.reverse()) releaseCandidateFixtureSlotSync(ledger, lease);
+    throw cause;
+  }
+  let released = false;
+  const release: SlotRelease = () => {
+    if (released) return;
+    released = true;
+    for (const { ledger, lease } of leases.reverse()) {
+      releaseCandidateFixtureSlotSync(ledger, lease);
+      completeCandidateNativeTerminationsSync(ledger);
+    }
+  };
+  const chain = new Map<string, { path: string; nonce: string }>();
+  for (const env of environments) {
+    for (const ancestor of JSON.parse(env.MUSUBIX5_CANDIDATE_LEDGER_CHAIN ?? '[]')) chain.set(ancestor.path, ancestor);
+    if (env.MUSUBIX5_CANDIDATE_SLOT_LEDGER) chain.set(env.MUSUBIX5_CANDIDATE_SLOT_LEDGER,
+      { path: env.MUSUBIX5_CANDIDATE_SLOT_LEDGER, nonce: env.CANDIDATE_DISPATCH_NONCE! });
+  }
+  if (chain.size) release.environment = { ...(options?.env ?? process.env),
+    MUSUBIX5_CANDIDATE_LEDGER_CHAIN: JSON.stringify([...chain.values()]) };
+  release.bindNative = child => {
+    if (!child.pid) return;
+    for (const { ledger, lease } of leases) {
+      const path = join(ledger.root, `native-${lease.leaseId}.json`);
+      const descriptor = { schemaVersion: 1, nonce: ledger.nonce, leaseId: lease.leaseId,
+        callerPid: process.pid, childPid: child.pid, status: 'launched' };
+      writeFileSync(path, JSON.stringify(descriptor), { flag: 'wx', mode: 0o600 });
+      const terminated = () => writeFileSync(path, JSON.stringify({ ...descriptor, status: 'terminated' }), { mode: 0o600 });
+      child.once('exit', terminated);
+      child.once('close', terminated);
+    }
+  };
+  return release;
+}
+function invocationEnvironment(args: unknown[], release: SlotRelease): unknown[] {
+  const optionsIndex = args.findIndex(value => value && typeof value === 'object' && !Array.isArray(value));
+  const options = optionsIndex >= 0 ? args[optionsIndex] as { env?: NodeJS.ProcessEnv } : undefined;
+  const explicitEnvironment = options && Object.prototype.hasOwnProperty.call(options, 'env');
+  let environment = release.environment;
+  if (!explicitEnvironment && (environment
+    || process.env.MUSUBIX5_REUSED_TEST_REPORT || process.env.MUSUBIX5_REUSED_TEST_REPORT_SHA256)) {
+    environment = { ...(environment ?? process.env) };
+    delete environment.MUSUBIX5_REUSED_TEST_REPORT;
+    delete environment.MUSUBIX5_REUSED_TEST_REPORT_SHA256;
+  }
+  if (!environment) return args;
+  const copy = [...args];
+  if (optionsIndex >= 0) copy[optionsIndex] = { ...args[optionsIndex] as object, env: environment };
+  else copy.splice(typeof copy.at(-1) === 'function' ? copy.length - 1 : copy.length, 0, { env: environment });
+  return copy;
+}
+function countedSynchronous(fn: Function, args: unknown[]) {
+  const release = processSlotLeases(args, fn === native.execSync);
+  try { return Reflect.apply(fn, undefined, invocationEnvironment(args, release)); } finally { release(); }
+}
+function countedAsynchronous(fn: Function, args: unknown[]): childProcess.ChildProcess {
+  const release = processSlotLeases(args, fn === native.exec);
+  let child: childProcess.ChildProcess | undefined;
+  try {
+    child = Reflect.apply(fn, undefined, invocationEnvironment(args, release)) as childProcess.ChildProcess;
+    release.bindNative?.(child);
+    child.once('exit', release);
+    child.once('close', release);
+    return child;
+  } catch (cause) {
+    if (child?.pid) {
+      child.once('exit', release);
+      child.once('close', release);
+      child.kill('SIGKILL');
+    } else release();
+    throw cause;
+  }
+}
+export const countedExecFileSync = ((...args: unknown[]) => countedSynchronous(native.execFileSync, args)) as typeof childProcess.execFileSync;
+export const countedSpawnSync = ((...args: unknown[]) => countedSynchronous(native.spawnSync, args)) as typeof childProcess.spawnSync;
+export const countedExecSync = ((...args: unknown[]) => countedSynchronous(native.execSync, args)) as typeof childProcess.execSync;
+export const countedSpawn = ((...args: unknown[]) => countedAsynchronous(native.spawn, args)) as typeof childProcess.spawn;
+export const countedExecFile = ((...args: unknown[]) => countedAsynchronous(native.execFile, args)) as typeof childProcess.execFile;
+export const countedExec = ((...args: unknown[]) => countedAsynchronous(native.exec, args)) as typeof childProcess.exec;
+export const countedFork = ((...args: unknown[]) => countedAsynchronous(native.fork, args)) as typeof childProcess.fork;
+for (const fn of [countedExecFile, countedExec]) {
+  Object.defineProperty(fn, promisify.custom, { value: (...args: unknown[]) => {
+    let child: childProcess.ChildProcess | undefined;
+    const promise = new Promise((accept, reject) => {
+      child = Reflect.apply(fn, undefined, [...args, (error: Error | null, stdout: unknown, stderr: unknown) =>
+        error ? reject(Object.assign(error, { stdout, stderr })) : accept({ stdout, stderr })]);
+    });
+    return Object.assign(promise, { child });
+  } });
+}
+
+export function installCandidateNativeCounting(): void {
+  if (!process.env.MUSUBIX5_CANDIDATE_SLOT_LEDGER) return;
+  const target = (childProcess as unknown as { default: Record<string, unknown> }).default;
+  Object.assign(target, { spawn: countedSpawn, spawnSync: countedSpawnSync, execFile: countedExecFile,
+    execFileSync: countedExecFileSync, exec: countedExec, execSync: countedExecSync, fork: countedFork });
+  syncBuiltinESMExports();
+}
 
 export interface ProcessResult {
   testRuntime?: TestRuntimeProvenance;
@@ -18,6 +187,8 @@ export type Runner = (command: string, args: string[], options: {
   timeoutMs: number;
   input?: string;
   env?: NodeJS.ProcessEnv;
+  deadline?: number;
+  slotProvider?: { acquire(): Promise<() => Promise<void>> };
 }) => Promise<ProcessResult>;
 
 export function resolveProcessCommand(command: string, platform: NodeJS.Platform = process.platform): string {
@@ -107,28 +278,50 @@ export function cleanTestRuntimeBuildEnvironment(root: string, environment = pro
       || memory !== undefined && memory !== token) throw new Error('TEST_RUNTIME_BOOTSTRAP_INVALID: node-options');
     memory = token;
   }
-  if (tokens.includes(preload) !== Boolean(env.MUSUBIX5_TEST_RUNTIME_CLOCK)) throw new Error('TEST_RUNTIME_BOOTSTRAP_INVALID: worker-scope');
+  const countOnly = env.MUSUBIX5_CANDIDATE_COUNT_ONLY === '1' && Boolean(env.MUSUBIX5_CANDIDATE_SLOT_LEDGER);
+  if (tokens.includes(preload) !== (Boolean(env.MUSUBIX5_TEST_RUNTIME_CLOCK) || countOnly)) throw new Error('TEST_RUNTIME_BOOTSTRAP_INVALID: worker-scope');
   delete env.MUSUBIX5_TEST_RUNTIME_CLOCK;
   delete env.MUSUBIX5_TEST_RUNTIME_REQUEST;
   delete env.MUSUBIX5_TEST_RUNTIME_DISPATCH;
   const retained = tokens.filter((token) => token !== preload);
+  if (env.MUSUBIX5_CANDIDATE_SLOT_LEDGER) {
+    retained.push(preload);
+    env.MUSUBIX5_CANDIDATE_COUNT_ONLY = '1';
+  }
   if (retained.length) env.NODE_OPTIONS = retained.join(' ');
   else delete env.NODE_OPTIONS;
   return env;
 }
 
-export const runProcess: Runner = async (command, args, options) => new Promise((resolve) => {
+export const runProcess: Runner = async (command, args, options) => {
+  let environment = options.env ?? process.env;
+  let release: (() => Promise<void>) | undefined;
+  let nativeRelease: SlotRelease | undefined;
+  if (options.slotProvider) release = await options.slotProvider.acquire();
+  else {
+    nativeRelease = processSlotLeases([command, args, { env: environment }], false, process.platform === 'win32');
+    environment = nativeRelease.environment ?? environment;
+    release = async () => nativeRelease!();
+  }
+  let closed = false;
+  let cleanup: Promise<void> | undefined;
+  try { return await new Promise((resolve) => {
   const start = performance.now();
   const invocation = /^npm$/i.test(command)
     ? resolvePortableNpmInvocation(args)
     : resolveProcessInvocation(command, args);
-  const child = spawn(invocation.command, invocation.args, {
+  let child: childProcess.ChildProcessWithoutNullStreams;
+  try { child = native.spawn(invocation.command, invocation.args, {
     cwd: options.cwd,
-    ...(options.env ? { env: options.env } : {}),
+    env: environment,
     shell: false,
     stdio: ['pipe', 'pipe', 'pipe'],
     detached: process.platform !== 'win32',
-  });
+  }); } catch (cause) {
+    closed = true;
+    throw cause;
+  }
+  nativeRelease?.bindNative?.(child);
   let stdout = '';
   let stderr = '';
   let status: ProcessResult['status'] = 'completed';
@@ -147,23 +340,38 @@ export const runProcess: Runner = async (command, args, options) => new Promise(
     if (child.pid && process.platform !== 'win32') {
       try { process.kill(-child.pid, 'SIGKILL'); }
       catch (cause) { if ((cause as NodeJS.ErrnoException).code !== 'ESRCH') stderr += String(cause); }
+    } else if (child.pid) {
+      cleanup = new Promise<void>((done) => {
+        try {
+          const killer = native.spawn('taskkill', ['/PID', String(child.pid), '/T', '/F'], { stdio: 'ignore', windowsHide: true });
+          const killerTimer = setTimeout(() => killer.kill('SIGKILL'), 1_000);
+          killer.once('error', () => { child.kill('SIGKILL'); clearTimeout(killerTimer); done(); });
+          killer.once('close', () => { clearTimeout(killerTimer); done(); });
+        } catch (cause) { stderr += String(cause); child.kill('SIGKILL'); done(); }
+      });
     } else child.kill('SIGKILL');
     killFallback = setTimeout(() => finish(null), 1_000);
     killFallback.unref();
-  }, options.timeoutMs);
+  }, options.deadline === undefined ? options.timeoutMs : Math.min(options.timeoutMs, remainingCandidateDeadline(options.deadline)));
   child.stdout.on('data', (chunk: Buffer) => { stdout = (stdout + chunk.toString()).slice(-1_000_000); });
   child.stderr.on('data', (chunk: Buffer) => { stderr = (stderr + chunk.toString()).slice(-1_000_000); });
   child.stdin.on('error', (cause: NodeJS.ErrnoException) => {
     if (cause.code !== 'EPIPE') { status = 'error'; stderr += cause.message; }
   });
   child.on('error', (cause: NodeJS.ErrnoException) => {
+    if (!child.pid) closed = true;
     status = cause.code === 'ENOENT' ? 'missing' : 'error';
     stderr += cause.message;
     finish(null);
   });
-  child.on('close', finish);
+  child.on('close', code => { closed = true; finish(code); });
   child.stdin.end(options.input ?? '');
-});
+  });
+  } finally {
+    await cleanup;
+    if (closed) await release?.();
+  }
+};
 
 export async function changedFiles(root: string, runner: Runner = runProcess): Promise<string[]> {
   const location = await runner('git', ['rev-parse', '--show-prefix'], { cwd: root, timeoutMs: 10_000 });

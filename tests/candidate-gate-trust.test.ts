@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync } from './fixtures/counted-process.js';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -44,7 +44,7 @@ describe('candidate gate trust contract', () => {
       fileURLToPath(new URL('..', import.meta.url)),
     );
     expect(sha256(canonicalBytes(projection)))
-      .toBe('2d92597fbbd621ec23abb31d26c4f4287b3b735d7523fd4f284e5f7f3e837516');
+      .toBe('8549b34ba44dae0ef28018864ac74b4d021350e3ecab31f4e62641f4c89ad4fa');
 
     await expect(ingestCandidateGateEnvelopes(root, [{
       schemaVersion: 1,

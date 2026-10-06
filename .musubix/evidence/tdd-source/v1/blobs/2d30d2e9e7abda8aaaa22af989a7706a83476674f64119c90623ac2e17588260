@@ -1,0 +1,1522 @@
+import { countedExecFile as execFile, type TestRuntimeProvenance } from './process.js';
+export type { TestRuntimeProvenance } from './process.js';
+import { createHash, randomUUID } from 'node:crypto';
+import type { Stats } from 'node:fs';
+import { link, lstat, mkdir, open, readFile, readdir, rename, unlink, writeFile } from 'node:fs/promises';
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { promisify } from 'node:util';
+import { canonicalBytes, canonicalRepositoryIdentity, sha256 } from './canonical.js';
+import { files } from './files.js';
+import {
+  candidateCommandNames, extractCandidateFailedTests, mergeCandidateFailedTestGroups, type CandidateFailedTest,
+  mergeCandidateVitestReports,
+  normalizeAdapterReport,
+} from './adapters.js';
+import { acquireCandidateSlots, createCandidateSlotLedger, loadCandidateExecutionPlan,
+  releaseCandidateSlots, validateCandidateSlotLedger, candidateExecutionPlanDigest,
+  validateCandidateLaunchInventory } from './candidate-execution-plan.js';
+import { canonicalRuntimePath } from './candidate-portability.js';
+import { authoritativeCandidateTestIds } from './trace.js';
+import { candidatePartitionDispatchDigest, validateCandidatePartitionAcknowledgments,
+  type CandidatePartitionAcknowledgment, type CandidatePartitionDispatch } from './candidate-partitions.js';
+
+/** @id CODE-M5-CI-TRANSIENT-FAILURES-001
+ * @implements REQ-M5-CI-008
+ * @design DES-M5-CI-009
+ */
+const candidateFailures = Symbol('candidate-command-failures');
+type TransientCandidateResult = { [candidateFailures]?: readonly CandidateFailedTest[] };
+
+export function getCandidateFailedTests(result: object): readonly CandidateFailedTest[] | undefined {
+  return (result as TransientCandidateResult)[candidateFailures];
+}
+
+export function formatIncompleteCommand(command: unknown, result?: unknown): string {
+  // Legacy shape: incomplete command ${command.name} (${execution.status}); use trusted key/value fields instead.
+  let message = 'acknowledgment-binding: incomplete command';
+  if (result === null || typeof result !== 'object' || Array.isArray(result)) return message;
+  const observed = result as Record<string, unknown>;
+  if (candidateCommandNames.some(name => name === command)) message += ` command=${command}`;
+  if (['completed', 'missing', 'timeout', 'error'].some(status => status === observed.status)) message += ` status=${observed.status}`;
+  if (observed.exitCode === null || Number.isSafeInteger(observed.exitCode)) message += ` exitCode=${observed.exitCode}`;
+  if (Number.isSafeInteger(observed.durationMs) && (observed.durationMs as number) >= 0) message += ` durationMs=${observed.durationMs}`;
+  return message;
+}
+
+function incompleteCommand(command: unknown, result?: unknown): never {
+  invalid('acknowledgment-binding', formatIncompleteCommand(command, result).slice('acknowledgment-binding: '.length));
+}
+
+interface CommandConfig {
+  name: string;
+  command: string;
+  args: string[];
+  adapter?: string;
+  timeoutMs: number;
+  tddArgs?: string[];
+  tddReport?: { format: string; path: string };
+}
+interface ProcessResult {
+  status: 'completed' | 'missing' | 'timeout' | 'error';
+  exitCode: number | null;
+  stdout: string;
+  stderr: string;
+  durationMs: number;
+}
+type Runner = (command: string, args: string[], options: {
+  cwd: string;
+  timeoutMs: number;
+  input?: string;
+  env?: NodeJS.ProcessEnv;
+  slotProvider?: { acquire(): Promise<() => Promise<void>> };
+}) => Promise<ProcessResult>;
+interface JournalRecord {
+  schemaVersion: 1;
+  order: number;
+  stream: 'normal' | 'bootstrap';
+  changeId: string;
+  kind: string;
+  idempotencyKey: string;
+  payload: unknown;
+  previousSha256: string | null;
+  recordSha256: string;
+}
+interface EvidenceOrderRecord {
+  kind: 'change' | 'tdd';
+  entityId: string;
+  phase: string;
+  sequence: number;
+  previousSha256: string | null;
+  recordSha256: string;
+  testId?: string;
+  code?: string;
+  requirementId?: string;
+  detail?: string;
+}
+
+export const testRuntimeProfile = {
+  calibration: { maxWidthMs: 1, samples: 8 },
+  commandNames: ['codegraph-tests', 'compatibility', 'test'],
+  inputs: [
+    '.musubix/config.json', 'package-lock.json', 'package.json',
+    '.musubix/candidate-execution-plan.json', '.musubix/candidate-timeout-calibration.json',
+    'packages/analysis/src/adapters.ts', 'packages/analysis/src/candidate-gate.ts',
+    'packages/analysis/src/candidate-execution-plan.ts', 'packages/analysis/src/candidate-calibration.ts',
+    'packages/analysis/src/candidate-partitions.ts', 'packages/analysis/src/candidate-portability.ts',
+    'packages/analysis/src/candidate-stability.ts',
+    'packages/analysis/src/canonical.ts', 'packages/analysis/src/config.ts',
+    'packages/analysis/src/gate.ts', 'packages/analysis/src/parallel-runtime.ts',
+    'packages/analysis/src/process.ts', 'packages/analysis/src/tdd-source-pair.ts',
+    'packages/analysis/src/tdd.ts', 'packages/analysis/src/test-runtime.ts',
+    'scripts/run-codegraph-tests.mjs', 'scripts/test-runtime/coordinator-reporter.mjs',
+    'scripts/run-candidate-tests.mjs', 'scripts/run-compatibility-tests.mjs',
+    'scripts/test-runtime/counted-launcher.mjs', 'scripts/test-runtime/partition-scheduler.mjs',
+    'scripts/test-runtime/stable-wall-clock.mjs', 'scripts/test-runtime/vitest-setup.mjs',
+    'tests/global-setup.ts', 'tests/fixtures/counted-process.ts', 'tests/fixtures/portable-paths.ts',
+    'packages/analysis/src/candidate-gate-runner.ts', 'packages/analysis/src/candidate-state.ts',
+    'packages/analysis/src/candidate-git-distribution.ts', 'packages/analysis/src/candidate-integration.ts',
+    'packages/analysis/src/journal.ts', 'packages/analysis/src/source-lfs-migration.ts',
+    'packages/analysis/src/tdd-source-lfs.ts', 'packages/analysis/src/tdd-source-snapshot.ts',
+    'packages/analysis/src/trace.ts', 'packages/analysis/src/workspace-manager.ts',
+    'scripts/verify-lfs-checkout.mjs', '.github/scripts/run-candidate-gate-wrapper.mjs',
+    '.github/scripts/resolve-candidate-job-timing.mjs', '.github/actions/prepare-candidate/action.yml',
+    '.github/workflows/candidate-gate.yml', '.github/workflows/candidate-calibration.yml',
+    'tsconfig.build.json', 'tsconfig.json', 'vitest.config.ts',
+  ],
+  kind: 'stable-test-wall-clock-v1',
+  reporterMode: 'append-after-native-v1',
+  schemaVersion: 1,
+} as const;
+
+export type TestRuntimeProfile = typeof testRuntimeProfile;
+Object.freeze(testRuntimeProfile.calibration);
+Object.freeze(testRuntimeProfile.commandNames);
+Object.freeze(testRuntimeProfile.inputs);
+Object.freeze(testRuntimeProfile);
+export interface TestRuntimeContext {
+  repositoryId: string | null;
+  changeId: string | null;
+  generation: number | null;
+  commit: string | null;
+  role: 'tdd' | 'command' | 'result' | 'integration' | 'standalone';
+}
+export const testRuntimeProfileSha256 = sha256(canonicalBytes(testRuntimeProfile));
+const historicRuntimeProfileDigests = new Set([
+  'f9fbe94729722eaaea1f1e49bbaf6c48053ea1ed6a8498a2287dbfe4a20bf06e',
+  '958242972e758cc3c6a80a4e3d3a3225fdb154e8dbeca6014955bae994a159f2',
+  '960689975ebf18799c11de68bd7bd6d169401cd450c61670fe6e627255e4e952',
+]);
+const knownRuntimeProfileDigest = (value: unknown) => value === testRuntimeProfileSha256
+  || typeof value === 'string' && historicRuntimeProfileDigests.has(value);
+const profileDigests: Readonly<Record<string, string>> = Object.freeze({
+  'stable-test-wall-clock-v1:1': testRuntimeProfileSha256,
+});
+const hash = (value: unknown): string => sha256(canonicalBytes(value));
+const rawHash = (value: unknown): string => createHash('sha256').update(JSON.stringify(value)).digest('hex');
+const reporterPath = 'scripts/test-runtime/coordinator-reporter.mjs';
+const preloadPath = 'scripts/test-runtime/stable-wall-clock.mjs';
+
+function invalid(reason: string, detail = ''): never {
+  throw new Error(`TEST_RUNTIME_BOOTSTRAP_INVALID: ${reason}${detail ? `: ${detail}` : ''}`);
+}
+
+function object(value: unknown, reason: string, keys?: readonly string[]): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) invalid(reason, 'expected object');
+  const descriptors = Object.getOwnPropertyDescriptors(value);
+  if (![Object.prototype, null].includes(Object.getPrototypeOf(value))
+    || Reflect.ownKeys(value).some((key) => typeof key !== 'string')
+    || Object.values(descriptors).some((d) => !Object.hasOwn(d, 'value'))) invalid(reason, 'plain data required');
+  if (keys && Object.keys(value).sort().join('\0') !== [...keys].sort().join('\0')) invalid(reason, 'closed fields');
+  return value as Record<string, unknown>;
+}
+
+function text(value: unknown, reason: string): string {
+  if (typeof value !== 'string' || !value.trim()) invalid(reason, 'expected string');
+  return value;
+}
+
+function strings(value: unknown, reason: string): string[] {
+  if (!Array.isArray(value) || !value.every((v): v is string => typeof v === 'string')) invalid(reason, 'string array');
+  return value;
+}
+
+function equal(actual: unknown, expected: unknown, reason: string): void {
+  if (hash(actual) !== hash(expected)) invalid(reason, 'binding mismatch');
+}
+
+/** @id CODE-M5-TEST-RUNTIME-PROFILE-001
+ * @implements REQ-M5-COMPAT-013 REQ-M5-LIFECYCLE-006
+ * @design DES-M5-015
+ */
+export function expectedTestRuntimeProfileSha256(kind: string, schemaVersion: number): string {
+  const expected = profileDigests[`${kind}:${schemaVersion}`];
+  if (!expected || hash(testRuntimeProfile) !== expected) {
+    invalid('profile-digest');
+  }
+  return expected;
+}
+
+export function validateTestRuntimeProfile(value: unknown): TestRuntimeProfile {
+  const initial = object(value, 'profile-digest');
+  const { calibratedPlan: _plan, ...base } = initial;
+  const profile = object(base, 'profile-digest', ['calibration', 'commandNames', 'inputs', 'kind', 'reporterMode', 'schemaVersion']);
+  object(profile.calibration, 'profile-digest', ['maxWidthMs', 'samples']);
+  strings(profile.commandNames, 'profile-digest');
+  strings(profile.inputs, 'profile-digest');
+  if (hash(base) !== expectedTestRuntimeProfileSha256('stable-test-wall-clock-v1', 1)) invalid('profile-digest');
+  equal(base, testRuntimeProfile, 'profile-digest');
+  return testRuntimeProfile;
+}
+
+type Invocation = { command: string; args: string[] };
+type Locations = { repo: string; run: string; 'command-run': string };
+
+function invocation(value: unknown): Invocation {
+  const v = object(value, 'augmentation-binding', ['command', 'args']);
+  return { command: text(v.command, 'augmentation-binding'), args: strings(v.args, 'augmentation-binding') };
+}
+
+function observedVitestArgs(value: Invocation): string[] {
+  return value.command === 'npm'
+    ? ['run', 'tests/cli-help-contract.test.ts', 'tests/cli-json-error-contract.test.ts',
+      'tests/compatibility-oracle.test.ts', ...value.args.slice(value.args.indexOf('--') + 1)]
+    : value.args.slice(1);
+}
+
+function locations(value: unknown): Locations {
+  const v = object(value, 'augmentation-binding', ['repo', 'run', 'command-run']);
+  const original = { repo: text(v.repo, 'augmentation-binding'), run: text(v.run, 'augmentation-binding'),
+    'command-run': text(v['command-run'], 'augmentation-binding') };
+  for (const p of Object.values(original)) {
+    if (!isAbsolute(p)) invalid('unsafe-path');
+    try { canonicalRuntimePath(p, process.platform); } catch { invalid('unsafe-path'); }
+  }
+  return { repo: resolve(original.repo), run: resolve(original.run), 'command-run': resolve(original['command-run']) };
+}
+
+function composition(logical: Invocation, where: Locations) {
+  let args = [...logical.args];
+  const npm = logical.command === 'npm';
+  if (npm && (args[0] !== 'run' || args[1] !== 'test:compat')) invalid('augmentation-binding', 'npm launcher');
+  if (!npm && !(logical.command === 'npx' && args[0] === 'vitest')
+    && !([process.execPath, join(where.repo, '.musubix-runtime/bin/node'),
+      join(where.repo, '.musubix-runtime/bin/node.exe')].includes(logical.command) && typeof args[0] === 'string'
+      && (args[0] === 'node_modules/vitest/vitest.mjs' || args[0] === join(where.repo, 'node_modules/vitest/vitest.mjs')))) {
+    invalid('augmentation-binding', 'launcher');
+  }
+  const separators = args.flatMap((arg, i) => arg === '--' ? [i] : []);
+  if (separators.length > 1) invalid('augmentation-binding', 'ambiguous separators');
+  const npmForwardingBoundary = npm && !separators.length;
+  if (npmForwardingBoundary) args.push('--');
+  const suffix = !npm && separators.length ? args.splice(separators[0]!) : [];
+  const runtimeReporter = `--reporter=${join(where.repo, reporterPath)}`;
+  const normalized: string[] = [];
+  let reporter = false;
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]!;
+    const value = arg === '--reporter' ? args[i + 1] : arg.startsWith('--reporter=') ? arg.slice(11) : undefined;
+    if (value !== undefined) {
+      if (value.includes('coordinator-reporter.mjs')) {
+        if (value !== join(where.repo, reporterPath)) invalid('augmentation-binding', 'foreign runtime reporter');
+        if (arg === '--reporter') i++;
+        continue;
+      }
+      reporter = true;
+    } else if (arg === '--reporter') invalid('augmentation-binding', 'missing reporter value');
+    normalized.push(arg);
+  }
+  if (!reporter) normalized.push('--reporter=default');
+  normalized.push(runtimeReporter, ...suffix);
+  return { args: normalized, defaultReporter: !reporter, npmForwardingBoundary };
+}
+
+/** @id CODE-M5-TEST-RUNTIME-AUGMENTATION-001
+ * @implements REQ-M5-COMPAT-013 REQ-M5-LIFECYCLE-006
+ * @design DES-M5-015
+ */
+export function augmentTestRuntimeInvocation(value: unknown) {
+  const v = object(value, 'augmentation-binding');
+  if (Object.keys(v).some((k) => !['logicalInvocation', 'profileSha256', 'anchor', 'runId', 'commandRunId', 'locations'].includes(k))) {
+    invalid('augmentation-binding', 'unknown argument');
+  }
+  if (!knownRuntimeProfileDigest(v.profileSha256)) invalid('profile-digest');
+  const logical = invocation(v.logicalInvocation), where = locations(v.locations);
+  const runId = text(v.runId, 'augmentation-binding'), commandRunId = text(v.commandRunId, 'augmentation-binding');
+  const composed = composition(logical, where);
+  const augmentation = {
+    schemaVersion: 1, kind: 'test-runtime-augmentation-v1', profileSha256: v.profileSha256,
+    reporterPath: `repo:${reporterPath}`, defaultReporter: composed.defaultReporter,
+    npmForwardingBoundary: composed.npmForwardingBoundary, preloadPath: `repo:${preloadPath}`,
+    setupPath: 'repo:scripts/test-runtime/vitest-setup.mjs', requestPath: 'run:request.json',
+    dispatchPath: 'command-run:dispatch.json', ackPath: 'run:ack.json',
+    workerPacketPath: 'run:worker-acks/{workerId}.json', clockMarker: 'anchor-ref',
+  };
+  return {
+    logicalInvocation: logical, logicalCommandSha256: rawHash([logical.command, logical.args]),
+    augmentation, augmentationSha256: hash(augmentation),
+    resolvedInvocation: { command: logical.command, args: composed.args },
+    resolvedRuntimeEnvironment: {
+      NODE_OPTIONS: `--import=${pathToFileURL(join(where.repo, preloadPath)).href}`,
+      MUSUBIX5_TEST_RUNTIME_REQUEST: join(where.run, 'request.json'),
+      MUSUBIX5_TEST_RUNTIME_DISPATCH: join(where['command-run'], 'dispatch.json'),
+      clockMarker: { runId, commandRunId, anchor: v.anchor ?? null },
+    },
+    locations: where,
+  };
+}
+
+export function validateTestRuntimeExecutionBinding(value: unknown): void {
+  const v = object(value, 'augmentation-binding', ['logicalInvocation', 'logicalCommandSha256', 'augmentation',
+    'augmentationSha256', 'resolvedInvocation', 'resolvedRuntimeEnvironment', 'locations']);
+  const environment = object(v.resolvedRuntimeEnvironment, 'augmentation-binding',
+    ['NODE_OPTIONS', 'MUSUBIX5_TEST_RUNTIME_REQUEST', 'MUSUBIX5_TEST_RUNTIME_DISPATCH', 'clockMarker']);
+  const marker = object(environment.clockMarker, 'augmentation-binding', ['runId', 'commandRunId', 'anchor']);
+  const expected = augmentTestRuntimeInvocation({
+    logicalInvocation: v.logicalInvocation, profileSha256: object(v.augmentation, 'augmentation-binding').profileSha256,
+    runId: marker.runId, commandRunId: marker.commandRunId, locations: v.locations,
+    ...(marker.anchor === null ? {} : { anchor: marker.anchor }),
+  });
+  equal(v, expected, 'augmentation-binding');
+}
+
+export function validateTestRuntimeGroups(description: unknown, bindings: unknown): void {
+  const described = object(description, 'augmentation-binding', ['schemaVersion', 'groups']);
+  if (described.schemaVersion !== 1 || !Array.isArray(described.groups) || !Array.isArray(bindings)
+    || described.groups.length !== bindings.length || !bindings.length) invalid('augmentation-binding', 'group count');
+  const ids = new Set<string>();
+  for (const [i, value] of bindings.entries()) {
+    const b = object(value, 'augmentation-binding', ['ordinal', 'runId', 'group', 'executionBinding']);
+    const group = object(b.group, 'augmentation-binding', ['ordinal', 'testIds', 'testFiles', 'command', 'args']);
+    if (b.ordinal !== i || group.ordinal !== i) invalid('augmentation-binding', 'group order');
+    equal(b.group, described.groups[i], 'augmentation-binding');
+    const id = text(b.runId, 'augmentation-binding');
+    if (ids.has(id)) invalid('augmentation-binding', 'duplicate run');
+    ids.add(id);
+    validateTestRuntimeExecutionBinding(b.executionBinding);
+    const binding = object(b.executionBinding, 'augmentation-binding');
+    equal(binding.logicalInvocation, { command: group.command, args: group.args }, 'augmentation-binding');
+    equal(object(object(binding.resolvedRuntimeEnvironment, 'augmentation-binding').clockMarker,
+      'augmentation-binding').runId, id, 'augmentation-binding');
+  }
+}
+
+const blobDirectory = (root: string): string => join(root, '.musubix/evidence/test-runtime/v1/blobs');
+const blobFields: Record<string, string[]> = {
+  'test-runtime-file-v1': ['path', 'mode', 'size', 'rawSha256', 'contentBase64'],
+  'test-runtime-inputs-v1': ['entries'],
+  'test-runtime-request-v1': ['runId', 'commandRunId', 'commandName', 'origin', 'context',
+    'configuredInvocation', 'effectiveInvocation', 'executionBinding', 'selectedTestIds', 'selectedFiles',
+    'profileSha256', 'inputsSha256', 'dispatchSha256'],
+  'test-runtime-anchor-v1': ['runId', 'wallEpochMs', 'monoEpochMs', 'hrtimeNs'],
+  'test-runtime-worker-v1': ['runId', 'requestSha256', 'worker', 'provider', 'markerMetadata'],
+  'test-runtime-dispatch-v1': ['commandRunId', 'commandSha256', 'profileSha256', 'inputsSha256', 'invocations'],
+  'test-runtime-ack-v1': ['runId', 'requestSha256', 'profileSha256', 'inputsSha256', 'nodeVersion', 'platform',
+    'anchor', 'anchorSha256', 'workers', 'files', 'workerSha256s', 'reporterRegistration',
+    'reportedFailed', 'bootstrapErrors', 'complete'],
+  'test-runtime-result-v1': ['runId', 'requestSha256', 'effectiveInvocation', 'executionBinding',
+    'status', 'exitCode', 'durationMs', 'nativeReportBase64'],
+};
+
+function address(value: unknown): string {
+  if (typeof value !== 'string' || !/^[a-f0-9]{64}$/.test(value)) invalid('blob-schema', 'address');
+  return value;
+}
+
+function array(value: unknown, reason = 'blob-schema'): unknown[] {
+  if (!Array.isArray(value)) invalid(reason, 'array required');
+  return value;
+}
+
+function base64(value: unknown): Buffer {
+  if (typeof value !== 'string') invalid('blob-schema', 'base64 required');
+  const bytes = Buffer.from(value, 'base64');
+  if (bytes.toString('base64') !== value) invalid('blob-schema', 'canonical base64 required');
+  return bytes;
+}
+
+async function regular(path: string, ancestors?: Map<string, Promise<Stats>>): Promise<Buffer> {
+  for (let parent = dirname(path); parent !== dirname(parent); parent = dirname(parent)) {
+    let pending = ancestors?.get(parent);
+    if (!pending) {
+      pending = lstat(parent);
+      ancestors?.set(parent, pending);
+    }
+    const stat = await pending;
+    if (stat.isSymbolicLink() || !stat.isDirectory()) invalid('unsafe-path', parent);
+  }
+  const before = await lstat(path);
+  if (!before.isFile() || before.isSymbolicLink()) invalid('unsafe-path', path);
+  const bytes = await readFile(path);
+  const after = await lstat(path);
+  if (before.dev !== after.dev || before.ino !== after.ino || before.size !== after.size
+    || before.mtimeMs !== after.mtimeMs) invalid('blob-io', 'file changed during read');
+  return bytes;
+}
+
+function errno(cause: unknown, code: string): boolean {
+  return cause instanceof Error && 'code' in cause && cause.code === code;
+}
+
+async function durableBlob(root: string, bytes: Buffer, platform: string): Promise<string> {
+  const directory = blobDirectory(root), digest = sha256(bytes), target = join(directory, digest);
+  await mkdir(directory, { recursive: true, mode: 0o700 });
+  const temporary = join(directory, `.${digest}.${randomUUID()}.tmp`);
+  try {
+    const file = await open(temporary, 'wx', 0o600);
+    try { await file.writeFile(bytes); await file.sync(); } finally { await file.close(); }
+    try { await link(temporary, target); } catch (cause) {
+      if (!errno(cause, 'EEXIST')) throw cause;
+    }
+    if (!(await regular(target)).equals(bytes)) invalid('blob-io', `collision or post-write mismatch: ${digest}`);
+    if (platform !== 'win32') {
+      const directoryHandle = await open(directory, 'r');
+      try { await directoryHandle.sync(); } finally { await directoryHandle.close(); }
+    }
+    await unlink(temporary);
+    if (platform !== 'win32') {
+      const directoryHandle = await open(directory, 'r');
+      try { await directoryHandle.sync(); } finally { await directoryHandle.close(); }
+    }
+    if (!(await regular(target)).equals(bytes)) invalid('blob-io', `final rehash: ${digest}`);
+  } catch (cause) {
+    invalid('blob-io', cause instanceof Error ? cause.message : String(cause));
+  }
+  return digest;
+}
+
+function blobSchema(value: unknown): Record<string, unknown> {
+  const v = object(value, 'blob-schema');
+  if (v.kind === 'stable-test-wall-clock-v1') {
+    if (!historicRuntimeProfileDigests.has(hash(v))) validateTestRuntimeProfile(v);
+    return v;
+  }
+  const fields = typeof v.kind === 'string' ? blobFields[v.kind] : undefined;
+  if (!fields || v.schemaVersion !== 1) invalid('blob-schema', 'kind/version');
+  return object(v, 'blob-schema', ['schemaVersion', 'kind', ...fields]);
+}
+
+function references(v: Record<string, unknown>): string[] {
+  const refs: unknown[] = [];
+  if (v.kind === 'test-runtime-inputs-v1') {
+    for (const entry of array(v.entries)) refs.push(object(entry, 'blob-schema').blobSha256);
+  }
+  if (['test-runtime-request-v1', 'test-runtime-dispatch-v1', 'test-runtime-ack-v1'].includes(String(v.kind))) {
+    refs.push(v.profileSha256, v.inputsSha256);
+  }
+  if (v.kind === 'test-runtime-request-v1') refs.push(v.dispatchSha256);
+  if (['test-runtime-worker-v1', 'test-runtime-result-v1', 'test-runtime-ack-v1'].includes(String(v.kind))) refs.push(v.requestSha256);
+  if (v.kind === 'test-runtime-ack-v1') refs.push(v.anchorSha256, ...array(v.workerSha256s));
+  return refs.map(address);
+}
+
+function provenanceSchema(value: unknown) {
+  const fields = ['kind', 'profileSha256', 'inputsSha256', 'dispatchSha256', 'runs', 'publication'];
+  const initial = object(value, 'blob-schema');
+  const v = object(initial, 'blob-schema', Object.hasOwn(initial, 'activation') ? [...fields, 'activation'] : fields);
+  if (v.kind !== testRuntimeProfile.kind || !knownRuntimeProfileDigest(v.profileSha256)) invalid('profile-digest');
+  const runs = array(v.runs).map((run) => object(run, 'blob-schema',
+    ['ordinal', 'runId', 'requestSha256', 'anchorSha256', 'acknowledgmentSha256', 'resultSha256']));
+  if (!runs.length || new Set(runs.map((r) => r.runId)).size !== runs.length
+    || runs.some((r, i) => r.ordinal !== i)) invalid('blob-schema', 'run inventory');
+  const publication = object(v.publication, 'blob-schema', ['durability', 'closureSha256']);
+  if (!['posix-file-directory-fsync', 'win32-file-flush-no-replace-rehash'].includes(String(publication.durability))) {
+    invalid('blob-schema', 'durability');
+  }
+  address(publication.closureSha256);
+  return { v, runs, publication };
+}
+
+async function runtimeClosure(root: string, value: unknown, context: unknown) {
+  const { v, runs, publication } = provenanceSchema(value);
+  const bytes = new Map<string, Buffer>(), objects = new Map<string, Record<string, unknown>>();
+  const ancestors = new Map<string, Promise<Stats>>();
+  const pending = [v.profileSha256, v.inputsSha256, v.dispatchSha256,
+    ...runs.flatMap((r) => [r.requestSha256, r.anchorSha256, r.acknowledgmentSha256, r.resultSha256])].map(address);
+  while (pending.length) {
+    const round = [...new Set(pending.splice(0))].filter((digest) => !objects.has(digest));
+    const reads = await Promise.allSettled(round.map((digest) =>
+      regular(join(blobDirectory(root), digest), ancestors)));
+    for (const [index, digest] of round.entries()) {
+      const result = reads[index]!;
+      if (result.status === 'rejected') {
+        if (errno(result.reason, 'ENOENT')) invalid('blob-missing', digest);
+        throw result.reason;
+      }
+      const content = result.value;
+      let parsed: unknown;
+      try {
+        const decoded = new TextDecoder('utf-8', { fatal: true }).decode(content);
+        parsed = JSON.parse(decoded);
+      } catch (cause) { invalid('blob-schema', cause instanceof Error ? cause.message : String(cause)); }
+      const blob = blobSchema(parsed);
+      if (!content.equals(canonicalBytes(blob))) invalid('blob-schema', 'noncanonical JSON');
+      if (sha256(content) !== digest) invalid('blob-hash', digest);
+      bytes.set(digest, content); objects.set(digest, blob);
+      pending.push(...references(blob));
+    }
+  }
+  const get = (digest: unknown, kind: string) => {
+    const blob = objects.get(address(digest));
+    if (!blob || blob.kind !== kind) invalid('blob-schema', `expected ${kind}`);
+    return blob;
+  };
+  const storedProfile = get(v.profileSha256, 'stable-test-wall-clock-v1');
+  const inputs = get(v.inputsSha256, 'test-runtime-inputs-v1');
+  const entries = array(inputs.entries).map((entry) => object(entry, 'blob-schema',
+    ['path', 'mode', 'size', 'rawSha256', 'blobSha256']));
+  equal(entries.map((e) => e.path), storedProfile.inputs, 'blob-schema');
+  for (const entry of entries) {
+    const file = get(entry.blobSha256, 'test-runtime-file-v1'), content = base64(file.contentBase64);
+    equal({ path: file.path, mode: file.mode, size: file.size, rawSha256: file.rawSha256 },
+      { path: entry.path, mode: entry.mode, size: entry.size, rawSha256: entry.rawSha256 }, 'blob-schema');
+    const absent = file.mode === 0 && candidateArtifactPaths.includes(String(file.path))
+      && content.equals(candidateAbsentArtifact(String(file.path)));
+    if (!absent && ![100644, 100755].includes(Number(file.mode)) || content.length !== file.size
+      || sha256(content) !== file.rawSha256) invalid('blob-hash', 'input snapshot');
+  }
+  const bootstrapSha256 = entries.find((entry) => entry.path === preloadPath)!.rawSha256;
+  const dispatch = get(v.dispatchSha256, 'test-runtime-dispatch-v1');
+  equal(dispatch.profileSha256, v.profileSha256, 'blob-context');
+  equal(dispatch.inputsSha256, v.inputsSha256, 'blob-context');
+  const dispatched = array(dispatch.invocations);
+  if (dispatched.length !== runs.length) invalid('acknowledgment-binding', 'dispatch inventory');
+  for (const [ordinal, run] of runs.entries()) {
+    const request = get(run.requestSha256, 'test-runtime-request-v1');
+    const anchor = get(run.anchorSha256, 'test-runtime-anchor-v1');
+    const ack = get(run.acknowledgmentSha256, 'test-runtime-ack-v1');
+    const result = get(run.resultSha256, 'test-runtime-result-v1');
+    object(request.context, 'blob-context', ['repositoryId', 'changeId', 'generation', 'commit', 'role']);
+    equal(request.context, context, 'blob-context');
+    if (!['configured', 'standalone'].includes(String(request.origin))) invalid('blob-schema', 'origin');
+    for (const blob of [request, ack, result]) equal(blob.runId, run.runId, 'acknowledgment-stale');
+    for (const blob of [request, ack]) {
+      equal(blob.profileSha256, v.profileSha256, 'blob-context');
+      equal(blob.inputsSha256, v.inputsSha256, 'blob-context');
+    }
+    equal(request.commandRunId, dispatch.commandRunId, 'blob-context');
+    equal(request.dispatchSha256, v.dispatchSha256, 'blob-context');
+    for (const blob of [ack, result]) equal(blob.requestSha256, run.requestSha256, 'acknowledgment-stale');
+    validateTestRuntimeExecutionBinding(request.executionBinding);
+    equal(result.executionBinding, request.executionBinding, 'augmentation-binding');
+    const binding = object(request.executionBinding, 'augmentation-binding');
+    equal(request.effectiveInvocation, binding.resolvedInvocation, 'augmentation-binding');
+    equal(result.effectiveInvocation, request.effectiveInvocation, 'augmentation-binding');
+    const invocationValue = invocation(request.effectiveInvocation);
+    const issued = object(dispatched[ordinal], 'blob-schema',
+      ['ordinal', 'runId', 'argv', 'selectedTestIds', 'selectedFiles', 'executionBinding']);
+    equal(issued, { ordinal, runId: run.runId, argv: [invocationValue.command, ...invocationValue.args],
+      selectedTestIds: request.selectedTestIds, selectedFiles: request.selectedFiles,
+      executionBinding: request.executionBinding }, 'acknowledgment-binding');
+    equal(ack.anchor, anchor, 'acknowledgment-binding');
+    equal(ack.anchorSha256, run.anchorSha256, 'acknowledgment-binding');
+    validateAnchorData(anchor);
+    if (ack.complete !== true || array(ack.bootstrapErrors).length || !Number.isSafeInteger(ack.reportedFailed)
+      || Number(ack.reportedFailed) < 0) invalid('acknowledgment-binding', 'incomplete acknowledgment');
+    const registration = object(ack.reporterRegistration, 'acknowledgment-binding',
+      ['reporterPath', 'requestSha256', 'observedProcess', 'observedVitestArgs']);
+    const where = locations(binding.locations);
+    equal(registration.reporterPath, join(where.repo, reporterPath), 'acknowledgment-binding');
+    equal(registration.requestSha256, run.requestSha256, 'acknowledgment-binding');
+    const vitestArgs = observedVitestArgs(invocationValue);
+    equal(registration.observedVitestArgs, vitestArgs, 'acknowledgment-binding');
+    const observedProcess = invocation(registration.observedProcess);
+    equal(registration.observedProcess, { command: observedProcess.command,
+      args: [join(where.repo, 'node_modules/vitest/vitest.mjs'), ...vitestArgs] }, 'acknowledgment-binding');
+    const files = array(ack.files).map((f) => object(f, 'acknowledgment-schema', ['path', 'state']));
+    const selectedFiles = strings(request.selectedFiles, 'blob-schema');
+    equal(files.map((f) => f.path), [...selectedFiles].sort(), 'acknowledgment-binding');
+    if (!files.length || new Set(selectedFiles).size !== selectedFiles.length
+      || files.some((f) => !['completed', 'failed', 'skipped'].includes(String(f.state)))) invalid('acknowledgment-binding', 'file inventory');
+    const workers = array(ack.workers), workerHashes = array(ack.workerSha256s);
+    if (!workers.length || workers.length !== workerHashes.length) invalid('acknowledgment-binding', 'worker inventory');
+    const workerIds: string[] = [], workerFiles: string[] = [];
+    for (const [index, value] of workers.entries()) {
+      const worker = object(value, 'acknowledgment-binding', ['workerId', 'pool', 'testPath',
+        'inputsSha256', 'anchorSha256', 'samples', 'selectedIndex', 'status', 'observation']);
+      const packet = get(workerHashes[index], 'test-runtime-worker-v1');
+      equal(packet.runId, run.runId, 'acknowledgment-stale');
+      equal(packet.requestSha256, run.requestSha256, 'acknowledgment-stale');
+      equal(packet.worker, worker, 'acknowledgment-binding');
+      equal(worker.inputsSha256, v.inputsSha256, 'acknowledgment-binding');
+      equal(worker.anchorSha256, run.anchorSha256, 'acknowledgment-binding');
+      if (worker.status !== 'ready' || !['forks', 'threads', 'vmForks', 'vmThreads'].includes(String(worker.pool))) invalid('acknowledgment-binding');
+      workerIds.push(text(worker.workerId, 'acknowledgment-binding'));
+      workerFiles.push(text(worker.testPath, 'acknowledgment-binding'));
+      const provider = object(packet.provider, 'acknowledgment-binding',
+        ['schemaVersion', 'kind', 'executionRunId', 'profileSha256', 'inputsSha256', 'bootstrapSha256', 'anchorId', 'anchor']);
+      equal(provider, { schemaVersion: 1, kind: 'test-runtime-provider-v1', executionRunId: run.runId,
+        profileSha256: v.profileSha256, inputsSha256: v.inputsSha256, bootstrapSha256,
+        anchorId: run.anchorSha256, anchor }, 'acknowledgment-binding');
+      const metadata = object(packet.markerMetadata, 'acknowledgment-binding',
+        ['schemaVersion', 'kind', 'anchorId', 'bootstrapSha256', 'profileSha256', 'calibration']);
+      const calibration = calibrationData(anchor, worker.samples);
+      equal(worker.selectedIndex, calibration.selectedIndex, 'acknowledgment-binding');
+      equal(metadata, { schemaVersion: 1, kind: 'test-runtime-install-v1', anchorId: run.anchorSha256,
+        bootstrapSha256, profileSha256: v.profileSha256, calibration }, 'acknowledgment-binding');
+      equal(worker.observation, { schemaVersion: 1, providerKey: 'musubix5StableWallClockV1',
+        markerKey: 'musubix5.testRuntime.stableWallClock.install.v1', providerSha256: hash(provider),
+        markerMetadataSha256: hash(metadata), installedNowMatchesDateNow: true }, 'acknowledgment-binding');
+    }
+    if (new Set(workerIds).size !== workerIds.length || new Set(workerFiles).size !== workerFiles.length) invalid('acknowledgment-binding', 'duplicate worker');
+    equal(workerIds, [...workerIds].sort(), 'acknowledgment-binding');
+    equal([...workerFiles].sort(), files.filter((f) => f.state !== 'skipped').map((f) => f.path), 'acknowledgment-binding');
+    if (result.status !== 'completed' || !Number.isSafeInteger(result.exitCode)
+      || typeof result.durationMs !== 'number' || !Number.isFinite(result.durationMs) || result.durationMs < 0) invalid('acknowledgment-binding', 'native result');
+    if (result.nativeReportBase64 === null && request.commandName === 'compatibility') continue;
+    const native: unknown = JSON.parse(base64(result.nativeReportBase64).toString('utf8'));
+    const report = object(native, 'blob-schema');
+    const assertions = array(report.testResults).flatMap((f) => array(object(f, 'blob-schema').assertionResults));
+    for (const id of strings(request.selectedTestIds, 'blob-schema')) {
+      const selected = assertions.map((a) => object(a, 'blob-schema')).filter((a) =>
+        a.title === id || typeof a.title === 'string' && a.title.startsWith(`${id} `));
+      if (selected.length !== 1 || !['passed', 'failed'].includes(String(selected[0]!.status))) invalid('acknowledgment-binding', 'native selection');
+    }
+  }
+  equal(publication.closureSha256, hash([...bytes.keys()].sort()), 'blob-hash');
+  for (const [path, pending] of ancestors) {
+    const before = await pending, after = await lstat(path);
+    if (!after.isDirectory() || after.isSymbolicLink() || before.dev !== after.dev || before.ino !== after.ino) {
+      invalid('blob-io', 'ancestor changed during validation');
+    }
+  }
+  return bytes;
+}
+
+function validateAnchorData(value: unknown) {
+  const a = object(value, 'anchor-schema', ['schemaVersion', 'kind', 'runId', 'wallEpochMs', 'monoEpochMs', 'hrtimeNs']);
+  if (a.schemaVersion !== 1 || a.kind !== 'test-runtime-anchor-v1' || !Number.isSafeInteger(a.wallEpochMs)
+    || typeof a.monoEpochMs !== 'number' || !Number.isFinite(a.monoEpochMs)
+    || typeof a.hrtimeNs !== 'string' || !/^(0|[1-9][0-9]*)$/.test(a.hrtimeNs)) invalid('anchor-schema');
+  return { schemaVersion: 1 as const, kind: 'test-runtime-anchor-v1' as const,
+    runId: text(a.runId, 'anchor-schema'), wallEpochMs: Number(a.wallEpochMs),
+    monoEpochMs: a.monoEpochMs, hrtimeNs: a.hrtimeNs };
+}
+
+function calibrationData(input: unknown, samples: unknown) {
+  const anchor = validateAnchorData(input), values = array(samples, 'calibration');
+  if (values.length !== 8) invalid('calibration');
+  const brackets = values.map((v) => {
+    const s = object(v, 'calibration', ['hrtimeBeforeNs', 'performanceMs', 'hrtimeAfterNs']);
+    if (typeof s.hrtimeBeforeNs !== 'string' || !/^(0|[1-9][0-9]*)$/.test(s.hrtimeBeforeNs)
+      || typeof s.hrtimeAfterNs !== 'string' || !/^(0|[1-9][0-9]*)$/.test(s.hrtimeAfterNs)
+      || typeof s.performanceMs !== 'number' || !Number.isFinite(s.performanceMs)) invalid('calibration');
+    const before = BigInt(s.hrtimeBeforeNs), after = BigInt(s.hrtimeAfterNs);
+    if (after < before || before < BigInt(anchor.hrtimeNs)) invalid('clock-domain');
+    return { before, after, performanceMs: s.performanceMs };
+  });
+  let selectedIndex = 0;
+  for (let i = 1; i < brackets.length; i++) {
+    if (brackets[i]!.after - brackets[i]!.before < brackets[selectedIndex]!.after - brackets[selectedIndex]!.before) selectedIndex = i;
+  }
+  const selected = brackets[selectedIndex]!, delta = selected.before + selected.after - BigInt(anchor.hrtimeNs) * 2n;
+  if (selected.after - selected.before > 1_000_000n || delta > BigInt(Number.MAX_SAFE_INTEGER)) invalid('calibration');
+  return { samples: values, selectedIndex, localWallEpochMs: anchor.wallEpochMs + Number(delta) / 2_000_000,
+    localMonoEpochMs: selected.performanceMs };
+}
+
+/** @id CODE-M5-TEST-RUNTIME-BLOBS-001
+ * @implements REQ-M5-COMPAT-013 REQ-M5-LIFECYCLE-006
+ * @design DES-M5-015
+ */
+/** @id CODE-M5-CI-ARCHIVED-RUNTIME-001
+ * @implements REQ-M5-CI-003
+ * @design DES-M5-CI-003
+ */
+export async function validateTestRuntimeProvenance(root: string, value: unknown, context: unknown): Promise<void> {
+  await runtimeClosure(root, value, context);
+}
+
+/** @id CODE-M5-CI-LIVE-RUNTIME-001
+ * @implements REQ-M5-CI-003
+ * @design DES-M5-CI-003
+ */
+export async function authorizeTestRuntimeNode(root: string, command: string): Promise<void> {
+  if (command === process.execPath) {
+    if (Number(process.versions.node.split('.')[0]) !== 24) invalid('augmentation-binding', 'Node major');
+    await regular(command);
+    return;
+  }
+  if (![join(resolve(root), '.musubix-runtime/bin/node'), join(resolve(root), '.musubix-runtime/bin/node.exe')]
+    .includes(command)) invalid('augmentation-binding', 'Node executable authorization');
+  try {
+    const before = await regular(command);
+    const { stdout } = await promisify(execFile)(command,
+      ['-e', 'process.stdout.write(JSON.stringify([process.versions.node,process.platform,process.arch]))'],
+      { timeout: 10_000, maxBuffer: 1024, env: { ...process.env, NODE_OPTIONS: '', NODE_PATH: '' } });
+    const observed: unknown = JSON.parse(stdout);
+    if (!Array.isArray(observed) || observed.length !== 3 || typeof observed[0] !== 'string'
+      || Number(observed[0].split('.')[0]) !== 24 || observed[1] !== process.platform || observed[2] !== process.arch
+      || !(await regular(command)).equals(before)) invalid('augmentation-binding', 'Node executable identity');
+  } catch {
+    invalid('augmentation-binding', 'Node executable identity');
+  }
+}
+
+export async function validateTestRuntimeOutcome(
+  root: string, value: unknown, expected: Partial<TestRuntimeContext>, commandSha256?: string,
+): Promise<void> {
+  const { v, runs } = provenanceSchema(value);
+  let context: Record<string, unknown> | undefined;
+  for (const run of runs) {
+    const digest = address(run.requestSha256);
+    let bytes: Buffer;
+    try { bytes = await regular(join(blobDirectory(root), digest)); } catch (cause) {
+      if (errno(cause, 'ENOENT')) invalid('blob-missing', digest);
+      throw cause;
+    }
+    const request = blobSchema(JSON.parse(bytes.toString('utf8')));
+    if (sha256(bytes) !== digest || request.kind !== 'test-runtime-request-v1') invalid('blob-hash', digest);
+    const observed = object(request.context, 'blob-context', ['repositoryId', 'changeId', 'generation', 'commit', 'role']);
+    for (const [key, expectedValue] of Object.entries(expected)) equal(observed[key], expectedValue, 'blob-context');
+    if (context) equal(observed, context, 'blob-context');
+    else context = observed;
+  }
+  await runtimeClosure(root, value, context);
+  if (commandSha256 !== undefined) {
+    const dispatch = blobSchema(JSON.parse((await regular(join(blobDirectory(root),
+      address(v.dispatchSha256)))).toString('utf8')));
+    equal(dispatch.commandSha256, commandSha256, 'augmentation-binding');
+  }
+}
+
+export async function publishTestRuntimeClosure(value: unknown) {
+  const v = object(value, 'blob-schema', ['sourceRoot', 'controlRoot', 'provenance', 'context', 'platform']);
+  const source = text(v.sourceRoot, 'blob-schema'), control = text(v.controlRoot, 'blob-schema');
+  let closure: Map<string, Buffer>;
+  try { closure = await runtimeClosure(source, v.provenance, v.context); } catch (cause) {
+    invalid('blob-io', cause instanceof Error ? cause.message : String(cause));
+  }
+  const platform = text(v.platform, 'blob-schema');
+  for (const [, bytes] of [...closure.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+    await durableBlob(control, bytes, platform);
+  }
+  const publication = { durability: platform === 'win32' ? 'win32-file-flush-no-replace-rehash' : 'posix-file-directory-fsync',
+    closureSha256: hash([...closure.keys()].sort()) };
+  await runtimeClosure(control, { ...object(v.provenance, 'blob-schema'), publication }, v.context);
+  return publication;
+}
+
+const legacyRuntimeTests = [
+  ['TEST-M5-RELEASE-002-TRUST-001', 'REQ-M5-COMPAT-013'],
+  ['TEST-M5-TEST-CLOCK-MODULE-ORDER-001', 'REQ-M5-LIFECYCLE-006'],
+  ['TEST-M5-TEST-CLOCK-MONOTONIC-001', 'REQ-M5-LIFECYCLE-006'],
+  ['TEST-M5-TEST-CLOCK-CHILD-001', 'REQ-M5-LIFECYCLE-006'],
+  ['TEST-M5-TEST-CLOCK-MOCK-001', 'REQ-M5-LIFECYCLE-006'],
+  ['TEST-M5-TEST-CLOCK-TIMERS-001', 'REQ-M5-LIFECYCLE-006'],
+  ['TEST-M5-TEST-CLOCK-ISOLATION-001', 'REQ-M5-LIFECYCLE-006'],
+  ['TEST-M5-TEST-CLOCK-EVIDENCE-001', 'REQ-M5-COMPAT-013'],
+  ['TEST-M5-TEST-CLOCK-AGGREGATE-001', 'REQ-M5-COMPAT-013'],
+  ['TEST-M5-TEST-CLOCK-HOST-BOUNDARY-001', 'REQ-M5-LIFECYCLE-006'],
+  ['TEST-M5-TEST-CLOCK-BLOB-PLATFORM-001', 'REQ-M5-COMPAT-013'],
+  ['TEST-M5-TEST-CLOCK-GATE-FINGERPRINT-001', 'REQ-M5-COMPAT-013'],
+] as const;
+
+function journalRecords(value: unknown): value is JournalRecord[] {
+  return Array.isArray(value) && value.every((item: unknown) => {
+    const v = object(item, 'phase-runtime-transition');
+    return v.schemaVersion === 1 && ['normal', 'bootstrap'].includes(String(v.stream))
+      && typeof v.changeId === 'string' && typeof v.kind === 'string'
+      && typeof v.idempotencyKey === 'string' && Number.isSafeInteger(v.order)
+      && (v.previousSha256 === null || typeof v.previousSha256 === 'string')
+      && typeof v.recordSha256 === 'string' && Object.hasOwn(v, 'payload');
+  });
+}
+
+function orderRecords(value: unknown): value is EvidenceOrderRecord[] {
+  return Array.isArray(value) && value.every((item: unknown) => {
+    const v = object(item, 'phase-runtime-transition');
+    return ['change', 'tdd'].includes(String(v.kind)) && typeof v.entityId === 'string'
+      && typeof v.phase === 'string' && Number.isSafeInteger(v.sequence)
+      && (v.previousSha256 === null || typeof v.previousSha256 === 'string')
+      && typeof v.recordSha256 === 'string';
+  });
+}
+
+function runtimeScopeId(requirementIds: string[]): string {
+  return [...new Set(requirementIds)].sort().join(',');
+}
+
+function runtimeOrderPhase(generation: number, phase: string, scopeId?: string): string {
+  return `g${generation}:${phase}${scopeId ? `:${scopeId}` : ''}`;
+}
+
+/** @id CODE-M5-TEST-RUNTIME-ACTIVATION-001
+ * @implements REQ-M5-COMPAT-013 REQ-M5-LIFECYCLE-006
+ * @design DES-M5-015
+ */
+export function validateLegacyRuntimeActivation(value: unknown): void {
+  const reason = 'phase-runtime-transition';
+  const v = object(value, reason, ['schemaVersion', 'repositoryId', 'tddEvidence', 'cycle',
+    'green', 'approvals', 'orders', 'journal', 'phases', 'batch']);
+  const evidence = object(v.tddEvidence, reason, ['schemaVersion', 'cycles', 'chain']);
+  const cycle = object(v.cycle, reason);
+  const red = object(cycle.red, reason, ['phase', 'valid', 'scoped', 'resultObserved', 'testStatus',
+    'reportSha256', 'commandSha256', 'outputSha256', 'exitCode', 'durationMs', 'testFingerprint',
+    'sourceFingerprint', 'executionId', 'order', 'recordedAt', 'diagnostics', 'warnings']
+    .filter((key) => key !== 'warnings' || Object.hasOwn(object(cycle.red, reason), key)));
+  const green = object(v.green, reason);
+  const provenance = object(green.testRuntime, reason);
+  const activation = object(provenance.activation, reason, ['schemaVersion', 'kind', 'changeId',
+    'generation', 'scopeId', 'cycleId', 'requirementId', 'testId', 'commandName', 'redOrder',
+    'redPhaseEvidenceSha256', 'requirementsApprovalSha256', 'designApprovalSha256',
+    'requirementsCheckpointOrder', 'designCheckpointOrder', 'redCheckpoint', 'implementationCheckpoint']);
+  const batch = object(v.batch, reason, ['scopeId', 'requirementIds', 'red', 'implementation']);
+  const phases = object(v.phases, reason);
+  const approvals = object(v.approvals, reason, ['requirements', 'design']);
+  const requirementIds = ['REQ-M5-COMPAT-013', 'REQ-M5-LIFECYCLE-006'];
+  const scopeId = runtimeScopeId(requirementIds);
+  if (v.schemaVersion !== 1 || evidence.schemaVersion !== 1
+    || cycle.changeId !== 'CHANGE-0017' || cycle.generation !== 8 || cycle.commandName !== 'test'
+    || !legacyRuntimeTests.some(([testId, requirementId]) =>
+      testId === cycle.testId && requirementId === cycle.requirementId)
+    || v.repositoryId !== 'repository:e5297915dd33125e52ca4d9d5a00250e33a221401bd38b066934730c6948ecae'
+    || batch.scopeId !== scopeId || activation.scopeId !== scopeId
+    || red.phase !== 'red' || red.valid !== true || red.scoped !== true || red.resultObserved !== true
+    || red.testStatus !== 'failed' || green.phase !== 'green' || green.valid !== true
+    || green.testStatus !== 'passed' || red.commandSha256 !== green.commandSha256
+    || red.testFingerprint !== green.testFingerprint) invalid(reason);
+  equal(batch.requirementIds, requirementIds, reason);
+  for (const field of ['cycleId', 'changeId', 'generation', 'requirementId', 'testId', 'commandName']) {
+    equal(activation[field], cycle[field], reason);
+  }
+  if (activation.schemaVersion !== 1 || activation.kind !== 'legacy-red-runtime-activation-v1'
+    || activation.redOrder !== red.order || activation.redPhaseEvidenceSha256 !== rawHash(red)) invalid(reason);
+  const approvalHashes = {
+    requirements: 'c2dc2a2d10d83dbb86141450c3cd024643460d733b3d601809c942e75c583f3b',
+    design: '28a2f554d9c6243a15c09baddd720d068ef27a45c0ace880725b4ce932a89273',
+  };
+  for (const stage of ['requirements', 'design'] as const) {
+    const approval = object(approvals[stage], reason), phase = object(phases[stage], reason);
+    if (approval.schemaVersion !== 1 || approval.stage !== stage || approval.changeId !== cycle.changeId
+      || approval.generation !== 8 || approval.artifactSha256 !== approvalHashes[stage]
+      || phase.approvalManifestSha256 !== approval.artifactSha256
+      || activation[`${stage}ApprovalSha256`] !== approval.artifactSha256
+      || activation[`${stage}CheckpointOrder`] !== phase.order) invalid(reason);
+  }
+  const requirements = object(phases.requirements, reason), design = object(phases.design, reason);
+  const batchRed = object(batch.red, reason), implementation = object(batch.implementation, reason);
+  const orders = [requirements.order, design.order, red.order, batchRed.order, implementation.order, green.order];
+  if (orders.some((order, index) => !Number.isSafeInteger(order) || Number(order) < 1
+    || index > 0 && Number(orders[index - 1]) >= Number(order))) invalid(reason);
+  if (!journalRecords(v.journal) || !orderRecords(v.orders)) invalid(reason);
+  const recordedOrders = v.orders;
+  const orderAt = (sequence: unknown, kind: string, entityId: unknown, phase: unknown) => {
+    if (!recordedOrders.some((entry) => entry.sequence === sequence && entry.kind === kind
+      && entry.entityId === entityId && entry.phase === phase)) invalid(reason);
+  };
+  orderAt(red.order, 'tdd', cycle.cycleId, 'red');
+  orderAt(green.order, 'tdd', cycle.cycleId, 'green');
+  const cycles = array(evidence.cycles, reason);
+  if (cycles.filter((entry) => object(entry, reason).cycleId === cycle.cycleId).length !== 1) invalid(reason);
+  equal(cycles.find((entry) => object(entry, reason).cycleId === cycle.cycleId), cycle, reason);
+  let previous: string | null = null;
+  let selected = false;
+  for (const [index, entry] of array(evidence.chain, reason).entries()) {
+    const chain = object(entry, reason), { recordSha256, ...payload } = chain;
+    if (chain.sequence !== index + 1 || chain.previousSha256 !== previous || recordSha256 !== rawHash(payload)) invalid(reason);
+    previous = text(recordSha256, reason);
+    const owner = cycles.find((item) => object(item, reason).cycleId === chain.cycleId);
+    if (!owner) invalid(reason);
+    const owned = object(owner, reason);
+    if (chain.phase !== 'red' || chain.phaseEvidenceSha256 !== rawHash(owned.red)) invalid(reason);
+    if (chain.cycleId === cycle.cycleId) {
+      for (const field of ['changeId', 'generation', 'requirementId', 'testId', 'testPath', 'commandName']) {
+        equal(chain[field], cycle[field], reason);
+      }
+      selected = true;
+    }
+  }
+  if (!selected) invalid(reason);
+  for (const [name, phase] of [['red', batchRed], ['implementation', implementation]] as const) {
+    const reference = object(activation[`${name}Checkpoint`], reason,
+      ['order', 'orderPhaseKey', 'journalRecordSha256', 'tddEvidenceSha256']);
+    const key = runtimeOrderPhase(8, name, scopeId);
+    const record = v.journal.find((item) => item.recordSha256 === reference.journalRecordSha256);
+    if (!record) invalid(reason);
+    const payload = object(record.payload, reason);
+    if (payload.phase !== name || payload.changeId !== cycle.changeId || payload.generation !== 8
+      || payload.scopeId !== scopeId || payload.repositoryId !== v.repositoryId
+      || payload.orderPhaseKey !== key || reference.orderPhaseKey !== key || reference.order !== phase.order
+      || reference.tddEvidenceSha256 !== rawHash(evidence) || payload.tddEvidenceSha256 !== rawHash(evidence)) invalid(reason);
+    equal(payload.requirementIds, requirementIds, reason);
+    equal(payload.fingerprints, phase.fingerprints, reason);
+    orderAt(phase.order, 'change', cycle.changeId, key);
+  }
+  const before = object(batchRed.fingerprints, reason), after = object(implementation.fingerprints, reason);
+  if (object(design.fingerprints, reason).tests === before.tests || before.implementation === after.implementation) invalid(reason);
+  for (const id of requirementIds) {
+    if (hash(object(before.requirementImplementations, reason)[id])
+      === hash(object(after.requirementImplementations, reason)[id])) invalid(reason);
+  }
+  try { provenanceSchema(provenance); } catch (cause) {
+    invalid(reason, cause instanceof Error ? cause.message : String(cause));
+  }
+}
+
+type Anchor = ReturnType<typeof validateAnchorData>;
+export type TestRuntimeProvider = Readonly<{
+  schemaVersion: 1; kind: 'test-runtime-provider-v1'; executionRunId: string;
+  profileSha256: string; bootstrapSha256: string; inputsSha256: string;
+  anchorId: string; anchor: Anchor;
+}>;
+export interface TestRuntimeReporterBridge {
+  root: string;
+  args: string[];
+  files: string[];
+  configureEnvironment(environment: Record<string, string>): void;
+  controller?: {
+    module(path: string, state: string): Promise<void>;
+    finish(provider: unknown, failed: number): Promise<void>;
+  };
+}
+declare global {
+  var __musubix5TestRuntimeCoordinator: TestRuntimeReporterBridge | undefined;
+}
+
+async function transportJson(path: string, value: unknown, exclusive = false): Promise<void> {
+  if (exclusive) {
+    await writeFile(path, canonicalBytes(value), { flag: 'wx', mode: 0o600 });
+    return;
+  }
+  const temporary = `${path}.${randomUUID()}.tmp`;
+  await writeFile(temporary, canonicalBytes(value), { flag: 'wx', mode: 0o600 });
+  await rename(temporary, path);
+}
+
+const candidateArtifactPaths = ['.musubix/candidate-execution-plan.json', '.musubix/candidate-timeout-calibration.json'];
+const candidateAbsentArtifact = (path: string) => canonicalBytes({ schemaVersion: 1, kind: 'candidate-artifact-absent-v1', path });
+
+async function runtimeInput(root: string, path: string): Promise<{ bytes: Buffer; mode: number }> {
+  try {
+    const bytes = await regular(join(root, path));
+    return { bytes, mode: (await lstat(join(root, path))).mode & 0o111 ? 100755 : 100644 };
+  } catch (cause) {
+    if (!candidateArtifactPaths.includes(path) || !errno(cause, 'ENOENT')) throw cause;
+    return { bytes: candidateAbsentArtifact(path), mode: 0 };
+  }
+}
+
+async function snapshotRuntime(root: string, transportRoot: string) {
+  const profile = await durableBlob(transportRoot, canonicalBytes(testRuntimeProfile), process.platform);
+  const entries = [];
+  for (const path of testRuntimeProfile.inputs) {
+    const { bytes, mode } = await runtimeInput(root, path);
+    const snapshot = { schemaVersion: 1, kind: 'test-runtime-file-v1', path,
+      mode, size: bytes.length, rawSha256: sha256(bytes),
+      contentBase64: bytes.toString('base64') };
+    const blobSha256 = await durableBlob(transportRoot, canonicalBytes(snapshot), process.platform);
+    entries.push({ path, mode: snapshot.mode, size: snapshot.size, rawSha256: snapshot.rawSha256, blobSha256 });
+  }
+  const inputsSha256 = await durableBlob(transportRoot,
+    canonicalBytes({ schemaVersion: 1, kind: 'test-runtime-inputs-v1', entries }), process.platform);
+  return { profileSha256: profile, inputsSha256, entries };
+}
+
+function cleanTestRuntimeBuildEnvironment(root: string, environment = process.env): NodeJS.ProcessEnv {
+  const env = { ...environment };
+  const options = env.NODE_OPTIONS ?? '';
+  const preload = `--import=${pathToFileURL(join(root, preloadPath)).href}`;
+  const tokens = options.split(/[ \t]+/).filter(Boolean);
+  let memory: string | undefined;
+  if (/[^\S\t ]|["'\\\x00-\x08\x0e-\x1f\x7f]/.test(options)) invalid('node-options');
+  for (const token of tokens) {
+    if (token === preload || token === '--enable-source-maps') continue;
+    if (!/^--max-old-space-size=[1-9][0-9]*$/.test(token)
+      || !Number.isSafeInteger(Number(token.split('=')[1]))
+      || memory !== undefined && memory !== token) invalid('node-options');
+    memory = token;
+  }
+  const countOnly = env.MUSUBIX5_CANDIDATE_COUNT_ONLY === '1' && Boolean(env.MUSUBIX5_CANDIDATE_SLOT_LEDGER);
+  if (tokens.includes(preload) !== (Boolean(env.MUSUBIX5_TEST_RUNTIME_CLOCK) || countOnly)) invalid('worker-scope');
+  delete env.MUSUBIX5_TEST_RUNTIME_CLOCK;
+  delete env.MUSUBIX5_TEST_RUNTIME_REQUEST;
+  delete env.MUSUBIX5_TEST_RUNTIME_DISPATCH;
+  const retained = tokens.filter((token) => token !== preload);
+  if (retained.length) env.NODE_OPTIONS = retained.join(' ');
+  else delete env.NODE_OPTIONS;
+  return env;
+}
+
+async function runtimeAnchor(root: string, runId: string, environment = process.env): Promise<Anchor> {
+  cleanTestRuntimeBuildEnvironment(root, environment);
+  if (environment.MUSUBIX5_TEST_RUNTIME_CLOCK) {
+    const provider = object(JSON.parse(environment.MUSUBIX5_TEST_RUNTIME_CLOCK), 'worker-scope',
+      ['schemaVersion', 'kind', 'executionRunId', 'profileSha256', 'bootstrapSha256', 'inputsSha256', 'anchorId', 'anchor']);
+    const anchor = validateAnchorData(provider.anchor);
+    if (provider.schemaVersion !== 1 || provider.kind !== 'test-runtime-provider-v1'
+      || provider.profileSha256 !== testRuntimeProfileSha256 || provider.anchorId !== hash(anchor)) invalid('worker-scope');
+    text(provider.executionRunId, 'worker-scope');
+    address(provider.bootstrapSha256); address(provider.inputsSha256);
+    return anchor;
+  }
+  return { schemaVersion: 1, kind: 'test-runtime-anchor-v1', runId,
+    wallEpochMs: Date.now(), monoEpochMs: performance.now(), hrtimeNs: process.hrtime.bigint().toString() };
+}
+
+async function allocateRuntimeRun(root: string, runId: string): Promise<string> {
+  const run = join(root, '.musubix/cache/test-runtime', runId);
+  await mkdir(dirname(run), { recursive: true, mode: 0o700 });
+  await mkdir(run, { mode: 0o700 });
+  await mkdir(join(run, 'worker-acks'), { mode: 0o700 });
+  return run;
+}
+
+export async function testRuntimeExecutionContext(
+  root: string, role: TestRuntimeContext['role'], runner: Runner,
+  change: { changeId: string; generation: number | null } | null = null,
+): Promise<TestRuntimeContext> {
+  const revision = await runner('git', ['rev-parse', 'HEAD'], { cwd: root, timeoutMs: 10_000 });
+  const origin = await runner('git', ['config', '--get', 'remote.origin.url'], { cwd: root, timeoutMs: 10_000 });
+  if (revision.status !== 'completed' || revision.exitCode !== 0
+    || origin.status !== 'completed' || ![0, 1].includes(origin.exitCode ?? -1)) invalid('blob-context', 'repository unavailable');
+  return {
+    repositoryId: canonicalRepositoryIdentity(origin.exitCode === 0 ? origin.stdout.trim() : undefined, root),
+    changeId: change?.changeId ?? null, generation: change?.generation ?? null,
+    commit: revision.stdout.trim(), role,
+  };
+}
+
+function nativeReportPath(args: string[], cwd: string): string | null {
+  const values = args.flatMap((arg, index) => arg === '--outputFile' ? [args[index + 1]]
+    : arg.startsWith('--outputFile=') ? [arg.slice('--outputFile='.length)] : []);
+  if (values.length > 1 || values.some((value) => !value)) invalid('augmentation-binding', 'native report path');
+  return values.length ? resolve(cwd, text(values[0], 'augmentation-binding')) : null;
+}
+
+/** @id CODE-M5-TEST-RUNTIME-COMMAND-001
+ * @implements REQ-M5-COMPAT-013 REQ-M5-LIFECYCLE-006
+ * @design DES-M5-015
+ */
+export async function runTestRuntimeCommand(
+  root: string, command: CommandConfig, args: string[],
+  options: Parameters<Runner>[2] & { collectCandidateFailures?: boolean; candidateReportPath?: string },
+  runner: Runner, context: TestRuntimeContext,
+  controlRoot = root,
+): Promise<ProcessResult & { testRuntime: TestRuntimeProvenance }> {
+  root = resolve(root);
+  const commandRunId = randomUUID(), transport = await allocateRuntimeRun(root, commandRunId);
+  const snapshot = await snapshotRuntime(root, transport);
+  const environment = options.env ?? process.env;
+  const matrix = context.role !== 'tdd' && !process.env.MUSUBIX5_TEST_RUNTIME_REQUEST
+    && environment.MUSUBIX5_CANDIDATE_ROOT === root
+    && (environment.CANDIDATE_MODE === 'candidate' || environment.CANDIDATE_MODE === 'calibration');
+  const partitioned = matrix && ['test', 'compatibility'].includes(command.name);
+  const grouped = partitioned || command.name === 'codegraph-tests';
+  const scheduler = partitioned ? { command: process.execPath,
+    args: [join(root, `scripts/run-${command.name === 'test' ? 'candidate' : 'compatibility'}-tests.mjs`),
+      '--report', options.candidateReportPath ?? nativeReportPath(args, options.cwd) ?? join(transport, 'aggregate.json')] }
+    : { command: command.command, args };
+  const candidatePlan = matrix ? (await loadCandidateExecutionPlan(root)).plan : undefined;
+  const ledger = matrix ? await createCandidateSlotLedger(transport, environment.CANDIDATE_DISPATCH_NONCE!, 16) : undefined;
+  const rootLease = ledger ? await acquireCandidateSlots(ledger, { nonce: ledger.nonce, pid: process.pid, partition: 'command-root' }, 1) : undefined;
+  const manifestPath = join(transport, 'partition-manifest.json');
+  const anchor = await runtimeAnchor(root, commandRunId, environment);
+  const tokens = (cleanTestRuntimeBuildEnvironment(root, environment).NODE_OPTIONS ?? '').split(/[ \t]+/).filter(Boolean);
+  const commandHash = rawHash([command.command, args]);
+  let groups: Array<{ ordinal: number; testIds: string[]; testFiles: string[]; command: string; args: string[] }>;
+  if (grouped) {
+    const described = await runner(scheduler.command, [...scheduler.args, '--describe-groups'], options);
+    if (described.status !== 'completed' || described.exitCode !== 0) invalid('augmentation-binding', described.stderr);
+    const description = object(JSON.parse(described.stdout), 'augmentation-binding', ['schemaVersion', 'groups']);
+    if (description.schemaVersion !== 1) invalid('augmentation-binding');
+    groups = array(description.groups, 'augmentation-binding').map((entry, ordinal) => {
+      const g = object(entry, 'augmentation-binding', ['ordinal', 'testIds', 'testFiles', 'command', 'args']);
+      if (g.ordinal !== ordinal || ![process.execPath, join(root, '.musubix-runtime/bin/node'),
+        join(root, '.musubix-runtime/bin/node.exe')].includes(String(g.command))) invalid('augmentation-binding');
+      const groupCommand = text(g.command, 'augmentation-binding');
+      return { ordinal, command: groupCommand, args: strings(g.args, 'augmentation-binding'),
+        testIds: strings(g.testIds, 'augmentation-binding'), testFiles: strings(g.testFiles, 'augmentation-binding') };
+    });
+  } else {
+    const inventory = (await files(root)).filter((path) => /^tests\/.*\.test\.tsx?$/.test(path));
+    const selectors = args.filter((arg) => !arg.startsWith('-') && /^tests\//.test(arg));
+    const compatibility = ['tests/cli-help-contract.test.ts', 'tests/cli-json-error-contract.test.ts', 'tests/compatibility-oracle.test.ts'];
+    const selected = command.name === 'compatibility' ? compatibility
+      : selectors.length ? inventory.filter((path) => selectors.some((selector) => path.includes(selector))) : inventory;
+    groups = [{ ordinal: 0, command: command.command, args,
+      testFiles: selected.sort(), testIds: [...new Set(args.flatMap((arg) => arg.match(/TEST-[A-Z0-9-]+/g) ?? []))] }];
+  }
+  if (!groups.length || groups.some((group) => !group.testFiles.length)) invalid('augmentation-binding', 'empty dispatch');
+  const plannedCommand = candidatePlan?.commands.find(planned => planned.name === command.name);
+  let compositeDispatch: CandidatePartitionDispatch | undefined;
+  if (candidatePlan && plannedCommand && ledger) {
+    await validateCandidateLaunchInventory(root);
+    const selectedIds = groups.flatMap(group => group.testIds).sort();
+    equal(selectedIds, [...plannedCommand.testIds].sort(), 'augmentation-binding');
+    for (const group of groups) {
+      const owning = plannedCommand.partitions.filter(partition => group.testIds.every(id => partition.testIds.includes(id))
+        && group.testFiles.every(file => partition.files.includes(file)));
+      if (owning.length !== 1) invalid('augmentation-binding', `partition-${group.ordinal}: ownership`);
+      if (partitioned) {
+        equal(group.testIds, owning[0]!.testIds, 'augmentation-binding');
+        equal(group.testFiles, owning[0]!.files, 'augmentation-binding');
+        if (!group.args.includes(`--maxWorkers=${owning[0]!.maxWorkers}`)
+          || !group.args.includes(`--pool=${owning[0]!.pool}`)) invalid('augmentation-binding', 'worker capacity');
+      }
+    }
+    compositeDispatch = { nonce: ledger.nonce, planDigest: candidateExecutionPlanDigest(candidatePlan),
+      command: command.name, partitions: plannedCommand.partitions.map(({ id, ordinal, wave, files, testIds }) =>
+        ({ id, ordinal, wave, files, testIds })) };
+    await transportJson(join(transport, 'composite-dispatch.json'), compositeDispatch, true);
+  }
+  const issued = [];
+  for (const group of groups) {
+    await authorizeTestRuntimeNode(root, ['npx', 'npm'].includes(group.command) ? process.execPath : group.command);
+    const runId = grouped ? randomUUID() : commandRunId;
+    const run = runId === commandRunId ? transport : await allocateRuntimeRun(root, runId);
+    const executionBinding = augmentTestRuntimeInvocation({
+      logicalInvocation: { command: group.command, args: group.args }, profileSha256: snapshot.profileSha256,
+      runId, commandRunId, anchor, locations: { repo: root, run, 'command-run': transport },
+    });
+    const provider: TestRuntimeProvider = {
+      schemaVersion: 1, kind: 'test-runtime-provider-v1', executionRunId: runId,
+      profileSha256: snapshot.profileSha256, inputsSha256: snapshot.inputsSha256,
+      bootstrapSha256: snapshot.entries.find((entry) => entry.path === preloadPath)!.rawSha256,
+      anchorId: hash(anchor), anchor,
+    };
+    issued.push({ group, runId, run, executionBinding, provider });
+  }
+  if (grouped) validateTestRuntimeGroups({ schemaVersion: 1, groups },
+    issued.map(({ group, runId, executionBinding }) => ({ ordinal: group.ordinal, runId, group, executionBinding })));
+  const dispatch = {
+    schemaVersion: 1, kind: 'test-runtime-dispatch-v1', commandRunId, commandSha256: commandHash,
+    profileSha256: snapshot.profileSha256, inputsSha256: snapshot.inputsSha256,
+    invocations: issued.map(({ group, runId, executionBinding }) => ({
+      ordinal: group.ordinal, runId,
+      argv: [executionBinding.resolvedInvocation.command, ...executionBinding.resolvedInvocation.args],
+      selectedTestIds: group.testIds, selectedFiles: [...group.testFiles].sort(), executionBinding,
+    })),
+  };
+  const dispatchSha256 = await durableBlob(transport, canonicalBytes(dispatch), process.platform);
+  await transportJson(join(transport, 'dispatch.json'), dispatch, true);
+  await durableBlob(transport, canonicalBytes(anchor), process.platform);
+  const prepared: Array<typeof issued[number] & { request: Record<string, unknown>; requestSha256: string;
+    env: NodeJS.ProcessEnv; resultPath: string }> = [];
+  for (const entry of issued) {
+    const { group, runId, run, executionBinding, provider } = entry;
+    const request = {
+      schemaVersion: 1, kind: 'test-runtime-request-v1', runId, commandRunId,
+      commandName: command.name, origin: 'configured', context,
+      configuredInvocation: { command: command.command, args: command.args },
+      effectiveInvocation: executionBinding.resolvedInvocation, executionBinding,
+      selectedTestIds: group.testIds, selectedFiles: [...group.testFiles].sort(),
+      profileSha256: snapshot.profileSha256, inputsSha256: snapshot.inputsSha256, dispatchSha256,
+    };
+    const requestSha256 = await durableBlob(transport, canonicalBytes(request), process.platform);
+    await transportJson(join(run, 'request.json'), request, true);
+    const env: NodeJS.ProcessEnv = { ...environment,
+      NODE_OPTIONS: [...tokens, executionBinding.resolvedRuntimeEnvironment.NODE_OPTIONS].join(' '),
+      MUSUBIX5_TEST_RUNTIME_CLOCK: JSON.stringify(provider),
+      MUSUBIX5_TEST_RUNTIME_REQUEST: join(run, 'request.json'),
+      MUSUBIX5_TEST_RUNTIME_DISPATCH: join(transport, 'dispatch.json') };
+    if (!ledger) delete env.MUSUBIX5_CANDIDATE_PARTITION_MANIFEST;
+    if (ledger) {
+      Object.assign(env, { MUSUBIX5_CANDIDATE_SLOT_LEDGER: join(transport, 'candidate-slot-ledger.json'),
+        MUSUBIX5_CANDIDATE_PARTITION_MANIFEST: manifestPath });
+    }
+    prepared.push({ ...entry, request, requestSha256, env, resultPath: join(run, 'process-result.json') });
+  }
+  let execution: ProcessResult;
+  if (ledger) await transportJson(join(transport, 'candidate-slot-ledger.json'), ledger, true);
+  if (grouped) {
+    const groupPath = join(transport, 'groups.json');
+    await transportJson(groupPath, { schemaVersion: 1, groups: prepared.map((entry) => ({
+      ordinal: entry.group.ordinal, ...entry.executionBinding.resolvedInvocation,
+      env: entry.env, resultPath: entry.resultPath,
+    })) }, true);
+    execution = await runner(scheduler.command, [...scheduler.args, '--runtime-dispatch', groupPath], {
+      ...options, env: { ...environment, ...(ledger ? {
+        MUSUBIX5_CANDIDATE_SLOT_LEDGER: join(transport, 'candidate-slot-ledger.json'),
+        MUSUBIX5_CANDIDATE_PARTITION_MANIFEST: manifestPath,
+      } : {}) },
+      ...(ledger ? { slotProvider: { acquire: async () => async () => {} } } : {}),
+    });
+  } else {
+    const entry = prepared[0]!;
+    validateTestRuntimeExecutionBinding(entry.executionBinding);
+    const effective = entry.executionBinding.resolvedInvocation;
+    const node = ['npx', 'npm'].includes(effective.command) ? process.execPath : effective.command;
+    await authorizeTestRuntimeNode(root, node);
+    execution = await runner(node, [join(root, 'node_modules/vitest/vitest.mjs'), ...observedVitestArgs(effective)],
+      { ...options, env: entry.env });
+  }
+  if (execution.status !== 'completed') {
+    incompleteCommand(command.name, execution);
+  }
+  let slotObservation: Awaited<ReturnType<typeof validateCandidateSlotLedger>> | undefined;
+  const regions: Record<string, { durationMs: number; status: 'completed'; exitCode: 0; reportComplete: true; acknowledgmentComplete: true }> = {};
+  const measured = (name: string, duration: number) => {
+    regions[name] = { durationMs: Math.ceil(duration), status: 'completed', exitCode: 0,
+      reportComplete: true, acknowledgmentComplete: true };
+  };
+  if (ledger && rootLease) {
+    const terminationStarted = Number(process.hrtime.bigint()) / 1_000_000;
+    await releaseCandidateSlots(ledger, rootLease);
+    slotObservation = await validateCandidateSlotLedger(ledger);
+    measured(`termination:${command.name}:termination`, Number(process.hrtime.bigint()) / 1_000_000 - terminationStarted);
+    const manifest = object(JSON.parse((await regular(manifestPath)).toString('utf8')), 'acknowledgment-binding', ['schemaVersion', 'acknowledgments']);
+    const entries = array(manifest.acknowledgments, 'acknowledgment-binding');
+    if (manifest.schemaVersion !== 1 || entries.length !== prepared.length) invalid('acknowledgment-binding', 'partition manifest inventory');
+    for (const [ordinal, value] of entries.entries()) {
+      const entry = prepared[ordinal]!, ackPath = join(entry.run, 'ack.json');
+      const observed = object(value, 'acknowledgment-binding', ['ordinal', 'ackPath', 'ackDigest', 'resultPath', 'resultDigest', 'startedAt', 'completedAt']);
+      if (observed.ordinal !== ordinal || observed.ackPath !== ackPath || observed.resultPath !== entry.resultPath
+        || observed.ackDigest !== sha256(await regular(ackPath)) || observed.resultDigest !== sha256(await regular(entry.resultPath))) {
+        invalid('acknowledgment-binding', `partition-${ordinal}: manifest binding`);
+      }
+      const result = JSON.parse((await regular(entry.resultPath)).toString('utf8'));
+      if (observed.startedAt !== result.startedAt || observed.completedAt !== result.completedAt
+        || !Number.isFinite(observed.startedAt) || !Number.isFinite(observed.completedAt)
+        || Number(observed.completedAt) < Number(observed.startedAt)) invalid('acknowledgment-binding', 'region timing');
+    }
+    for (const partition of compositeDispatch!.partitions) {
+      const owned = entries.filter((_entry, ordinal) => prepared[ordinal]!.group.testIds.every(id => partition.testIds.includes(id))
+        && prepared[ordinal]!.group.testFiles.every(file => partition.files.includes(file)));
+      measured(`partition:${command.name}:${partition.id}`, Math.max(...owned.map(value => Number((value as Record<string, unknown>).completedAt)))
+        - Math.min(...owned.map(value => Number((value as Record<string, unknown>).startedAt))));
+    }
+    for (const wave of new Set(compositeDispatch!.partitions.map(partition => partition.wave))) {
+      const wavePartitions = compositeDispatch!.partitions.filter(partition => partition.wave === wave);
+      const owned = entries.filter((_entry, ordinal) => wavePartitions.some(partition =>
+        prepared[ordinal]!.group.testIds.every(id => partition.testIds.includes(id))
+          && prepared[ordinal]!.group.testFiles.every(file => partition.files.includes(file))));
+      measured(`wave:${command.name}:wave-${wave}`, Math.max(...owned.map(value => Number((value as Record<string, unknown>).completedAt)))
+        - Math.min(...owned.map(value => Number((value as Record<string, unknown>).startedAt))));
+    }
+  }
+  const runs: TestRuntimeProvenance['runs'] = [];
+  const failedGroups: Array<{ ordinal: number; failures: CandidateFailedTest[] | null }> = [];
+  const acceptedReports: Buffer[] = [];
+  const compositeGroups: Array<{ entry: typeof prepared[number]; ack: Record<string, unknown>; native: ProcessResult; report: Buffer }> = [];
+  for (const entry of prepared) {
+    let native = execution;
+    let report: Buffer | null = null;
+    let candidateReportBound = grouped;
+    if (grouped) {
+      const result = object(JSON.parse((await regular(entry.resultPath)).toString('utf8')), 'acknowledgment-binding',
+        ['status', 'exitCode', 'durationMs', 'nativeReportBase64', ...(ledger ? ['startedAt', 'completedAt'] : [])]);
+      const status = result.status;
+      if (status !== 'completed' && status !== 'missing' && status !== 'timeout' && status !== 'error'
+        || !Number.isSafeInteger(result.durationMs)) invalid('acknowledgment-binding');
+      native = { ...execution, status,
+        exitCode: result.exitCode === null ? null : Number(result.exitCode), durationMs: Number(result.durationMs) };
+      report = result.nativeReportBase64 === null ? null : base64(result.nativeReportBase64);
+    } else {
+      const path = nativeReportPath(entry.executionBinding.resolvedInvocation.args, options.cwd);
+      if (path) {
+        try {
+          report = await regular(path);
+          candidateReportBound = options.candidateReportPath !== undefined
+            && path === resolve(options.candidateReportPath);
+        } catch (cause) {
+          if (!errno(cause, 'ENOENT')) throw cause;
+        }
+      }
+    }
+    if (native.status !== 'completed') {
+      incompleteCommand(command.name, native);
+    }
+    if (partitioned && report) acceptedReports.push(report);
+    let ackBytes: Buffer;
+    try {
+      ackBytes = await regular(join(entry.run, 'ack.json'));
+    } catch (cause) {
+      if (errno(cause, 'ENOENT')) invalid('acknowledgment-binding', 'missing acknowledgment');
+      throw cause;
+    }
+    const ack = blobSchema(JSON.parse(ackBytes.toString('utf8')));
+    if (ack.complete !== true) incompleteCommand(command.name, native);
+    if (compositeDispatch && report) {
+      const nativeReport = object(JSON.parse(report.toString('utf8')), 'acknowledgment-binding');
+      const nativeFiles = array(nativeReport.testResults).map(value => {
+        const file = object(value, 'acknowledgment-binding');
+        return relative(root, text(file.name, 'acknowledgment-binding')).replaceAll('\\', '/');
+      }).sort();
+      equal(nativeFiles, [...entry.group.testFiles].sort(), 'acknowledgment-binding');
+      compositeGroups.push({ entry, ack, native, report });
+    }
+    const acknowledgmentSha256 = await durableBlob(transport, ackBytes, process.platform);
+    const resultSha256 = await durableBlob(transport, canonicalBytes({
+      schemaVersion: 1, kind: 'test-runtime-result-v1', runId: entry.runId, requestSha256: entry.requestSha256,
+      effectiveInvocation: entry.executionBinding.resolvedInvocation, executionBinding: entry.executionBinding,
+      status: native.status, exitCode: native.exitCode, durationMs: native.durationMs,
+      nativeReportBase64: report?.toString('base64') ?? null,
+    }), process.platform);
+    runs.push({ ordinal: entry.group.ordinal, runId: entry.runId, requestSha256: entry.requestSha256,
+      anchorSha256: hash(anchor), acknowledgmentSha256, resultSha256 });
+    if (options.collectCandidateFailures === true) {
+      failedGroups.push({ ordinal: entry.group.ordinal, failures: candidateReportBound
+        && report && report.length > 0 && report.length <= 4_000_000
+        ? extractCandidateFailedTests(report.toString('utf8'), { root }) : null });
+    }
+  }
+  const addresses = new Set<string>([snapshot.profileSha256, snapshot.inputsSha256, dispatchSha256, hash(anchor),
+    ...snapshot.entries.map((entry) => entry.blobSha256)]);
+  for (const run of runs) {
+    for (const address of [run.requestSha256, run.acknowledgmentSha256, run.resultSha256]) addresses.add(address);
+    const ack = object(JSON.parse((await regular(join(blobDirectory(transport), run.acknowledgmentSha256))).toString('utf8')), 'blob-schema');
+    for (const worker of array(ack.workerSha256s)) addresses.add(text(worker, 'blob-schema'));
+  }
+  const provenance: TestRuntimeProvenance = {
+    kind: 'stable-test-wall-clock-v1', profileSha256: snapshot.profileSha256, inputsSha256: snapshot.inputsSha256,
+    dispatchSha256, runs, publication: {
+      durability: process.platform === 'win32' ? 'win32-file-flush-no-replace-rehash' : 'posix-file-directory-fsync',
+      closureSha256: hash([...addresses].sort()),
+    },
+  };
+  await publishTestRuntimeClosure({ sourceRoot: transport, controlRoot, provenance, context, platform: process.platform });
+  let compositeDigest: string | undefined;
+  const mergeStarted = Number(process.hrtime.bigint()) / 1_000_000;
+  if (compositeDispatch && slotObservation) {
+    const acknowledgments: CandidatePartitionAcknowledgment[] = compositeDispatch.partitions.map(partition => {
+      const owned = compositeGroups.filter(({ entry }) => entry.group.testIds.every(id => partition.testIds.includes(id))
+        && entry.group.testFiles.every(file => partition.files.includes(file)));
+      if (!owned.length) invalid('acknowledgment-binding', `${partition.id}: missing composite result`);
+      const nativeTests = owned.flatMap(({ entry, report }) =>
+        normalizeAdapterReport('vitest', report.toString('utf8')).tests.filter(test => entry.group.testIds.includes(test.id)));
+      return { ...partition, nonce: compositeDispatch!.nonce, planDigest: compositeDispatch!.planDigest, command: command.name,
+        dispatchDigest: candidatePartitionDispatchDigest(compositeDispatch!), executionBinding: { command: scheduler.command, args: scheduler.args },
+        observedVitestArgs: owned.flatMap(({ ack }) => strings(object(ack.reporterRegistration, 'acknowledgment-binding').observedVitestArgs, 'acknowledgment-binding')),
+        workers: owned.flatMap(({ entry, ack }) => array(ack.workers).map(value => {
+          const worker = object(value, 'acknowledgment-binding');
+          return { workerId: `${entry.runId}:${text(worker.workerId, 'acknowledgment-binding')}`, file: text(worker.testPath, 'acknowledgment-binding') };
+        })),
+        observedMaximum: slotObservation!.maximum, status: 'completed',
+        exitCode: owned.some(({ native }) => native.exitCode !== 0) ? 1 : 0, signal: null,
+        failureStage: owned.some(({ native }) => native.exitCode !== 0) ? 'native-tests' : null,
+        tests: nativeTests.map(test => ({ testId: test.id, status: test.status, nativeMessage: '' })) };
+    });
+    const merged = validateCandidatePartitionAcknowledgments(compositeDispatch, acknowledgments, slotObservation);
+    if (command.name === 'codegraph-tests') {
+      const reportArgument = scheduler.args.indexOf('--report');
+      if (reportArgument < 0) invalid('augmentation-binding', 'CodeGraph aggregate path');
+      const path = resolve(options.cwd, scheduler.args[reportArgument + 1]!);
+      const previous = object(JSON.parse((await regular(path)).toString('utf8')), 'acknowledgment-binding');
+      const previousTests = array(previous.tests).map(value => object(value, 'acknowledgment-binding'));
+      const tests = [...merged.tests].sort((a, b) => Buffer.compare(Buffer.from(a.testId), Buffer.from(b.testId))).map(test => {
+        const existing = previousTests.filter(value => value.id === test.testId);
+        if (existing.length !== 1 || existing[0]!.status !== test.status) invalid('acknowledgment-binding', 'CodeGraph native result mismatch');
+        return { id: test.testId, status: test.status, ...(existing[0]!.operations ? { operations: existing[0]!.operations } : {}) };
+      });
+      if (tests.length !== previousTests.length) invalid('acknowledgment-binding', 'CodeGraph native inventory');
+      await writeFile(path, canonicalBytes({ schemaVersion: 1, tests }), { mode: 0o600 });
+    }
+    const manifest = { schemaVersion: 1, dispatchDigest: candidatePartitionDispatchDigest(compositeDispatch),
+      planDigest: compositeDispatch.planDigest, nonce: compositeDispatch.nonce,
+      observedMaximum: slotObservation.maximum, ledgerDigest: slotObservation.ledgerDigest,
+      acknowledgments: acknowledgments.map(ack => ({ ordinal: ack.ordinal, digest: hash(ack) })) };
+    compositeDigest = hash(manifest);
+    await transportJson(join(transport, 'composite-acknowledgments.json'), { manifest, acknowledgments }, true);
+  }
+  if (partitioned && candidatePlan) {
+    const expectedIds = candidatePlan.commands.find(value => value.name === command.name)!.testIds;
+    const merged = mergeCandidateVitestReports(acceptedReports, expectedIds);
+    await writeFile(scheduler.args[scheduler.args.indexOf('--report') + 1]!, merged, { flag: 'wx', mode: 0o600 });
+  }
+  if (ledger) measured(`merge:${command.name}:merge`, Number(process.hrtime.bigint()) / 1_000_000 - mergeStarted);
+  await transportJson(join(transport, 'provenance.json'), provenance, true);
+  const result = { ...execution, testRuntime: provenance,
+    ...(slotObservation ? { candidateExecution: { maximum: slotObservation.maximum, ledgerDigest: slotObservation.ledgerDigest,
+      compositeDigest, planDigest: compositeDispatch?.planDigest } } : {}) };
+  if (slotObservation) Object.assign(result.candidateExecution!, { regions });
+  if (options.collectCandidateFailures === true) {
+    const failures = mergeCandidateFailedTestGroups(failedGroups);
+    if (failures) Object.defineProperty(result, candidateFailures, { value: failures, enumerable: false });
+  }
+  return result;
+}
+
+/** @id CODE-M5-TEST-RUNTIME-PROVIDER-001
+ * @implements REQ-M5-COMPAT-013 REQ-M5-LIFECYCLE-006
+ * @design DES-M5-015
+ */
+export async function prepareTestRuntimeProvider(
+  root: string,
+): Promise<TestRuntimeProvider | undefined> {
+  root = resolve(root);
+  const rawConfig = object(JSON.parse((await regular(join(root, '.musubix/config.json'))).toString('utf8')), 'profile-digest');
+  if (!Object.hasOwn(rawConfig, 'testRuntime')) return undefined;
+  validateTestRuntimeProfile(rawConfig.testRuntime);
+  const bridge = globalThis.__musubix5TestRuntimeCoordinator;
+  if (!bridge || bridge.root !== resolve(root) || bridge.controller) invalid('reporter-missing');
+  const incomingPath = process.env.MUSUBIX5_TEST_RUNTIME_REQUEST;
+  const incoming = incomingPath
+    ? blobSchema(JSON.parse((await regular(incomingPath)).toString('utf8'))) : undefined;
+  if (Boolean(incomingPath) !== Boolean(process.env.MUSUBIX5_TEST_RUNTIME_DISPATCH)) invalid('worker-scope');
+  const runId = incoming ? text(incoming.runId, 'worker-scope') : randomUUID();
+  const incomingBinding = incoming ? object(incoming.executionBinding, 'augmentation-binding') : undefined;
+  const incomingLocations = incomingBinding ? locations(incomingBinding.locations) : undefined;
+  const run = incomingLocations?.run ?? await allocateRuntimeRun(root, runId);
+  const store = incomingLocations?.['command-run'] ?? run;
+  if (incomingLocations && (incomingLocations.repo !== root || incomingPath !== join(run, 'request.json')
+    || process.env.MUSUBIX5_TEST_RUNTIME_DISPATCH !== join(store, 'dispatch.json'))) invalid('worker-scope');
+  const snapshot = await snapshotRuntime(root, store);
+  const anchor = await runtimeAnchor(root, runId);
+  const provider: TestRuntimeProvider = {
+    schemaVersion: 1, kind: 'test-runtime-provider-v1', executionRunId: runId,
+    profileSha256: snapshot.profileSha256, inputsSha256: snapshot.inputsSha256,
+    bootstrapSha256: snapshot.entries.find((e) => e.path === preloadPath)!.rawSha256,
+    anchorId: hash(anchor), anchor,
+  };
+  const actual = { command: process.execPath, args: [join(root, 'node_modules/vitest/vitest.mjs'), ...bridge.args] };
+  const runtimeReporter = `--reporter=${join(root, reporterPath)}`;
+  const logical = {
+    command: process.execPath,
+    args: [join(root, 'node_modules/vitest/vitest.mjs'), ...bridge.args.filter((arg) => arg !== runtimeReporter)],
+  };
+  const selectedFiles = [...bridge.files].sort();
+  let selectedTestIds = [...new Set(bridge.args.flatMap((arg) => arg.match(/TEST-[A-Z0-9-]+/g) ?? []))];
+  if (!selectedTestIds.length && incoming && array(incoming.selectedTestIds).length
+    && process.env.MUSUBIX5_CANDIDATE_ROOT === root
+    && ['candidate', 'calibration'].includes(process.env.CANDIDATE_MODE ?? '')) {
+    selectedTestIds = (await Promise.all(selectedFiles.map(async path =>
+      authoritativeCandidateTestIds(await readFile(join(root, path), 'utf8'), path)))).flat();
+  }
+  let request: Record<string, unknown>;
+  if (incoming) {
+    if (incoming.kind !== 'test-runtime-request-v1' || incoming.origin !== 'configured') invalid('worker-scope');
+    validateTestRuntimeExecutionBinding(incoming.executionBinding);
+    equal(incoming.profileSha256, snapshot.profileSha256, 'profile-digest');
+    equal(incoming.inputsSha256, snapshot.inputsSha256, 'input-hash');
+    equal(incoming.selectedFiles, selectedFiles, 'acknowledgment-binding');
+    equal(incoming.selectedTestIds, selectedTestIds, 'acknowledgment-binding');
+    equal(observedVitestArgs(invocation(incoming.effectiveInvocation)), bridge.args, 'acknowledgment-binding');
+    const dispatch = blobSchema(JSON.parse((await regular(join(store, 'dispatch.json'))).toString('utf8')));
+    equal(hash(dispatch), incoming.dispatchSha256, 'acknowledgment-binding');
+    if (!array(dispatch.invocations).some((value) => {
+      const entry = object(value, 'acknowledgment-binding');
+      return entry.runId === runId && hash(entry.executionBinding) === hash(incoming.executionBinding);
+    })) invalid('acknowledgment-binding');
+    request = incoming;
+  } else {
+    const executionBinding = augmentTestRuntimeInvocation({
+      logicalInvocation: logical, profileSha256: testRuntimeProfileSha256, runId, commandRunId: runId,
+      anchor, locations: { repo: root, run, 'command-run': store },
+    });
+    // Standalone diagnostics declare their actual argv, never runner authority.
+    equal(executionBinding.resolvedInvocation, actual, 'augmentation-binding');
+    const dispatch = { schemaVersion: 1, kind: 'test-runtime-dispatch-v1', commandRunId: runId,
+      commandSha256: executionBinding.logicalCommandSha256, profileSha256: snapshot.profileSha256,
+      inputsSha256: snapshot.inputsSha256, invocations: [{ ordinal: 0, runId,
+        argv: [actual.command, ...actual.args], selectedTestIds, selectedFiles, executionBinding }] };
+    const dispatchSha256 = await durableBlob(store, canonicalBytes(dispatch), process.platform);
+    request = { schemaVersion: 1, kind: 'test-runtime-request-v1', runId, commandRunId: runId,
+      commandName: 'test', origin: 'standalone', context: {
+        repositoryId: null, changeId: null, generation: null, commit: null, role: 'standalone',
+      }, configuredInvocation: actual, effectiveInvocation: actual, executionBinding,
+      selectedTestIds, selectedFiles, profileSha256: snapshot.profileSha256, inputsSha256: snapshot.inputsSha256, dispatchSha256 };
+    await durableBlob(store, canonicalBytes(anchor), process.platform);
+    await transportJson(join(run, 'request.json'), request, true);
+    await transportJson(join(store, 'dispatch.json'), dispatch, true);
+  }
+  const requestSha256 = await durableBlob(store, canonicalBytes(request), process.platform);
+  const states = new Map(selectedFiles.map((path) => [path, 'not-started']));
+  const packets = new Map<string, { digest: string; packet: Record<string, unknown> }>();
+  let complete = false, reportedFailed = 0, pollingError: unknown;
+  let queue = Promise.resolve();
+  const update = async () => {
+    for (const name of (await readdir(join(run, 'worker-acks'))).sort()) {
+      if (!/^[a-f0-9-]{36}\.json$/.test(name)) invalid('unsafe-path', 'worker packet');
+      if (packets.has(name)) continue;
+      const bytes = await regular(join(run, 'worker-acks', name));
+      const packet = blobSchema(JSON.parse(bytes.toString('utf8')));
+      if (packet.kind !== 'test-runtime-worker-v1') invalid('acknowledgment-schema');
+      equal(packet.runId, runId, 'acknowledgment-stale');
+      equal(packet.requestSha256, requestSha256, 'acknowledgment-stale');
+      const worker = object(packet.worker, 'acknowledgment-schema');
+      if (!states.has(text(worker.testPath, 'acknowledgment-binding'))) invalid('acknowledgment-binding', 'foreign file');
+      if ([...packets.values()].some((p) => object(p.packet.worker, 'acknowledgment-schema').testPath === worker.testPath)) {
+        invalid('acknowledgment-binding', 'duplicate realm');
+      }
+      const digest = await durableBlob(store, bytes, process.platform);
+      packets.set(name, { digest, packet });
+    }
+    const ordered = [...packets.values()].sort((a, b) => String(object(a.packet.worker, 'blob-schema').workerId)
+      .localeCompare(String(object(b.packet.worker, 'blob-schema').workerId)));
+    const ack = { schemaVersion: 1, kind: 'test-runtime-ack-v1', runId, requestSha256,
+      profileSha256: snapshot.profileSha256, inputsSha256: snapshot.inputsSha256,
+      nodeVersion: process.version, platform: process.platform, anchor, anchorSha256: hash(anchor),
+      workers: ordered.map((p) => p.packet.worker), files: [...states].sort(([a], [b]) => a.localeCompare(b)).map(([path, state]) => ({ path, state })),
+      workerSha256s: ordered.map((p) => p.digest), reporterRegistration: {
+        reporterPath: join(root, reporterPath), requestSha256, observedProcess: actual, observedVitestArgs: bridge.args,
+      }, reportedFailed, bootstrapErrors: [], complete };
+    await transportJson(join(run, 'ack.json'), ack);
+    if (complete) await durableBlob(store, canonicalBytes(ack), process.platform);
+  };
+  const schedule = () => { queue = queue.then(update); return queue; };
+  const interval = setInterval(() => {
+    if (pollingError !== undefined) return;
+    void schedule().catch((cause: unknown) => { pollingError = cause; clearInterval(interval); });
+  }, 250);
+  interval.unref();
+  bridge.controller = {
+    async module(path, state) {
+      const local = relative(root, path).split('\\').join('/');
+      if (!states.has(local)) invalid('acknowledgment-binding', local);
+      states.set(local, state);
+      if (pollingError !== undefined) throw pollingError;
+      await schedule();
+    },
+    async finish(delivered, failed) {
+      clearInterval(interval);
+      if (pollingError !== undefined) throw pollingError;
+      equal(delivered, provider, 'acknowledgment-binding');
+      for (const entry of snapshot.entries) {
+        const current = await runtimeInput(root, entry.path);
+        if (current.mode !== entry.mode || sha256(current.bytes) !== entry.rawSha256) invalid('input-hash', entry.path);
+      }
+      reportedFailed = failed;
+      await schedule();
+      if (packets.size !== states.size || [...states.values()].some((state) => !['completed', 'failed', 'skipped'].includes(state))) {
+        invalid('acknowledgment-binding', 'incomplete native inventory');
+      }
+      complete = true;
+      await schedule();
+    },
+  };
+  await schedule();
+  bridge.configureEnvironment({ MUSUBIX5_TEST_RUNTIME_REQUEST: join(run, 'request.json'),
+    MUSUBIX5_TEST_RUNTIME_DISPATCH: join(store, 'dispatch.json') });
+  return Object.freeze({ ...provider, anchor: Object.freeze(anchor) });
+}

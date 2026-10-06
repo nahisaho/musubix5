@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-05T02:35:10.664Z",
-  "totalRequirements": 127,
-  "modeledRequirements": 4,
-  "modeledFraction": 0.031496062992125984,
+  "generatedAt": "2026-10-06T01:43:36.335Z",
+  "totalRequirements": 133,
+  "modeledRequirements": 5,
+  "modeledFraction": 0.03759398496240601,
   "result": {
     "valid": true,
     "abstraction": "Consistency of explicit branch-scoped conditional, exact unit-normalized integer numeric, bounded temporal interval, deterministic state-transition, and controlled unconditional Boolean constraints; not implementation correctness.",
@@ -29,6 +29,15 @@
     ],
     "constraints": [
       {
+        "requirement": "REQ-M5-CI-EFFICIENCY-003",
+        "constraint": {
+          "kind": "temporal",
+          "trigger": "candidate_matrix_job_started",
+          "response": "signed_candidate_envelope_created",
+          "withinMs": 1200000
+        }
+      },
+      {
         "requirement": "REQ-M5-WAVE1-PUBLISH-001",
         "constraint": {
           "kind": "temporal",
@@ -50,6 +59,11 @@
     "unsupported": [
       "REQ-M5-WAVE1-CLEANUP-001",
       "REQ-M5-WAVE1-CLEANUP-002",
+      "REQ-M5-CI-EFFICIENCY-001",
+      "REQ-M5-CI-EFFICIENCY-002",
+      "REQ-M5-CI-EFFICIENCY-005",
+      "REQ-M5-CI-EFFICIENCY-006",
+      "REQ-M5-CI-EFFICIENCY-004",
       "REQ-M5-GRAPH-001",
       "REQ-M5-GRAPH-002",
       "REQ-M5-GRAPH-003",
@@ -182,6 +196,31 @@
         "code": "FORMAL_UNSUPPORTED",
         "severity": "warning",
         "message": "REQ-M5-WAVE1-CLEANUP-002 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-CI-EFFICIENCY-001 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-CI-EFFICIENCY-002 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-CI-EFFICIENCY-005 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-CI-EFFICIENCY-006 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
+      },
+      {
+        "code": "FORMAL_UNSUPPORTED",
+        "severity": "warning",
+        "message": "REQ-M5-CI-EFFICIENCY-004 is outside the unconditional English/Japanese Boolean abstraction; it was not checked for consistency."
       },
       {
         "code": "FORMAL_UNSUPPORTED",
@@ -802,6 +841,7 @@
   },
   "fingerprints": {
     ".musubix/features/candidate-cleanup-policy/requirements.md": "253a36dbca0b76a81f452c845f2988e2b33163823095ee5ac1add81519dd5462",
+    ".musubix/features/candidate-gate-efficiency/requirements.md": "bf846911fbcff810a212441299d2546fed57cfbd3f4df20abcd20ccc198231b9",
     ".musubix/features/codegraph-performance/requirements.md": "c6e62a96471c7a89c179e368d574f91f604624f2d70ff9639c94a9379ffdb7ea",
     ".musubix/features/evidence-selector-guards/requirements.md": "fdb70191e472f41e16eab793b2b2d86583587cd86a88db5627be59bf045ef601",
     ".musubix/features/multi-change-workspaces/requirements.md": "9071c2c1f8a7ca49b9137cf074fe30b33343264536f41efcdddad0ab2a6cff4d",

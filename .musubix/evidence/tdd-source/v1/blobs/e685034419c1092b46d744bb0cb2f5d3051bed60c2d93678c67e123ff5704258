@@ -1,0 +1,295 @@
+# ADR-0042: Make candidate verification hermetic and platform-explicit
+
+Status: Accepted through Generation 39; Generation 45 supersession pending design approval.
+
+## Context
+
+CHANGE-0017 Generation 27 passed the complete local gate after its scoped Git
+LFS migration, but candidate run 37007570832 failed on every required Node.js 24
+matrix platform. Ubuntu rejected archived acknowledgments because their producer
+Node path differed from the runner, then consumed absent or stale local cache
+provenance. Windows additionally exposed unsupported directory sync, checkout
+conversion, worktree mode and invalid fixture-name assumptions. macOS returned
+an abnormal gate payload that the workflow masked with a secondary property
+access exception. Issue #54 records the release-blocking evidence.
+
+Generation-29 candidate run 37088115126 then proved a distinct orchestration
+defect: the workflow used the single configured `test` timeout as the outer
+timeout for the complete seven-command matrix gate. Ubuntu and macOS were
+terminated at that boundary with empty output, and Windows returned an
+incomplete-command runtime acknowledgment. The per-command ceiling was correct;
+the outer budget was not.
+
+## Decision
+
+Separate archived provenance from new execution authorization. Archived runtime
+paths remain hash-bound evidence but are never resolved or launched by a
+validator host. New execution keeps a closed Node.js 24 authorization policy.
+
+Make candidate matrix input production hermetic. Matrix mode creates graph and
+performance inputs from the immutable candidate under a run-scoped root and
+binds observations to candidate, platform, Node, command, run, report, test,
+counter and exit provenance. Local quality cache paths grant no matrix credit.
+
+Use explicit platform contracts at filesystem boundaries. File publication,
+authorization, no-replace semantics and rehash remain mandatory everywhere;
+only the closed parent-directory open/sync error sets may be tolerated.
+Candidate checkout disables line-ending conversion, treats Git index mode as
+authority on Windows, retains POSIX worktree executable-bit checks, and verifies
+logical LFS bytes separately from Git pointers. Git's EOL report describes
+content, not the declared `text` attribute: content without CR or LF reports
+`none`, while newline-containing `-text` files may report `lf`, `crlf`, or
+`mixed`. The comparator therefore rejects non-empty repository-local
+`info/attributes`, disables system attributes, overrides the global attributes
+file with a comparator-owned empty file, clears `attr.tree` and
+`GIT_ATTR_SOURCE`, and then uses candidate-index attributes obtained with
+`git check-attr --cached` to select text or binary policy. Non-regular or
+unreadable `info/attributes` entries fail closed. It applies EOL constraints
+only to the text class and always proves non-LFS identity by hashing unfiltered
+raw bytes as a Git blob.
+
+Validate cross-platform fixture names before mutation. Candidate workflow
+subprocess execution passes through one bounded spool/capture boundary and typed
+normalizer with an ordered abnormal-result decision table. The complete raw
+stdout spool is the only parsing input; raw stream digests are computed before
+redaction, while bounded diagnostic tails are separate redacted projections.
+The normalizer emits either a normal candidate result or a bounded failure
+result and never dereferences an unvalidated shape.
+
+Separate inner command timeouts from the outer gate-orchestration timeout. The
+runner exports one calculator that requires exactly the seven closed required
+commands, validates the `test` positive safe-integer timeout at no more than 900,000
+milliseconds and each other closed command at no more than 300,000 milliseconds, validates `formal.timeoutMs` from 100 through 300,000
+milliseconds, and returns 75,000 milliseconds plus both the command sum and
+the formal timeout. The command array must contain exactly the seven names with
+no extras. The workflow uses only this calculated value for the whole
+`gate --matrix --json` subprocess. The inner gate remains responsible for
+enforcing each command's and the formal execution's original timeout. The
+calculator fails closed before spawn for missing, duplicate or extra command
+declarations, invalid timeout values, and a non-safe result outside 75,107
+through 3,075,000 milliseconds. Those guards throw only the exported
+`CandidateGateStartupError`. Execution order is module import, wrapper
+context/config validation, timeout calculation, candidate/repository/LFS/tree
+preconditions under one aggregate 300,000-millisecond deadline, secure spool
+creation, `onCommandStart`, then subprocess spawn. The outer timer starts
+immediately before the spawn attempt. The workflow emits the
+existing runner-startup result with `GATE_RUNNER_UNAVAILABLE`, null exit and
+signal, and empty-stream digests only for import failure or a caught
+`CandidateGateStartupError` thrown before `runCandidateGateWorkflow()` is
+called. It requires both `instanceof runner.CandidateGateStartupError` and the
+exact code `GATE_RUNNER_UNAVAILABLE`; it never infers startup class from timing
+alone.
+Every value thrown inside the precondition region remains inside
+`runCandidateGateWorkflow()`, is normalized to either an eligible preserved
+domain code and bounded redacted message or the fixed generic precondition
+failure, is not startup-class, and never triggers that fallback. Nothing thrown
+inside that region is rethrown. Startup faults before the precondition step
+short-circuit precondition evaluation; a precondition fault suppresses later
+callback, spawn, and pre-spawn child-error evaluation.
+Precondition-deadline expiry terminates probe process trees, performs at most
+5,000 milliseconds of cleanup, returns precondition-domain
+`CANDIDATE_GATE_PRECONDITION_TIMEOUT` with fixed text and `timedOut: false`, and
+never reaches spool creation or spawn. `runCandidateGateWorkflow()` uses
+distinct precondition and runner-command
+startup `try` regions. It catches secure-spool, callback, synchronous-spawn,
+and pre-spawn child-error startup faults and returns the startup-schema result
+itself; those
+runner-internal faults do not invoke the dependency-free fallback script. The
+same `CandidateGateStartupError` instance is therefore generic precondition
+failure in the precondition region and startup failure in the callback region.
+Every startup fault after spool creation begins closes handles and removes
+partial or complete spools within the bounded cleanup. A pre-spawn child error
+cancels the timer, conditionally terminates by PID, drains and cleans up before
+throwing, and never returns an outcome. A
+post-spawn child error is
+returned as outcome data with `spawned: true`, `childErrorMessage`, and
+`GATE_SUBPROCESS_ERROR`; any other runner-owned exception after spawn is
+normalized to `GATE_RUNNER_PROCESSING_FAILED`. Both paths terminate the process
+tree and use the bounded drain instead of escaping.
+After drain, `runCandidateGateWorkflow()` owns a distinct 300,000-millisecond
+post-condition region for repeated LFS closure and tracked-tree verification.
+Expiry or another exception terminates probe trees, cleans up for at most 5,000
+milliseconds, emits runner-processing ahead of outer timeout, retains command
+exit/signal/timeout/digest metadata, and sets `postTreeMatchesCandidate: false`.
+The fixed
+75,000-millisecond term is an engineering allowance
+for solver discovery, process-runner kill fallbacks, inner-gate Git probes,
+startup, matrix input materialization and other non-command work; candidate
+precondition probes are outside the outer timer. It does not claim that
+every possible internal timeout can be exhausted sequentially. Candidate
+precondition Git and LFS probes share one aggregate 300,000-millisecond deadline
+instead of inheriting the larger outer budget. Outer process-tree termination
+and its 5,000-millisecond pipe drain remain separate bounds after the outer
+timer fires.
+
+Expose typed production-default dependency seams for arithmetic, spawn, timers,
+clock, preconditions, process-tree termination, spool creation, result
+persistence and enumerated fault stages, and an importable workflow wrapper
+with validation dependencies and a fallback observer. Wrapper validation proves
+the result directory's create/sync/atomic-rename/delete behavior.
+`runCandidateGateWorkflow()` owns atomic primary persistence and removes spools
+in `finally` after success or failure. Primary persistence failure invokes the
+dependency-free `runner-processing-failure` fallback once. Import, startup and
+processing fallback modes have fixed domain code/message/cause tuples and
+absent optional tails/checks; fallback-persistence failure in any mode
+terminates fail-closed outside the envelope-availability claim. The matrix job
+uses `timeout-minutes: 110`; explicit pre-gate timeouts total at most 1,800,000
+milliseconds, the closed verification matrix step uses `timeout-minutes: 65`,
+and post-gate timeouts total at most 600,000 milliseconds. Within the
+3,900,000-millisecond gate step, precondition, outer, drain and aggregate
+300,000-millisecond post-condition budgets leave a 220,000-millisecond allowance for import, validation, spool creation,
+termination, primary/fallback persistence and cleanup. The step timeout bounds
+stalls without claiming filesystem calls are independently cancellable. The
+precondition and post-condition 5,000-millisecond cleanup waits are charged to
+that allowance, and the post-condition deadline begins only after drain. The
+declared step maximum is 6,300,000 milliseconds below the 6,600,000-millisecond
+(110-minute) job boundary, leaving 300,000 milliseconds for platform setup and cleanup. Both workflow LFS
+checks remain bounded defense in depth in addition to the runner precondition.
+
+Generation-32 run 37178547480 showed that the runner-owned proof was bounded but
+needlessly amplified: Windows was consistent with the closure scanner's private
+120,000-millisecond deadline and macOS exhausted the enclosing
+300,000-millisecond aggregate deadline. Preserve the aggregate deadline and the
+independent proof, but make the proof proportional to protected source
+bindings and distinct media. The protected namespace is exactly
+`.musubix/evidence/tdd-source/v1/blobs/`, which is the historical closure scope
+before and after this decision. Enumerate that pathspec in each reachable
+commit, populate one temporary index from the complete historical tree so
+ancestor attributes remain effective, validate every historical path, mode,
+attribute and pointer, reject conflicting sizes, batch bounded pointer reads,
+and hash each distinct `(OID, size)` media identity once per invocation. A
+repeated OID is not a repeated byte-integrity obligation after every binding to
+that OID has been validated. Historical attribute lookup disables system,
+global, environment-selected and repository-local uncommitted attribute
+authority while retaining committed ancestor `.gitattributes`; pointer-batch
+input and output progress concurrently under bounded backpressure. Set the
+direct-call scanner watchdog to 310,000
+milliseconds so the candidate runner's aggregate 300,000-millisecond timer
+always owns observable timeout classification. The tree comparator likewise
+combines text-byte classification, byte counting and Git blob hashing into one
+worktree stream while retaining before/after metadata checks.
+
+Generation-35 review found that the implementation incorrectly passed
+`historical: true` for the frozen candidate head as well as non-head commits.
+Because media verification is deduplicated by OID, an older binding could then
+be the single streamed representative and candidate-head `eol=lf` could escape
+strict validation. Preserve media deduplication, but make attribute validation
+unconditionally per binding: exact candidate-head commit equality selects
+strict non-historical attributes, and only non-head reachable commits receive
+the historical `eol=lf` relaxation. Reject moving strict attribute validation
+into the media loop because the loop intentionally observes only one binding
+per media identity and cannot prove every binding.
+
+Keep the Generation-27 candidate evidence API compatibility surface frozen.
+Runner execution, bounded stream capture, redaction and report normalization
+live in a dedicated `candidate-gate-runner.ts` module imported directly by the
+workflow. `candidate-gate.ts` retains only its existing ingestion and matrix
+identity responsibilities and is restored to commit `4e05d850` except for the
+single fingerprint-config trace block already tolerated by the frozen test, so
+the no-`testRuntime` trust digest remains valid without weakening or rewriting
+historical tests. Dependency direction is one-way and type-only from the runner
+to the frozen module.
+
+Generation 40 proposed preserving one signed envelope per matrix job and
+extending only the
+validated normal-result check projection. A required failed `command:*` check
+retains its integer-or-null exit code and separately redacted final stdout and
+stderr tails, each bounded to 20,000 Unicode scalar values. Passing command
+checks, optional failed commands, and non-command checks retain no command
+streams. Unsafe retained text activates the existing global parsed-text
+fail-closed path, omitting parsed checks while preserving status and digests.
+This uses the existing `TailRedactor`; a second artifact or unbounded log is
+rejected because it would weaken the exactly-one-envelope and redaction
+contracts.
+
+The configured `test` timeout becomes exactly 900,000 milliseconds because two
+macOS attempts and one Windows attempt exhausted 300,000 milliseconds before a
+normal gate report. Other command and formal ceilings remain unchanged. The
+outer calculator therefore accepts 75,107 through 3,075,000 milliseconds, the
+gate step becomes 65 minutes, and the matrix job becomes 110 minutes. A uniform
+900,000-millisecond ceiling for all commands is rejected because only `test`
+has remote evidence requiring the expansion and it would unnecessarily widen
+every command's failure window.
+
+Generation 45 incorporates that runner and envelope decision as current design
+under the complete requirement set `REQ-M5-CI-008`, `REQ-M5-COMPAT-013`, and
+`REQ-M5-LIFECYCLE-006`. Generation-40 through Generation-44 design and TDD
+evidence remain non-credit. To avoid the Generation-42 Red ordering failure,
+the authoritative orchestration test reads the actual config and workflow and
+asserts the approved 900,000/3,075,000/65/110 values before invoking any runner
+export; the restored baseline therefore fails with an assertion that observes
+300,000/2,475,000/55/100 rather than `CandidateGateStartupError`.
+The outer maximum observation uses test-local arithmetic as 75,000 plus the
+parsed actual `test` timeout plus six 300,000-millisecond non-test ceiling slots
+plus the 300,000-millisecond formal ceiling, not the live non-test values or
+runner calculator.
+`DES-M5-CI-008` owns runner validation, timeout orchestration,
+diagnostic-tail normalization, and workflow bounds; `DES-M5-015` owns the
+resulting execution-policy SHA-256
+`a9a084af6062c318e75124631cc2080521f57bac405dff102767760d773d6993`,
+complete candidate-gate SHA-256
+`d4251d4e7be83fb03fbf551f2e8d32c0584a6d34b709a0d3fa64da3f22a00ba5`,
+and unchanged Generation-27 legacy/no-`testRuntime` SHA-256
+`2487162acfb6d862ff118819267631f8f64195358798b57bedd4cfa9602792cd`.
+
+## Consequences
+
+Candidate evidence becomes reproducible from a fresh checkout instead of
+depending on the producer workstation's executable path or ignored cache.
+Windows behavior is explicit without weakening POSIX durability or candidate
+tree identity. Failing matrix jobs may upload signed diagnostic envelopes, but
+non-pass status remains ineligible for release evidence.
+
+The design adds focused cross-platform tests and a small shared result
+normalizer. Matrix jobs perform additional graph/performance generation, so
+their aggregate duration may exceed 300 seconds. The Generation-39 300-second per-command ceiling remains historical. Generation
+41 raises only the configured `test` command to 900 seconds, retains the other
+command and deterministic operation maxima, and widens the outer orchestration
+budget for that closed named exception.
+The Generation-33 closure implementation reduces process launches, complete
+tree enumeration and duplicate media reads without caching authority across
+workflow steps or invocations. Every run still derives its result from the
+candidate repository and LFS storage it independently verifies.
+
+## Rejected alternatives
+
+- Rewrite Generation-27 acknowledgments with runner paths: rejected because
+  historical evidence is immutable and would lose producer provenance.
+- Permit arbitrary archived or live executable paths: rejected because it
+  would convert provenance portability into code-execution authorization.
+- Commit or copy `.musubix/cache/**`: rejected because ignored generated cache
+  is not candidate authority and can be stale across commands or platforms.
+- Ignore every Windows `fsync` or access error: rejected because only a closed
+  unsupported parent-directory operation set is safe to tolerate.
+- Normalize candidate bytes after checkout: rejected because conversion could
+  hide a tracked content mismatch; checkout must instead be deterministic.
+- Require `i/lf w/lf` or `i/-text w/-text` for every declared text/binary file:
+  rejected because `git ls-files --eol` reports content classification rather
+  than attribute identity, so empty files report `none` and `-text` does not
+  produce a `-text` EOL token.
+- Skip failing tests on Windows or macOS: rejected because all three matrix
+  identities are mandatory release evidence.
+- Let the workflow throw on malformed gate JSON: rejected because secondary
+  exceptions hide the primary release-blocking diagnostic.
+- Add runner and normalizer APIs to `candidate-gate.ts`: rejected because that
+  file is a frozen Generation-27 candidate trust surface whose digest is
+  independently enforced by `TEST-M5-FULL-TEST-TIMEOUT-001`.
+- Reuse the largest or the `test` command timeout for the whole gate: rejected
+  because sequentially executed, individually bounded commands can legitimately
+  exceed any one command's budget.
+- Use the GitHub job timeout as the only bound: rejected because the candidate
+  envelope must retain deterministic timeout identity and bounded stream
+  drainage inside the runner.
+- Reuse the workflow's earlier LFS result: rejected because the runner must
+  independently prove closure inside its own precondition region.
+- Raise the aggregate precondition timeout: rejected because the approved
+  300,000-millisecond contract is sufficient once duplicate full-tree and media
+  work is removed.
+- Skip repeated historical bindings for an already-seen OID: rejected because
+  path, mode, effective attributes, pointer identity and pointer size remain
+  commit-scoped obligations even when media bytes are content-addressed.
+
+## Links
+
+Requirements: REQ-M5-CI-003 REQ-M5-CI-004 REQ-M5-CI-005 REQ-M5-CI-006 REQ-M5-CI-007 REQ-M5-CI-008
+Design: DES-M5-CI-003 DES-M5-CI-004 DES-M5-CI-005 DES-M5-CI-006 DES-M5-CI-007 DES-M5-CI-008

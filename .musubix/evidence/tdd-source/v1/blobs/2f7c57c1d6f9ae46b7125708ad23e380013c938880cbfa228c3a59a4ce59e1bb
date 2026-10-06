@@ -1,0 +1,36 @@
+import { execFileSync } from './fixtures/counted-process.js';
+import { readFile } from 'node:fs/promises';
+import { expect, it } from 'vitest';
+
+/** @id TEST-M5-CI-CODEGRAPH-BATCHING-001
+ * @verifies REQ-M5-CI-EFFICIENCY-001
+ * @design DES-M5-CI-EFFICIENCY-002
+ */
+it('TEST-M5-CI-CODEGRAPH-BATCHING-001 pays one non-counter bootstrap and keeps every operation counter isolated within the exact plan', async () => {
+  const groups = JSON.parse(execFileSync(process.execPath, [
+    'scripts/run-codegraph-tests.mjs', '--describe-groups',
+    '--report', '.musubix/cache/codegraph-batching-description.json',
+  ], { encoding: 'utf8' })).groups as Array<{ testIds: string[]; testFiles: string[]; args: string[] }>;
+  const batched = groups.filter(group => !group.testIds.some(id => id.startsWith('TEST-M5-GRAPH-')));
+  const operations = groups.filter(group => group.testIds.some(id => id.startsWith('TEST-M5-GRAPH-')));
+  expect(batched, 'non-counter assertions share one verified bootstrap, not one per file').toHaveLength(1);
+  expect(batched[0]!.testFiles.length).toBeGreaterThan(20);
+  expect(batched[0]!.args).toContain('--maxWorkers=3');
+  expect(operations.length).toBeGreaterThan(0);
+  for (const group of operations) {
+    expect(group.testIds).toHaveLength(1);
+    expect(group.args).toContain('--maxWorkers=1');
+  }
+  const ids = groups.flatMap(group => group.testIds);
+  expect(new Set(ids).size).toBe(ids.length);
+  expect(groups.length).toBe(operations.length + 1);
+  const plan = JSON.parse(await readFile('.musubix/candidate-execution-plan.json', 'utf8'));
+  const command = plan.commands.find((command: { name: string }) => command.name === 'codegraph-tests');
+  expect([...command.testIds].sort()).toEqual([...ids].sort());
+  expect(command.partitions).toHaveLength(1);
+  expect(command.partitions[0]).toMatchObject({ wave: 0, maxWorkers: 4, fanout: 11 });
+  const workers = (group: { args: string[] }) => Number(group.args.find(arg => arg.startsWith('--maxWorkers='))!.split('=')[1]);
+  expect(workers(batched[0]!) + workers(operations[0]!)).toBe(command.partitions[0].maxWorkers);
+  expect(1 + command.partitions[0].maxWorkers + command.partitions[0].fanout).toBe(16);
+  expect(command.partitions[0].timeoutMs + command.mergeAllowanceMs + command.terminationAllowanceMs).toBe(120_000);
+});

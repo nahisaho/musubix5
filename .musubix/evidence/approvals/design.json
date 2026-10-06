@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "stage": "design",
-  "changeId": "CHANGE-0017",
-  "generation": 50,
+  "changeId": "CHANGE-0018",
+  "generation": 2,
   "artifacts": {
     ".musubix/constitution.md": "f8b47fdc486f395bab05223a94821b145cf8df70ffde2c838a28f8d71fe0fa92",
     ".musubix/decisions/ADR-0002.md": "9f41d752530613cf6cc3ab6798709567e85650e5b97426dfca4147840eb35684",
@@ -47,8 +47,11 @@
     ".musubix/decisions/ADR-0041.md": "1919f12be4545b9199f1febed358527fcb0b5bc702887e6690eaefa6d63a0468",
     ".musubix/decisions/ADR-0042.md": "e685034419c1092b46d744bb0cb2f5d3051bed60c2d93678c67e123ff5704258",
     ".musubix/decisions/ADR-0043.md": "562458fcf480483a8f109bcad546f58c457ce0f8f7de77fcd919c2444e91669c",
+    ".musubix/decisions/ADR-0044.md": "a45d920363fb25f254115e05fdde851c09e50c4af604195719bf97a74db9c56b",
     ".musubix/features/candidate-cleanup-policy/design.md": "54d32a6d446bbaed299860b164fe74d24362e0c5739862bc79df2e0acab20c1b",
     ".musubix/features/candidate-cleanup-policy/requirements.md": "253a36dbca0b76a81f452c845f2988e2b33163823095ee5ac1add81519dd5462",
+    ".musubix/features/candidate-gate-efficiency/design.md": "478f2f034497bce81fe7cfd9df71061606cf926aa2e57d4fda6cf59ff9f2b7cf",
+    ".musubix/features/candidate-gate-efficiency/requirements.md": "bf846911fbcff810a212441299d2546fed57cfbd3f4df20abcd20ccc198231b9",
     ".musubix/features/codegraph-performance/design.md": "a8461463b6c0a7e8ae11b9496ab5e724e5d98e2700dd32623e5fd6331187b175",
     ".musubix/features/codegraph-performance/requirements.md": "c6e62a96471c7a89c179e368d574f91f604624f2d70ff9639c94a9379ffdb7ea",
     ".musubix/features/evidence-selector-guards/design.md": "f6477ad027e055d5b7760e876164f316fb529d665af54eefaa965d2b69656b29",
@@ -218,7 +221,7 @@
     }
   },
   "exclusions": [],
-  "artifactSha256": "8c10589927d720918a8cee522521dc658c47cbd4d52c9c5d942187c04921e7d1",
+  "artifactSha256": "f81688652ccaec4418f50100ab42c33e2ac75c750064ee6f0fa511deeb1c9dc6",
   "approver": "nahisaho",
-  "approvedAt": "2026-10-05T00:26:12.646Z"
+  "approvedAt": "2026-10-05T09:37:28.778Z"
 }

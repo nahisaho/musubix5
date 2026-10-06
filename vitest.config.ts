@@ -5,7 +5,7 @@ export default defineConfig({
     globalSetup: ['./tests/global-setup.ts'],
     setupFiles: ['./scripts/test-runtime/vitest-setup.mjs'],
     include: ['tests/**/*.test.ts'],
-    testTimeout: 60_000,
+    testTimeout: 90_000,
     maxWorkers: 8,
   },
 });

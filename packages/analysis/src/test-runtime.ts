@@ -1,4 +1,5 @@
-import { execFile } from 'node:child_process';
+import { countedExecFile as execFile, type TestRuntimeProvenance } from './process.js';
+export type { TestRuntimeProvenance } from './process.js';
 import { createHash, randomUUID } from 'node:crypto';
 import type { Stats } from 'node:fs';
 import { link, lstat, mkdir, open, readFile, readdir, rename, unlink, writeFile } from 'node:fs/promises';
@@ -9,7 +10,16 @@ import { canonicalBytes, canonicalRepositoryIdentity, sha256 } from './canonical
 import { files } from './files.js';
 import {
   candidateCommandNames, extractCandidateFailedTests, mergeCandidateFailedTestGroups, type CandidateFailedTest,
+  mergeCandidateVitestReports,
+  normalizeAdapterReport,
 } from './adapters.js';
+import { acquireCandidateSlots, createCandidateSlotLedger, loadCandidateExecutionPlan,
+  releaseCandidateSlots, validateCandidateSlotLedger, candidateExecutionPlanDigest,
+  validateCandidateLaunchInventory } from './candidate-execution-plan.js';
+import { canonicalRuntimePath } from './candidate-portability.js';
+import { authoritativeCandidateTestIds } from './trace.js';
+import { candidatePartitionDispatchDigest, validateCandidatePartitionAcknowledgments,
+  type CandidatePartitionAcknowledgment, type CandidatePartitionDispatch } from './candidate-partitions.js';
 
 /** @id CODE-M5-CI-TRANSIENT-FAILURES-001
  * @implements REQ-M5-CI-008
@@ -59,6 +69,7 @@ type Runner = (command: string, args: string[], options: {
   timeoutMs: number;
   input?: string;
   env?: NodeJS.ProcessEnv;
+  slotProvider?: { acquire(): Promise<() => Promise<void>> };
 }) => Promise<ProcessResult>;
 interface JournalRecord {
   schemaVersion: 1;
@@ -89,14 +100,29 @@ export const testRuntimeProfile = {
   commandNames: ['codegraph-tests', 'compatibility', 'test'],
   inputs: [
     '.musubix/config.json', 'package-lock.json', 'package.json',
+    '.musubix/candidate-execution-plan.json', '.musubix/candidate-timeout-calibration.json',
     'packages/analysis/src/adapters.ts', 'packages/analysis/src/candidate-gate.ts',
+    'packages/analysis/src/candidate-execution-plan.ts', 'packages/analysis/src/candidate-calibration.ts',
+    'packages/analysis/src/candidate-partitions.ts', 'packages/analysis/src/candidate-portability.ts',
+    'packages/analysis/src/candidate-stability.ts',
     'packages/analysis/src/canonical.ts', 'packages/analysis/src/config.ts',
     'packages/analysis/src/gate.ts', 'packages/analysis/src/parallel-runtime.ts',
     'packages/analysis/src/process.ts', 'packages/analysis/src/tdd-source-pair.ts',
     'packages/analysis/src/tdd.ts', 'packages/analysis/src/test-runtime.ts',
     'scripts/run-codegraph-tests.mjs', 'scripts/test-runtime/coordinator-reporter.mjs',
+    'scripts/run-candidate-tests.mjs', 'scripts/run-compatibility-tests.mjs',
+    'scripts/test-runtime/counted-launcher.mjs', 'scripts/test-runtime/partition-scheduler.mjs',
     'scripts/test-runtime/stable-wall-clock.mjs', 'scripts/test-runtime/vitest-setup.mjs',
-    'tests/global-setup.ts', 'tsconfig.build.json', 'tsconfig.json', 'vitest.config.ts',
+    'tests/global-setup.ts', 'tests/fixtures/counted-process.ts', 'tests/fixtures/portable-paths.ts',
+    'packages/analysis/src/candidate-gate-runner.ts', 'packages/analysis/src/candidate-state.ts',
+    'packages/analysis/src/candidate-git-distribution.ts', 'packages/analysis/src/candidate-integration.ts',
+    'packages/analysis/src/journal.ts', 'packages/analysis/src/source-lfs-migration.ts',
+    'packages/analysis/src/tdd-source-lfs.ts', 'packages/analysis/src/tdd-source-snapshot.ts',
+    'packages/analysis/src/trace.ts', 'packages/analysis/src/workspace-manager.ts',
+    'scripts/verify-lfs-checkout.mjs', '.github/scripts/run-candidate-gate-wrapper.mjs',
+    '.github/scripts/resolve-candidate-job-timing.mjs', '.github/actions/prepare-candidate/action.yml',
+    '.github/workflows/candidate-gate.yml', '.github/workflows/candidate-calibration.yml',
+    'tsconfig.build.json', 'tsconfig.json', 'vitest.config.ts',
   ],
   kind: 'stable-test-wall-clock-v1',
   reporterMode: 'append-after-native-v1',
@@ -115,22 +141,14 @@ export interface TestRuntimeContext {
   commit: string | null;
   role: 'tdd' | 'command' | 'result' | 'integration' | 'standalone';
 }
-export interface TestRuntimeProvenance {
-  kind: 'stable-test-wall-clock-v1';
-  profileSha256: string;
-  inputsSha256: string;
-  dispatchSha256: string;
-  runs: Array<{
-    ordinal: number; runId: string; requestSha256: string; anchorSha256: string;
-    acknowledgmentSha256: string; resultSha256: string;
-  }>;
-  publication: {
-    durability: 'posix-file-directory-fsync' | 'win32-file-flush-no-replace-rehash';
-    closureSha256: string;
-  };
-  activation?: Record<string, unknown>;
-}
-export const testRuntimeProfileSha256 = 'f9fbe94729722eaaea1f1e49bbaf6c48053ea1ed6a8498a2287dbfe4a20bf06e';
+export const testRuntimeProfileSha256 = sha256(canonicalBytes(testRuntimeProfile));
+const historicRuntimeProfileDigests = new Set([
+  'f9fbe94729722eaaea1f1e49bbaf6c48053ea1ed6a8498a2287dbfe4a20bf06e',
+  '958242972e758cc3c6a80a4e3d3a3225fdb154e8dbeca6014955bae994a159f2',
+  '960689975ebf18799c11de68bd7bd6d169401cd450c61670fe6e627255e4e952',
+]);
+const knownRuntimeProfileDigest = (value: unknown) => value === testRuntimeProfileSha256
+  || typeof value === 'string' && historicRuntimeProfileDigests.has(value);
 const profileDigests: Readonly<Record<string, string>> = Object.freeze({
   'stable-test-wall-clock-v1:1': testRuntimeProfileSha256,
 });
@@ -180,12 +198,14 @@ export function expectedTestRuntimeProfileSha256(kind: string, schemaVersion: nu
 }
 
 export function validateTestRuntimeProfile(value: unknown): TestRuntimeProfile {
-  const profile = object(value, 'profile-digest', ['calibration', 'commandNames', 'inputs', 'kind', 'reporterMode', 'schemaVersion']);
+  const initial = object(value, 'profile-digest');
+  const { calibratedPlan: _plan, ...base } = initial;
+  const profile = object(base, 'profile-digest', ['calibration', 'commandNames', 'inputs', 'kind', 'reporterMode', 'schemaVersion']);
   object(profile.calibration, 'profile-digest', ['maxWidthMs', 'samples']);
   strings(profile.commandNames, 'profile-digest');
   strings(profile.inputs, 'profile-digest');
-  if (hash(value) !== expectedTestRuntimeProfileSha256('stable-test-wall-clock-v1', 1)) invalid('profile-digest');
-  equal(value, testRuntimeProfile, 'profile-digest');
+  if (hash(base) !== expectedTestRuntimeProfileSha256('stable-test-wall-clock-v1', 1)) invalid('profile-digest');
+  equal(base, testRuntimeProfile, 'profile-digest');
   return testRuntimeProfile;
 }
 
@@ -208,7 +228,10 @@ function locations(value: unknown): Locations {
   const v = object(value, 'augmentation-binding', ['repo', 'run', 'command-run']);
   const original = { repo: text(v.repo, 'augmentation-binding'), run: text(v.run, 'augmentation-binding'),
     'command-run': text(v['command-run'], 'augmentation-binding') };
-  for (const p of Object.values(original)) if (!isAbsolute(p)) invalid('unsafe-path');
+  for (const p of Object.values(original)) {
+    if (!isAbsolute(p)) invalid('unsafe-path');
+    try { canonicalRuntimePath(p, process.platform); } catch { invalid('unsafe-path'); }
+  }
   return { repo: resolve(original.repo), run: resolve(original.run), 'command-run': resolve(original['command-run']) };
 }
 
@@ -257,12 +280,12 @@ export function augmentTestRuntimeInvocation(value: unknown) {
   if (Object.keys(v).some((k) => !['logicalInvocation', 'profileSha256', 'anchor', 'runId', 'commandRunId', 'locations'].includes(k))) {
     invalid('augmentation-binding', 'unknown argument');
   }
-  equal(v.profileSha256, testRuntimeProfileSha256, 'profile-digest');
+  if (!knownRuntimeProfileDigest(v.profileSha256)) invalid('profile-digest');
   const logical = invocation(v.logicalInvocation), where = locations(v.locations);
   const runId = text(v.runId, 'augmentation-binding'), commandRunId = text(v.commandRunId, 'augmentation-binding');
   const composed = composition(logical, where);
   const augmentation = {
-    schemaVersion: 1, kind: 'test-runtime-augmentation-v1', profileSha256: testRuntimeProfileSha256,
+    schemaVersion: 1, kind: 'test-runtime-augmentation-v1', profileSha256: v.profileSha256,
     reporterPath: `repo:${reporterPath}`, defaultReporter: composed.defaultReporter,
     npmForwardingBoundary: composed.npmForwardingBoundary, preloadPath: `repo:${preloadPath}`,
     setupPath: 'repo:scripts/test-runtime/vitest-setup.mjs', requestPath: 'run:request.json',
@@ -290,7 +313,7 @@ export function validateTestRuntimeExecutionBinding(value: unknown): void {
     ['NODE_OPTIONS', 'MUSUBIX5_TEST_RUNTIME_REQUEST', 'MUSUBIX5_TEST_RUNTIME_DISPATCH', 'clockMarker']);
   const marker = object(environment.clockMarker, 'augmentation-binding', ['runId', 'commandRunId', 'anchor']);
   const expected = augmentTestRuntimeInvocation({
-    logicalInvocation: v.logicalInvocation, profileSha256: testRuntimeProfileSha256,
+    logicalInvocation: v.logicalInvocation, profileSha256: object(v.augmentation, 'augmentation-binding').profileSha256,
     runId: marker.runId, commandRunId: marker.commandRunId, locations: v.locations,
     ...(marker.anchor === null ? {} : { anchor: marker.anchor }),
   });
@@ -405,7 +428,7 @@ async function durableBlob(root: string, bytes: Buffer, platform: string): Promi
 function blobSchema(value: unknown): Record<string, unknown> {
   const v = object(value, 'blob-schema');
   if (v.kind === 'stable-test-wall-clock-v1') {
-    validateTestRuntimeProfile(v);
+    if (!historicRuntimeProfileDigests.has(hash(v))) validateTestRuntimeProfile(v);
     return v;
   }
   const fields = typeof v.kind === 'string' ? blobFields[v.kind] : undefined;
@@ -431,7 +454,7 @@ function provenanceSchema(value: unknown) {
   const fields = ['kind', 'profileSha256', 'inputsSha256', 'dispatchSha256', 'runs', 'publication'];
   const initial = object(value, 'blob-schema');
   const v = object(initial, 'blob-schema', Object.hasOwn(initial, 'activation') ? [...fields, 'activation'] : fields);
-  if (v.kind !== testRuntimeProfile.kind || v.profileSha256 !== testRuntimeProfileSha256) invalid('profile-digest');
+  if (v.kind !== testRuntimeProfile.kind || !knownRuntimeProfileDigest(v.profileSha256)) invalid('profile-digest');
   const runs = array(v.runs).map((run) => object(run, 'blob-schema',
     ['ordinal', 'runId', 'requestSha256', 'anchorSha256', 'acknowledgmentSha256', 'resultSha256']));
   if (!runs.length || new Set(runs.map((r) => r.runId)).size !== runs.length
@@ -478,16 +501,18 @@ async function runtimeClosure(root: string, value: unknown, context: unknown) {
     if (!blob || blob.kind !== kind) invalid('blob-schema', `expected ${kind}`);
     return blob;
   };
-  get(v.profileSha256, 'stable-test-wall-clock-v1');
+  const storedProfile = get(v.profileSha256, 'stable-test-wall-clock-v1');
   const inputs = get(v.inputsSha256, 'test-runtime-inputs-v1');
   const entries = array(inputs.entries).map((entry) => object(entry, 'blob-schema',
     ['path', 'mode', 'size', 'rawSha256', 'blobSha256']));
-  equal(entries.map((e) => e.path), testRuntimeProfile.inputs, 'blob-schema');
+  equal(entries.map((e) => e.path), storedProfile.inputs, 'blob-schema');
   for (const entry of entries) {
     const file = get(entry.blobSha256, 'test-runtime-file-v1'), content = base64(file.contentBase64);
     equal({ path: file.path, mode: file.mode, size: file.size, rawSha256: file.rawSha256 },
       { path: entry.path, mode: entry.mode, size: entry.size, rawSha256: entry.rawSha256 }, 'blob-schema');
-    if (![100644, 100755].includes(Number(file.mode)) || content.length !== file.size
+    const absent = file.mode === 0 && candidateArtifactPaths.includes(String(file.path))
+      && content.equals(candidateAbsentArtifact(String(file.path)));
+    if (!absent && ![100644, 100755].includes(Number(file.mode)) || content.length !== file.size
       || sha256(content) !== file.rawSha256) invalid('blob-hash', 'input snapshot');
   }
   const bootstrapSha256 = entries.find((entry) => entry.path === preloadPath)!.rawSha256;
@@ -899,13 +924,26 @@ async function transportJson(path: string, value: unknown, exclusive = false): P
   await rename(temporary, path);
 }
 
+const candidateArtifactPaths = ['.musubix/candidate-execution-plan.json', '.musubix/candidate-timeout-calibration.json'];
+const candidateAbsentArtifact = (path: string) => canonicalBytes({ schemaVersion: 1, kind: 'candidate-artifact-absent-v1', path });
+
+async function runtimeInput(root: string, path: string): Promise<{ bytes: Buffer; mode: number }> {
+  try {
+    const bytes = await regular(join(root, path));
+    return { bytes, mode: (await lstat(join(root, path))).mode & 0o111 ? 100755 : 100644 };
+  } catch (cause) {
+    if (!candidateArtifactPaths.includes(path) || !errno(cause, 'ENOENT')) throw cause;
+    return { bytes: candidateAbsentArtifact(path), mode: 0 };
+  }
+}
+
 async function snapshotRuntime(root: string, transportRoot: string) {
   const profile = await durableBlob(transportRoot, canonicalBytes(testRuntimeProfile), process.platform);
   const entries = [];
   for (const path of testRuntimeProfile.inputs) {
-    const bytes = await regular(join(root, path)), stat = await lstat(join(root, path));
+    const { bytes, mode } = await runtimeInput(root, path);
     const snapshot = { schemaVersion: 1, kind: 'test-runtime-file-v1', path,
-      mode: stat.mode & 0o111 ? 100755 : 100644, size: bytes.length, rawSha256: sha256(bytes),
+      mode, size: bytes.length, rawSha256: sha256(bytes),
       contentBase64: bytes.toString('base64') };
     const blobSha256 = await durableBlob(transportRoot, canonicalBytes(snapshot), process.platform);
     entries.push({ path, mode: snapshot.mode, size: snapshot.size, rawSha256: snapshot.rawSha256, blobSha256 });
@@ -929,7 +967,8 @@ function cleanTestRuntimeBuildEnvironment(root: string, environment = process.en
       || memory !== undefined && memory !== token) invalid('node-options');
     memory = token;
   }
-  if (tokens.includes(preload) !== Boolean(env.MUSUBIX5_TEST_RUNTIME_CLOCK)) invalid('worker-scope');
+  const countOnly = env.MUSUBIX5_CANDIDATE_COUNT_ONLY === '1' && Boolean(env.MUSUBIX5_CANDIDATE_SLOT_LEDGER);
+  if (tokens.includes(preload) !== (Boolean(env.MUSUBIX5_TEST_RUNTIME_CLOCK) || countOnly)) invalid('worker-scope');
   delete env.MUSUBIX5_TEST_RUNTIME_CLOCK;
   delete env.MUSUBIX5_TEST_RUNTIME_REQUEST;
   delete env.MUSUBIX5_TEST_RUNTIME_DISPATCH;
@@ -999,12 +1038,26 @@ export async function runTestRuntimeCommand(
   const commandRunId = randomUUID(), transport = await allocateRuntimeRun(root, commandRunId);
   const snapshot = await snapshotRuntime(root, transport);
   const environment = options.env ?? process.env;
+  const matrix = context.role !== 'tdd' && !process.env.MUSUBIX5_TEST_RUNTIME_REQUEST
+    && environment.MUSUBIX5_CANDIDATE_ROOT === root
+    && (environment.CANDIDATE_MODE === 'candidate' || environment.CANDIDATE_MODE === 'calibration');
+  const partitioned = matrix && ['test', 'compatibility'].includes(command.name);
+  const grouped = partitioned || command.name === 'codegraph-tests';
+  const scheduler = partitioned ? { command: process.execPath,
+    args: [join(root, `scripts/run-${command.name === 'test' ? 'candidate' : 'compatibility'}-tests.mjs`),
+      '--report', options.candidateReportPath ?? nativeReportPath(args, options.cwd) ?? join(transport, 'aggregate.json')] }
+    : { command: command.command, args };
+  const candidatePlan = matrix ? (await loadCandidateExecutionPlan(root)).plan : undefined;
+  const ledger = matrix ? await createCandidateSlotLedger(transport, environment.CANDIDATE_DISPATCH_NONCE!, 16) : undefined;
+  const rootLease = ledger ? await acquireCandidateSlots(ledger, { nonce: ledger.nonce, pid: process.pid, partition: 'command-root' }, 1) : undefined;
+  const manifestPath = join(transport, 'partition-manifest.json');
   const anchor = await runtimeAnchor(root, commandRunId, environment);
   const tokens = (cleanTestRuntimeBuildEnvironment(root, environment).NODE_OPTIONS ?? '').split(/[ \t]+/).filter(Boolean);
   const commandHash = rawHash([command.command, args]);
   let groups: Array<{ ordinal: number; testIds: string[]; testFiles: string[]; command: string; args: string[] }>;
-  if (command.name === 'codegraph-tests') {
-    const described = await runner(command.command, [...args, '--describe-groups'], options);
+  if (grouped) {
+    const described = await runner(scheduler.command,
+      [...scheduler.args, '--describe-groups', '--runtime-selection'], options);
     if (described.status !== 'completed' || described.exitCode !== 0) invalid('augmentation-binding', described.stderr);
     const description = object(JSON.parse(described.stdout), 'augmentation-binding', ['schemaVersion', 'groups']);
     if (description.schemaVersion !== 1) invalid('augmentation-binding');
@@ -1026,10 +1079,32 @@ export async function runTestRuntimeCommand(
       testFiles: selected.sort(), testIds: [...new Set(args.flatMap((arg) => arg.match(/TEST-[A-Z0-9-]+/g) ?? []))] }];
   }
   if (!groups.length || groups.some((group) => !group.testFiles.length)) invalid('augmentation-binding', 'empty dispatch');
+  const plannedCommand = candidatePlan?.commands.find(planned => planned.name === command.name);
+  let compositeDispatch: CandidatePartitionDispatch | undefined;
+  if (candidatePlan && plannedCommand && ledger) {
+    await validateCandidateLaunchInventory(root);
+    const selectedIds = groups.flatMap(group => group.testIds).sort();
+    equal(selectedIds, [...plannedCommand.testIds].sort(), 'augmentation-binding');
+    for (const group of groups) {
+      const owning = plannedCommand.partitions.filter(partition => group.testIds.every(id => partition.testIds.includes(id))
+        && group.testFiles.every(file => partition.files.includes(file)));
+      if (owning.length !== 1) invalid('augmentation-binding', `partition-${group.ordinal}: ownership`);
+      if (partitioned) {
+        equal(group.testIds, owning[0]!.testIds, 'augmentation-binding');
+        equal(group.testFiles, owning[0]!.files, 'augmentation-binding');
+        if (!group.args.includes(`--maxWorkers=${owning[0]!.maxWorkers}`)
+          || !group.args.includes(`--pool=${owning[0]!.pool}`)) invalid('augmentation-binding', 'worker capacity');
+      }
+    }
+    compositeDispatch = { nonce: ledger.nonce, planDigest: candidateExecutionPlanDigest(candidatePlan),
+      command: command.name, partitions: plannedCommand.partitions.map(({ id, ordinal, wave, files, testIds }) =>
+        ({ id, ordinal, wave, files, testIds })) };
+    await transportJson(join(transport, 'composite-dispatch.json'), compositeDispatch, true);
+  }
   const issued = [];
   for (const group of groups) {
     await authorizeTestRuntimeNode(root, ['npx', 'npm'].includes(group.command) ? process.execPath : group.command);
-    const runId = command.name === 'codegraph-tests' ? randomUUID() : commandRunId;
+    const runId = grouped ? randomUUID() : commandRunId;
     const run = runId === commandRunId ? transport : await allocateRuntimeRun(root, runId);
     const executionBinding = augmentTestRuntimeInvocation({
       logicalInvocation: { command: group.command, args: group.args }, profileSha256: snapshot.profileSha256,
@@ -1043,7 +1118,7 @@ export async function runTestRuntimeCommand(
     };
     issued.push({ group, runId, run, executionBinding, provider });
   }
-  if (command.name === 'codegraph-tests') validateTestRuntimeGroups({ schemaVersion: 1, groups },
+  if (grouped) validateTestRuntimeGroups({ schemaVersion: 1, groups },
     issued.map(({ group, runId, executionBinding }) => ({ ordinal: group.ordinal, runId, group, executionBinding })));
   const dispatch = {
     schemaVersion: 1, kind: 'test-runtime-dispatch-v1', commandRunId, commandSha256: commandHash,
@@ -1057,7 +1132,8 @@ export async function runTestRuntimeCommand(
   const dispatchSha256 = await durableBlob(transport, canonicalBytes(dispatch), process.platform);
   await transportJson(join(transport, 'dispatch.json'), dispatch, true);
   await durableBlob(transport, canonicalBytes(anchor), process.platform);
-  const prepared = [];
+  const prepared: Array<typeof issued[number] & { request: Record<string, unknown>; requestSha256: string;
+    env: NodeJS.ProcessEnv; resultPath: string }> = [];
   for (const entry of issued) {
     const { group, runId, run, executionBinding, provider } = entry;
     const request = {
@@ -1070,21 +1146,33 @@ export async function runTestRuntimeCommand(
     };
     const requestSha256 = await durableBlob(transport, canonicalBytes(request), process.platform);
     await transportJson(join(run, 'request.json'), request, true);
-    const env = { ...environment,
+    const env: NodeJS.ProcessEnv = { ...environment,
       NODE_OPTIONS: [...tokens, executionBinding.resolvedRuntimeEnvironment.NODE_OPTIONS].join(' '),
       MUSUBIX5_TEST_RUNTIME_CLOCK: JSON.stringify(provider),
       MUSUBIX5_TEST_RUNTIME_REQUEST: join(run, 'request.json'),
       MUSUBIX5_TEST_RUNTIME_DISPATCH: join(transport, 'dispatch.json') };
+    if (!ledger) delete env.MUSUBIX5_CANDIDATE_PARTITION_MANIFEST;
+    if (ledger) {
+      Object.assign(env, { MUSUBIX5_CANDIDATE_SLOT_LEDGER: join(transport, 'candidate-slot-ledger.json'),
+        MUSUBIX5_CANDIDATE_PARTITION_MANIFEST: manifestPath });
+    }
     prepared.push({ ...entry, request, requestSha256, env, resultPath: join(run, 'process-result.json') });
   }
   let execution: ProcessResult;
-  if (command.name === 'codegraph-tests') {
+  if (ledger) await transportJson(join(transport, 'candidate-slot-ledger.json'), ledger, true);
+  if (grouped) {
     const groupPath = join(transport, 'groups.json');
     await transportJson(groupPath, { schemaVersion: 1, groups: prepared.map((entry) => ({
       ordinal: entry.group.ordinal, ...entry.executionBinding.resolvedInvocation,
       env: entry.env, resultPath: entry.resultPath,
     })) }, true);
-    execution = await runner(command.command, [...args, '--runtime-dispatch', groupPath], options);
+    execution = await runner(scheduler.command, [...scheduler.args, '--runtime-dispatch', groupPath], {
+      ...options, env: { ...environment, ...(ledger ? {
+        MUSUBIX5_CANDIDATE_SLOT_LEDGER: join(transport, 'candidate-slot-ledger.json'),
+        MUSUBIX5_CANDIDATE_PARTITION_MANIFEST: manifestPath,
+      } : {}) },
+      ...(ledger ? { slotProvider: { acquire: async () => async () => {} } } : {}),
+    });
   } else {
     const entry = prepared[0]!;
     validateTestRuntimeExecutionBinding(entry.executionBinding);
@@ -1097,20 +1185,65 @@ export async function runTestRuntimeCommand(
   if (execution.status !== 'completed') {
     incompleteCommand(command.name, execution);
   }
+  let slotObservation: Awaited<ReturnType<typeof validateCandidateSlotLedger>> | undefined;
+  const regions: Record<string, { durationMs: number; status: 'completed'; exitCode: 0; reportComplete: true; acknowledgmentComplete: true }> = {};
+  const measured = (name: string, duration: number) => {
+    regions[name] = { durationMs: Math.ceil(duration), status: 'completed', exitCode: 0,
+      reportComplete: true, acknowledgmentComplete: true };
+  };
+  if (ledger && rootLease) {
+    const terminationStarted = Number(process.hrtime.bigint()) / 1_000_000;
+    await releaseCandidateSlots(ledger, rootLease);
+    slotObservation = await validateCandidateSlotLedger(ledger);
+    measured(`termination:${command.name}:termination`, Number(process.hrtime.bigint()) / 1_000_000 - terminationStarted);
+    const manifest = object(JSON.parse((await regular(manifestPath)).toString('utf8')), 'acknowledgment-binding', ['schemaVersion', 'acknowledgments']);
+    const entries = array(manifest.acknowledgments, 'acknowledgment-binding');
+    if (manifest.schemaVersion !== 1 || entries.length !== prepared.length) invalid('acknowledgment-binding', 'partition manifest inventory');
+    for (const [ordinal, value] of entries.entries()) {
+      const entry = prepared[ordinal]!, ackPath = join(entry.run, 'ack.json');
+      const observed = object(value, 'acknowledgment-binding', ['ordinal', 'ackPath', 'ackDigest', 'resultPath', 'resultDigest', 'startedAt', 'completedAt']);
+      if (observed.ordinal !== ordinal || observed.ackPath !== ackPath || observed.resultPath !== entry.resultPath
+        || observed.ackDigest !== sha256(await regular(ackPath)) || observed.resultDigest !== sha256(await regular(entry.resultPath))) {
+        invalid('acknowledgment-binding', `partition-${ordinal}: manifest binding`);
+      }
+      const result = JSON.parse((await regular(entry.resultPath)).toString('utf8'));
+      if (observed.startedAt !== result.startedAt || observed.completedAt !== result.completedAt
+        || !Number.isFinite(observed.startedAt) || !Number.isFinite(observed.completedAt)
+        || Number(observed.completedAt) < Number(observed.startedAt)) invalid('acknowledgment-binding', 'region timing');
+    }
+    for (const partition of compositeDispatch!.partitions) {
+      const owned = entries.filter((_entry, ordinal) => prepared[ordinal]!.group.testIds.every(id => partition.testIds.includes(id))
+        && prepared[ordinal]!.group.testFiles.every(file => partition.files.includes(file)));
+      measured(`partition:${command.name}:${partition.id}`, Math.max(...owned.map(value => Number((value as Record<string, unknown>).completedAt)))
+        - Math.min(...owned.map(value => Number((value as Record<string, unknown>).startedAt))));
+    }
+    for (const wave of new Set(compositeDispatch!.partitions.map(partition => partition.wave))) {
+      const wavePartitions = compositeDispatch!.partitions.filter(partition => partition.wave === wave);
+      const owned = entries.filter((_entry, ordinal) => wavePartitions.some(partition =>
+        prepared[ordinal]!.group.testIds.every(id => partition.testIds.includes(id))
+          && prepared[ordinal]!.group.testFiles.every(file => partition.files.includes(file))));
+      measured(`wave:${command.name}:wave-${wave}`, Math.max(...owned.map(value => Number((value as Record<string, unknown>).completedAt)))
+        - Math.min(...owned.map(value => Number((value as Record<string, unknown>).startedAt))));
+    }
+  }
   const runs: TestRuntimeProvenance['runs'] = [];
   const failedGroups: Array<{ ordinal: number; failures: CandidateFailedTest[] | null }> = [];
+  const acceptedReports: Buffer[] = [];
+  const compositeGroups: Array<{ entry: typeof prepared[number]; ack: Record<string, unknown>; native: ProcessResult; report: Buffer }> = [];
   for (const entry of prepared) {
     let native = execution;
     let report: Buffer | null = null;
-    let candidateReportBound = command.name === 'codegraph-tests';
-    if (command.name === 'codegraph-tests') {
+    let candidateReportBound = grouped;
+    if (grouped) {
       const result = object(JSON.parse((await regular(entry.resultPath)).toString('utf8')), 'acknowledgment-binding',
-        ['status', 'exitCode', 'durationMs', 'nativeReportBase64']);
+        ['status', 'exitCode', 'durationMs', 'stdout', 'stderr', 'nativeReportBase64',
+          ...(ledger ? ['startedAt', 'completedAt'] : [])]);
       const status = result.status;
       if (status !== 'completed' && status !== 'missing' && status !== 'timeout' && status !== 'error'
         || !Number.isSafeInteger(result.durationMs)) invalid('acknowledgment-binding');
       native = { ...execution, status,
-        exitCode: result.exitCode === null ? null : Number(result.exitCode), durationMs: Number(result.durationMs) };
+        exitCode: result.exitCode === null ? null : Number(result.exitCode), durationMs: Number(result.durationMs),
+        stdout: String(result.stdout), stderr: String(result.stderr) };
       report = result.nativeReportBase64 === null ? null : base64(result.nativeReportBase64);
     } else {
       const path = nativeReportPath(entry.executionBinding.resolvedInvocation.args, options.cwd);
@@ -1127,6 +1260,7 @@ export async function runTestRuntimeCommand(
     if (native.status !== 'completed') {
       incompleteCommand(command.name, native);
     }
+    if (partitioned && report) acceptedReports.push(report);
     let ackBytes: Buffer;
     try {
       ackBytes = await regular(join(entry.run, 'ack.json'));
@@ -1136,6 +1270,15 @@ export async function runTestRuntimeCommand(
     }
     const ack = blobSchema(JSON.parse(ackBytes.toString('utf8')));
     if (ack.complete !== true) incompleteCommand(command.name, native);
+    if (compositeDispatch && report) {
+      const nativeReport = object(JSON.parse(report.toString('utf8')), 'acknowledgment-binding');
+      const nativeFiles = array(nativeReport.testResults).map(value => {
+        const file = object(value, 'acknowledgment-binding');
+        return relative(root, text(file.name, 'acknowledgment-binding')).replaceAll('\\', '/');
+      }).sort();
+      equal(nativeFiles, [...entry.group.testFiles].sort(), 'acknowledgment-binding');
+      compositeGroups.push({ entry, ack, native, report });
+    }
     const acknowledgmentSha256 = await durableBlob(transport, ackBytes, process.platform);
     const resultSha256 = await durableBlob(transport, canonicalBytes({
       schemaVersion: 1, kind: 'test-runtime-result-v1', runId: entry.runId, requestSha256: entry.requestSha256,
@@ -1166,8 +1309,60 @@ export async function runTestRuntimeCommand(
     },
   };
   await publishTestRuntimeClosure({ sourceRoot: transport, controlRoot, provenance, context, platform: process.platform });
+  let compositeDigest: string | undefined;
+  const mergeStarted = Number(process.hrtime.bigint()) / 1_000_000;
+  if (compositeDispatch && slotObservation) {
+    const acknowledgments: CandidatePartitionAcknowledgment[] = compositeDispatch.partitions.map(partition => {
+      const owned = compositeGroups.filter(({ entry }) => entry.group.testIds.every(id => partition.testIds.includes(id))
+        && entry.group.testFiles.every(file => partition.files.includes(file)));
+      if (!owned.length) invalid('acknowledgment-binding', `${partition.id}: missing composite result`);
+      const nativeTests = owned.flatMap(({ entry, report }) =>
+        normalizeAdapterReport('vitest', report.toString('utf8')).tests.filter(test => entry.group.testIds.includes(test.id)));
+      return { ...partition, nonce: compositeDispatch!.nonce, planDigest: compositeDispatch!.planDigest, command: command.name,
+        dispatchDigest: candidatePartitionDispatchDigest(compositeDispatch!), executionBinding: { command: scheduler.command, args: scheduler.args },
+        observedVitestArgs: owned.flatMap(({ ack }) => strings(object(ack.reporterRegistration, 'acknowledgment-binding').observedVitestArgs, 'acknowledgment-binding')),
+        workers: owned.flatMap(({ entry, ack }) => array(ack.workers).map(value => {
+          const worker = object(value, 'acknowledgment-binding');
+          return { workerId: `${entry.runId}:${text(worker.workerId, 'acknowledgment-binding')}`, file: text(worker.testPath, 'acknowledgment-binding') };
+        })),
+        observedMaximum: slotObservation!.maximum, status: 'completed',
+        exitCode: owned.some(({ native }) => native.exitCode !== 0) ? 1 : 0, signal: null,
+        failureStage: owned.some(({ native }) => native.exitCode !== 0) ? 'native-tests' : null,
+        tests: nativeTests.map(test => ({ testId: test.id, status: test.status, nativeMessage: '' })) };
+    });
+    const merged = validateCandidatePartitionAcknowledgments(compositeDispatch, acknowledgments, slotObservation);
+    if (command.name === 'codegraph-tests') {
+      const reportArgument = scheduler.args.indexOf('--report');
+      if (reportArgument < 0) invalid('augmentation-binding', 'CodeGraph aggregate path');
+      const path = resolve(options.cwd, scheduler.args[reportArgument + 1]!);
+      const previous = object(JSON.parse((await regular(path)).toString('utf8')), 'acknowledgment-binding');
+      const previousTests = array(previous.tests).map(value => object(value, 'acknowledgment-binding'));
+      const tests = [...merged.tests].sort((a, b) => Buffer.compare(Buffer.from(a.testId), Buffer.from(b.testId))).map(test => {
+        const existing = previousTests.filter(value => value.id === test.testId);
+        if (existing.length !== 1 || existing[0]!.status !== test.status) invalid('acknowledgment-binding', 'CodeGraph native result mismatch');
+        return { id: test.testId, status: test.status, ...(existing[0]!.operations ? { operations: existing[0]!.operations } : {}) };
+      });
+      if (tests.length !== previousTests.length) invalid('acknowledgment-binding', 'CodeGraph native inventory');
+      await writeFile(path, canonicalBytes({ schemaVersion: 1, tests }), { mode: 0o600 });
+    }
+    const manifest = { schemaVersion: 1, dispatchDigest: candidatePartitionDispatchDigest(compositeDispatch),
+      planDigest: compositeDispatch.planDigest, nonce: compositeDispatch.nonce,
+      observedMaximum: slotObservation.maximum, ledgerDigest: slotObservation.ledgerDigest,
+      acknowledgments: acknowledgments.map(ack => ({ ordinal: ack.ordinal, digest: hash(ack) })) };
+    compositeDigest = hash(manifest);
+    await transportJson(join(transport, 'composite-acknowledgments.json'), { manifest, acknowledgments }, true);
+  }
+  if (partitioned && candidatePlan) {
+    const expectedIds = candidatePlan.commands.find(value => value.name === command.name)!.testIds;
+    const merged = mergeCandidateVitestReports(acceptedReports, expectedIds);
+    await writeFile(scheduler.args[scheduler.args.indexOf('--report') + 1]!, merged, { flag: 'wx', mode: 0o600 });
+  }
+  if (ledger) measured(`merge:${command.name}:merge`, Number(process.hrtime.bigint()) / 1_000_000 - mergeStarted);
   await transportJson(join(transport, 'provenance.json'), provenance, true);
-  const result = { ...execution, testRuntime: provenance };
+  const result = { ...execution, testRuntime: provenance,
+    ...(slotObservation ? { candidateExecution: { maximum: slotObservation.maximum, ledgerDigest: slotObservation.ledgerDigest,
+      compositeDigest, planDigest: compositeDispatch?.planDigest } } : {}) };
+  if (slotObservation) Object.assign(result.candidateExecution!, { regions });
   if (options.collectCandidateFailures === true) {
     const failures = mergeCandidateFailedTestGroups(failedGroups);
     if (failures) Object.defineProperty(result, candidateFailures, { value: failures, enumerable: false });
@@ -1214,7 +1409,13 @@ export async function prepareTestRuntimeProvider(
     args: [join(root, 'node_modules/vitest/vitest.mjs'), ...bridge.args.filter((arg) => arg !== runtimeReporter)],
   };
   const selectedFiles = [...bridge.files].sort();
-  const selectedTestIds = [...new Set(bridge.args.flatMap((arg) => arg.match(/TEST-[A-Z0-9-]+/g) ?? []))];
+  let selectedTestIds = [...new Set(bridge.args.flatMap((arg) => arg.match(/TEST-[A-Z0-9-]+/g) ?? []))];
+  if (!selectedTestIds.length && incoming && array(incoming.selectedTestIds).length
+    && process.env.MUSUBIX5_CANDIDATE_ROOT === root
+    && ['candidate', 'calibration'].includes(process.env.CANDIDATE_MODE ?? '')) {
+    selectedTestIds = (await Promise.all(selectedFiles.map(async path =>
+      authoritativeCandidateTestIds(await readFile(join(root, path), 'utf8'), path)))).flat();
+  }
   let request: Record<string, unknown>;
   if (incoming) {
     if (incoming.kind !== 'test-runtime-request-v1' || incoming.origin !== 'configured') invalid('worker-scope');
@@ -1305,7 +1506,8 @@ export async function prepareTestRuntimeProvider(
       if (pollingError !== undefined) throw pollingError;
       equal(delivered, provider, 'acknowledgment-binding');
       for (const entry of snapshot.entries) {
-        if (sha256(await regular(join(root, entry.path))) !== entry.rawSha256) invalid('input-hash', entry.path);
+        const current = await runtimeInput(root, entry.path);
+        if (current.mode !== entry.mode || sha256(current.bytes) !== entry.rawSha256) invalid('input-hash', entry.path);
       }
       reportedFailed = failed;
       await schedule();

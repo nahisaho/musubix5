@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { performance as monotonicPerformance } from 'node:perf_hooks';
 import { unlink } from 'node:fs/promises';
 import { error, validateConstitution, validateDesign, validateRequirements, type Diagnostic, type Evidence } from '../../domain/src/index.js';
 import { loadConfig, loadPolicyBaseline, policyDiagnostics, commandCwd, type Config } from './config.js';
@@ -25,43 +26,8 @@ import { deriveWorkflowWaiverAudit } from './workflow-waiver.js';
 import { changedFiles, runProcess, type Runner } from './process.js';
 import { buildTrace, checkTrace } from './trace.js';
 import { adapterInvocation, clearAdapterOutput, mergeAdapterArgs, normalizeAdapterReport, readAdapterOutput,
-  candidateCommandNames, type CandidateFailedTest } from './adapters.js';
-import { canonicalBytes } from './canonical.js';
-
-/** @id CODE-M5-CI-FAILED-TEST-CARRIERS-001
- * @implements REQ-M5-CI-008
- * @design DES-M5-CI-009
- */
-export function createCandidateFailureProjector(): (command: string, failures: readonly CandidateFailedTest[]) => Diagnostic[] {
-  let projected: Diagnostic[] = [], stopped = false;
-  return (command, failures) => {
-    if (stopped || !candidateCommandNames.some(name => name === command) || !failures.length) return [];
-    try {
-      const sorted = [...failures].sort((a, b) => Buffer.compare(Buffer.from(a.testId, 'utf8'), Buffer.from(b.testId, 'utf8')));
-      const selected = sorted.length > 100 ? sorted.slice(0, 99) : sorted;
-      const diagnostics: Diagnostic[] = selected.map(entry => ({
-        code: 'CANDIDATE_COMMAND_TEST_FAILED', severity: 'error',
-        message: canonicalBytes({ schemaVersion: 1, command, testId: entry.testId, title: entry.title,
-          nativeMessage: entry.nativeMessage }).toString('utf8'),
-        ...(entry.path !== undefined ? { path: entry.path } : {}),
-      }));
-      if (sorted.length > 100) diagnostics.push({
-        code: 'CANDIDATE_COMMAND_TESTS_OMITTED', severity: 'error',
-        message: canonicalBytes({ schemaVersion: 1, command, omitted: sorted.length - 99 }).toString('utf8'),
-      });
-      const candidateDiagnostics = [...projected, ...diagnostics];
-      if (Buffer.byteLength(JSON.stringify(candidateDiagnostics), 'utf8') > 24_000_000) {
-        stopped = true;
-        return [];
-      }
-      projected = candidateDiagnostics;
-      return diagnostics;
-    } catch {
-      stopped = true;
-      return [];
-    }
-  };
-}
+  createCandidateFailureProjector } from './adapters.js';
+export { createCandidateFailureProjector } from './adapters.js';
 import {
   createPerformanceExecution, performanceCommandSha256, validatePerformanceEvidence,
   writePerformanceEvidence, matrixPerformanceReportRoot, type MatrixPerformanceContext, type PerformanceExecution,
@@ -103,6 +69,10 @@ import {
 import { listCandidateSnapshotRecords } from './workspace-manager.js';
 import { requiredCommandDiagnostics } from './quality-policy.js';
 import { getCandidateFailedTests, runTestRuntimeCommand, testRuntimeExecutionContext } from './test-runtime.js';
+import { candidateExecutionPlanDigest, loadCandidateExecutionPlan, createCandidateSlotLedger,
+  acquireCandidateSlots, releaseCandidateSlots, validateCandidateSlotLedger } from './candidate-execution-plan.js';
+import { cleanTestRuntimeBuildEnvironment } from './process.js';
+import { loadApprovedCandidateCalibration, verifyCandidateCalibrationSourceFinal } from './candidate-calibration.js';
 
 export interface GateReport {
   schemaVersion: 1;
@@ -296,7 +266,7 @@ export async function runGate(root: string, options: {
   tddPurpose?: 'readiness' | 'integration-verification';
   evidenceContext?: CandidateEvidenceContext | IntegrationEvidenceContext;
 } = {}): Promise<GateReport> {
-  const config = options.config ?? await loadConfig(root);
+  let config = options.config ?? await loadConfig(root);
   const validationContext = options.evidenceContext
     ? undefined
     : await resolveValidationChangeContext(root);
@@ -304,6 +274,23 @@ export async function runGate(root: string, options: {
   const gateRunId = randomUUID();
   const matrixMode = options.persistenceMode === 'matrix';
   const environment = options.environment ?? process.env;
+  let planDigest: string | undefined;
+  if (matrixMode && config.testRuntime?.calibratedPlan) {
+    const { plan } = await loadCandidateExecutionPlan(root);
+    planDigest = candidateExecutionPlanDigest(plan);
+    const mode = environment.CANDIDATE_MODE;
+    if (mode !== 'candidate' && mode !== 'calibration') throw new Error('CANDIDATE_EXECUTION_PLAN_INVALID: explicit mode required');
+    if (mode === 'candidate') {
+      const calibration = await loadApprovedCandidateCalibration(root, plan);
+      await verifyCandidateCalibrationSourceFinal(root, calibration.manifest, environment.CANDIDATE_COMMIT!, runner);
+    }
+    config = { ...config, commands: config.commands.map((command, index) => {
+      const planned = plan.commands[index]!;
+      if (planned.name !== command.name || planned.executable !== command.command
+        || JSON.stringify(planned.args) !== JSON.stringify(command.args)) throw new Error('CANDIDATE_EXECUTION_PLAN_INVALID: configured invocation mismatch');
+      return { ...command, timeoutMs: mode === 'calibration' ? command.name === 'test' ? 600_000 : 120_000 : planned.timeoutMs };
+    }), formal: { ...config.formal, timeoutMs: mode === 'calibration' ? 120_000 : plan.formalTimeoutMs } };
+  }
   const matrixScope: MatrixPerformanceContext | undefined = matrixMode ? {
     repositoryId: environment.REPOSITORY_ID ?? '', candidateCommit: environment.CANDIDATE_COMMIT ?? '',
     platform: environment.MATRIX_OS ?? '', nodeMajor: Number(environment.MATRIX_NODE), runId: gateRunId,
@@ -378,6 +365,7 @@ export async function runGate(root: string, options: {
   add('graph', graph.files.length > 0, graphResult.diagnostics);
   const formalText = (await Promise.all(requirementPaths.map(async (path) =>
     (await readText(root, path)).replace(/^---[\s\S]*?---\s*/, '')))).join('\n\n');
+  const formalStarted = monotonicPerformance.now();
   const formalResult = await formalCheck(formalText, root, {
     solver: config.formal.solver,
     timeoutMs: config.formal.timeoutMs,
@@ -404,7 +392,7 @@ export async function runGate(root: string, options: {
       ? `${modeledRequirements}/${totalRequirements} requirements modeled; consistency ${formalResult.consistency}; solver ${formalResult.solver.status}.`
       : 'No requirements available for formal analysis.',
     diagnostics: formalDiagnostics,
-    durationMs: formalResult.solver.durationMs,
+    durationMs: Math.ceil(monotonicPerformance.now() - formalStarted),
   });
   const workflow = await validateWorkflow(
     root, config.workflow, options.evidenceContext, validationContext,
@@ -499,11 +487,13 @@ export async function runGate(root: string, options: {
   };
   if (!matrixMode) await writeJson(root, '.musubix/evidence/formal.json', formalEvidence);
   const commandChecks: Evidence[] = [];
+  const observedExecutionSlots: number[] = [];
   const structuredTests = new Map<string, MusubixTestReport['tests'][number][]>();
   const performanceExecutions: PerformanceExecution[] = [];
   const mutationExecutions: MutationExecution[] = [];
   const testReportDiagnostics: Diagnostic[] = [];
   const mutationReportDiagnostics: Diagnostic[] = [];
+  let reusableTestReport: { path: string; sha256: string } | undefined;
   let configuredTestReports = 0;
   const candidateFailureDiagnostics = createCandidateFailureProjector();
   for (const [commandIndex, command] of config.commands.entries()) {
@@ -543,8 +533,28 @@ export async function runGate(root: string, options: {
     const args = command.adapter
       ? mergeAdapterArgs(command.adapter, configuredArgs, adapterArgs)
       : configuredArgs;
-    const executionOptions = { cwd: commandCwd(root, command), timeoutMs: command.timeoutMs, env: environment };
-    const result = config.testRuntime?.commandNames.some((name) => name === command.name)
+    const runtimeCommand = config.testRuntime?.commandNames.some((name) => name === command.name);
+    const standaloneLedger = matrixMode && planDigest && !runtimeCommand
+      ? await createCandidateSlotLedger(await safePath(root, `.musubix/cache/candidate-slots/${gateRunId}/${command.name}`),
+        environment.CANDIDATE_DISPATCH_NONCE!, 16) : undefined;
+    const standaloneRoot = standaloneLedger ? await acquireCandidateSlots(standaloneLedger,
+      { nonce: standaloneLedger.nonce, pid: process.pid, partition: 'command-root' }, 1) : undefined;
+    let commandEnvironment = command.name === 'codegraph-tests' && reusableTestReport
+      ? {
+        ...environment,
+        MUSUBIX5_REUSED_TEST_REPORT: reusableTestReport.path,
+        MUSUBIX5_REUSED_TEST_REPORT_SHA256: reusableTestReport.sha256,
+      }
+      : environment;
+    if (standaloneLedger) {
+      const ledgerPath = await safePath(root, `.musubix/cache/candidate-slots/${gateRunId}/${command.name}/binding.json`);
+      await writeJson(root, ledgerPath, standaloneLedger);
+      commandEnvironment = cleanTestRuntimeBuildEnvironment(root, {
+        ...environment, MUSUBIX5_CANDIDATE_SLOT_LEDGER: ledgerPath, MUSUBIX5_CANDIDATE_PARTITION: command.name,
+      });
+    }
+    const executionOptions = { cwd: commandCwd(root, command), timeoutMs: command.timeoutMs, env: commandEnvironment };
+    const result = runtimeCommand
       ? await runTestRuntimeCommand(root, command, args, {
         ...executionOptions,
         collectCandidateFailures: matrixMode,
@@ -553,6 +563,10 @@ export async function runGate(root: string, options: {
         await testRuntimeExecutionContext(root, options.evidenceContext && 'integrationId' in options.evidenceContext
           ? 'integration' : 'command', runner, validationContext ?? null))
       : await runner(command.command, args, executionOptions);
+    if (standaloneLedger && standaloneRoot) {
+      await releaseCandidateSlots(standaloneLedger, standaloneRoot);
+      Object.assign(result, { candidateExecution: await validateCandidateSlotLedger(standaloneLedger) });
+    }
     const commandCheck: Evidence = {
       name: `command:${command.name}`, required: command.required,
       status: result.status === 'missing' ? 'skipped' : result.status !== 'completed' || result.exitCode !== 0 ? 'fail' : 'pass',
@@ -560,6 +574,12 @@ export async function runGate(root: string, options: {
       durationMs: result.durationMs, exitCode: result.exitCode, stdout: result.stdout, stderr: result.stderr,
       ...(result.testRuntime ? { testRuntime: result.testRuntime } : {}),
     };
+    const slotObservation = (result as typeof result & { candidateExecution?: { maximum: number; ledgerDigest: string } }).candidateExecution;
+    if (slotObservation) {
+      Object.assign(commandCheck, { candidateExecution: slotObservation });
+      observedExecutionSlots.push(slotObservation.maximum);
+      commandCheck.summary += ` Execution slots ${slotObservation.maximum}; ledger ${slotObservation.ledgerDigest}; plan ${planDigest}.`;
+    }
     commandChecks.push(commandCheck);
     if (matrixMode && command.required && result.status === 'completed' && result.exitCode !== null && result.exitCode !== 0) {
       const failures = getCandidateFailedTests(result);
@@ -655,6 +675,12 @@ export async function runGate(root: string, options: {
             if (command.required) testReportDiagnostics.push(...executionDiagnostics);
           } else {
             const sourceKind = adapterOutput?.source ?? 'file';
+            if (command.name === 'test') {
+              reusableTestReport = {
+                path: await safePath(root, reportPath),
+                sha256: digest(reportText),
+              };
+            }
             performanceExecutions.push(createPerformanceExecution({
               runId: gateRunId,
               executionId: digest(JSON.stringify({ runId: gateRunId, commandIndex, commandName: command.name })),
@@ -839,6 +865,7 @@ export async function runGate(root: string, options: {
     'formal.errors': countErrors(formalDiagnostics),
     'formal.modeledFraction': modeledFraction,
     'commands.failures': commandChecks.filter((c) => c.status === 'fail').length,
+    'candidateObservedExecutionSlots': Math.max(0, ...observedExecutionSlots),
     'commands.skipped': commandChecks.filter((c) => c.status === 'skipped').length + Number(!commandChecks.length),
     'tests.annotatedIds': annotatedTestIds.length,
     'tests.executedIds': executedTestIds.length,

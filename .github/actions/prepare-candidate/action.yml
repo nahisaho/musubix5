@@ -1,0 +1,32 @@
+name: Prepare immutable candidate
+description: Resolve job timing, install Node 24, verify local LFS closure, install and build within the parent deadline
+runs:
+  using: composite
+  steps:
+    - name: Resolve authoritative job start
+      shell: bash
+      run: node .github/scripts/resolve-candidate-job-timing.mjs
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 24
+        cache: npm
+    - name: Verify closure and prepare runner
+      shell: bash
+      run: |
+        node --input-type=module <<'NODE'
+        import { execFileSync } from 'node:child_process';
+        import { dirname, join } from 'node:path';
+        const deadline = Number(process.env.CANDIDATE_PREPARATION_DEADLINE);
+        const run = (args) => {
+          const remaining = deadline - Date.now();
+          if (!Number.isSafeInteger(remaining) || remaining <= 0) throw new Error('CANDIDATE_PREPARATION_TIMEOUT');
+          try { execFileSync(process.execPath, args, {timeout: remaining, stdio: 'inherit'}); }
+          catch { throw new Error('CANDIDATE_PREPARATION_FAILED'); }
+        };
+        run(['scripts/verify-lfs-checkout.mjs', '.', '--local-only', '--deadline', String(deadline)]);
+        const npm = process.env.npm_execpath ?? (process.platform === 'win32'
+          ? join(dirname(process.execPath),'node_modules/npm/bin/npm-cli.js')
+          : join(dirname(process.execPath),'../lib/node_modules/npm/bin/npm-cli.js'));
+        run([npm, 'ci', '--no-audit', '--no-fund']);
+        run([npm, 'run', 'build']);
+        NODE

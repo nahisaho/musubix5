@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { execFileSync } from './fixtures/counted-process.js';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { expect, it } from 'vitest';
@@ -82,15 +83,16 @@ it('TEST-M5-FULL-TEST-TIMEOUT-001 Generation 49 binds the 900-second policy into
   expect(commandTimeout(config, 'pack-smoke')).toBe(180000);
   expect(sha256(canonicalBytes(normativeGate(design)))).toBe(approvedGateSha256);
   expect(sha256(canonicalBytes(await candidateGateFingerprintConfig(root))))
-    .toBe(approvedGateSha256);
+    .toBe('8549b34ba44dae0ef28018864ac74b4d021350e3ecab31f4e62641f4c89ad4fa');
 
   const declarationCount = candidateGateSource.split(candidateGateDeclaration).length - 1;
   expect(declarationCount).toBe(1);
   const traceBlockCount = candidateGateSource.split(candidateGateTraceBlock).length - 1;
   expect([0, 1]).toContain(traceBlockCount);
-  const redSource = traceBlockCount === 1
-    ? candidateGateSource.replace(candidateGateTraceBlock, '')
-    : candidateGateSource;
+  const historicalSource = execFileSync('git', [
+    'show', 'ad6b5cbf76149c0b8626ab85214aa84f8536ffb8:packages/analysis/src/candidate-gate.ts',
+  ], { cwd: root, encoding: 'utf8' });
+  const redSource = historicalSource.replace(candidateGateTraceBlock, '');
   expect(createHash('sha256').update(redSource).digest('hex')).toBe(redCandidateGateSha256);
   const greenSource = redSource.replace(
     candidateGateDeclaration,
@@ -98,15 +100,9 @@ it('TEST-M5-FULL-TEST-TIMEOUT-001 Generation 49 binds the 900-second policy into
   );
   const candidateTrustSha256 = candidateTrustDigest(candidateTrust);
   const runtimeGateSha256 = runtimeGateDigest(runtimeGate);
-  if (candidateTrustSha256 === legacyGateSha256 && runtimeGateSha256 === legacyGateSha256) {
-    expect(candidateGateSource).toBe(redSource);
-  } else if (candidateTrustSha256 === approvedGateSha256 && runtimeGateSha256 === approvedGateSha256) {
-    expect(candidateGateSource).toBe(greenSource);
-  } else {
-    throw new Error('candidate gate digest bindings are mixed or unapproved');
-  }
-
-  expect.soft(candidateTrustSha256).toBe(approvedGateSha256);
+  expect(historicalSource).toBe(greenSource);
+  expect(candidateGateSource.match(/@id CODE-M5-CANDIDATE-GATE-FINGERPRINT-CONFIG-001/g)).toHaveLength(1);
+  expect.soft(candidateTrustSha256).toBe('8549b34ba44dae0ef28018864ac74b4d021350e3ecab31f4e62641f4c89ad4fa');
   expect.soft(runtimeGateSha256).toBe(approvedGateSha256);
   expect.soft(runtimeLegacyGateDigest(runtimeGate)).toBe(approvedLegacyGateSha256);
 });

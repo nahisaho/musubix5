@@ -2970,10 +2970,11 @@ export async function validateTddEvidence(
           cause instanceof Error ? cause.message : String(cause), cycle.testPath));
       }
     }
-    if (cycle.red.testRuntime && cycle.green && !cycle.green.testRuntime
+    if (!supersededCycles.has(cycle) && !validlyVoidedCycles.has(cycle) && (
+      cycle.red.testRuntime && cycle.green && !cycle.green.testRuntime
       || cycle.green?.testRuntime && cycle.refactor && !cycle.refactor.testRuntime
       || cycle.red.testRuntime && cycle.green?.testRuntime
-        && cycle.red.testRuntime.profileSha256 !== cycle.green.testRuntime.profileSha256) {
+        && cycle.red.testRuntime.profileSha256 !== cycle.green.testRuntime.profileSha256)) {
       diagnostics.push(error('TEST_RUNTIME_BOOTSTRAP_INVALID',
         `${cycle.testId}: phase-runtime-transition.`, cycle.testPath));
     }
