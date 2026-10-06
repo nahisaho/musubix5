@@ -71,6 +71,18 @@ it('TEST-M5-LINUX-CALIBRATION-WRAPPER-DIAGNOSTIC-001 emits only a normalized pro
   expect(wrapper).not.toContain('cause.message');
 });
 
+/** @id TEST-M5-LINUX-CALIBRATION-SIGNER-DIAGNOSTIC-001
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-CALIBRATION-SIGNER-DIAGNOSTIC-001 identifies only the failed validation stage', async () => {
+  const workflow = await readFile('.github/workflows/candidate-calibration.yml', 'utf8');
+  for (const stage of ['read', 'outcome', 'context', 'manifest']) {
+    expect(workflow).toContain(`validationStage='${stage}'`);
+  }
+  expect(workflow).toContain("console.error(`candidate-calibration-sign:${validationStage}`)");
+});
+
 /** @id TEST-M5-CI-CALIBRATION-FAILURE-ENVELOPE-001
  * @verifies REQ-M5-CI-EFFICIENCY-004 REQ-M5-CI-EFFICIENCY-005
  * @design DES-M5-CI-EFFICIENCY-004 DES-M5-CI-EFFICIENCY-006
