@@ -1,6 +1,6 @@
 /** @id CODE-M5-CI-CANDIDATE-WRAPPER-001
- * @implements REQ-M5-CI-008
- * @design DES-M5-CI-008
+ * @implements REQ-M5-CI-008 REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-CI-008 DES-M5-LINUX-DELIVERY-002
  */
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -17,6 +17,15 @@ import { writeCandidateGateRunnerFailure } from './write-candidate-gate-runner-f
  *   writeFailure?: typeof writeCandidateGateRunnerFailure
  * }} WrapperDependencies
  */
+function failureKind(cause) {
+  try {
+    const value = cause instanceof Error ? cause.name : typeof cause;
+    return /^[A-Za-z][A-Za-z0-9]{0,63}$/.test(value) ? value : 'unknown';
+  } catch {
+    return 'unknown';
+  }
+}
+
 /**
  * @param {{cwd?: string, env?: NodeJS.ProcessEnv, config?: unknown, dependencies?: WrapperDependencies}} options
  * @returns {Promise<import('../../packages/analysis/src/candidate-gate-runner.js').CandidateGateRunnerResult>}
@@ -76,7 +85,8 @@ export async function runCandidateGateWrapper({
     const result = await runner.runCandidateGateWorkflow(input);
     if (result.status !== 'pass') process.exitCode = 1;
     return result;
-  } catch {
+  } catch (cause) {
+    console.error(`candidate-gate-wrapper:${failureKind(cause)}`);
     return fallback('runner-processing-failure');
   }
 }

@@ -61,6 +61,16 @@ it('TEST-M5-LINUX-CALIBRATION-PARTITION-BUDGET-001 expands only calibration test
   expect(scheduler).toContain('timeoutMs: partitionTimeouts[partition.ordinal]');
 });
 
+/** @id TEST-M5-LINUX-CALIBRATION-WRAPPER-DIAGNOSTIC-001
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-CALIBRATION-WRAPPER-DIAGNOSTIC-001 emits only a normalized processing failure class', async () => {
+  const wrapper = await readFile('.github/scripts/run-candidate-gate-wrapper.mjs', 'utf8');
+  expect(wrapper).toContain('candidate-gate-wrapper:${failureKind(cause)}');
+  expect(wrapper).not.toContain('cause.message');
+});
+
 /** @id TEST-M5-CI-CALIBRATION-FAILURE-ENVELOPE-001
  * @verifies REQ-M5-CI-EFFICIENCY-004 REQ-M5-CI-EFFICIENCY-005
  * @design DES-M5-CI-EFFICIENCY-004 DES-M5-CI-EFFICIENCY-006
