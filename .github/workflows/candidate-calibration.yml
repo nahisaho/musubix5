@@ -80,7 +80,8 @@ jobs:
           import { join } from 'node:path';
           const e=process.env,canonical=v=>Array.isArray(v)?`[${v.map(canonical).join(',')}]`:v&&typeof v==='object'?`{${Object.entries(v).sort(([a],[b])=>Buffer.compare(Buffer.from(a),Buffer.from(b))).map(([k,x])=>`${JSON.stringify(k)}:${canonical(x)}`).join(',')}}`:JSON.stringify(v);
           const hash=v=>createHash('sha256').update(`${canonical(v)}\n`).digest('hex'),audienceBase='https://github.com/nahisaho/musubix5/actions/musubix5-gate';
-          const context={repositoryId:e.REPOSITORY_ID,changeId:e.CHANGE_ID,generation:Number(e.GENERATION),candidateCommit:e.CANDIDATE_COMMIT,gateInputFingerprint:e.GATE_INPUT_FINGERPRINT,deliveryProfile:e.DELIVERY_PROFILE,job:{os:e.MATRIX_OS,nodeMajor:24}};
+          const runnerContext={repositoryId:e.REPOSITORY_ID,changeId:e.CHANGE_ID,generation:Number(e.GENERATION),candidateCommit:e.CANDIDATE_COMMIT,gateInputFingerprint:e.GATE_INPUT_FINGERPRINT,job:{os:e.MATRIX_OS,nodeMajor:24}};
+          const context={...runnerContext,deliveryProfile:e.DELIVERY_PROFILE};
           let result,validationStage='read';
           try{
             result=JSON.parse(readFileSync(join(e.RUNNER_TEMP,'candidate-gate-result.json'),'utf8'));
@@ -89,7 +90,7 @@ jobs:
             validationStage='context';
             const cfg=JSON.parse(readFileSync('.musubix/config.json','utf8'));
             if(cfg.candidateGate&&cfg.candidateGate.attestation.githubOidc.audience!==audienceBase) throw new Error('audience');
-            if(Object.entries(context).some(([k,v])=>canonical(result[k])!==canonical(v))||result.producer!=='github-actions'||result.mode!=='calibration'||result.runAttempt!==1||result.runId!==e.GITHUB_RUN_ID) throw new Error('context');
+            if(Object.entries(runnerContext).some(([k,v])=>canonical(result[k])!==canonical(v))||result.producer!=='github-actions'||result.mode!=='calibration'||result.runAttempt!==1||result.runId!==e.GITHUB_RUN_ID) throw new Error('context');
             validationStage='manifest';
             const manifest=JSON.parse(readFileSync(join(e.RUNNER_TEMP,'candidate-lfs-closure.json'),'utf8'));
             if(result.lfsManifestDigest!==hash(manifest)) throw new Error('manifest');

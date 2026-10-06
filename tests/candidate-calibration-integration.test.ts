@@ -83,6 +83,19 @@ it('TEST-M5-LINUX-CALIBRATION-SIGNER-DIAGNOSTIC-001 identifies only the failed v
   expect(workflow).toContain("console.error(`candidate-calibration-sign:${validationStage}`)");
 });
 
+/** @id TEST-M5-LINUX-SIGNER-CONTEXT-BOUNDARY-001
+ * @verifies REQ-M5-LINUX-DELIVERY-002 REQ-M5-LINUX-DELIVERY-004
+ * @design DES-M5-LINUX-DELIVERY-002 DES-M5-LINUX-DELIVERY-004
+ */
+it('TEST-M5-LINUX-SIGNER-CONTEXT-BOUNDARY-001 validates schema-v1 runner context before adding the delivery profile', async () => {
+  for (const name of ['candidate-gate', 'candidate-calibration']) {
+    const workflow = await readFile(`.github/workflows/${name}.yml`, 'utf8');
+    expect(workflow).toContain('const runnerContext=');
+    expect(workflow).toContain('const context={...runnerContext,deliveryProfile:e.DELIVERY_PROFILE}');
+    expect(workflow).toContain('Object.entries(runnerContext)');
+  }
+});
+
 /** @id TEST-M5-CI-CALIBRATION-FAILURE-ENVELOPE-001
  * @verifies REQ-M5-CI-EFFICIENCY-004 REQ-M5-CI-EFFICIENCY-005
  * @design DES-M5-CI-EFFICIENCY-004 DES-M5-CI-EFFICIENCY-006
