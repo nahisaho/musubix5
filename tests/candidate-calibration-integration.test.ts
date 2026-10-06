@@ -51,6 +51,16 @@ it('TEST-M5-CI-CALIBRATION-INTEGRATION-001 binds workflow mode budgets and rejec
   })).toThrow();
 });
 
+/** @id TEST-M5-LINUX-CALIBRATION-PARTITION-BUDGET-001
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-CALIBRATION-PARTITION-BUDGET-001 expands only calibration test partition deadlines', async () => {
+  const scheduler = await readFile('scripts/test-runtime/partition-scheduler.mjs', 'utf8');
+  expect(scheduler).toContain("commandName === 'test' && process.env.CANDIDATE_MODE === 'calibration'");
+  expect(scheduler).toContain('900_000 - command.mergeAllowanceMs - command.terminationAllowanceMs');
+  expect(scheduler).toContain('timeoutMs: partitionTimeouts[partition.ordinal]');
+});
+
 /** @id TEST-M5-CI-CALIBRATION-FAILURE-ENVELOPE-001
  * @verifies REQ-M5-CI-EFFICIENCY-004 REQ-M5-CI-EFFICIENCY-005
  * @design DES-M5-CI-EFFICIENCY-004 DES-M5-CI-EFFICIENCY-006

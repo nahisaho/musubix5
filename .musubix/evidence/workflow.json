@@ -6424,13 +6424,45 @@
       "phase": "complete",
       "status": "completed",
       "recordedAt": "2026-10-06T14:24:47.648Z"
+    },
+    {
+      "skill": "sdd-implementation",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0020",
+      "generation": 1,
+      "requirementIds": [
+        "REQ-M5-LINUX-DELIVERY-001",
+        "REQ-M5-LINUX-DELIVERY-002",
+        "REQ-M5-LINUX-DELIVERY-003",
+        "REQ-M5-LINUX-DELIVERY-004"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-10-06T16:58:44.541Z"
+    },
+    {
+      "skill": "sdd-quality",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0020",
+      "generation": 1,
+      "requirementIds": [
+        "REQ-M5-LINUX-DELIVERY-001",
+        "REQ-M5-LINUX-DELIVERY-002",
+        "REQ-M5-LINUX-DELIVERY-003",
+        "REQ-M5-LINUX-DELIVERY-004"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-10-06T17:07:31.245Z"
     }
   ],
   "verification": {
     "mode": "compatible",
-    "sourceSha256": "21ef5c39134c322659c5b0fd466dd44c0afffe89d1db229320b980f315b768d5",
-    "eventsSha256": "aacc234840d7624f3edba107076b46071c8fd8ca3fb79938779314e11287c8c2",
-    "verifiedAt": "2026-10-06T14:35:35.131Z",
+    "sourceSha256": "916c28f316424bcb34d83434c913d42a7da7a1789936528458e2a39b681c83ec",
+    "eventsSha256": "a47bcb63edae10f749f0d4eb4b70b214159b26a460a727ea744043f8147d4cb3",
+    "verifiedAt": "2026-10-06T17:08:04.888Z",
     "invocations": [
       {
         "skill": "sdd-change",
@@ -6661,6 +6693,13 @@
         "toolCallId": "call_Ur1SIK295e7du5v3CkT8jdmg",
         "invokedAt": "2026-10-06T14:35:28.401Z",
         "completedAt": "2026-10-06T14:35:28.416Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-quality",
+        "toolCallId": "call_W7DmMBHYnyvSzCeSItJqPFjf",
+        "invokedAt": "2026-10-06T16:58:47.509Z",
+        "completedAt": "2026-10-06T16:58:47.523Z",
         "status": "completed"
       }
     ]
