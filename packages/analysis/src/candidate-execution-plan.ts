@@ -585,9 +585,9 @@ export function calibrateCandidateTimeouts(observations: unknown): CandidateTime
       }
       for (const lease of remaining.values()) {
         const native = nativeDescriptors.find(descriptor => descriptor.leaseId === lease.leaseId);
-        if (!native || native.callerPid !== lease.pid || !await terminated(lease.pid)) {
-          reject(`leaked native owner partition=${lease.partition} callerPid=${lease.pid} childPid=${native?.childPid ?? "missing"}`);
-        }
+        if (!await terminated(lease.pid)) reject(`leaked native owner partition=${lease.partition} callerPid=${lease.pid} childPid=${native?.childPid ?? "missing"}`);
+        if (!native) { await releaseCandidateSlots(ledger, lease); continue; }
+        if (native.callerPid !== lease.pid) reject('foreign native descriptor');
         if (!await terminated(Number(native.childPid))) reject('live native child');
         native.status = 'terminated';
         await writeFile(join(ledger.root, `native-${lease.leaseId}.json`), canonicalBytes(native), { mode: 0o600 });

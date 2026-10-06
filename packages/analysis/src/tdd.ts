@@ -2234,8 +2234,26 @@ export async function voidTddCycle(root: string, testId: string, approver: strin
       reason: `${testId} has no verifiable dangling TDD cycle in the current operation scope.`,
     };
   }
-  const eligibleFallback = effectiveLatestCycle(index, testId, event.order, operationScope);
-  if (!eligibleFallback) {
+  let hasEligibleFallback = effectiveLatestCycle(index, testId, event.order, operationScope) !== undefined;
+  if (!hasEligibleFallback && cycle.green?.valid === false) {
+    const successorFallbacks = evidence.cycles.filter((candidate) =>
+      candidate.cycleId !== cycle.cycleId
+      && operationScope(candidate)
+      && candidate.requirementId === cycle.requirementId
+      && candidate.testPath === cycle.testPath
+      && candidate.commandName === cycle.commandName
+      && canonicalBytes(candidate.binding ?? null).equals(canonicalBytes(cycle.binding ?? null))
+      && (candidate.red.order ?? 0) > (cycle.green?.order ?? cycle.red.order ?? 0)
+      && !validlyVoided.has(candidate)
+      && authoritativeRepairCycle(candidate));
+    const successorFallback = successorFallbacks[0];
+    if (successorFallbacks.length === 1
+      && successorFallback
+      && await repairCycleSourceCurrent(root, successorFallback)) {
+      hasEligibleFallback = true;
+    }
+  }
+  if (!hasEligibleFallback) {
     return {
       voided: false,
       testId,

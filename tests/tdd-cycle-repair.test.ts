@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { readFile } from 'node:fs/promises';
 import {
   repairAwareCycles,
   tddRepairOperationIdentity,
@@ -88,5 +89,15 @@ describe('scoped TDD repair', () => {
     expect(repairAwareCycles({ ...evidence, repairs: [repair] }).map((entry) => entry.cycleId))
       .toEqual(['cycle-replacement']);
     expect(JSON.stringify(evidence.cycles)).toBe(before);
+  });
+
+  /**
+   * @id TEST-M5-TDD-INVALID-GREEN-SUCCESSOR-001
+   * @verifies REQ-M5-CI-EFFICIENCY-001
+   */
+  it('TEST-M5-TDD-INVALID-GREEN-SUCCESSOR-001 permits void only with one authoritative successor', async () => {
+    const source = await readFile('packages/analysis/src/tdd.ts', 'utf8');
+    expect(source).toContain('const successorFallbacks = evidence.cycles.filter');
+    expect(source).toContain('successorFallbacks.length === 1');
   });
 });

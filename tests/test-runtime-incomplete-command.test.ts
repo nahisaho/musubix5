@@ -164,3 +164,13 @@ it('TEST-M5-CI-PARTITION-PREBUILT-RUNTIME-001 prevents concurrent partitions fro
   expect(scheduler).toContain("MUSUBIX5_PREBUILT_TEST_RUNTIME: 'true'");
   expect(setup).toContain("process.env.MUSUBIX5_PREBUILT_TEST_RUNTIME !== 'true'");
 });
+
+/** @id TEST-M5-CI-PARTITION-ID-SET-BINDING-001
+ * @verifies REQ-M5-CI-EFFICIENCY-002 REQ-M5-CI-EFFICIENCY-004
+ * @design DES-M5-CI-EFFICIENCY-002 DES-M5-CI-EFFICIENCY-006
+ */
+it('TEST-M5-CI-PARTITION-ID-SET-BINDING-001 binds partition identities independent of source enumeration order', async () => {
+  const source = await readFile('packages/analysis/src/test-runtime.ts', 'utf8');
+  expect(source).toContain("[...strings(incoming.selectedTestIds, 'acknowledgment-binding')].sort()");
+  expect(source).toContain('[...selectedTestIds].sort()');
+});

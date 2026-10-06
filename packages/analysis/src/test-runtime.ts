@@ -1451,7 +1451,8 @@ export async function prepareTestRuntimeProvider(
     equal(incoming.profileSha256, snapshot.profileSha256, 'profile-digest');
     equal(incoming.inputsSha256, snapshot.inputsSha256, 'input-hash');
     equal(incoming.selectedFiles, selectedFiles, 'acknowledgment-binding');
-    equal(incoming.selectedTestIds, selectedTestIds, 'acknowledgment-binding');
+    equal([...strings(incoming.selectedTestIds, 'acknowledgment-binding')].sort(),
+      [...selectedTestIds].sort(), 'acknowledgment-binding');
     equal(observedVitestArgs(invocation(incoming.effectiveInvocation)), bridge.args, 'acknowledgment-binding');
     const dispatch = blobSchema(JSON.parse((await regular(join(store, 'dispatch.json'))).toString('utf8')));
     equal(hash(dispatch), incoming.dispatchSha256, 'acknowledgment-binding');

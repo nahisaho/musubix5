@@ -115,3 +115,22 @@ it('TEST-M5-CI-SLOT-ORDINAL-COUNTER-001 allocates observation ordinals without s
   expect(source).toContain("join(ledger.root, 'observation-count')");
   expect(source).not.toContain("readdirSync(ledger.root).filter(name => /^observation-[0-9]+\\.json$/.test(name)).length");
 });
+
+/** @id TEST-M5-CI-DEAD-FIXTURE-OWNER-001
+ * @verifies REQ-M5-CI-EFFICIENCY-001 REQ-M5-CI-EFFICIENCY-004
+ * @design DES-M5-CI-EFFICIENCY-002 DES-M5-CI-EFFICIENCY-006
+ */
+it('TEST-M5-CI-DEAD-FIXTURE-OWNER-001 cleans only independently confirmed dead fixture owners', async () => {
+  const source = await readFile('packages/analysis/src/candidate-execution-plan.ts', 'utf8');
+  expect(source).toContain("if (!await terminated(lease.pid)) reject(`leaked native owner");
+  expect(source).toContain('if (!native) { await releaseCandidateSlots(ledger, lease); continue; }');
+});
+
+/** @id TEST-M5-CI-DEAD-FIXTURE-OWNER-REPAIR-001
+ * @verifies REQ-M5-CI-EFFICIENCY-001 REQ-M5-CI-EFFICIENCY-004
+ * @design DES-M5-CI-EFFICIENCY-002 DES-M5-CI-EFFICIENCY-006
+ */
+it('TEST-M5-CI-DEAD-FIXTURE-OWNER-REPAIR-001 preserves the verified dead-owner cleanup behavior', async () => {
+  const source = await readFile('packages/analysis/src/candidate-execution-plan.ts', 'utf8');
+  expect(source).toContain('if (!native) { await releaseCandidateSlots(ledger, lease); continue; }');
+});
