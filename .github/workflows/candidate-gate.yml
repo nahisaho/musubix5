@@ -82,8 +82,10 @@ jobs:
           const e = process.env, canonical = v => Array.isArray(v) ? `[${v.map(canonical).join(',')}]` : v && typeof v === 'object' ? `{${Object.entries(v).sort(([a],[b])=>Buffer.compare(Buffer.from(a),Buffer.from(b))).map(([k,x])=>`${JSON.stringify(k)}:${canonical(x)}`).join(',')}}` : JSON.stringify(v);
           const hash = v => createHash('sha256').update(`${canonical(v)}\n`).digest('hex');
           const audienceBase = 'https://github.com/nahisaho/musubix5/actions/musubix5-gate';
-          const runnerContext={repositoryId:e.REPOSITORY_ID,changeId:e.CHANGE_ID,generation:Number(e.GENERATION),candidateCommit:e.CANDIDATE_COMMIT,gateInputFingerprint:e.GATE_INPUT_FINGERPRINT,job:{os:e.MATRIX_OS,nodeMajor:24}};
+          const runnerContext=Object.freeze({repositoryId:e.REPOSITORY_ID,changeId:e.CHANGE_ID,generation:Number(e.GENERATION),candidateCommit:e.CANDIDATE_COMMIT,gateInputFingerprint:e.GATE_INPUT_FINGERPRINT,job:{os:e.MATRIX_OS,nodeMajor:24}});
           const context={...runnerContext,deliveryProfile:e.DELIVERY_PROFILE};
+          const signedContext={...runnerContext,deliveryProfile:e.DELIVERY_PROFILE};
+          const signingBoundary=Object.freeze({context:signedContext});
           let result;
           try {
             if (e.GATE_STEP_OUTCOME !== 'success') throw new Error('incomplete gate stage');
@@ -94,7 +96,7 @@ jobs:
             const manifest=JSON.parse(readFileSync(join(e.RUNNER_TEMP,'candidate-lfs-closure.json'),'utf8'));
             if (result.lfsManifestDigest !== hash(manifest) || result.mode !== 'candidate' || result.runAttempt !== 1 || result.runId !== e.GITHUB_RUN_ID) throw new Error('manifest');
           } catch {
-            result={schemaVersion:2,...context,producer:'github-actions',runtime:context.job,status:'fail',commands:['typecheck','build','test','codegraph-tests','compatibility','pack-check','pack-smoke'].map(name=>({name,exitCode:1,digest:hash({name}),status:'fail'})),commandsPassed:false,preTreeMatchesCandidate:false,postTreeMatchesCandidate:false,stdoutSha256:hash(''),stderrSha256:hash(''),gateReportDigest:hash(''),exitCode:1,signal:null,timedOut:false,drainTruncated:false,tailsDropped:false,resultTextDropped:false,matchedCauses:['workflow-stage-failure'],originalDomainCode:'CANDIDATE_GATE_REPORT_INVALID',originalDomainMessage:'Workflow stage failed.',childErrorMessage:null};
+            result={schemaVersion:2,...signingBoundary.context,producer:'github-actions',runtime:signingBoundary.context.job,status:'fail',commands:['typecheck','build','test','codegraph-tests','compatibility','pack-check','pack-smoke'].map(name=>({name,exitCode:1,digest:hash({name}),status:'fail'})),commandsPassed:false,preTreeMatchesCandidate:false,postTreeMatchesCandidate:false,stdoutSha256:hash(''),stderrSha256:hash(''),gateReportDigest:hash(''),exitCode:1,signal:null,timedOut:false,drainTruncated:false,tailsDropped:false,resultTextDropped:false,matchedCauses:['workflow-stage-failure'],originalDomainCode:'CANDIDATE_GATE_REPORT_INVALID',originalDomainMessage:'Workflow stage failed.',childErrorMessage:null};
           }
           const now=Date.now(), started=Number(e.CANDIDATE_JOB_STARTED_AT);
           if (!Number.isSafeInteger(started) || now<started || now-started>1_080_000) result.status='fail';

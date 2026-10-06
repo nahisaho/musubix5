@@ -1,12 +1,12 @@
 /** @id CODE-M5-LINUX-DELIVERY-PROFILE-001
- * @implements REQ-M5-LINUX-DELIVERY-001 REQ-M5-LINUX-DELIVERY-004
- * @design DES-M5-LINUX-DELIVERY-001 DES-M5-LINUX-DELIVERY-004
+ * @implements REQ-M5-LINUX-DELIVERY-001 REQ-M5-LINUX-DELIVERY-002 REQ-M5-LINUX-DELIVERY-004
+ * @design DES-M5-LINUX-DELIVERY-001 DES-M5-LINUX-DELIVERY-002 DES-M5-LINUX-DELIVERY-004
  */
-export const LINUX_DELIVERY_PROFILE = {
+export const LINUX_DELIVERY_PROFILE = Object.freeze({
   profile: 'linux-only-v1',
   os: 'ubuntu',
   nodeMajor: 24,
-} as const;
+} as const);
 
 function invalid(reason: string): never {
   throw new Error(`LINUX_DELIVERY_EVIDENCE_INVALID: ${reason}`);

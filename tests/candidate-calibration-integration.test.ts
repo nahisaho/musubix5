@@ -96,6 +96,18 @@ it('TEST-M5-LINUX-SIGNER-CONTEXT-BOUNDARY-001 validates schema-v1 runner context
   }
 });
 
+/** @id TEST-M5-LINUX-SIGNER-CONTEXT-BOUNDARY-002
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-SIGNER-CONTEXT-BOUNDARY-002 names the enriched schema-v2 context at the signing boundary', async () => {
+  for (const name of ['candidate-gate', 'candidate-calibration']) {
+    const workflow = await readFile(`.github/workflows/${name}.yml`, 'utf8');
+    expect(workflow).toContain('const signedContext={...runnerContext,deliveryProfile:e.DELIVERY_PROFILE}');
+    expect(workflow).toContain('context:signedContext');
+  }
+});
+
 /** @id TEST-M5-CI-CALIBRATION-FAILURE-ENVELOPE-001
  * @verifies REQ-M5-CI-EFFICIENCY-004 REQ-M5-CI-EFFICIENCY-005
  * @design DES-M5-CI-EFFICIENCY-004 DES-M5-CI-EFFICIENCY-006
