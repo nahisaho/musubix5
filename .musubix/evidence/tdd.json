@@ -62301,6 +62301,176 @@
         "diagnostics": [],
         "order": 4514
       }
+    },
+    {
+      "cycleId": "e0858f04-bcaa-4de6-8928-07f284addf06",
+      "changeId": "CHANGE-0018",
+      "generation": 2,
+      "requirementId": "REQ-M5-CI-EFFICIENCY-002",
+      "testId": "TEST-M5-CI-PARTITION-PREBUILT-RUNTIME-001",
+      "testPath": "tests/test-runtime-incomplete-command.test.ts",
+      "commandName": "test",
+      "red": {
+        "testRuntime": {
+          "kind": "stable-test-wall-clock-v1",
+          "profileSha256": "a6ed695f234afda58c7826caf4d04d1b89e9ddf16378da425f722916a25c4832",
+          "inputsSha256": "aaafdb0c11c976be215f45fa4a5690222659fd2e6df34721dfe8ee848be430b0",
+          "dispatchSha256": "cc4048daf1ed1f322d56f0cc59497f3ee4c5b835ca0eac0e98bca7489c4f4ffb",
+          "runs": [
+            {
+              "ordinal": 0,
+              "runId": "e6b9b1a9-37d3-4cfe-981e-096b1ba377d6",
+              "requestSha256": "67881743839ca56147add362c0d7d522cc19eecdc0baa85245883547fabde0bf",
+              "anchorSha256": "3840da49f7ad2c5ceb62d2f44f42a801d7045742933dc14348aae6b5aa083ad1",
+              "acknowledgmentSha256": "09a001605bbe2ac432fce142ef595af67ed829c77703c3a8696a271c9cdc7275",
+              "resultSha256": "fa727de3dada1a3d938f27d55dad3252e98066950d2f448998a78c4ea6dd2021"
+            }
+          ],
+          "publication": {
+            "durability": "posix-file-directory-fsync",
+            "closureSha256": "44d46e6a0e64c79dfaf8355e6ec9ec340845751d088292dac026fbcd9a951640"
+          }
+        },
+        "phase": "red",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "failed",
+        "reportSha256": "949dee0bf408ec014f2c63421b730cea328fb14a938cbed5f8f559481e217c35",
+        "commandSha256": "07282513f3cad261a50dee9148b5b279a380d939c2e57a15c5234fbcead6c4aa",
+        "outputSha256": "3cd2dad6e633e5cc3e4f6efac8913d9c884e999a04b108fccb4585b6728b5ca9",
+        "exitCode": 1,
+        "durationMs": 6215,
+        "testFingerprint": "147f5f6160656ca7582a70db39fe6d05065dd49e4f07d5b1864d066e41a02d00",
+        "sourceFingerprint": "7eb9003f1d8559c4bcd70351e41b1a066678b203abaa233ffba825b9f6e01892",
+        "executionId": "cc891272-93f4-4d6f-81fe-d32ab88236c9",
+        "recordedAt": "2026-10-06T04:26:53.866Z",
+        "diagnostics": [],
+        "order": 4515
+      },
+      "green": {
+        "testRuntime": {
+          "kind": "stable-test-wall-clock-v1",
+          "profileSha256": "a6ed695f234afda58c7826caf4d04d1b89e9ddf16378da425f722916a25c4832",
+          "inputsSha256": "d900f9e17613d0e7e9f3125b262e3835351fc12889bdab364cf4dd396d78fcd4",
+          "dispatchSha256": "ca7d5b38d82a5092f7b7adfc3b791b6616ae85be45f4e3172eeff27af4764678",
+          "runs": [
+            {
+              "ordinal": 0,
+              "runId": "5ff23599-5132-4d00-b817-fa7c63edf778",
+              "requestSha256": "0008cd6bb3d626be35bde45254a50c38e6c1b9fbb14f0ba69af2a3ab0138af6a",
+              "anchorSha256": "18d81dba4ad82fa3bcff021d6e4d70cfed741522e67833910ea188def57440ca",
+              "acknowledgmentSha256": "96dab1e14b8486ac59299cf28500a8b056308c66ec250e4c4ef6abc1d137ecd3",
+              "resultSha256": "0e0372d6d49623659293934192cfaa74fbce951f141154742bf80c7b0c383af0"
+            }
+          ],
+          "publication": {
+            "durability": "posix-file-directory-fsync",
+            "closureSha256": "7c91af7ecdef5f89a2ff2a554061fc9a7fa23ce529c3fc4ee15de19eadec4948"
+          }
+        },
+        "phase": "green",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "passed",
+        "reportSha256": "bc9f472da92516a5008c27154bd86ef15b28753c433eb4d1677115850c490064",
+        "commandSha256": "07282513f3cad261a50dee9148b5b279a380d939c2e57a15c5234fbcead6c4aa",
+        "outputSha256": "3cd2dad6e633e5cc3e4f6efac8913d9c884e999a04b108fccb4585b6728b5ca9",
+        "exitCode": 0,
+        "durationMs": 6195,
+        "testFingerprint": "147f5f6160656ca7582a70db39fe6d05065dd49e4f07d5b1864d066e41a02d00",
+        "sourceFingerprint": "8868f80f3ed4094b34636432ff563805829e368e3634425f90569f47a6a66f7e",
+        "executionId": "a0d929d9-fadb-4264-b217-c1717cefedd6",
+        "recordedAt": "2026-10-06T04:30:12.896Z",
+        "diagnostics": [],
+        "order": 4517
+      }
+    },
+    {
+      "cycleId": "603a053c-178d-4a44-917c-9992cb307c3b",
+      "changeId": "CHANGE-0018",
+      "generation": 2,
+      "requirementId": "REQ-M5-CI-EFFICIENCY-001",
+      "testId": "TEST-M5-CI-SLOT-ORDINAL-COUNTER-001",
+      "testPath": "tests/candidate-slot-transaction.test.ts",
+      "commandName": "test",
+      "red": {
+        "testRuntime": {
+          "kind": "stable-test-wall-clock-v1",
+          "profileSha256": "a6ed695f234afda58c7826caf4d04d1b89e9ddf16378da425f722916a25c4832",
+          "inputsSha256": "aaafdb0c11c976be215f45fa4a5690222659fd2e6df34721dfe8ee848be430b0",
+          "dispatchSha256": "72c9c8976c7690806e67aeb9e39e2d3f1d7e2b3e9daf437e07731351228d2af7",
+          "runs": [
+            {
+              "ordinal": 0,
+              "runId": "910a9a6e-b149-4f1b-af23-15c3cf3ebfdb",
+              "requestSha256": "106911da69b52a9ead8c0d953c260e944ae644c50a43d72f86f2cdd9dea1aa4e",
+              "anchorSha256": "513201df3449221810ed313fe93003991d531bf9935ec50cf510392a54a9ec51",
+              "acknowledgmentSha256": "281a51743e286f9c74596a1b76777869c3866d9e2a5784def542a7304f12812c",
+              "resultSha256": "8dacf736df0cecdc133e916255bdca36fdcc48f411b93432065271cdacd3bdce"
+            }
+          ],
+          "publication": {
+            "durability": "posix-file-directory-fsync",
+            "closureSha256": "421986c5e7015a380f07557d1241d52c5adeade1f34f9220a826081873b514d1"
+          }
+        },
+        "phase": "red",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "failed",
+        "reportSha256": "ad721769eb1dbb6badc63d31adce6f2dd6bc8724a66b76a3b49c209105dede93",
+        "commandSha256": "980130da852c1adb705248718b7d809556f969846074aeee413faf75237dac2c",
+        "outputSha256": "79501a162196b4790bf8887c4410299c4a952a27b0dae9485940083960ea0369",
+        "exitCode": 1,
+        "durationMs": 6553,
+        "testFingerprint": "bfcc1b95e956d9176afbf48961cdbb00afcffde2bcf052ecf67ce397c9e25b1a",
+        "sourceFingerprint": "fd70fe5effef3b2642d675d7e9dd37adda12f7df1c78eb408021dd97ed8f2843",
+        "executionId": "c5903912-ba0a-4948-a4cc-51624c2c8c17",
+        "recordedAt": "2026-10-06T04:28:22.694Z",
+        "diagnostics": [],
+        "order": 4516
+      },
+      "green": {
+        "testRuntime": {
+          "kind": "stable-test-wall-clock-v1",
+          "profileSha256": "a6ed695f234afda58c7826caf4d04d1b89e9ddf16378da425f722916a25c4832",
+          "inputsSha256": "d900f9e17613d0e7e9f3125b262e3835351fc12889bdab364cf4dd396d78fcd4",
+          "dispatchSha256": "8eecd9d26c7ec4cad04dfd0456b4444e5bbb5ccf66f18783de7ce70c1a257899",
+          "runs": [
+            {
+              "ordinal": 0,
+              "runId": "1c482a2a-1d74-43f7-9962-88953a4f5021",
+              "requestSha256": "0d8551e4cfeead8a01406f4254fe55a94cf8ecbef8871d0c8f26e6ef2983b77c",
+              "anchorSha256": "3bdc6ecaba7030a7a1a1f68c93ee7e7730ee7cb7745040f5b05a875eb8cd9bd9",
+              "acknowledgmentSha256": "a5d23958f653c5940664a3d568c21d0dbc0215bdb4f5122312369a73ad899f59",
+              "resultSha256": "0c4ef3c3d3ec4bca9af40982e3c3757353e1b3a6c258cb70761be52c8c6e47a2"
+            }
+          ],
+          "publication": {
+            "durability": "posix-file-directory-fsync",
+            "closureSha256": "cf1c442578752b3b07cde65b1eb1c0008ab95e727e207092bc07d958ed026004"
+          }
+        },
+        "phase": "green",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "passed",
+        "reportSha256": "cae43fb49b8d87745eddc7f8de6046130603d649c54e5eddf4dd31edc2f97987",
+        "commandSha256": "980130da852c1adb705248718b7d809556f969846074aeee413faf75237dac2c",
+        "outputSha256": "79501a162196b4790bf8887c4410299c4a952a27b0dae9485940083960ea0369",
+        "exitCode": 0,
+        "durationMs": 5894,
+        "testFingerprint": "bfcc1b95e956d9176afbf48961cdbb00afcffde2bcf052ecf67ce397c9e25b1a",
+        "sourceFingerprint": "7d508baf7a0cc092db254b3bff0de16ff60a33f25be0cce6d9cb14f9b8976287",
+        "executionId": "f8396c9a-f8c8-48f4-8390-c86a0fb1e5f0",
+        "recordedAt": "2026-10-06T04:31:39.937Z",
+        "diagnostics": [],
+        "order": 4518
+      }
     }
   ],
   "chain": [
@@ -98049,6 +98219,62 @@
       "phaseEvidenceSha256": "49066b30c4d6850fb92d7cdc387e8d0a92dce387052122eed877acce707cfb30",
       "previousSha256": "c65cf6b27d54152bd0e757af4abe81bc255400578b4da8bac215642b398a8100",
       "recordSha256": "bdd11c5f5c231a0fe36615ce4aa62b4e8977e7099b6387956d9cf8d4e0ab57ea"
+    },
+    {
+      "sequence": 2392,
+      "cycleId": "e0858f04-bcaa-4de6-8928-07f284addf06",
+      "changeId": "CHANGE-0018",
+      "generation": 2,
+      "requirementId": "REQ-M5-CI-EFFICIENCY-002",
+      "testId": "TEST-M5-CI-PARTITION-PREBUILT-RUNTIME-001",
+      "testPath": "tests/test-runtime-incomplete-command.test.ts",
+      "commandName": "test",
+      "phase": "red",
+      "phaseEvidenceSha256": "54538c80b5c3411a2a376a6aed455e322ab00300e24ff0de002c3547a1e3502c",
+      "previousSha256": "bdd11c5f5c231a0fe36615ce4aa62b4e8977e7099b6387956d9cf8d4e0ab57ea",
+      "recordSha256": "753654cd759829e048ea6bc72d99a44a9f74420e6e885fe36c75001f004b9260"
+    },
+    {
+      "sequence": 2393,
+      "cycleId": "603a053c-178d-4a44-917c-9992cb307c3b",
+      "changeId": "CHANGE-0018",
+      "generation": 2,
+      "requirementId": "REQ-M5-CI-EFFICIENCY-001",
+      "testId": "TEST-M5-CI-SLOT-ORDINAL-COUNTER-001",
+      "testPath": "tests/candidate-slot-transaction.test.ts",
+      "commandName": "test",
+      "phase": "red",
+      "phaseEvidenceSha256": "9f2f1d0d8dc61efa4fb63167f403cd61762c01cfe3f6319f2a357af4b0b23cb1",
+      "previousSha256": "753654cd759829e048ea6bc72d99a44a9f74420e6e885fe36c75001f004b9260",
+      "recordSha256": "a8c824fb773501697e80dd44b7391213ed98e9dfbe99bb7f1b18e73ce1ea3eed"
+    },
+    {
+      "sequence": 2394,
+      "cycleId": "e0858f04-bcaa-4de6-8928-07f284addf06",
+      "changeId": "CHANGE-0018",
+      "generation": 2,
+      "requirementId": "REQ-M5-CI-EFFICIENCY-002",
+      "testId": "TEST-M5-CI-PARTITION-PREBUILT-RUNTIME-001",
+      "testPath": "tests/test-runtime-incomplete-command.test.ts",
+      "commandName": "test",
+      "phase": "green",
+      "phaseEvidenceSha256": "047ade5b1ce097b729dfb9f4acf0efe438a4829cefc64cfc8127ee3443a04e21",
+      "previousSha256": "a8c824fb773501697e80dd44b7391213ed98e9dfbe99bb7f1b18e73ce1ea3eed",
+      "recordSha256": "6e46bd49c32c525978c0268e7dc10fb61a679a9ea5f085d3343f5fed14aa15ee"
+    },
+    {
+      "sequence": 2395,
+      "cycleId": "603a053c-178d-4a44-917c-9992cb307c3b",
+      "changeId": "CHANGE-0018",
+      "generation": 2,
+      "requirementId": "REQ-M5-CI-EFFICIENCY-001",
+      "testId": "TEST-M5-CI-SLOT-ORDINAL-COUNTER-001",
+      "testPath": "tests/candidate-slot-transaction.test.ts",
+      "commandName": "test",
+      "phase": "green",
+      "phaseEvidenceSha256": "a624f2a55059fdd2dbda52435b4e117ee56d5ed4646b0fec3d657d86b5f2ffe4",
+      "previousSha256": "6e46bd49c32c525978c0268e7dc10fb61a679a9ea5f085d3343f5fed14aa15ee",
+      "recordSha256": "8e1aec8bbe255b93c100a3d65293a42bdaddc96111c84cf7acbd9414a0b52e93"
     }
   ],
   "sourceSupersessions": [

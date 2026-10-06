@@ -153,3 +153,14 @@ it('TEST-M5-CI-PARTITION-CHILD-DIAGNOSTIC-001 preserves bounded child output for
   expect(scheduler).toContain('stderrTail: result.stderrTail');
   expect(runtime).toContain("detail.stderrTail ?? detail.stdoutTail ?? detail.childErrorMessage");
 });
+
+/** @id TEST-M5-CI-PARTITION-PREBUILT-RUNTIME-001
+ * @verifies REQ-M5-CI-EFFICIENCY-001 REQ-M5-CI-EFFICIENCY-002
+ * @design DES-M5-CI-EFFICIENCY-002
+ */
+it('TEST-M5-CI-PARTITION-PREBUILT-RUNTIME-001 prevents concurrent partitions from rebuilding shared dist', async () => {
+  const scheduler = await readFile('scripts/test-runtime/partition-scheduler.mjs', 'utf8');
+  const setup = await readFile('tests/global-setup.ts', 'utf8');
+  expect(scheduler).toContain("MUSUBIX5_PREBUILT_TEST_RUNTIME: 'true'");
+  expect(setup).toContain("process.env.MUSUBIX5_PREBUILT_TEST_RUNTIME !== 'true'");
+});

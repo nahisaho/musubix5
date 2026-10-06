@@ -105,3 +105,13 @@ it('TEST-M5-CI-NATIVE-OWNER-DIAGNOSTIC-001 identifies the unreleased native proc
   expect(source).toContain('callerPid=${lease.pid}');
   expect(source).toContain('childPid=${native?.childPid ?? "missing"}');
 });
+
+/** @id TEST-M5-CI-SLOT-ORDINAL-COUNTER-001
+ * @verifies REQ-M5-CI-EFFICIENCY-001
+ * @design DES-M5-CI-EFFICIENCY-002
+ */
+it('TEST-M5-CI-SLOT-ORDINAL-COUNTER-001 allocates observation ordinals without scanning the ledger', async () => {
+  const source = await readFile('packages/analysis/src/candidate-execution-plan.ts', 'utf8');
+  expect(source).toContain("join(ledger.root, 'observation-count')");
+  expect(source).not.toContain("readdirSync(ledger.root).filter(name => /^observation-[0-9]+\\.json$/.test(name)).length");
+});

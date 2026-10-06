@@ -402,9 +402,12 @@ export function calibrateCandidateTimeouts(observations: unknown): CandidateTime
       } finally { rmSync(lock, { recursive: true }); }
     }
     function observeCandidateFixtureSlotSync(ledger: CandidateSlotLedger, lease: CandidateSlotLease, action: 'acquire' | 'release') {
-      const ordinal = readdirSync(ledger.root).filter(name => /^observation-[0-9]+\.json$/.test(name)).length;
+      const countPath = join(ledger.root, 'observation-count');
+      const ordinal = Number(readFileSync(countPath, 'utf8'));
+      if (!Number.isSafeInteger(ordinal) || ordinal < 0) reject('slot observation counter');
       writeFileSync(join(ledger.root, `observation-${ordinal}.json`), canonicalBytes({ ...lease, ordinal, action,
         count: lease.slots.length, monotonicMs: Number(process.hrtime.bigint()) / 1_000_000 }), { flag: 'wx', mode: 0o600 });
+      writeFileSync(countPath, String(ordinal + 1));
     }
     export function completeCandidateNativeTerminationsSync(ledger: CandidateSlotLedger): void {
       const terminated = (pid: number): boolean => {
@@ -481,6 +484,7 @@ export function calibrateCandidateTimeouts(observations: unknown): CandidateTime
       await mkdir(directory, { mode: 0o700 });
       const ledger = { root: directory, nonce, capacity };
       await writeFile(join(directory, 'ledger.json'), canonicalBytes({ nonce, capacity }), { flag: 'wx', mode: 0o600 });
+      await writeFile(join(directory, 'observation-count'), '0', { flag: 'wx', mode: 0o600 });
       return ledger;
     }
     function withSlotLock<T>(ledger: CandidateSlotLedger, operation: () => T): T {
@@ -590,11 +594,16 @@ export function calibrateCandidateTimeouts(observations: unknown): CandidateTime
         await releaseCandidateSlots(ledger, lease);
       }
       const names = await readdir(ledger.root);
-      if (names.some((name) => name !== 'ledger.json' && !/^observation-[0-9]+\.json$/.test(name)
+      if (names.some((name) => !['ledger.json', 'observation-count'].includes(name) && !/^observation-[0-9]+\.json$/.test(name)
         && !/^native-[a-f0-9-]{36}\.json$/.test(name))) reject('leaked or foreign slot');
       const observations: CandidateSlotObservation[] = [];
       for (const name of names.filter((name) => /^observation-/.test(name))) {
+        if (!/^observation-[0-9]+\.json$/.test(name)) continue;
         observations.push(JSON.parse(await readFile(join(ledger.root, name), 'utf8')));
+      }
+      const observationCount = Number(await readFile(join(ledger.root, 'observation-count'), 'utf8'));
+      if (!Number.isSafeInteger(observationCount) || observationCount !== observations.length) {
+        reject('slot observation counter');
       }
       observations.sort((a, b) => a.ordinal - b.ordinal);
       const active = new Map<number, string>(), owners = new Map<string, CandidateSlotLease>();

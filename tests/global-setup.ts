@@ -9,10 +9,12 @@ import { cleanTestRuntimeBuildEnvironment, resolveBuildInvocationForEnvironment 
  */
 export default async function globalSetup(project: TestProject): Promise<void> {
   const repositoryRoot = fileURLToPath(new URL('..', import.meta.url));
-  const build = resolveBuildInvocationForEnvironment();
-  execFileSync(build.command, build.args, {
-    cwd: repositoryRoot, stdio: 'pipe', env: cleanTestRuntimeBuildEnvironment(repositoryRoot),
-  });
+  if (process.env.MUSUBIX5_PREBUILT_TEST_RUNTIME !== 'true') {
+    const build = resolveBuildInvocationForEnvironment();
+    execFileSync(build.command, build.args, {
+      cwd: repositoryRoot, stdio: 'pipe', env: cleanTestRuntimeBuildEnvironment(repositoryRoot),
+    });
+  }
   const { prepareTestRuntimeProvider } = await import('../packages/analysis/src/test-runtime.js');
   const provider = await prepareTestRuntimeProvider(repositoryRoot);
   if (provider === undefined) return;

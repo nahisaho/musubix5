@@ -54,7 +54,8 @@ export async function runPartitionScheduler(commandName) {
       if (group.ordinal !== partition.ordinal || group.command !== process.execPath) throw new Error(`CANDIDATE_PARTITION_DISPATCH_INVALID: ${partition.id}`);
       const startedAt = Number(process.hrtime.bigint()) / 1_000_000;
       const result = await launchCountedProcess(group.command, group.args, {
-        env: group.env, partition: partition.id, maxWorkers: partition.maxWorkers,
+        env: { ...group.env, MUSUBIX5_PREBUILT_TEST_RUNTIME: 'true' },
+        partition: partition.id, maxWorkers: partition.maxWorkers,
         timeoutMs: partition.timeoutMs, captureBytes: 4096,
       });
       const path = resolve(dirname(reportPath), `partition-${partition.id}.json`);
