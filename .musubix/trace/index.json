@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "kind": "repository-trace-index",
-  "generatedAt": "2026-10-06T06:31:57.583Z",
+  "generatedAt": "2026-10-06T07:39:51.410Z",
   "nodes": [
     {
       "id": "ADR-0002",
@@ -583,7 +583,7 @@
       "id": "CODE-M5-CI-ATOMIC-SLOT-LEASE-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-execution-plan.ts",
-      "line": 506
+      "line": 522
     },
     {
       "id": "CODE-M5-CI-CALIBRATION-MANIFEST-001",
@@ -751,7 +751,7 @@
       "id": "CODE-M5-CI-INDEPENDENT-SLOT-VALIDATION-001",
       "kind": "code",
       "path": "packages/analysis/src/candidate-execution-plan.ts",
-      "line": 550
+      "line": 566
     },
     {
       "id": "CODE-M5-CI-JOB-TIMING-001",
@@ -3914,7 +3914,7 @@
       "id": "TEST-M5-CANDIDATE-GIT-DISTRIBUTION-001",
       "kind": "test",
       "path": "tests/git-lfs-distribution.test.ts",
-      "line": 303
+      "line": 312
     },
     {
       "id": "TEST-M5-CANDIDATE-OWNERSHIP-ROUTING-001",
@@ -4160,13 +4160,13 @@
       "id": "TEST-M5-CI-CANDIDATE-HEAD-ATTRIBUTES-001",
       "kind": "test",
       "path": "tests/git-lfs-distribution.test.ts",
-      "line": 159
+      "line": 168
     },
     {
       "id": "TEST-M5-CI-CANDIDATE-PRECONDITION-EFFICIENCY-001",
       "kind": "test",
       "path": "tests/git-lfs-distribution.test.ts",
-      "line": 419
+      "line": 428
     },
     {
       "id": "TEST-M5-CI-CLOSED-SCHEMA-DIAGNOSTIC-001",
@@ -4439,6 +4439,12 @@
       "line": 6
     },
     {
+      "id": "TEST-M5-CI-PREPARATION-OFFLINE-001",
+      "kind": "test",
+      "path": "tests/git-lfs-distribution.test.ts",
+      "line": 52
+    },
+    {
       "id": "TEST-M5-CI-RESOURCE-PLAN-001",
       "kind": "test",
       "path": "tests/candidate-execution-plan.test.ts",
@@ -4449,6 +4455,12 @@
       "kind": "test",
       "path": "tests/short-unix-socket.test.ts",
       "line": 31
+    },
+    {
+      "id": "TEST-M5-CI-SLOT-LOCK-BOUND-001",
+      "kind": "test",
+      "path": "tests/candidate-slot-transaction.test.ts",
+      "line": 138
     },
     {
       "id": "TEST-M5-CI-SLOT-OBSERVATION-BOUNDED-001",
@@ -4479,6 +4491,12 @@
       "kind": "test",
       "path": "tests/candidate-stability.test.ts",
       "line": 3
+    },
+    {
+      "id": "TEST-M5-CI-STALE-SLOT-LOCK-001",
+      "kind": "test",
+      "path": "tests/candidate-slot-transaction.test.ts",
+      "line": 147
     },
     {
       "id": "TEST-M5-CI-WINDOWS-DURABILITY-001",
@@ -6230,7 +6248,7 @@
       "id": "TEST-M5-TDD-SOURCE-LFS-001",
       "kind": "test",
       "path": "tests/git-lfs-distribution.test.ts",
-      "line": 52
+      "line": 61
     },
     {
       "id": "TEST-M5-TDD-SPLIT-ROOT-FINGERPRINT-001",
@@ -18852,6 +18870,16 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-CI-PREPARATION-OFFLINE-001",
+      "to": "DES-M5-CI-EFFICIENCY-001",
+      "relation": "implements"
+    },
+    {
+      "from": "TEST-M5-CI-PREPARATION-OFFLINE-001",
+      "to": "REQ-M5-CI-EFFICIENCY-003",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-CI-RESOURCE-PLAN-001",
       "to": "REQ-M5-CI-EFFICIENCY-001",
       "relation": "verifies"
@@ -18859,6 +18887,26 @@
     {
       "from": "TEST-M5-CI-SHORT-SOCKET-PATH-001",
       "to": "REQ-M5-CI-002",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-CI-SLOT-LOCK-BOUND-001",
+      "to": "DES-M5-CI-EFFICIENCY-002",
+      "relation": "implements"
+    },
+    {
+      "from": "TEST-M5-CI-SLOT-LOCK-BOUND-001",
+      "to": "DES-M5-CI-EFFICIENCY-006",
+      "relation": "implements"
+    },
+    {
+      "from": "TEST-M5-CI-SLOT-LOCK-BOUND-001",
+      "to": "REQ-M5-CI-EFFICIENCY-001",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-CI-SLOT-LOCK-BOUND-001",
+      "to": "REQ-M5-CI-EFFICIENCY-004",
       "relation": "verifies"
     },
     {
@@ -18919,6 +18967,26 @@
     {
       "from": "TEST-M5-CI-STABILITY-PROOF-001",
       "to": "REQ-M5-CI-EFFICIENCY-006",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-CI-STALE-SLOT-LOCK-001",
+      "to": "DES-M5-CI-EFFICIENCY-002",
+      "relation": "implements"
+    },
+    {
+      "from": "TEST-M5-CI-STALE-SLOT-LOCK-001",
+      "to": "DES-M5-CI-EFFICIENCY-006",
+      "relation": "implements"
+    },
+    {
+      "from": "TEST-M5-CI-STALE-SLOT-LOCK-001",
+      "to": "REQ-M5-CI-EFFICIENCY-001",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-CI-STALE-SLOT-LOCK-001",
+      "to": "REQ-M5-CI-EFFICIENCY-004",
       "relation": "verifies"
     },
     {
@@ -23264,7 +23332,7 @@
   ],
   "diagnostics": [],
   "fingerprints": {
-    ".github/actions/prepare-candidate/action.yml": "470ab3a145da46f8110e05b46e10017c3439302527884c7dce1ac406ca656610",
+    ".github/actions/prepare-candidate/action.yml": "54c1c1baf04ac2a25b7032129ccf8d0327083e2ee6f5d428a5a1eec43074114f",
     ".github/scripts/resolve-candidate-job-timing.mjs": "b736fa81638fb29619c6c6087f7669406993c467f6e805d6a6f8e62b347579da",
     ".github/scripts/run-candidate-gate-wrapper.mjs": "968075015a3e3a5797fa9bc9f402652794db7e39dd1ff5ac3c8792db3e67862f",
     ".github/scripts/run-candidate-precondition-probe.mjs": "5edee32d7bf6b789ecb0a590e1eebbeefb1bf91c7e8c50922cc0333b34c952dd",
@@ -23373,7 +23441,7 @@
     "packages/analysis/src/budget-ledger.ts": "c7e4fa74032e066491708685359ca7115ab34c44a0d2af18337bd15a4da25590",
     "packages/analysis/src/candidate-calibration.ts": "05a7941ed4a3a778477c5e8b75d994812178dcbd073b65a87fde27f702d8b7be",
     "packages/analysis/src/candidate-evidence-binding.ts": "b1a0f978e747939dcae508f8a91e1fd8a6681d98c6d3887b9ee43468cf7d307a",
-    "packages/analysis/src/candidate-execution-plan.ts": "2089f6a04588bc8516a75c66cabf59a90e9e2a0645ed93aaff2d4062b9c64f75",
+    "packages/analysis/src/candidate-execution-plan.ts": "fc9508a85ddf96e770eb4d51cceeed4c1a4bf64065c0e3dfb1e7d2b44fb4979b",
     "packages/analysis/src/candidate-gate-runner.ts": "081e27b13233adc0d7d3f1774f59b74c0ecf8808e9b77ea9b8783cacf0308bec",
     "packages/analysis/src/candidate-gate.ts": "61c4d71ad73d810b7f192abc6b35934a2614fe5073bf3cf50945264ac91b2efb",
     "packages/analysis/src/candidate-git-distribution.ts": "c3fafc714db7becf4e0b64f5a4592352588cefa28daee73a737c0bd4b320e83b",
@@ -23501,7 +23569,7 @@
     "tests/candidate-gate-efficient-timeout.test.ts": "04570d74120dc96f55fc3d8329dfd044df28c6c8e9ee566b4789f459729d38eb",
     "tests/candidate-gate-eol.test.ts": "db72054d71bb5bb2cb986c7a5ccb7b31d714b6c863e5901fd7d1fe723e8a1ad4",
     "tests/candidate-gate-orchestration-boundaries.test.ts": "8f7c5fd2c3f35a47e7a5353cfbc54a7094ef553f02f5521862fe8edf1a3fa5a2",
-    "tests/candidate-gate-trust.test.ts": "684428d97714a13d3ba4bf35304e50964839e3afd41803d9d7ab0ed36a51dd74",
+    "tests/candidate-gate-trust.test.ts": "ba688a678c1643d9f63bb9fcf565144c71fe8fde7b40029ad6398f693b387ae3",
     "tests/candidate-gate-workflow-errors.test.ts": "7e2948b49714ef352effc3eb678496858ff3c90f81947facd1d41c30f88f4403",
     "tests/candidate-gate.test.ts": "ba1dcd780fdebf6c9d03fe71deb672cf29d66b224ac335d19d51db603280a2d7",
     "tests/candidate-integration-dependencies.test.ts": "cf7b57b88909268baceb4d17eb0a5acab080011e20c37739746502d7758e5553",
@@ -23518,7 +23586,7 @@
     "tests/candidate-parallel-checkout.test.ts": "eded5ece3cfaf571d9fb89101fc1642e3680bd0d80f4152bb0d1cc091fdda720",
     "tests/candidate-path-portability.test.ts": "a48146572d8c4967fd16bbc24be0ea0faf05d3f33210e2ad1d0528985e62f953",
     "tests/candidate-portable-execution.test.ts": "d6646bb13b85eb239d5e2417c5e73547816cbda725d3214422bbbea4c3473f1d",
-    "tests/candidate-slot-transaction.test.ts": "5bea39a69632e53c099cc1e838df8ab7bfb764df3f011803bd6366068ca303e2",
+    "tests/candidate-slot-transaction.test.ts": "fb594ed88f6513fb604952005fb09b542af083039666a10b538a9c2661e373da",
     "tests/candidate-snapshot-lifecycle.test.ts": "c1a864c9e4f99c1d2b9388cfd0fd0db6fb5a6bfa190352dda1c1cdeadeba36a0",
     "tests/candidate-snapshot-repository-binding.test.ts": "e3c606cad49a5199aa3f8ff0dbff4d124519cc0bf14ca6f948e27128ff01288a",
     "tests/candidate-stability-artifact.test.ts": "817d56055e81df3a6f7a99c1e66be246251a5d65161f95b97b71adc32c94aa19",
@@ -23568,7 +23636,7 @@
     "tests/fixtures/portable-path.ts": "03d7c64e1636efe1d008fccb62aeea0fde2474668128dd8e2a5d4043e173eca8",
     "tests/fixtures/portable-paths.ts": "08f08667a406a20f05e574225c39dc934b36d950786fc82dd5ee770c473d749f",
     "tests/fixtures/short-unix-socket.ts": "8b6e158c7a9880b2db6d3c3d87d533e208660f7b611089e08152a8689958a803",
-    "tests/full-test-timeout.test.ts": "bc861453cbf1b7df8b59ff645cf3099679352bc27e20fc733e800961b2329ba8",
+    "tests/full-test-timeout.test.ts": "d251d38d2a666c884ea380496e6fc21a2b14ac7e561b41c8ef0c0291c75d5514",
     "tests/generation10-recovery-accounting.test.ts": "e55f536251eedd89b4d4f6c4dd427f66ddc197f2bfcdda34ae061514a6a9fbcb",
     "tests/generation10-recovery-completion.test.ts": "777f8a18fe452c29b9ade2ff17a5a2da2e86622550c0695791eea5faaf358d55",
     "tests/generation10-recovery-contract.test.ts": "a68f1797bd02fcba08de4f6f9aee5336994f188d8c0cb328621e11fe6873ba89",
@@ -23579,7 +23647,7 @@
     "tests/generation10-recovery-state-machine.test.ts": "ea7227cef21df8586965e84da6f234e94b8502bd77856ebb73b97afc5a196d21",
     "tests/generation10-recovery.test.ts": "b7b8beb89f8e9886c9db989bf922329a96ab575ad0b4b3f1d3db522c2cd65925",
     "tests/generation11-recovery.test.ts": "ca197fef376f2b2f599d541e717fa2a154e2ae42e1331d01207dd1d3bf20bc0f",
-    "tests/git-lfs-distribution.test.ts": "8c5396021842183aa7f3d08ef54d976c27a3f2cd91f569185a4a5120f3e40405",
+    "tests/git-lfs-distribution.test.ts": "a35a06fa853d6bb0b9a0ab49b1b763004d0f61fdfdb2f5b0c49d2a0edae649c7",
     "tests/git-lfs-generation14-coverage.test.ts": "b5e036d5ed6248b64d48f0e9c83656ea3c715123885905b2f9e73ba078545235",
     "tests/global-setup.ts": "b4b2fb1675762ffe44304312e83959e9792aac63e63dadb8180be496b9916a89",
     "tests/graph-nested-alias.test.ts": "6314074909d5a28e0213282ef0d7f76b0609c7c83ad3972a7364247afb7d11fb",

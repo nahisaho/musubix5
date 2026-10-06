@@ -27,6 +27,6 @@ runs:
         const npm = process.env.npm_execpath ?? (process.platform === 'win32'
           ? join(dirname(process.execPath),'node_modules/npm/bin/npm-cli.js')
           : join(dirname(process.execPath),'../lib/node_modules/npm/bin/npm-cli.js'));
-        run([npm, 'ci', '--no-audit', '--no-fund']);
+        run([npm, 'ci', '--ignore-scripts', '--prefer-offline', '--no-audit', '--no-fund']);
         run([npm, 'run', 'build']);
         NODE

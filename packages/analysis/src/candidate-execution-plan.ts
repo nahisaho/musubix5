@@ -369,18 +369,51 @@ export function calibrateCandidateTimeouts(observations: unknown): CandidateTime
 
     export interface CandidateSlotLedger { root: string; nonce: string; capacity: number }
 
+    interface CandidateSlotLockOwner { pid: number; token: string }
+    function slotLockOwnerTerminated(pid: number): boolean {
+      if (!Number.isSafeInteger(pid) || pid <= 0) return false;
+      try { process.kill(pid, 0); }
+      catch (cause) { return (cause as NodeJS.ErrnoException).code === 'ESRCH'; }
+      if (process.platform !== 'linux') return false;
+      try {
+        const stat = readFileSync(`/proc/${pid}/stat`, 'utf8');
+        return /^\s+Z\s/.test(stat.slice(stat.lastIndexOf(')') + 1));
+      } catch (cause) { return (cause as NodeJS.ErrnoException).code === 'ENOENT'; }
+    }
+    function acquireSlotLockSync(ledger: CandidateSlotLedger, deadline: number, reason: string): CandidateSlotLockOwner {
+      const lock = join(ledger.root, 'lock');
+      const owner = { pid: process.pid, token: randomUUID() };
+      for (;;) {
+        try {
+          mkdirSync(lock);
+          try { writeFileSync(join(lock, 'owner.json'), canonicalBytes(owner), { flag: 'wx', mode: 0o600 }); }
+          catch (cause) { rmSync(lock, { recursive: true }); throw cause; }
+          return owner;
+        } catch (cause) {
+          if ((cause as NodeJS.ErrnoException).code !== 'EEXIST') reject(reason);
+          try {
+            const existing = JSON.parse(readFileSync(join(lock, 'owner.json'), 'utf8')) as CandidateSlotLockOwner;
+            if (slotLockOwnerTerminated(existing.pid)) { rmSync(lock, { recursive: true }); continue; }
+          } catch {}
+          if (Number(process.hrtime.bigint()) / 1_000_000 >= deadline) reject(reason);
+          Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5);
+        }
+      }
+    }
+    function releaseSlotLockSync(ledger: CandidateSlotLedger, owner: CandidateSlotLockOwner): void {
+      const lock = join(ledger.root, 'lock');
+      const existing = JSON.parse(readFileSync(join(lock, 'owner.json'), 'utf8')) as CandidateSlotLockOwner;
+      if (existing.pid !== owner.pid || existing.token !== owner.token) reject('foreign slot lock');
+      rmSync(lock, { recursive: true });
+    }
+
     export function acquireCandidateFixtureSlotSync(ledger: CandidateSlotLedger, partition: string, count = 1): CandidateSlotLease {
       integer(ledger.capacity, 1, 16);
       integer(count, 1, ledger.capacity);
       const identity = JSON.parse(readFileSync(join(ledger.root, 'ledger.json'), 'utf8'));
       if (identity.nonce !== ledger.nonce || identity.capacity !== ledger.capacity) reject('foreign fixture ledger');
-      const lock = join(ledger.root, 'lock'), deadline = Number(process.hrtime.bigint()) / 1_000_000 + 1_000;
-      for (;;) {
-        try { mkdirSync(lock); break; } catch (cause) {
-          if ((cause as NodeJS.ErrnoException).code !== 'EEXIST' || Number(process.hrtime.bigint()) / 1_000_000 >= deadline) reject('fixture lease deadline');
-          Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5);
-        }
-      }
+      const lockOwner = acquireSlotLockSync(ledger,
+        Number(process.hrtime.bigint()) / 1_000_000 + 1_000, 'fixture lease deadline');
       try {
         const occupied = new Set(readdirSync(ledger.root));
         const slots = Array.from({ length: ledger.capacity }, (_, slot) => slot).filter(slot => !occupied.has(`slot-${slot}`)).slice(0, count);
@@ -399,7 +432,7 @@ export function calibrateCandidateTimeouts(observations: unknown): CandidateTime
           for (const slot of created) rmSync(join(ledger.root, `slot-${slot}`), { recursive: true });
           throw cause;
         }
-      } finally { rmSync(lock, { recursive: true }); }
+      } finally { releaseSlotLockSync(ledger, lockOwner); }
     }
     function observeCandidateFixtureSlotSync(ledger: CandidateSlotLedger, lease: CandidateSlotLease, action: 'acquire' | 'release') {
       const countPath = join(ledger.root, 'observation-count');
@@ -419,13 +452,8 @@ export function calibrateCandidateTimeouts(observations: unknown): CandidateTime
           return /^\s+Z\s/.test(stat.slice(stat.lastIndexOf(')') + 1));
         } catch (cause) { return (cause as NodeJS.ErrnoException).code === 'ENOENT'; }
       };
-      const lock = join(ledger.root, 'lock'), deadline = Number(process.hrtime.bigint()) / 1_000_000 + 1_000;
-      for (;;) {
-        try { mkdirSync(lock); break; } catch (cause) {
-          if ((cause as NodeJS.ErrnoException).code !== 'EEXIST' || Number(process.hrtime.bigint()) / 1_000_000 >= deadline) reject('native terminal accounting deadline');
-          Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5);
-        }
-      }
+      const lockOwner = acquireSlotLockSync(ledger,
+        Number(process.hrtime.bigint()) / 1_000_000 + 1_000, 'native terminal accounting deadline');
       try {
         const leases = new Map<string, CandidateSlotLease>();
         for (const name of readdirSync(ledger.root).filter(name => /^slot-[0-9]+$/.test(name))) {
@@ -449,16 +477,11 @@ export function calibrateCandidateTimeouts(observations: unknown): CandidateTime
           observeCandidateFixtureSlotSync(ledger, lease, 'release');
           for (const slot of lease.slots) rmSync(join(ledger.root, `slot-${slot}`), { recursive: true });
         }
-      } finally { rmSync(lock, { recursive: true }); }
+      } finally { releaseSlotLockSync(ledger, lockOwner); }
     }
     export function releaseCandidateFixtureSlotSync(ledger: CandidateSlotLedger, lease: CandidateSlotLease) {
-      const lock = join(ledger.root, 'lock'), deadline = Number(process.hrtime.bigint()) / 1_000_000 + 1_000;
-      for (;;) {
-        try { mkdirSync(lock); break; } catch (cause) {
-          if ((cause as NodeJS.ErrnoException).code !== 'EEXIST' || Number(process.hrtime.bigint()) / 1_000_000 >= deadline) reject('fixture release deadline');
-          Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5);
-        }
-      }
+      const lockOwner = acquireSlotLockSync(ledger,
+        Number(process.hrtime.bigint()) / 1_000_000 + 1_000, 'fixture release deadline');
       try {
         if (lease.nonce !== ledger.nonce || !lease.slots.length || new Set(lease.slots).size !== lease.slots.length) reject('foreign fixture slot');
         for (const slot of lease.slots) {
@@ -467,7 +490,7 @@ export function calibrateCandidateTimeouts(observations: unknown): CandidateTime
         }
         observeCandidateFixtureSlotSync(ledger, lease, 'release');
         for (const slot of lease.slots) rmSync(join(ledger.root, `slot-${slot}`), { recursive: true });
-      } finally { rmSync(lock, { recursive: true }); }
+      } finally { releaseSlotLockSync(ledger, lockOwner); }
     }
 
     export interface CandidateSlotLease {
@@ -490,17 +513,10 @@ export function calibrateCandidateTimeouts(observations: unknown): CandidateTime
     function withSlotLock<T>(ledger: CandidateSlotLedger, operation: () => T): T {
       const identity = JSON.parse(readFileSync(join(ledger.root, 'ledger.json'), 'utf8'));
       if (identity.nonce !== ledger.nonce || identity.capacity !== ledger.capacity) reject('foreign slot ledger');
-      const lock = join(ledger.root, 'lock');
-      const deadline = Number(process.hrtime.bigint()) / 1_000_000 + 1_000;
-      for (;;) {
-        try { mkdirSync(lock); break; } catch (cause) {
-          if ((cause as NodeJS.ErrnoException).code !== 'EEXIST'
-            || Number(process.hrtime.bigint()) / 1_000_000 >= deadline) reject('slot capacity or concurrent lease transaction');
-          Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5);
-        }
-      }
+      const lockOwner = acquireSlotLockSync(ledger,
+        Number(process.hrtime.bigint()) / 1_000_000 + 5_000, 'slot capacity or concurrent lease transaction');
       // Native synchronous counting can re-enter between awaits, so a held transaction must never yield.
-      try { return operation(); } finally { rmSync(lock, { recursive: true }); }
+      try { return operation(); } finally { releaseSlotLockSync(ledger, lockOwner); }
     }
 
     /** @id CODE-M5-CI-ATOMIC-SLOT-LEASE-001

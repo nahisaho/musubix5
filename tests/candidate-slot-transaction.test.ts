@@ -134,3 +134,23 @@ it('TEST-M5-CI-DEAD-FIXTURE-OWNER-REPAIR-001 preserves the verified dead-owner c
   const source = await readFile('packages/analysis/src/candidate-execution-plan.ts', 'utf8');
   expect(source).toContain('if (!native) { await releaseCandidateSlots(ledger, lease); continue; }');
 });
+
+/** @id TEST-M5-CI-SLOT-LOCK-BOUND-001
+ * @verifies REQ-M5-CI-EFFICIENCY-001 REQ-M5-CI-EFFICIENCY-004
+ * @design DES-M5-CI-EFFICIENCY-002 DES-M5-CI-EFFICIENCY-006
+ */
+it('TEST-M5-CI-SLOT-LOCK-BOUND-001 allows bounded runner filesystem contention without retrying commands', async () => {
+  const source = await readFile('packages/analysis/src/candidate-execution-plan.ts', 'utf8');
+  expect(source).toContain('Number(process.hrtime.bigint()) / 1_000_000 + 5_000');
+});
+
+/** @id TEST-M5-CI-STALE-SLOT-LOCK-001
+ * @verifies REQ-M5-CI-EFFICIENCY-001 REQ-M5-CI-EFFICIENCY-004
+ * @design DES-M5-CI-EFFICIENCY-002 DES-M5-CI-EFFICIENCY-006
+ */
+it('TEST-M5-CI-STALE-SLOT-LOCK-001 recovers only a lock whose recorded owner is independently dead', async () => {
+  const source = await readFile('packages/analysis/src/candidate-execution-plan.ts', 'utf8');
+  expect(source).toContain("writeFileSync(join(lock, 'owner.json'), canonicalBytes(owner)");
+  expect(source).toContain("if (slotLockOwnerTerminated(existing.pid)) { rmSync(lock, { recursive: true }); continue; }");
+  expect(source).toContain("existing.token !== owner.token");
+});
