@@ -167,7 +167,13 @@ function object(value: unknown, reason: string, keys?: readonly string[]): Recor
   if (![Object.prototype, null].includes(Object.getPrototypeOf(value))
     || Reflect.ownKeys(value).some((key) => typeof key !== 'string')
     || Object.values(descriptors).some((d) => !Object.hasOwn(d, 'value'))) invalid(reason, 'plain data required');
-  if (keys && Object.keys(value).sort().join('\0') !== [...keys].sort().join('\0')) invalid(reason, 'closed fields');
+  if (keys) {
+    const actualFields = Object.keys(value).sort();
+    const expectedFields = [...keys].sort();
+    if (actualFields.join('\0') !== expectedFields.join('\0')) {
+      invalid(reason, `closed fields actual=${actualFields.join(',')} expected=${expectedFields.join(',')}`);
+    }
+  }
   return value as Record<string, unknown>;
 }
 
@@ -1199,14 +1205,19 @@ export async function runTestRuntimeCommand(
     const manifestAvailable = await exists(manifestPath);
     if (!manifestAvailable) {
       const missingPartitions: string[] = [];
+      const partitionResults: string[] = [];
       for (const entry of prepared) {
         const missing = [];
         if (!await exists(join(entry.run, 'ack.json'))) missing.push('ack');
         if (!await exists(entry.resultPath)) missing.push('result');
+        let detail: Record<string, unknown> | undefined;
+        if (await exists(entry.resultPath)) {
+          detail = object(JSON.parse((await regular(entry.resultPath)).toString('utf8')), 'acknowledgment-binding');
+          partitionResults.push(`partition-${entry.group.ordinal}:status=${String(detail.status)}:exitCode=${String(detail.exitCode)}:durationMs=${String(detail.durationMs)}`);
+        }
         if (missing.length) {
           let suffix = '';
-          if (await exists(entry.resultPath)) {
-            const detail = JSON.parse((await regular(entry.resultPath)).toString('utf8'));
+          if (detail) {
             const output = detail.stderrTail ?? detail.stdoutTail ?? detail.childErrorMessage;
             const bounded = typeof output === 'string'
               ? output.replace(/[\u0000-\u001f\u007f]+/g, ' ').trim().slice(-2048) : '';
@@ -1218,6 +1229,9 @@ export async function runTestRuntimeCommand(
       }
       if (missingPartitions.length) {
         invalid('acknowledgment-binding', `partition manifest missing: ${missingPartitions.join(',')}`);
+      }
+      if (partitionResults.length) {
+        invalid('acknowledgment-binding', `partition manifest missing: ${partitionResults.join(',')}`);
       }
     }
     if (!manifestAvailable && execution.status === 'completed' && execution.exitCode === 0) {
@@ -1263,15 +1277,21 @@ export async function runTestRuntimeCommand(
     let report: Buffer | null = null;
     let candidateReportBound = grouped;
     if (grouped) {
-      const result = object(JSON.parse((await regular(entry.resultPath)).toString('utf8')), 'acknowledgment-binding',
-        ['status', 'exitCode', 'durationMs', 'stdout', 'stderr', 'nativeReportBase64',
-          ...(ledger ? ['startedAt', 'completedAt'] : [])]);
+      const rawResult = object(JSON.parse((await regular(entry.resultPath)).toString('utf8')), 'acknowledgment-binding');
+      const partitionResult = Object.hasOwn(rawResult, 'stdoutTail');
+      const result = object(rawResult, 'acknowledgment-binding', partitionResult
+        ? ['status', 'exitCode', 'durationMs', 'nativeReportBase64', 'stdoutTail', 'stderrTail', 'childErrorMessage',
+          ...(ledger ? ['startedAt', 'completedAt'] : [])]
+        : ['status', 'exitCode', 'durationMs', 'stdout', 'stderr', 'nativeReportBase64']);
       const status = result.status;
       if (status !== 'completed' && status !== 'missing' && status !== 'timeout' && status !== 'error'
         || !Number.isSafeInteger(result.durationMs)) invalid('acknowledgment-binding');
-      native = { ...execution, status,
-        exitCode: result.exitCode === null ? null : Number(result.exitCode), durationMs: Number(result.durationMs),
-        stdout: String(result.stdout), stderr: String(result.stderr) };
+      native = partitionResult
+        ? { ...execution, status, exitCode: result.exitCode === null ? null : Number(result.exitCode),
+          durationMs: Number(result.durationMs),
+          stdout: String(result.stdoutTail ?? ''), stderr: String(result.stderrTail ?? '') }
+        : { ...execution, status, exitCode: result.exitCode === null ? null : Number(result.exitCode),
+          durationMs: Number(result.durationMs), stdout: String(result.stdout), stderr: String(result.stderr) };
       report = result.nativeReportBase64 === null ? null : base64(result.nativeReportBase64);
     } else {
       const path = nativeReportPath(entry.executionBinding.resolvedInvocation.args, options.cwd);

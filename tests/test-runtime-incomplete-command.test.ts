@@ -174,3 +174,32 @@ it('TEST-M5-CI-PARTITION-ID-SET-BINDING-001 binds partition identities independe
   expect(source).toContain("[...strings(incoming.selectedTestIds, 'acknowledgment-binding')].sort()");
   expect(source).toContain('[...selectedTestIds].sort()');
 });
+
+/** @id TEST-M5-CI-PARTITION-RESULT-SCHEMA-001
+ * @verifies REQ-M5-CI-EFFICIENCY-004
+ * @design DES-M5-CI-EFFICIENCY-006
+ */
+it('TEST-M5-CI-PARTITION-RESULT-SCHEMA-001 accepts bounded partition child diagnostics', async () => {
+  const source = await readFile('packages/analysis/src/test-runtime.ts', 'utf8');
+  expect(source).toContain("'stdoutTail', 'stderrTail', 'childErrorMessage'");
+  expect(source).toContain("stdout: String(result.stdoutTail ?? ''), stderr: String(result.stderrTail ?? '')");
+});
+
+/** @id TEST-M5-CI-PARTITION-INCOMPLETE-DIAGNOSTIC-001
+ * @verifies REQ-M5-CI-EFFICIENCY-004
+ * @design DES-M5-CI-EFFICIENCY-006
+ */
+it('TEST-M5-CI-PARTITION-INCOMPLETE-DIAGNOSTIC-001 reports every partition result when the manifest is absent', async () => {
+  const source = await readFile('packages/analysis/src/test-runtime.ts', 'utf8');
+  expect(source).toContain('partitionResults.push(`partition-${entry.group.ordinal}:status=');
+  expect(source).toContain("partition manifest missing: ${partitionResults.join(',')}");
+});
+
+/** @id TEST-M5-CI-CLOSED-SCHEMA-DIAGNOSTIC-001
+ * @verifies REQ-M5-CI-EFFICIENCY-004
+ * @design DES-M5-CI-EFFICIENCY-006
+ */
+it('TEST-M5-CI-CLOSED-SCHEMA-DIAGNOSTIC-001 identifies actual and expected closed-schema fields', async () => {
+  const source = await readFile('packages/analysis/src/test-runtime.ts', 'utf8');
+  expect(source).toContain("`closed fields actual=${actualFields.join(',')} expected=${expectedFields.join(',')}`");
+});

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "kind": "repository-trace-index",
-  "generatedAt": "2026-10-06T05:32:45.090Z",
+  "generatedAt": "2026-10-06T06:31:57.583Z",
   "nodes": [
     {
       "id": "ADR-0002",
@@ -577,7 +577,7 @@
       "id": "CODE-M5-CI-ARCHIVED-RUNTIME-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 662
+      "line": 668
     },
     {
       "id": "CODE-M5-CI-ATOMIC-SLOT-LEASE-001",
@@ -769,7 +769,7 @@
       "id": "CODE-M5-CI-LIVE-RUNTIME-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 670
+      "line": 676
     },
     {
       "id": "CODE-M5-CI-MATRIX-INPUTS-001",
@@ -2023,19 +2023,19 @@
       "id": "CODE-M5-TEST-RUNTIME-ACTIVATION-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 784
+      "line": 790
     },
     {
       "id": "CODE-M5-TEST-RUNTIME-AUGMENTATION-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 274
+      "line": 280
     },
     {
       "id": "CODE-M5-TEST-RUNTIME-BLOBS-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 658
+      "line": 664
     },
     {
       "id": "CODE-M5-TEST-RUNTIME-BUILD-ISOLATION-001",
@@ -2047,7 +2047,7 @@
       "id": "CODE-M5-TEST-RUNTIME-COMMAND-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 1027
+      "line": 1033
     },
     {
       "id": "CODE-M5-TEST-RUNTIME-GLOBAL-SETUP-001",
@@ -2059,13 +2059,13 @@
       "id": "CODE-M5-TEST-RUNTIME-PROFILE-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 188
+      "line": 194
     },
     {
       "id": "CODE-M5-TEST-RUNTIME-PROVIDER-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 1401
+      "line": 1421
     },
     {
       "id": "CODE-M5-TEST-RUNTIME-REPORTER-001",
@@ -4169,6 +4169,12 @@
       "line": 419
     },
     {
+      "id": "TEST-M5-CI-CLOSED-SCHEMA-DIAGNOSTIC-001",
+      "kind": "test",
+      "path": "tests/test-runtime-incomplete-command.test.ts",
+      "line": 198
+    },
+    {
       "id": "TEST-M5-CI-CODEGRAPH-BATCHING-001",
       "kind": "test",
       "path": "tests/candidate-codegraph-batching.test.ts",
@@ -4403,6 +4409,12 @@
       "line": 168
     },
     {
+      "id": "TEST-M5-CI-PARTITION-INCOMPLETE-DIAGNOSTIC-001",
+      "kind": "test",
+      "path": "tests/test-runtime-incomplete-command.test.ts",
+      "line": 188
+    },
+    {
       "id": "TEST-M5-CI-PARTITION-MISSING-DIAGNOSTIC-001",
       "kind": "test",
       "path": "tests/test-runtime-incomplete-command.test.ts",
@@ -4413,6 +4425,12 @@
       "kind": "test",
       "path": "tests/test-runtime-incomplete-command.test.ts",
       "line": 157
+    },
+    {
+      "id": "TEST-M5-CI-PARTITION-RESULT-SCHEMA-001",
+      "kind": "test",
+      "path": "tests/test-runtime-incomplete-command.test.ts",
+      "line": 178
     },
     {
       "id": "TEST-M5-CI-PORTABLE-EXECUTION-001",
@@ -18334,6 +18352,16 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-CI-CLOSED-SCHEMA-DIAGNOSTIC-001",
+      "to": "DES-M5-CI-EFFICIENCY-006",
+      "relation": "implements"
+    },
+    {
+      "from": "TEST-M5-CI-CLOSED-SCHEMA-DIAGNOSTIC-001",
+      "to": "REQ-M5-CI-EFFICIENCY-004",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-CI-CODEGRAPH-BATCHING-001",
       "to": "DES-M5-CI-EFFICIENCY-002",
       "relation": "implements"
@@ -18774,6 +18802,16 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-CI-PARTITION-INCOMPLETE-DIAGNOSTIC-001",
+      "to": "DES-M5-CI-EFFICIENCY-006",
+      "relation": "implements"
+    },
+    {
+      "from": "TEST-M5-CI-PARTITION-INCOMPLETE-DIAGNOSTIC-001",
+      "to": "REQ-M5-CI-EFFICIENCY-004",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-CI-PARTITION-MISSING-DIAGNOSTIC-001",
       "to": "DES-M5-CI-EFFICIENCY-006",
       "relation": "implements"
@@ -18796,6 +18834,16 @@
     {
       "from": "TEST-M5-CI-PARTITION-PREBUILT-RUNTIME-001",
       "to": "REQ-M5-CI-EFFICIENCY-002",
+      "relation": "verifies"
+    },
+    {
+      "from": "TEST-M5-CI-PARTITION-RESULT-SCHEMA-001",
+      "to": "DES-M5-CI-EFFICIENCY-006",
+      "relation": "implements"
+    },
+    {
+      "from": "TEST-M5-CI-PARTITION-RESULT-SCHEMA-001",
+      "to": "REQ-M5-CI-EFFICIENCY-004",
       "relation": "verifies"
     },
     {
@@ -23387,7 +23435,7 @@
     "packages/analysis/src/tdd-types.ts": "83fc67aa4db7dd1a2df42e56a8cb63ffc11a6185bd12a9f191ba4f5b20e12103",
     "packages/analysis/src/tdd.ts": "ff979aef842bad3cb8b29a939f7d0c71f5d464db096ad1b1390928997bcda930",
     "packages/analysis/src/test-report.ts": "c4389c1a73b8ff61beae2061c1eaaeeadc4c5cc529befc059111ea5430d602c4",
-    "packages/analysis/src/test-runtime.ts": "f2175eaf205de559af228b874bfe09413ff63778252bb41817d330a2b3c3f875",
+    "packages/analysis/src/test-runtime.ts": "6e48f650af307992eebd06f6e7fec3aec031d6bc51db8f946df4f679f5afebd5",
     "packages/analysis/src/trace.ts": "b2dd6c6e73cb209c8b45bc1749440a3444fd1b65891ad6ee0f87c30c38c08715",
     "packages/analysis/src/workflow-correction.ts": "63fddf07315b8af34b7a96a542c68f82eee5ba8a321795a24bafe1ca8033e2f6",
     "packages/analysis/src/workflow-types.ts": "4fa0d85248bd9373eed4dc7043f1320c9b918f08fc8874dd982c528876b74783",
@@ -23453,7 +23501,7 @@
     "tests/candidate-gate-efficient-timeout.test.ts": "04570d74120dc96f55fc3d8329dfd044df28c6c8e9ee566b4789f459729d38eb",
     "tests/candidate-gate-eol.test.ts": "db72054d71bb5bb2cb986c7a5ccb7b31d714b6c863e5901fd7d1fe723e8a1ad4",
     "tests/candidate-gate-orchestration-boundaries.test.ts": "8f7c5fd2c3f35a47e7a5353cfbc54a7094ef553f02f5521862fe8edf1a3fa5a2",
-    "tests/candidate-gate-trust.test.ts": "ffa8e373dd05ea1f530152a65192bac1fbacbf2a93efb30c0a82c7e56f36201c",
+    "tests/candidate-gate-trust.test.ts": "684428d97714a13d3ba4bf35304e50964839e3afd41803d9d7ab0ed36a51dd74",
     "tests/candidate-gate-workflow-errors.test.ts": "7e2948b49714ef352effc3eb678496858ff3c90f81947facd1d41c30f88f4403",
     "tests/candidate-gate.test.ts": "ba1dcd780fdebf6c9d03fe71deb672cf29d66b224ac335d19d51db603280a2d7",
     "tests/candidate-integration-dependencies.test.ts": "cf7b57b88909268baceb4d17eb0a5acab080011e20c37739746502d7758e5553",
@@ -23520,7 +23568,7 @@
     "tests/fixtures/portable-path.ts": "03d7c64e1636efe1d008fccb62aeea0fde2474668128dd8e2a5d4043e173eca8",
     "tests/fixtures/portable-paths.ts": "08f08667a406a20f05e574225c39dc934b36d950786fc82dd5ee770c473d749f",
     "tests/fixtures/short-unix-socket.ts": "8b6e158c7a9880b2db6d3c3d87d533e208660f7b611089e08152a8689958a803",
-    "tests/full-test-timeout.test.ts": "8d98d51d51dfecad84a89819eb6952378cf24533657b464bcdde84339760b49d",
+    "tests/full-test-timeout.test.ts": "bc861453cbf1b7df8b59ff645cf3099679352bc27e20fc733e800961b2329ba8",
     "tests/generation10-recovery-accounting.test.ts": "e55f536251eedd89b4d4f6c4dd427f66ddc197f2bfcdda34ae061514a6a9fbcb",
     "tests/generation10-recovery-completion.test.ts": "777f8a18fe452c29b9ade2ff17a5a2da2e86622550c0695791eea5faaf358d55",
     "tests/generation10-recovery-contract.test.ts": "a68f1797bd02fcba08de4f6f9aee5336994f188d8c0cb328621e11fe6873ba89",
@@ -23606,7 +23654,7 @@
     "tests/test-harness-portability.test.ts": "644252711db925d5a45ceed8b5f0bb9b0108ec726aebb80d1a833493df585ee3",
     "tests/test-runtime-evidence.test.ts": "7b1aa047d1aa5ac0859445404f7932313db1e3d3bc84d1dbdb66b7ab6bb7d6ed",
     "tests/test-runtime-gate.test.ts": "2f061a55b5d69d3c757f2e838966f0350a9fe0d634ba5632b6d6120cfb5083ae",
-    "tests/test-runtime-incomplete-command.test.ts": "152fb03ba9be2ab3f30d86c1e7f413de152e3347bcfe2ba640693cf1a789b01b",
+    "tests/test-runtime-incomplete-command.test.ts": "82401b9d4fa595a02ccef88d51a1ef5323ada2f55beaa05cce9d64538e1e97cb",
     "tests/test-runtime-timers.test.ts": "c75e63498176fbcaf8692a9484910b5abdc4dfc4538ed6e031578c6d8671f135",
     "tests/test-runtime-worker.test.ts": "ff30c9836792e5bd1f90a43d05c494c961005daa16f952782cef4f28921dd0da",
     "tests/trace-namespace.test.ts": "8597797fe0fa237f52c6831c1d541ed0666b5789b11d3fc04a72b8c6d3fd9b4e",
