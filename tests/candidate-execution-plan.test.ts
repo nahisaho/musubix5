@@ -65,6 +65,18 @@ it('TEST-M5-CI-RESOURCE-PLAN-001 validates closed ownership, waves, worker/fanou
   }));
 });
 
+/** @id TEST-M5-CI-PARTITION-TIMEOUT-HEADROOM-001
+ * @verifies REQ-M5-CI-EFFICIENCY-003 REQ-M5-CI-EFFICIENCY-005
+ * @design DES-M5-CI-EFFICIENCY-001 DES-M5-CI-EFFICIENCY-004
+ */
+it('TEST-M5-CI-PARTITION-TIMEOUT-HEADROOM-001 preserves the command cap while moving headroom to the measured slow partition', async () => {
+  const plan = JSON.parse(await readFile('.musubix/candidate-execution-plan.json', 'utf8'));
+  const test = plan.commands.find((command: { name: string }) => command.name === 'test');
+  expect(test.partitions.map((partition: { timeoutMs: number }) => partition.timeoutMs)).toEqual([343600, 254400]);
+  expect(test.partitions.reduce((sum: number, partition: { timeoutMs: number }) => sum + partition.timeoutMs, 0)
+    + test.mergeAllowanceMs + test.terminationAllowanceMs).toBe(test.timeoutMs);
+});
+
 /** @id TEST-M5-CI-NATIVE-FANOUT-001
  * @verifies REQ-M5-CI-EFFICIENCY-001
  * @design DES-M5-CI-EFFICIENCY-002

@@ -206,8 +206,25 @@ try {
   await mkdir(owner, { recursive: true });
   scratch = await mkdtemp(resolve(owner, 'verify-'));
   let missingObject;
-  for await (const record of records(['rev-list', commit, '--'])) {
-    const historical = record.toString();
+  /** @id CODE-M5-CI-LFS-HISTORY-SCOPE-001
+   * @implements REQ-M5-CI-EFFICIENCY-003 REQ-M5-CI-EFFICIENCY-005
+   * @design DES-M5-CI-EFFICIENCY-001 DES-M5-CI-EFFICIENCY-004
+   */
+  /** @id CODE-M5-CI-LFS-HISTORY-ATTRIBUTES-001
+   * @implements REQ-M5-CI-EFFICIENCY-002 REQ-M5-CI-EFFICIENCY-005
+   * @design DES-M5-CI-EFFICIENCY-001 DES-M5-CI-EFFICIENCY-004
+   */
+  const historicalCommits = new Set([commit]);
+   const collectHistoricalCommits = async (source) => {
+     for await (const record of source) {
+      const historical = record.toString();
+      if (!oid.test(historical)) throw scanFailed();
+      historicalCommits.add(historical);
+    }
+   };
+   await collectHistoricalCommits(records(['rev-list', commit, '--', prefix]));
+   await collectHistoricalCommits(records(['rev-list', commit, '--', '.gitattributes']));
+   for (const historical of historicalCommits) {
     if (!oid.test(historical)) throw scanFailed();
     const indexEnv = { ...env, GIT_INDEX_FILE: resolve(scratch, 'index') };
     await rm(indexEnv.GIT_INDEX_FILE, { force: true });

@@ -58,6 +58,26 @@ it('TEST-M5-CI-PREPARATION-OFFLINE-001 keeps immutable installation within the a
   expect(action).toContain("run([npm, 'ci', '--ignore-scripts', '--prefer-offline', '--no-audit', '--no-fund'])");
 });
 
+/** @id TEST-M5-CI-LFS-HISTORY-SCOPE-001
+ * @verifies REQ-M5-CI-EFFICIENCY-003 REQ-M5-CI-EFFICIENCY-005
+ * @design DES-M5-CI-EFFICIENCY-001 DES-M5-CI-EFFICIENCY-004
+ */
+it('TEST-M5-CI-LFS-HISTORY-SCOPE-001 verifies protected history only at commits that changed the protected prefix', async () => {
+  const verifier = await readFile('scripts/verify-lfs-checkout.mjs', 'utf8');
+  expect(verifier).toContain("records(['rev-list', commit, '--', prefix])");
+  expect(verifier).not.toContain("records(['rev-list', commit, '--'])");
+});
+
+/** @id TEST-M5-CI-LFS-HISTORY-ATTRIBUTES-001
+ * @verifies REQ-M5-CI-EFFICIENCY-002 REQ-M5-CI-EFFICIENCY-005
+ * @design DES-M5-CI-EFFICIENCY-001 DES-M5-CI-EFFICIENCY-004
+ */
+it('TEST-M5-CI-LFS-HISTORY-ATTRIBUTES-001 retains current-tree and attribute-change verification in the scoped history', async () => {
+  const verifier = await readFile('scripts/verify-lfs-checkout.mjs', 'utf8');
+  expect(verifier).toContain('const historicalCommits = new Set([commit])');
+  expect(verifier).toContain("records(['rev-list', commit, '--', '.gitattributes'])");
+});
+
 /** @id TEST-M5-TDD-SOURCE-LFS-001
  * @verifies REQ-M5-LIFECYCLE-006 REQ-M5-COMPAT-013 REQ-M5-RELEASE-002
  * @design DES-M5-023 DES-M5-012
