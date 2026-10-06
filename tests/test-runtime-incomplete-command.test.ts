@@ -121,3 +121,13 @@ it('TEST-M5-CI-INCOMPLETE-COMMAND-DIAG-001 formats only independently trusted ru
     await rm(base, { recursive: true, force: true });
   }
 }, 180_000);
+
+/** @id TEST-M5-CI-PARTITION-FAILURE-PRECEDENCE-001
+ * @verifies REQ-M5-CI-EFFICIENCY-004
+ * @design DES-M5-CI-EFFICIENCY-006
+ */
+it('TEST-M5-CI-PARTITION-FAILURE-PRECEDENCE-001 preserves scheduler failure before a missing manifest lookup', async () => {
+  const source = await readFile('packages/analysis/src/test-runtime.ts', 'utf8');
+  expect(source).toContain('const manifestAvailable = await exists(manifestPath)');
+  expect(source).toContain("if (!manifestAvailable && execution.status === 'completed' && execution.exitCode === 0)");
+});

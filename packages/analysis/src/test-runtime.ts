@@ -7,7 +7,7 @@ import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 import { canonicalBytes, canonicalRepositoryIdentity, sha256 } from './canonical.js';
-import { files } from './files.js';
+import { exists, files } from './files.js';
 import {
   candidateCommandNames, extractCandidateFailedTests, mergeCandidateFailedTestGroups, type CandidateFailedTest,
   mergeCandidateVitestReports,
@@ -1196,6 +1196,11 @@ export async function runTestRuntimeCommand(
     await releaseCandidateSlots(ledger, rootLease);
     slotObservation = await validateCandidateSlotLedger(ledger);
     measured(`termination:${command.name}:termination`, Number(process.hrtime.bigint()) / 1_000_000 - terminationStarted);
+    const manifestAvailable = await exists(manifestPath);
+    if (!manifestAvailable && execution.status === 'completed' && execution.exitCode === 0) {
+      invalid('acknowledgment-binding', 'partition manifest missing');
+    }
+    if (!manifestAvailable) incompleteCommand(command.name, execution);
     const manifest = object(JSON.parse((await regular(manifestPath)).toString('utf8')), 'acknowledgment-binding', ['schemaVersion', 'acknowledgments']);
     const entries = array(manifest.acknowledgments, 'acknowledgment-binding');
     if (manifest.schemaVersion !== 1 || entries.length !== prepared.length) invalid('acknowledgment-binding', 'partition manifest inventory');

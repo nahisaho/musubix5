@@ -2,6 +2,7 @@ import { createHook } from 'node:async_hooks';
 import { existsSync, readFileSync } from 'node:fs';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { setTimeout as delay } from 'node:timers/promises';
 import { expect, it } from 'vitest';
 import {
   acquireCandidateSlots, acquireCandidateFixtureSlotSync, createCandidateSlotLedger,
@@ -53,3 +54,33 @@ it('TEST-M5-CI-SLOT-TRANSACTION-001 never yields while owning a transaction and 
     expect((await validateCandidateSlotLedger(ledger)).maximum).toBe(16);
   } finally { hook.disable(); await rm(root, { recursive: true, force: true }); }
 }, 15_000);
+
+/** @id TEST-M5-CI-NATIVE-OWNER-SETTLE-001
+ * @verifies REQ-M5-CI-EFFICIENCY-001 REQ-M5-CI-EFFICIENCY-004
+ * @design DES-M5-CI-EFFICIENCY-002 DES-M5-CI-EFFICIENCY-006
+ */
+it('TEST-M5-CI-NATIVE-OWNER-SETTLE-001 waits for terminal native callbacks before declaring a leak', async () => {
+  const root = await mkdtemp(join(process.cwd(), '.musubix/cache/native-owner-settle-'));
+  const ledger = await createCandidateSlotLedger(root, 'native-owner-settle', 16);
+  const lease = await acquireCandidateSlots(ledger, {
+    nonce: ledger.nonce, pid: process.pid, partition: 'nested-child',
+  }, 1);
+  const descriptorPath = join(ledger.root, `native-${lease.leaseId}.json`);
+  const descriptor = {
+    schemaVersion: 1, nonce: ledger.nonce, leaseId: lease.leaseId,
+    callerPid: process.pid, childPid: process.pid, status: 'launched',
+  };
+  await writeFile(descriptorPath, JSON.stringify(descriptor));
+  const terminal = (async () => {
+    await delay(50);
+    await writeFile(descriptorPath, JSON.stringify({ ...descriptor, status: 'terminated' }));
+    await releaseCandidateSlots(ledger, lease);
+  })();
+  try {
+    expect((await validateCandidateSlotLedger(ledger)).maximum).toBe(1);
+    await terminal;
+  } finally {
+    await terminal;
+    await rm(root, { recursive: true, force: true });
+  }
+});

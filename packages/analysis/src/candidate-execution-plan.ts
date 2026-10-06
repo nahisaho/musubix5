@@ -2,6 +2,7 @@ import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { setTimeout as delay } from 'node:timers/promises';
 import { canonicalBytes, sha256 } from './canonical.js';
 import { files, safePath } from './files.js';
 import { authoritativeCandidateTestIds } from './trace.js';
@@ -548,6 +549,9 @@ export function calibrateCandidateTimeouts(observations: unknown): CandidateTime
      */
     export async function validateCandidateSlotLedger(ledger: CandidateSlotLedger) {
       integer(ledger.capacity, 1, 16);
+      const settleDeadline = Date.now() + 2_000;
+      while ((await readdir(ledger.root)).some(name => /^slot-[0-9]+$/.test(name))
+        && Date.now() < settleDeadline) await delay(25);
       const nativeDescriptors = await Promise.all((await readdir(ledger.root)).filter(name => /^native-[a-f0-9-]{36}\.json$/.test(name))
         .sort().map(async name => {
           const descriptor = closed(JSON.parse(await readFile(join(ledger.root, name), 'utf8')),
