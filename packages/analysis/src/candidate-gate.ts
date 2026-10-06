@@ -29,6 +29,8 @@ export const historicalCandidateMatrixJobs = [
   { os: 'ubuntu', nodeMajor: 22 },
   { os: 'windows', nodeMajor: 22 },
   { os: 'macos', nodeMajor: 22 },
+  { os: 'windows', nodeMajor: 24 },
+  { os: 'macos', nodeMajor: 24 },
 ] as const;
 
 export type CandidateGateJob =
