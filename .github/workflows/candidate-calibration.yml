@@ -1,0 +1,122 @@
+# @id CODE-M5-CI-CALIBRATION-WORKFLOW-001
+# @implements REQ-M5-CI-EFFICIENCY-003 REQ-M5-CI-EFFICIENCY-005
+# @design DES-M5-CI-EFFICIENCY-004
+name: Candidate calibration (no credit)
+on:
+  workflow_dispatch:
+    inputs:
+      changeId: { description: CHANGE identifier, required: true, type: string }
+      generation: { description: Active CHANGE generation, required: true, type: number }
+      candidateCommit: { description: Calibration source SHA, required: true, type: string }
+      repositoryId: { description: Repository identity, required: true, type: string }
+      gateInputFingerprint: { description: Gate fingerprint SHA256, required: true, type: string }
+permissions: { contents: read, actions: read, id-token: write }
+jobs:
+  verify:
+    name: ${{ matrix.os }}-node24
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: ubuntu-latest, os: ubuntu }
+          - { runner: windows-latest, os: windows }
+          - { runner: macos-latest, os: macos }
+    runs-on: ${{ matrix.runner }}
+    env:
+      CANDIDATE_MODE: calibration
+      CANDIDATE_NO_CREDIT: 'true'
+      CANDIDATE_COMMIT: ${{ inputs.candidateCommit }}
+      CHANGE_ID: ${{ inputs.changeId }}
+      GENERATION: ${{ inputs.generation }}
+      GATE_INPUT_FINGERPRINT: ${{ inputs.gateInputFingerprint }}
+      MATRIX_OS: ${{ matrix.os }}
+      MATRIX_NODE: 24
+      REPOSITORY_ID: ${{ inputs.repositoryId }}
+    steps:
+      - name: Bootstrap exact source and local LFS objects
+        timeout-minutes: 1
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { execFileSync } from 'node:child_process';
+          import { randomUUID } from 'node:crypto';
+          import { appendFileSync } from 'node:fs';
+          const e=process.env, deadline=Date.now()+60_000;
+          if (!/^[a-f0-9]{40}$/.test(e.CANDIDATE_COMMIT)||!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(e.GITHUB_REPOSITORY)) throw new Error('CANDIDATE_BOOTSTRAP_INVALID');
+          const git=(args,env=e)=>{
+            const remaining=deadline-Date.now();
+            if(remaining<=0) throw new Error('CANDIDATE_BOOTSTRAP_TIMEOUT');
+            try{return execFileSync('git',args,{env,timeout:remaining,stdio:['ignore','pipe','pipe'],encoding:'utf8',maxBuffer:1_000_000});}
+            catch{throw new Error('CANDIDATE_BOOTSTRAP_FAILED');}
+          };
+          const version=/^git-lfs\/(\d+)\.(\d+)\.(\d+)/.exec(git(['lfs','version']));
+          if(!version||+version[1]<3||+version[1]===3&&(+version[2]<4||+version[2]===4&&+version[3]<1)) throw new Error('TDD_SOURCE_LFS_UNAVAILABLE: version-unsupported');
+          git(['config','--global','core.autocrlf','false']); git(['init','.']);
+          git(['remote','add','origin',`https://github.com/${e.GITHUB_REPOSITORY}.git`]);
+          const transport={...e,GIT_CONFIG_COUNT:'1',GIT_CONFIG_KEY_0:'http.https://github.com/.extraheader',GIT_CONFIG_VALUE_0:`AUTHORIZATION: basic ${Buffer.from(`x-access-token:${e.GH_TOKEN}`).toString('base64')}`};
+          git(['fetch','--no-tags','origin',e.CANDIDATE_COMMIT],transport);
+          git(['lfs','install','--local']);
+          git(['-c','lfs.fetchrecentalways=false','lfs','fetch','--all','origin',e.CANDIDATE_COMMIT],transport);
+          git(['checkout','--detach',e.CANDIDATE_COMMIT],{...e,GIT_LFS_SKIP_SMUDGE:'1'});
+          appendFileSync(e.GITHUB_ENV,`CANDIDATE_DISPATCH_NONCE=${randomUUID()}\n`);
+          NODE
+      - name: Prepare source within absolute deadline
+        timeout-minutes: 2
+        uses: ./.github/actions/prepare-candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Run no-credit closed calibration matrix
+        id: gate
+        timeout-minutes: 28
+        shell: bash
+        run: node .github/scripts/run-candidate-gate-wrapper.mjs
+      - name: Independently sign no-credit terminal result
+        timeout-minutes: 1
+        if: ${{ always() }}
+        shell: bash
+        env:
+          GATE_STEP_OUTCOME: ${{ steps.gate.outcome }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { createHash,generateKeyPairSync,sign } from 'node:crypto';
+          import { readFileSync,writeFileSync } from 'node:fs';
+          import { join } from 'node:path';
+          const e=process.env,canonical=v=>Array.isArray(v)?`[${v.map(canonical).join(',')}]`:v&&typeof v==='object'?`{${Object.entries(v).sort(([a],[b])=>Buffer.compare(Buffer.from(a),Buffer.from(b))).map(([k,x])=>`${JSON.stringify(k)}:${canonical(x)}`).join(',')}}`:JSON.stringify(v);
+          const hash=v=>createHash('sha256').update(`${canonical(v)}\n`).digest('hex'),audienceBase='https://github.com/nahisaho/musubix5/actions/musubix5-gate';
+          const context={repositoryId:e.REPOSITORY_ID,changeId:e.CHANGE_ID,generation:Number(e.GENERATION),candidateCommit:e.CANDIDATE_COMMIT,gateInputFingerprint:e.GATE_INPUT_FINGERPRINT,job:{os:e.MATRIX_OS,nodeMajor:24}};
+          let result;
+          try{
+            if(e.GATE_STEP_OUTCOME!=='success') throw new Error('incomplete calibration stage');
+            result=JSON.parse(readFileSync(join(e.RUNNER_TEMP,'candidate-gate-result.json'),'utf8'));
+            const cfg=JSON.parse(readFileSync('.musubix/config.json','utf8'));
+            if(cfg.candidateGate&&cfg.candidateGate.attestation.githubOidc.audience!==audienceBase) throw new Error('audience');
+            if(Object.entries(context).some(([k,v])=>canonical(result[k])!==canonical(v))||result.producer!=='github-actions'||result.mode!=='calibration'||result.runAttempt!==1||result.runId!==e.GITHUB_RUN_ID) throw new Error('context');
+            const manifest=JSON.parse(readFileSync(join(e.RUNNER_TEMP,'candidate-lfs-closure.json'),'utf8'));
+            if(result.lfsManifestDigest!==hash(manifest)) throw new Error('manifest');
+          }catch{
+            result={schemaVersion:1,...context,producer:'github-actions',runtime:context.job,status:'fail',commands:['typecheck','build','test','codegraph-tests','compatibility','pack-check','pack-smoke'].map(name=>({name,exitCode:1,digest:hash({name}),status:'fail'})),commandsPassed:false,preTreeMatchesCandidate:false,postTreeMatchesCandidate:false,stdoutSha256:hash(''),stderrSha256:hash(''),gateReportDigest:hash(''),exitCode:1,signal:null,timedOut:false,drainTruncated:false,tailsDropped:false,resultTextDropped:false,matchedCauses:['workflow-stage-failure'],originalDomainCode:'CANDIDATE_GATE_REPORT_INVALID',originalDomainMessage:'Calibration workflow stage failed.',childErrorMessage:null};
+          }
+          const now=Date.now(),started=Number(e.CANDIDATE_JOB_STARTED_AT);
+          if(!Number.isSafeInteger(started)||now<started||now-started>1_980_000) result.status='fail';
+          result={...result,mode:'calibration',noCredit:true,runId:e.GITHUB_RUN_ID,runAttempt:Number(e.GITHUB_RUN_ATTEMPT),jobTimingDigest:e.CANDIDATE_JOB_TIMING_DIGEST??null,preSigningCompletedAt:new Date(now).toISOString(),preSigningElapsedMs:Number.isSafeInteger(started)?Math.max(0,now-started):null};
+          const {privateKey,publicKey}=generateKeyPairSync('ed25519'),publicKeyPem=publicKey.export({type:'spki',format:'pem'}).toString();
+          const audience=`${audienceBase}#musubix3-key-sha256=${createHash('sha256').update(publicKey.export({type:'spki',format:'der'})).digest('base64url')}`;
+          const url=new URL(e.ACTIONS_ID_TOKEN_REQUEST_URL);url.searchParams.set('audience',audience);
+          const response=await fetch(url,{headers:{authorization:`Bearer ${e.ACTIONS_ID_TOKEN_REQUEST_TOKEN}`},signal:AbortSignal.timeout(10_000)});
+          if(!response.ok) throw new Error('OIDC request failed');
+          const unsigned={schemaVersion:1,repository:e.GITHUB_REPOSITORY,commitSha:e.CANDIDATE_COMMIT,ci:{provider:'github',runId:e.GITHUB_RUN_ID},evidenceHeads:{candidateGate:hash(result)},issuedAt:new Date().toISOString(),keyId:`candidate-calibration-${e.MATRIX_OS}-node24-${e.GITHUB_RUN_ID}`,githubOidc:{token:(await response.json()).value,publicKey:publicKeyPem}};
+          const attestation={...unsigned,signature:sign(null,Buffer.from(canonical(unsigned)),privateKey).toString('base64')};
+          writeFileSync(join(e.RUNNER_TEMP,'candidate-calibration-envelope.json'),`${canonical({schemaVersion:1,result,attestation})}\n`);
+          if(result.status!=='pass') process.exitCode=1;
+          NODE
+      - name: Upload no-credit signed envelope
+        uses: actions/upload-artifact@v4
+        timeout-minutes: 1
+        if: ${{ always() }}
+        with:
+          name: candidate-calibration-${{ matrix.os }}-node24
+          path: ${{ runner.temp }}/candidate-calibration-envelope.json
+          if-no-files-found: error
