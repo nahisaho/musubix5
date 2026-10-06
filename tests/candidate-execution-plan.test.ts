@@ -87,3 +87,14 @@ it('TEST-M5-CI-NATIVE-FANOUT-001 reserves ten child slots for nested CLI executi
   expect(command.partitions[1]).toMatchObject({ maxWorkers: 5, fanout: 10 });
   expect(1 + command.partitions[1].maxWorkers + command.partitions[1].fanout).toBe(16);
 });
+
+/** @id TEST-M5-LINUX-CALIBRATION-ISOLATED-WORKERS-001
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-CALIBRATION-ISOLATED-WORKERS-001 assigns three workers without exceeding sixteen slots', async () => {
+  const plan = JSON.parse(await readFile('.musubix/candidate-execution-plan.json', 'utf8'));
+  const command = plan.commands.find((entry: { name: string }) => entry.name === 'test');
+  expect(command.partitions[0]).toMatchObject({ maxWorkers: 3, fanout: 12 });
+  expect(1 + command.partitions[0].maxWorkers + command.partitions[0].fanout).toBe(16);
+});

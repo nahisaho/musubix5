@@ -6456,13 +6456,61 @@
       "phase": "complete",
       "status": "completed",
       "recordedAt": "2026-10-06T17:07:31.245Z"
+    },
+    {
+      "skill": "sdd-implementation",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0020",
+      "generation": 1,
+      "requirementIds": [
+        "REQ-M5-LINUX-DELIVERY-001",
+        "REQ-M5-LINUX-DELIVERY-002",
+        "REQ-M5-LINUX-DELIVERY-003",
+        "REQ-M5-LINUX-DELIVERY-004"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-10-06T18:05:07.448Z"
+    },
+    {
+      "skill": "sdd-quality",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0020",
+      "generation": 1,
+      "requirementIds": [
+        "REQ-M5-LINUX-DELIVERY-001",
+        "REQ-M5-LINUX-DELIVERY-002",
+        "REQ-M5-LINUX-DELIVERY-003",
+        "REQ-M5-LINUX-DELIVERY-004"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-10-06T18:05:29.083Z"
+    },
+    {
+      "skill": "sdd-change",
+      "version": "0.1.8",
+      "provenance": "self-reported",
+      "changeId": "CHANGE-0020",
+      "generation": 1,
+      "requirementIds": [
+        "REQ-M5-LINUX-DELIVERY-001",
+        "REQ-M5-LINUX-DELIVERY-002",
+        "REQ-M5-LINUX-DELIVERY-003",
+        "REQ-M5-LINUX-DELIVERY-004"
+      ],
+      "phase": "complete",
+      "status": "completed",
+      "recordedAt": "2026-10-06T18:05:30.068Z"
     }
   ],
   "verification": {
     "mode": "compatible",
-    "sourceSha256": "916c28f316424bcb34d83434c913d42a7da7a1789936528458e2a39b681c83ec",
-    "eventsSha256": "a47bcb63edae10f749f0d4eb4b70b214159b26a460a727ea744043f8147d4cb3",
-    "verifiedAt": "2026-10-06T17:08:04.888Z",
+    "sourceSha256": "9cc6a364da60d228b945e35d8b72cd20d1c3b3e61559d1541b749ef6242859a0",
+    "eventsSha256": "3b32d9a3221c652d555c5414c6c6999fd8d86ab4d3bb0e5d786d77b66ce24232",
+    "verifiedAt": "2026-10-06T18:05:37.081Z",
     "invocations": [
       {
         "skill": "sdd-change",
@@ -6700,6 +6748,27 @@
         "toolCallId": "call_W7DmMBHYnyvSzCeSItJqPFjf",
         "invokedAt": "2026-10-06T16:58:47.509Z",
         "completedAt": "2026-10-06T16:58:47.523Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-change",
+        "toolCallId": "call_RNTuds4PECX51ESeerpHLjCB",
+        "invokedAt": "2026-10-06T17:35:57.685Z",
+        "completedAt": "2026-10-06T17:35:57.697Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-implementation",
+        "toolCallId": "call_6qob416w48p7Av2JQbaSfBa8",
+        "invokedAt": "2026-10-06T17:36:03.360Z",
+        "completedAt": "2026-10-06T17:36:03.375Z",
+        "status": "completed"
+      },
+      {
+        "skill": "sdd-quality",
+        "toolCallId": "call_uHN1xUSqSku5MiAlzid0ODEL",
+        "invokedAt": "2026-10-06T18:05:14.351Z",
+        "completedAt": "2026-10-06T18:05:14.367Z",
         "status": "completed"
       }
     ]

@@ -215,8 +215,8 @@ async function candidateCodegraphRegistry(root: string) {
 }
 
 /** @id CODE-M5-CI-PLAN-INVENTORY-001
- * @implements REQ-M5-CI-EFFICIENCY-001 REQ-M5-CI-EFFICIENCY-002
- * @design DES-M5-CI-EFFICIENCY-001 DES-M5-CI-EFFICIENCY-002
+ * @implements REQ-M5-CI-EFFICIENCY-001 REQ-M5-CI-EFFICIENCY-002 REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-CI-EFFICIENCY-001 DES-M5-CI-EFFICIENCY-002 DES-M5-LINUX-DELIVERY-002
  */
 export async function deriveCandidateExecutionPlan(root: string): Promise<CandidateExecutionPlan> {
   const config = JSON.parse(await readFile(await safePath(root, '.musubix/config.json'), 'utf8'));
@@ -239,8 +239,8 @@ export async function deriveCandidateExecutionPlan(root: string): Promise<Candid
     const timeoutMs = command.name === 'test' ? 600_000 : 120_000;
     const partitions = groups.map((group, ordinal) => ({
       id: `${command.name}-partition-${ordinal}`, ordinal, wave: ordinal, pool: 'forks' as const,
-      maxWorkers: command.name === 'codegraph-tests' ? 4 : group.length === 1 ? 1 : group === isolated ? 2 : 6,
-      fanout: command.name === 'codegraph-tests' ? 11 : group.length === 1 ? 14 : group === isolated ? 13 : 9,
+      maxWorkers: command.name === 'codegraph-tests' ? 4 : group.length === 1 ? 1 : group === isolated ? 3 : 6,
+      fanout: command.name === 'codegraph-tests' ? 11 : group.length === 1 ? 14 : group === isolated ? 12 : 9,
       files: group.map(entry => entry.path), testIds: group.flatMap(entry => entry.ids),
       timeoutMs: Math.floor((timeoutMs - 2_000) * weights[ordinal]! / totalWeight),
     }));
