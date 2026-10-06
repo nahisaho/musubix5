@@ -1197,6 +1197,18 @@ export async function runTestRuntimeCommand(
     slotObservation = await validateCandidateSlotLedger(ledger);
     measured(`termination:${command.name}:termination`, Number(process.hrtime.bigint()) / 1_000_000 - terminationStarted);
     const manifestAvailable = await exists(manifestPath);
+    if (!manifestAvailable) {
+      const missingPartitions: string[] = [];
+      for (const entry of prepared) {
+        const missing = [];
+        if (!await exists(join(entry.run, 'ack.json'))) missing.push('ack');
+        if (!await exists(entry.resultPath)) missing.push('result');
+        if (missing.length) missingPartitions.push(`partition-${entry.group.ordinal}:${missing.join('+')}`);
+      }
+      if (missingPartitions.length) {
+        invalid('acknowledgment-binding', `partition manifest missing: ${missingPartitions.join(',')}`);
+      }
+    }
     if (!manifestAvailable && execution.status === 'completed' && execution.exitCode === 0) {
       invalid('acknowledgment-binding', 'partition manifest missing');
     }

@@ -590,8 +590,10 @@ export function calibrateCandidateTimeouts(observations: unknown): CandidateTime
       const names = await readdir(ledger.root);
       if (names.some((name) => name !== 'ledger.json' && !/^observation-[0-9]+\.json$/.test(name)
         && !/^native-[a-f0-9-]{36}\.json$/.test(name))) reject('leaked or foreign slot');
-      const observations: CandidateSlotObservation[] = await Promise.all(names.filter((name) => /^observation-/.test(name))
-        .map(async (name) => JSON.parse(await readFile(join(ledger.root, name), 'utf8'))));
+      const observations: CandidateSlotObservation[] = [];
+      for (const name of names.filter((name) => /^observation-/.test(name))) {
+        observations.push(JSON.parse(await readFile(join(ledger.root, name), 'utf8')));
+      }
       observations.sort((a, b) => a.ordinal - b.ordinal);
       const active = new Map<number, string>(), owners = new Map<string, CandidateSlotLease>();
       let maximum = 0, previous = -Infinity;

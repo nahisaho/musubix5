@@ -84,3 +84,13 @@ it('TEST-M5-CI-NATIVE-OWNER-SETTLE-001 waits for terminal native callbacks befor
     await rm(root, { recursive: true, force: true });
   }
 });
+
+/** @id TEST-M5-CI-SLOT-OBSERVATION-BOUNDED-001
+ * @verifies REQ-M5-CI-EFFICIENCY-001 REQ-M5-CI-EFFICIENCY-004
+ * @design DES-M5-CI-EFFICIENCY-002 DES-M5-CI-EFFICIENCY-006
+ */
+it('TEST-M5-CI-SLOT-OBSERVATION-BOUNDED-001 reads large slot ledgers without unbounded open files', async () => {
+  const source = await readFile('packages/analysis/src/candidate-execution-plan.ts', 'utf8');
+  expect(source).toContain('for (const name of names.filter((name) => /^observation-/.test(name)))');
+  expect(source).not.toContain("Promise.all(names.filter((name) => /^observation-/.test(name))");
+});

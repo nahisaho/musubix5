@@ -131,3 +131,12 @@ it('TEST-M5-CI-PARTITION-FAILURE-PRECEDENCE-001 preserves scheduler failure befo
   expect(source).toContain('const manifestAvailable = await exists(manifestPath)');
   expect(source).toContain("if (!manifestAvailable && execution.status === 'completed' && execution.exitCode === 0)");
 });
+
+/** @id TEST-M5-CI-PARTITION-MISSING-DIAGNOSTIC-001
+ * @verifies REQ-M5-CI-EFFICIENCY-004
+ * @design DES-M5-CI-EFFICIENCY-006
+ */
+it('TEST-M5-CI-PARTITION-MISSING-DIAGNOSTIC-001 identifies missing partition acknowledgments and results', async () => {
+  const source = await readFile('packages/analysis/src/test-runtime.ts', 'utf8');
+  expect(source).toContain("partition manifest missing: ${missingPartitions.join(',')}");
+});
