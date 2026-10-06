@@ -74,6 +74,16 @@ it('TEST-M5-LINUX-CALIBRATION-MODE-BINDING-001 binds calibration mode into the p
   expect(scheduler).toContain("option('--candidate-mode') === 'calibration'");
 });
 
+/** @id TEST-M5-LINUX-CALIBRATION-SCHEDULER-TIMEOUT-001
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-CALIBRATION-SCHEDULER-TIMEOUT-001 fixes the calibration scheduler boundary at 900 seconds', async () => {
+  const runtime = await readFile('packages/analysis/src/test-runtime.ts', 'utf8');
+  expect(runtime).toContain("const schedulerTimeoutMs = matrix && environment.CANDIDATE_MODE === 'calibration'");
+  expect(runtime).toContain('timeoutMs: schedulerTimeoutMs');
+});
+
 /** @id TEST-M5-LINUX-CALIBRATION-WRAPPER-DIAGNOSTIC-001
  * @verifies REQ-M5-LINUX-DELIVERY-002
  * @design DES-M5-LINUX-DELIVERY-002

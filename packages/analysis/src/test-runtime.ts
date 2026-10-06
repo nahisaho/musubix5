@@ -1166,6 +1166,8 @@ export async function runTestRuntimeCommand(
     prepared.push({ ...entry, request, requestSha256, env, resultPath: join(run, 'process-result.json') });
   }
   let execution: ProcessResult;
+  const schedulerTimeoutMs = matrix && environment.CANDIDATE_MODE === 'calibration'
+    && command.name === 'test' ? 900_000 : options.timeoutMs;
   if (ledger) await transportJson(join(transport, 'candidate-slot-ledger.json'), ledger, true);
   if (grouped) {
     const groupPath = join(transport, 'groups.json');
@@ -1174,7 +1176,7 @@ export async function runTestRuntimeCommand(
       env: entry.env, resultPath: entry.resultPath,
     })) }, true);
     execution = await runner(scheduler.command, [...scheduler.args, '--runtime-dispatch', groupPath], {
-      ...options, env: { ...environment, ...(ledger ? {
+      ...options, timeoutMs: schedulerTimeoutMs, env: { ...environment, ...(ledger ? {
         MUSUBIX5_CANDIDATE_SLOT_LEDGER: join(transport, 'candidate-slot-ledger.json'),
         MUSUBIX5_CANDIDATE_PARTITION_MANIFEST: manifestPath,
       } : {}) },
