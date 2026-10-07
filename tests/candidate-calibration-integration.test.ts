@@ -115,6 +115,16 @@ it('TEST-M5-LINUX-CALIBRATION-REMAINING-BUDGET-001 carries unused calibration ti
   expect(scheduler).toContain('timeoutMs: calibration ? remainingCalibrationBudget()');
 });
 
+/** @id TEST-M5-LINUX-CALIBRATION-NATIVE-REPORT-DIAGNOSTIC-001
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-CALIBRATION-NATIVE-REPORT-DIAGNOSTIC-001 bounds invalid partition report diagnostics', async () => {
+  const runtime = await readFile('packages/analysis/src/test-runtime.ts', 'utf8');
+  expect(runtime).toContain('partition-${entry.group.ordinal}: native report invalid');
+  expect(runtime).toContain('status=${native.status} exitCode=${native.exitCode} durationMs=${native.durationMs}');
+});
+
 /** @id TEST-M5-LINUX-CALIBRATION-TIMEOUT-DIAGNOSTIC-001
  * @verifies REQ-M5-LINUX-DELIVERY-002
  * @design DES-M5-LINUX-DELIVERY-002

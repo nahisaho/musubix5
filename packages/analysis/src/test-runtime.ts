@@ -1328,7 +1328,13 @@ export async function runTestRuntimeCommand(
     const ack = blobSchema(JSON.parse(ackBytes.toString('utf8')));
     if (ack.complete !== true) incompleteCommand(command.name, native);
     if (compositeDispatch && report) {
-      const nativeReport = object(JSON.parse(report.toString('utf8')), 'acknowledgment-binding');
+      let nativeReport: Record<string, unknown>;
+      try {
+        nativeReport = object(JSON.parse(report.toString('utf8')), 'acknowledgment-binding');
+      } catch {
+        invalid('acknowledgment-binding',
+          `partition-${entry.group.ordinal}: native report invalid status=${native.status} exitCode=${native.exitCode} durationMs=${native.durationMs}`);
+      }
       const nativeFiles = array(nativeReport.testResults).map(value => {
         const file = object(value, 'acknowledgment-binding');
         return relative(root, text(file.name, 'acknowledgment-binding')).replaceAll('\\', '/');

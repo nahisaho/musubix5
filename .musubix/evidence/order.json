@@ -37589,6 +37589,54 @@
       "phase": "g1:quality:19",
       "previousSha256": "d12965af8d1d7c93ed3687904c897787ff3de65ab9f43b86abdca8c318ca6330",
       "recordSha256": "dcd09ffbf7bcea32efb6f982431a1afa71a0eeb47e34852151221c8add2ca37c"
+    },
+    {
+      "sequence": 4696,
+      "kind": "tdd",
+      "entityId": "b6078f3f-8d3f-4a66-9afc-2c14b41b4d4a",
+      "phase": "red",
+      "previousSha256": "dcd09ffbf7bcea32efb6f982431a1afa71a0eeb47e34852151221c8add2ca37c",
+      "recordSha256": "3e80ff8e3fb4ec5169a147f0d2d2e3549d90476492c00c333bc809c8789d1e8a"
+    },
+    {
+      "sequence": 4697,
+      "kind": "change",
+      "entityId": "CHANGE-0020",
+      "phase": "g1:red:REQ-M5-LINUX-DELIVERY-002#12",
+      "previousSha256": "3e80ff8e3fb4ec5169a147f0d2d2e3549d90476492c00c333bc809c8789d1e8a",
+      "recordSha256": "a1a2a85ca1402ab7195ba98dca07cd6cfc147ea87dd31c582e4d089ae1593e1a"
+    },
+    {
+      "sequence": 4698,
+      "kind": "change",
+      "entityId": "CHANGE-0020",
+      "phase": "g1:implementation:REQ-M5-LINUX-DELIVERY-002#12",
+      "previousSha256": "a1a2a85ca1402ab7195ba98dca07cd6cfc147ea87dd31c582e4d089ae1593e1a",
+      "recordSha256": "984e66664617a100d57b9dfa9f50ba76a9c8f5f8769271584f707f0cb1f92949"
+    },
+    {
+      "sequence": 4699,
+      "kind": "tdd",
+      "entityId": "b6078f3f-8d3f-4a66-9afc-2c14b41b4d4a",
+      "phase": "green",
+      "previousSha256": "984e66664617a100d57b9dfa9f50ba76a9c8f5f8769271584f707f0cb1f92949",
+      "recordSha256": "1a2fee6840c919b1a8b2aef80a2c952e9ed5c80db65a245f3b4072861664260b"
+    },
+    {
+      "sequence": 4700,
+      "kind": "change",
+      "entityId": "CHANGE-0020",
+      "phase": "g1:green:REQ-M5-LINUX-DELIVERY-002#12",
+      "previousSha256": "1a2fee6840c919b1a8b2aef80a2c952e9ed5c80db65a245f3b4072861664260b",
+      "recordSha256": "c44abeaa22aa80e04e0feab3a82eb43f66e3b2147f97ec7b0c86324d225d5258"
+    },
+    {
+      "sequence": 4701,
+      "kind": "change",
+      "entityId": "CHANGE-0020",
+      "phase": "g1:quality:20",
+      "previousSha256": "c44abeaa22aa80e04e0feab3a82eb43f66e3b2147f97ec7b0c86324d225d5258",
+      "recordSha256": "cf407c8bb7245ab3c9688df1e5d2166b1061705c5dd23d3f6963b1443e73f889"
     }
   ]
 }
