@@ -656,7 +656,10 @@ export function calibrateCandidateTimeouts(observations: unknown): CandidateTime
       const names = await readdir(ledger.root);
       if (names.some((name) => !['ledger.json', 'observation-count', '.native-staging'].includes(name) && !/^observation-[0-9]+\.json$/.test(name)
         && !/^native-[a-f0-9-]{36}\.json$/.test(name))) reject('leaked or foreign slot');
-      if ((await readdir(stagingDirectory)).length) reject('leaked native staging');
+      const stagingNames = (await readdir(stagingDirectory)).sort();
+      if (stagingNames.length) reject(
+        `leaked native staging count=${stagingNames.length} files=${stagingNames.slice(0, 8).join(",")}`,
+      );
       const observations: CandidateSlotObservation[] = [];
       for (const name of names.filter((name) => /^observation-/.test(name))) {
         if (!/^observation-[0-9]+\.json$/.test(name)) continue;

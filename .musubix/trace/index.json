@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "kind": "repository-trace-index",
-  "generatedAt": "2026-10-07T12:52:26.814Z",
+  "generatedAt": "2026-10-07T14:03:00.302Z",
   "nodes": [
     {
       "id": "ADR-0002",
@@ -655,7 +655,7 @@
       "id": "CODE-M5-CI-CODEGRAPH-SCHEDULER-001",
       "kind": "code",
       "path": "scripts/run-codegraph-tests.mjs",
-      "line": 265
+      "line": 266
     },
     {
       "id": "CODE-M5-CI-COMPOSITE-PARTITION-ACK-001",
@@ -1363,7 +1363,7 @@
       "id": "CODE-M5-LINUX-CALIBRATION-CODEGRAPH-LANES-001",
       "kind": "code",
       "path": "scripts/run-codegraph-tests.mjs",
-      "line": 348
+      "line": 349
     },
     {
       "id": "CODE-M5-LINUX-CALIBRATION-REGION-BUDGET-001",
@@ -4236,7 +4236,7 @@
       "id": "TEST-M5-CI-CALIBRATION-FAILURE-ENVELOPE-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 331
+      "line": 341
     },
     {
       "id": "TEST-M5-CI-CALIBRATION-INPUT-CLOSURE-001",
@@ -4326,7 +4326,7 @@
       "id": "TEST-M5-CI-CODEGRAPH-SCHEDULER-001",
       "kind": "test",
       "path": "tests/candidate-codegraph-scheduler.test.ts",
-      "line": 166
+      "line": 167
     },
     {
       "id": "TEST-M5-CI-CODEGRAPH-STREAM-SCHEMA-001",
@@ -5304,7 +5304,7 @@
       "id": "TEST-M5-LINUX-CALIBRATION-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 363
+      "line": 373
     },
     {
       "id": "TEST-M5-LINUX-CALIBRATION-BUDGET-REALLOCATION-001",
@@ -5340,7 +5340,7 @@
       "id": "TEST-M5-LINUX-CALIBRATION-NATIVE-DESCRIPTOR-ATOMICITY-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 245
+      "line": 255
     },
     {
       "id": "TEST-M5-LINUX-CALIBRATION-NATIVE-REPORT-DIAGNOSTIC-001",
@@ -5355,6 +5355,12 @@
       "line": 179
     },
     {
+      "id": "TEST-M5-LINUX-CALIBRATION-NATIVE-STAGING-DIAGNOSTIC-001",
+      "kind": "test",
+      "path": "tests/candidate-calibration-integration.test.ts",
+      "line": 204
+    },
+    {
       "id": "TEST-M5-LINUX-CALIBRATION-OWNERSHIP-001",
       "kind": "test",
       "path": "tests/candidate-stability.test.ts",
@@ -5364,7 +5370,7 @@
       "id": "TEST-M5-LINUX-CALIBRATION-PARAMETERIZED-MERGE-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 204
+      "line": 214
     },
     {
       "id": "TEST-M5-LINUX-CALIBRATION-PARAMETERIZED-SELECTION-001",
@@ -5394,7 +5400,7 @@
       "id": "TEST-M5-LINUX-CALIBRATION-POSTCONDITION-STAGE-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 272
+      "line": 282
     },
     {
       "id": "TEST-M5-LINUX-CALIBRATION-REMAINING-BUDGET-001",
@@ -5412,7 +5418,7 @@
       "id": "TEST-M5-LINUX-CALIBRATION-SIGNER-DIAGNOSTIC-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 294
+      "line": 304
     },
     {
       "id": "TEST-M5-LINUX-CALIBRATION-SLOT-RELEASE-DIAGNOSTIC-001",
@@ -5424,25 +5430,25 @@
       "id": "TEST-M5-LINUX-CALIBRATION-TIMEOUT-DIAGNOSTIC-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 261
+      "line": 271
     },
     {
       "id": "TEST-M5-LINUX-CALIBRATION-WORKER-PACKET-ATOMICITY-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 234
+      "line": 244
     },
     {
       "id": "TEST-M5-LINUX-CALIBRATION-WRAPPER-DIAGNOSTIC-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 284
+      "line": 294
     },
     {
       "id": "TEST-M5-LINUX-CANDIDATE-WORKFLOW-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 344
+      "line": 354
     },
     {
       "id": "TEST-M5-LINUX-RELEASE-001",
@@ -5466,13 +5472,13 @@
       "id": "TEST-M5-LINUX-SIGNER-CONTEXT-BOUNDARY-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 306
+      "line": 316
     },
     {
       "id": "TEST-M5-LINUX-SIGNER-CONTEXT-BOUNDARY-002",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 319
+      "line": 329
     },
     {
       "id": "TEST-M5-LINUX-STABILITY-001",
@@ -21009,6 +21015,16 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-LINUX-CALIBRATION-NATIVE-STAGING-DIAGNOSTIC-001",
+      "to": "DES-M5-LINUX-DELIVERY-002",
+      "relation": "implements"
+    },
+    {
+      "from": "TEST-M5-LINUX-CALIBRATION-NATIVE-STAGING-DIAGNOSTIC-001",
+      "to": "REQ-M5-LINUX-DELIVERY-002",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-LINUX-CALIBRATION-OWNERSHIP-001",
       "to": "REQ-M5-LINUX-DELIVERY-002",
       "relation": "verifies"
@@ -24439,7 +24455,7 @@
     "packages/analysis/src/candidate-calibration.ts": "6abcd62164d5e23bcc5a8653810a7544d7fd635769e322b09b64537a165baeee",
     "packages/analysis/src/candidate-delivery-profile.ts": "0647dafde34401b172fdb0d23e64bf15fa66a92ec35672b7ac247bf51e20115e",
     "packages/analysis/src/candidate-evidence-binding.ts": "b1a0f978e747939dcae508f8a91e1fd8a6681d98c6d3887b9ee43468cf7d307a",
-    "packages/analysis/src/candidate-execution-plan.ts": "1adcfd219a83a6fa5b0a212b841b231fb5dcb0aa7c8afc02e6bf37b86c686f2a",
+    "packages/analysis/src/candidate-execution-plan.ts": "08021caa73e3736c4cf26b420d5e780f5db974df6527101d634cbebf437191e1",
     "packages/analysis/src/candidate-gate-runner.ts": "bfb3e8bd293aa31f26717c3ffe01619c4aa28a105d646006e18c5d8a9694274b",
     "packages/analysis/src/candidate-gate.ts": "131a49a57627adbf25ef5be0dfca87f4ec94d6b25d86d82d0082d426a7ab15f2",
     "packages/analysis/src/candidate-git-distribution.ts": "c3fafc714db7becf4e0b64f5a4592352588cefa28daee73a737c0bd4b320e83b",
@@ -24519,7 +24535,7 @@
     "scripts/check-lfs-tool.mjs": "1996502c4b2c96e16121b53175b273d97795debf66aa3e00feb7990df5acfb2e",
     "scripts/check-package.mjs": "b817a08296efb0f2f90be012df55c598f59aaaf5230c8501c1af02b900546593",
     "scripts/run-candidate-tests.mjs": "a1646e4571f3389b3f31eab09311a90dd07712e6db803c315526acd3b41ed9ea",
-    "scripts/run-codegraph-tests.mjs": "dcb30621a19b440feee55972cfc06f8aa5823ae37ac0abd126a08299e5c14e80",
+    "scripts/run-codegraph-tests.mjs": "69c13a523798e9f0229f7eeb0cd14af0d9257a52bf4473aff4be8143b2f9c2af",
     "scripts/run-compatibility-tests.mjs": "562a6c818ff94c013cb8a9f69a5c9dd2bdfb609c7ae90a3cd17c24aa96f35db9",
     "scripts/run-concurrency-load.mjs": "6ac4ab549f52c750d952be44984d4afe049a71b64fd54bd3b9c78557f7431600",
     "scripts/smoke-package.mjs": "b5f69bc4c0109632acdd266717695065dbce04e4d7f8d543eb164c1596a1568c",
@@ -24545,12 +24561,12 @@
     "tests/budget-reservation.test.ts": "f6e2a8e70103140b6f6feb063b0eb13e80df7500244ed604a6d85cea1caf4c52",
     "tests/budget-usage.test.ts": "62a656deb6e48e7f63302ac5900407f01b07cbf6d1963acdf6bffb8c27454807",
     "tests/candidate-calibration-input-closure.test.ts": "bcb660ce6025a59152b17c8a8c5ec531e3571a2c644646122b8c17e0a03825e4",
-    "tests/candidate-calibration-integration.test.ts": "13f69bb5c73e659fbab66af204e534f3b87796a4125fb0fabc7b798cd09710ad",
+    "tests/candidate-calibration-integration.test.ts": "a2c0a75d25f995fba06337c71ab70371da1d40e3bd609ffff1b0c34f6939975d",
     "tests/candidate-calibration-source-final.test.ts": "432b87ed53c3ca93fb4c432def8c9063926189f6bd7df67baff7e0caeac89ab5",
     "tests/candidate-cleanup-policy.test.ts": "5e913e01f82acb7a976985e404ca37ef5bf63f5d61bb7a4b5893c72fbebfd51d",
     "tests/candidate-codegraph-batching.test.ts": "b09716c92c340c2668b1f0ce0a6694e341add650503b2732739a4c27a9ba66f1",
     "tests/candidate-codegraph-mixed-report.test.ts": "209df8323549378fe7ef8f50a8c968734edcbc60e9bb749f15670508e1a43f7d",
-    "tests/candidate-codegraph-scheduler.test.ts": "da52b212c115b30491f8b41b25832c1a39fdb1ed7ee9c530082e103880676c2b",
+    "tests/candidate-codegraph-scheduler.test.ts": "449cc325e53d6ade58ab0800feb7bae7ffd5140036d2c41923e3f8124b412943",
     "tests/candidate-counted-fixture.test.ts": "8fc87d828d2e375c5af74f8bfff3217e0479f6e2d5e2ba75c6a4a7db73eec20c",
     "tests/candidate-counted-native.test.ts": "cc0a8dd2cc182389266fe87c4e3485b8b3af359f6fce4ea4c0651b6b4cfa9864",
     "tests/candidate-counted-scheduler.test.ts": "c20fd4ae868309949cd9a412ddf6276ec65a08b96632751a56c9c704236ccb59",
@@ -24567,7 +24583,7 @@
     "tests/candidate-gate-efficient-timeout.test.ts": "44c80b34ff784fdef56ba89bd43ca8a37ab20f6e4b2a0304c3250ad889105342",
     "tests/candidate-gate-eol.test.ts": "db72054d71bb5bb2cb986c7a5ccb7b31d714b6c863e5901fd7d1fe723e8a1ad4",
     "tests/candidate-gate-orchestration-boundaries.test.ts": "8f7c5fd2c3f35a47e7a5353cfbc54a7094ef553f02f5521862fe8edf1a3fa5a2",
-    "tests/candidate-gate-trust.test.ts": "aeed077e11639adf080271c79547bb71cf5253885d4acd1414f7194ecfa1cc00",
+    "tests/candidate-gate-trust.test.ts": "71434e7135e3b07006e9b974bbfa968c839509991db4cf5b4880000d33869346",
     "tests/candidate-gate-workflow-errors.test.ts": "073adf6802bc32d65bc3fa8dad2e766466a97206907517ab9da96931aa2f9048",
     "tests/candidate-gate.test.ts": "2d711c21af8fe0dfb02187aa87aae3f653f50fedfea9694859b94aeb5b1206c6",
     "tests/candidate-integration-dependencies.test.ts": "cf7b57b88909268baceb4d17eb0a5acab080011e20c37739746502d7758e5553",
@@ -24634,7 +24650,7 @@
     "tests/fixtures/portable-path.ts": "03d7c64e1636efe1d008fccb62aeea0fde2474668128dd8e2a5d4043e173eca8",
     "tests/fixtures/portable-paths.ts": "08f08667a406a20f05e574225c39dc934b36d950786fc82dd5ee770c473d749f",
     "tests/fixtures/short-unix-socket.ts": "8b6e158c7a9880b2db6d3c3d87d533e208660f7b611089e08152a8689958a803",
-    "tests/full-test-timeout.test.ts": "8f0ba659c3d0b5092f4dae8f946beefe5453458e4be97786d9129062edaf6208",
+    "tests/full-test-timeout.test.ts": "b6cd3816d6cb5f98c7e6c5597fcca6b63cf201be0633763e9f326cb1a0dda114",
     "tests/generation10-recovery-accounting.test.ts": "e55f536251eedd89b4d4f6c4dd427f66ddc197f2bfcdda34ae061514a6a9fbcb",
     "tests/generation10-recovery-completion.test.ts": "777f8a18fe452c29b9ade2ff17a5a2da2e86622550c0695791eea5faaf358d55",
     "tests/generation10-recovery-contract.test.ts": "a68f1797bd02fcba08de4f6f9aee5336994f188d8c0cb328621e11fe6873ba89",

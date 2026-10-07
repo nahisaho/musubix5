@@ -201,6 +201,16 @@ it('TEST-M5-LINUX-CALIBRATION-SLOT-RELEASE-DIAGNOSTIC-001 identifies the foreign
   expect(executionPlan).toContain('active=${activeDetail}');
 });
 
+/** @id TEST-M5-LINUX-CALIBRATION-NATIVE-STAGING-DIAGNOSTIC-001
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-CALIBRATION-NATIVE-STAGING-DIAGNOSTIC-001 identifies leaked native staging files', async () => {
+  const executionPlan = await readFile('packages/analysis/src/candidate-execution-plan.ts', 'utf8');
+  expect(executionPlan).toContain('leaked native staging count=${stagingNames.length}');
+  expect(executionPlan).toContain('files=${stagingNames.slice(0, 8).join(",")}');
+});
+
 /** @id TEST-M5-LINUX-CALIBRATION-PARAMETERIZED-MERGE-001
  * @verifies REQ-M5-LINUX-DELIVERY-002
  * @design DES-M5-LINUX-DELIVERY-002
