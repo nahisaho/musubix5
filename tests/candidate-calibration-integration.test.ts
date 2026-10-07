@@ -125,6 +125,17 @@ it('TEST-M5-LINUX-CALIBRATION-NATIVE-REPORT-DIAGNOSTIC-001 bounds invalid partit
   expect(runtime).toContain('status=${native.status} exitCode=${native.exitCode} durationMs=${native.durationMs}');
 });
 
+/** @id TEST-M5-LINUX-CALIBRATION-WORKER-PACKET-ATOMICITY-001
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-CALIBRATION-WORKER-PACKET-ATOMICITY-001 publishes complete worker JSON atomically', async () => {
+  const setup = await readFile('scripts/test-runtime/vitest-setup.mjs', 'utf8');
+  expect(setup).toContain("const staging = resolve(dirname(requestPath), `.worker-${workerId}.tmp`)");
+  expect(setup).toContain("writeFileSync(staging, `${JSON.stringify(ordered(packet))}\\n`, { flag: 'wx', mode: 0o600 })");
+  expect(setup).toContain("renameSync(staging, resolve(dirname(requestPath), 'worker-acks', `${workerId}.json`))");
+});
+
 /** @id TEST-M5-LINUX-CALIBRATION-TIMEOUT-DIAGNOSTIC-001
  * @verifies REQ-M5-LINUX-DELIVERY-002
  * @design DES-M5-LINUX-DELIVERY-002

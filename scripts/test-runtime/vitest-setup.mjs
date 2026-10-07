@@ -1,14 +1,14 @@
 import { expect, inject } from 'vitest';
 import { Buffer } from 'node:buffer';
 import { randomUUID } from 'node:crypto';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { closed, fail, freeze, hash, inheritClock, installClock, markerKey, validateProvider } from './stable-wall-clock.mjs';
 
 /* @id CODE-M5-TEST-RUNTIME-WORKER-001
- * @implements REQ-M5-COMPAT-013 REQ-M5-LIFECYCLE-006
- * @design DES-M5-015
+ * @implements REQ-M5-COMPAT-013 REQ-M5-LIFECYCLE-006 REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-015 DES-M5-LINUX-DELIVERY-002
  */
 const readProvided = /** @type {(key: string) => unknown} */ (/** @type {unknown} */ (inject));
 const supplied = readProvided('musubix5StableWallClockV1');
@@ -53,8 +53,9 @@ const ordered = /** @param {unknown} value @returns {unknown} */ (value) => {
     Object.entries(value).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([k, v]) => [k, ordered(v)]));
   return value;
 };
-writeFileSync(resolve(dirname(requestPath), 'worker-acks', `${workerId}.json`),
-  `${JSON.stringify(ordered(packet))}\n`, { flag: 'wx', mode: 0o600 });
+const staging = resolve(dirname(requestPath), `.worker-${workerId}.tmp`);
+writeFileSync(staging, `${JSON.stringify(ordered(packet))}\n`, { flag: 'wx', mode: 0o600 });
+renameSync(staging, resolve(dirname(requestPath), 'worker-acks', `${workerId}.json`));
 delete process.env.MUSUBIX5_TEST_RUNTIME_REQUEST;
 delete process.env.MUSUBIX5_TEST_RUNTIME_DISPATCH;
 inheritClock(provider);
