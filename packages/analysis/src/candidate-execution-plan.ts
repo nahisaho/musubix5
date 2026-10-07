@@ -686,8 +686,16 @@ export function calibrateCandidateTimeouts(observations: unknown): CandidateTime
           owners.set(lease.leaseId, lease);
           for (const slot of lease.slots) active.set(slot, lease.leaseId);
         } else if (action === 'release') {
-          if (sha256(canonicalBytes(owners.get(lease.leaseId) ?? null)) !== sha256(canonicalBytes(lease))
-            || lease.slots.some((slot) => active.get(slot) !== lease.leaseId)) reject('foreign slot release');
+          const owner = owners.get(lease.leaseId);
+          if (sha256(canonicalBytes(owner ?? null)) !== sha256(canonicalBytes(lease))
+            || lease.slots.some((slot) => active.get(slot) !== lease.leaseId)) {
+            const ownerDetail = owner
+              ? `${owner.leaseId}/${owner.partition}/${owner.pid}/${owner.slots.join(',')}` : 'missing';
+            const activeDetail = lease.slots.map(slot => `${slot}:${active.get(slot) ?? 'missing'}`).join(',');
+            reject(`foreign slot release ordinal=${observation.ordinal} leaseId=${lease.leaseId}`
+              + ` partition=${lease.partition} pid=${lease.pid} slots=${lease.slots.join(',')}`
+              + ` owner=${ownerDetail} active=${activeDetail}`);
+          }
           owners.delete(lease.leaseId);
           for (const slot of lease.slots) active.delete(slot);
         } else reject('slot action');

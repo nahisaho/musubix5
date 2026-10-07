@@ -176,6 +176,20 @@ it('TEST-M5-LINUX-CALIBRATION-NATIVE-SELECTION-DIAGNOSTIC-001 identifies the inv
   expect(runtime).toContain('statuses=${statuses || "none"}');
 });
 
+/** @id TEST-M5-LINUX-CALIBRATION-SLOT-RELEASE-DIAGNOSTIC-001
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-CALIBRATION-SLOT-RELEASE-DIAGNOSTIC-001 identifies the foreign slot release boundary', async () => {
+  const executionPlan = await readFile('packages/analysis/src/candidate-execution-plan.ts', 'utf8');
+  expect(executionPlan).toContain('foreign slot release ordinal=${observation.ordinal}');
+  expect(executionPlan).toContain('leaseId=${lease.leaseId}');
+  expect(executionPlan).toContain('partition=${lease.partition}');
+  expect(executionPlan).toContain('pid=${lease.pid}');
+  expect(executionPlan).toContain('owner=${ownerDetail}');
+  expect(executionPlan).toContain('active=${activeDetail}');
+});
+
 /** @id TEST-M5-LINUX-CALIBRATION-PARAMETERIZED-MERGE-001
  * @verifies REQ-M5-LINUX-DELIVERY-002
  * @design DES-M5-LINUX-DELIVERY-002
