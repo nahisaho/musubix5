@@ -88,10 +88,20 @@ it('TEST-M5-LINUX-CALIBRATION-SCHEDULER-TIMEOUT-001 fixes the calibration schedu
  * @verifies REQ-M5-LINUX-DELIVERY-002
  * @design DES-M5-LINUX-DELIVERY-002
  */
-it('TEST-M5-LINUX-CALIBRATION-POSTCONDITION-BUDGET-001 gives calibration postconditions a bounded 120-second observation window', async () => {
+it('TEST-M5-LINUX-CALIBRATION-POSTCONDITION-BUDGET-001 gives calibration postconditions a bounded observation window', async () => {
   const runner = await readFile('packages/analysis/src/candidate-gate-runner.ts', 'utf8');
-  expect(runner).toContain("postconditions: mode === 'calibration' ? 120_000");
+  expect(runner).toContain("postconditions: mode === 'calibration' ? maxInnerTimeoutMs");
   expect(runner).toContain('persistence: calibration?.budgets.timeouts.persistence ?? 60_000');
+});
+
+/** @id TEST-M5-LINUX-CALIBRATION-POSTCONDITION-HEADROOM-001
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-CALIBRATION-POSTCONDITION-HEADROOM-001 reserves 300 seconds for variable Linux tree verification', async () => {
+  const runner = await readFile('packages/analysis/src/candidate-gate-runner.ts', 'utf8');
+  expect(runner).toContain("postconditions: mode === 'calibration' ? maxInnerTimeoutMs");
+  expect(runner).toContain('const maxInnerTimeoutMs = 300000');
 });
 
 /** @id TEST-M5-LINUX-CALIBRATION-TIMEOUT-DIAGNOSTIC-001

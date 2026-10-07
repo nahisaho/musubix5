@@ -284,7 +284,7 @@ export async function validateCandidateGateWrapperInput(input: {
                 lfsManifestDigest, jobTimingDigest: env.CANDIDATE_JOB_TIMING_DIGEST!, jobStartedAt, gateDeadline: budget.gateDeadline,
                 regionTimeouts: {
                     preconditions: calibration?.budgets.timeouts.preconditions ?? 60_000,
-                    postconditions: mode === 'calibration' ? 120_000
+                    postconditions: mode === 'calibration' ? maxInnerTimeoutMs
                         : calibration?.budgets.timeouts.postconditions ?? 60_000,
                     persistence: calibration?.budgets.timeouts.persistence ?? 60_000,
                 } };
