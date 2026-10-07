@@ -8,7 +8,10 @@ import { StringDecoder } from 'node:string_decoder';
 import type { CandidateGateContext } from './candidate-gate.js';
 import { canonicalBytes, canonicalRepositoryIdentity, sha256 } from './canonical.js';
 import { isCandidateDiagnosticPath, parseCandidateFailureCarrier, type CandidateFailureCarrier } from './adapters.js';
-import { candidateExecutionPlanDigest, candidateGateOuterTimeoutMs, loadCandidateExecutionPlan } from './candidate-execution-plan.js';
+import {
+    candidateCalibrationCommandTimeoutMs, candidateExecutionPlanDigest, candidateGateOuterTimeoutMs,
+    loadCandidateExecutionPlan,
+} from './candidate-execution-plan.js';
 import { loadApprovedCandidateCalibration, validateCandidateDeadline, verifyCandidateCalibrationSourceFinal } from './candidate-calibration.js';
 import { candidateLfsClosureManifestDigest, verifyCandidateLfsClosureManifest } from './candidate-portability.js';
 
@@ -277,7 +280,7 @@ export async function validateCandidateGateWrapperInput(input: {
             const calibration = mode === 'candidate' ? await loadApprovedCandidateCalibration(input.cwd, plan) : undefined;
             if (calibration) await verifyCandidateCalibrationSourceFinal(input.cwd, calibration.manifest, context.candidateCommit);
             const commands = plan.commands.map(command => ({ name: command.name,
-                timeoutMs: mode === 'calibration' ? command.name === 'test' ? 1_050_000 : 95_000 : command.timeoutMs }));
+                timeoutMs: mode === 'calibration' ? candidateCalibrationCommandTimeoutMs(command.name) : command.timeoutMs }));
             const formalTimeout = mode === 'calibration' ? 120_000 : plan.formalTimeoutMs;
             const execution: CandidateExecutionBindings = { mode, noCredit: mode === 'calibration', runId: env.GITHUB_RUN_ID!,
                 runAttempt: 1, planDigest: candidateExecutionPlanDigest(plan), calibrationDigest: plan.calibrationDigest,

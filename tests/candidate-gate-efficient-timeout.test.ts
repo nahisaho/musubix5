@@ -29,7 +29,7 @@ it('TEST-M5-CI-EFFICIENT-ORCHESTRATION-TIMEOUT-001 calibrates one completed Ubun
   expect(api.candidateGateOuterTimeoutMs('candidate', Object.fromEntries(
     api.candidateCommandOrder.map((name) => [name, 1])), 100)).toBe(45_107);
   expect(api.candidateGateOuterTimeoutMs('calibration', Object.fromEntries(
-    api.candidateCommandOrder.map((name) => [name, name === 'test' ? 1_050_000 : 95_000])), 120_000)).toBe(1_785_000);
+    api.candidateCommandOrder.map((name) => [name, api.candidateCalibrationCommandTimeoutMs(name)])), 120_000)).toBe(1_785_000);
   const boundary = structuredClone(jobs);
   boundary[0]!.regions.test!.durationMs = 1_001;
   expect(api.calibrateCandidateTimeouts(boundary).timeouts.test).toBe(3_000);

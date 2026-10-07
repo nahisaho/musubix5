@@ -126,10 +126,33 @@ it('TEST-M5-LINUX-CALIBRATION-BUDGET-REALLOCATION-001 reallocates fixed outer bu
     readFile('scripts/test-runtime/partition-scheduler.mjs', 'utf8'),
     readFile('packages/analysis/src/candidate-execution-plan.ts', 'utf8'),
   ]);
-  expect(runner).toContain("command.name === 'test' ? 1_050_000 : 95_000");
+  expect(runner).toContain('candidateCalibrationCommandTimeoutMs(command.name)');
   expect(scheduler).toContain('1_050_000 - command.mergeAllowanceMs - command.terminationAllowanceMs');
-  expect(executionPlan).toContain('test: 1_050_000');
-  expect(executionPlan).toContain("map((name) => [name, 95_000])");
+  expect(executionPlan).toContain("if (name === 'test') return 1_050_000");
+  expect(executionPlan).toContain("if (name === 'codegraph-tests') return 120_000");
+  expect(executionPlan).toContain('return 90_000');
+});
+
+/** @id TEST-M5-LINUX-CALIBRATION-CODEGRAPH-BUDGET-001
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-CALIBRATION-CODEGRAPH-BUDGET-001 reallocates the fixed command budget to codegraph tests', async () => {
+  const api = await import('../packages/analysis/src/candidate-execution-plan.js');
+  const timeouts = Object.fromEntries(api.candidateCommandOrder.map(name => [
+    name,
+    api.candidateCalibrationCommandTimeoutMs(name),
+  ]));
+  expect(timeouts).toEqual({
+    typecheck: 90_000,
+    build: 90_000,
+    test: 1_050_000,
+    'codegraph-tests': 120_000,
+    compatibility: 90_000,
+    'pack-check': 90_000,
+    'pack-smoke': 90_000,
+  });
+  expect(api.candidateGateOuterTimeoutMs('calibration', timeouts, 120_000)).toBe(1_785_000);
 });
 
 /** @id TEST-M5-LINUX-CALIBRATION-NATIVE-REPORT-DIAGNOSTIC-001

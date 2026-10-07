@@ -11,6 +11,11 @@ import ts from 'typescript';
 export const candidateCommandOrder = [
   'typecheck', 'build', 'test', 'codegraph-tests', 'compatibility', 'pack-check', 'pack-smoke',
 ] as const;
+export function candidateCalibrationCommandTimeoutMs(name: typeof candidateCommandOrder[number]): number {
+  if (name === 'test') return 1_050_000;
+  if (name === 'codegraph-tests') return 120_000;
+  return 90_000;
+}
 export interface CandidatePartitionPlan {
   id: string;
   ordinal: number;
@@ -301,8 +306,7 @@ const regionCaps: Readonly<Record<string, number>> = {
 };
 const calibrationRegionCaps: Readonly<Record<string, number>> = {
   ...regionCaps,
-  test: 1_050_000,
-  ...Object.fromEntries(candidateCommandOrder.filter((name) => name !== 'test').map((name) => [name, 95_000])),
+  ...Object.fromEntries(candidateCommandOrder.map((name) => [name, candidateCalibrationCommandTimeoutMs(name)])),
 };
 
 /** @id CODE-M5-CI-EFFICIENCY-MODE-BUDGET-001
