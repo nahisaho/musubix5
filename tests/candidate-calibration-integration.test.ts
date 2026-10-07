@@ -142,6 +142,17 @@ it('TEST-M5-LINUX-CALIBRATION-NATIVE-REPORT-DIAGNOSTIC-001 bounds invalid partit
   expect(runtime).toContain('status=${native.status} exitCode=${native.exitCode} durationMs=${native.durationMs}');
 });
 
+/** @id TEST-M5-LINUX-CALIBRATION-NATIVE-SELECTION-DIAGNOSTIC-001
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-CALIBRATION-NATIVE-SELECTION-DIAGNOSTIC-001 identifies the invalid native selection boundary', async () => {
+  const runtime = await readFile('packages/analysis/src/test-runtime.ts', 'utf8');
+  expect(runtime).toContain('native selection ordinal=${ordinal}');
+  expect(runtime).toContain('command=${String(request.commandName)} testId=${id} matches=${selected.length}');
+  expect(runtime).toContain('statuses=${statuses || "none"}');
+});
+
 /** @id TEST-M5-LINUX-CALIBRATION-WORKER-PACKET-ATOMICITY-001
  * @verifies REQ-M5-LINUX-DELIVERY-002
  * @design DES-M5-LINUX-DELIVERY-002
