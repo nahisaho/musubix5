@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "kind": "repository-trace-index",
-  "generatedAt": "2026-10-07T09:05:10.011Z",
+  "generatedAt": "2026-10-07T09:52:26.897Z",
   "nodes": [
     {
       "id": "ADR-0002",
@@ -655,7 +655,7 @@
       "id": "CODE-M5-CI-CODEGRAPH-SCHEDULER-001",
       "kind": "code",
       "path": "scripts/run-codegraph-tests.mjs",
-      "line": 261
+      "line": 262
     },
     {
       "id": "CODE-M5-CI-COMPOSITE-PARTITION-ACK-001",
@@ -727,13 +727,13 @@
       "id": "CODE-M5-CI-FAILED-TEST-CARRIERS-001",
       "kind": "code",
       "path": "packages/analysis/src/adapters.ts",
-      "line": 71
+      "line": 75
     },
     {
       "id": "CODE-M5-CI-FAILED-TEST-EXTRACTION-001",
       "kind": "code",
       "path": "packages/analysis/src/adapters.ts",
-      "line": 51
+      "line": 55
     },
     {
       "id": "CODE-M5-CI-FAILED-TEST-NORMALIZATION-001",
@@ -4230,7 +4230,7 @@
       "id": "TEST-M5-CI-CALIBRATION-FAILURE-ENVELOPE-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 253
+      "line": 283
     },
     {
       "id": "TEST-M5-CI-CALIBRATION-INPUT-CLOSURE-001",
@@ -4320,7 +4320,7 @@
       "id": "TEST-M5-CI-CODEGRAPH-SCHEDULER-001",
       "kind": "test",
       "path": "tests/candidate-codegraph-scheduler.test.ts",
-      "line": 162
+      "line": 163
     },
     {
       "id": "TEST-M5-CI-CODEGRAPH-STREAM-SCHEMA-001",
@@ -5298,7 +5298,7 @@
       "id": "TEST-M5-LINUX-CALIBRATION-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 285
+      "line": 315
     },
     {
       "id": "TEST-M5-LINUX-CALIBRATION-BUDGET-REALLOCATION-001",
@@ -5322,7 +5322,7 @@
       "id": "TEST-M5-LINUX-CALIBRATION-NATIVE-DESCRIPTOR-ATOMICITY-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 167
+      "line": 197
     },
     {
       "id": "TEST-M5-LINUX-CALIBRATION-NATIVE-REPORT-DIAGNOSTIC-001",
@@ -5341,6 +5341,12 @@
       "kind": "test",
       "path": "tests/candidate-stability.test.ts",
       "line": 125
+    },
+    {
+      "id": "TEST-M5-LINUX-CALIBRATION-PARAMETERIZED-MERGE-001",
+      "kind": "test",
+      "path": "tests/candidate-calibration-integration.test.ts",
+      "line": 156
     },
     {
       "id": "TEST-M5-LINUX-CALIBRATION-PARAMETERIZED-SELECTION-001",
@@ -5370,7 +5376,7 @@
       "id": "TEST-M5-LINUX-CALIBRATION-POSTCONDITION-STAGE-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 194
+      "line": 224
     },
     {
       "id": "TEST-M5-LINUX-CALIBRATION-REMAINING-BUDGET-001",
@@ -5388,31 +5394,31 @@
       "id": "TEST-M5-LINUX-CALIBRATION-SIGNER-DIAGNOSTIC-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 216
+      "line": 246
     },
     {
       "id": "TEST-M5-LINUX-CALIBRATION-TIMEOUT-DIAGNOSTIC-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 183
+      "line": 213
     },
     {
       "id": "TEST-M5-LINUX-CALIBRATION-WORKER-PACKET-ATOMICITY-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 156
+      "line": 186
     },
     {
       "id": "TEST-M5-LINUX-CALIBRATION-WRAPPER-DIAGNOSTIC-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 206
+      "line": 236
     },
     {
       "id": "TEST-M5-LINUX-CANDIDATE-WORKFLOW-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 266
+      "line": 296
     },
     {
       "id": "TEST-M5-LINUX-RELEASE-001",
@@ -5436,13 +5442,13 @@
       "id": "TEST-M5-LINUX-SIGNER-CONTEXT-BOUNDARY-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 228
+      "line": 258
     },
     {
       "id": "TEST-M5-LINUX-SIGNER-CONTEXT-BOUNDARY-002",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 241
+      "line": 271
     },
     {
       "id": "TEST-M5-LINUX-STABILITY-001",
@@ -20954,6 +20960,16 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-LINUX-CALIBRATION-PARAMETERIZED-MERGE-001",
+      "to": "DES-M5-LINUX-DELIVERY-002",
+      "relation": "implements"
+    },
+    {
+      "from": "TEST-M5-LINUX-CALIBRATION-PARAMETERIZED-MERGE-001",
+      "to": "REQ-M5-LINUX-DELIVERY-002",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-LINUX-CALIBRATION-PARAMETERIZED-SELECTION-001",
       "to": "DES-M5-LINUX-DELIVERY-002",
       "relation": "implements"
@@ -24347,7 +24363,7 @@
     ".musubix/features/trace-skill-source-selection/requirements.md": "94fe7ab9c31b7b3e6ee7455039b71eaa66f622715db71cce155b2ca1f438c1fb",
     ".musubix/features/wave0-release-operations/design.md": "63bc20e1a428f5a20f99e797caa1551934a1690a48e79e45e9285591cece48ba",
     ".musubix/features/wave0-release-operations/requirements.md": "185c3d6d7d4520361d9b969825e96e985f0bdc195d98fd9d74e529987b0d6dae",
-    "packages/analysis/src/adapters.ts": "8de6dec93d261bed80e5fca8139a80f922921905a871bba96a5d2cc0428421e6",
+    "packages/analysis/src/adapters.ts": "2fa2b99e3227791ec17a61fa87a4b80e099ae5d6db6777ebad71e21429cd18db",
     "packages/analysis/src/approval-boundary.ts": "ec0c2da68cff776388126e4d34db112d529462bd7dfcfe4691d2bc5701a81090",
     "packages/analysis/src/approval-domains.ts": "56363d8d7fe0158df596a09abf2688f439815c38dd582fd5970c1bb30e6c5994",
     "packages/analysis/src/approval-normative.ts": "18fea120444b05d5ef507985e221f4e6a739e1a7d65e468b992e8c6467979904",
@@ -24439,7 +24455,7 @@
     "scripts/check-lfs-tool.mjs": "1996502c4b2c96e16121b53175b273d97795debf66aa3e00feb7990df5acfb2e",
     "scripts/check-package.mjs": "b817a08296efb0f2f90be012df55c598f59aaaf5230c8501c1af02b900546593",
     "scripts/run-candidate-tests.mjs": "a1646e4571f3389b3f31eab09311a90dd07712e6db803c315526acd3b41ed9ea",
-    "scripts/run-codegraph-tests.mjs": "2145d2f28fa2814895a46a1e3f74f1fb3f533c3c60f9f2c4d38a79822456d637",
+    "scripts/run-codegraph-tests.mjs": "4e9f459f52589aeb030991c95f50469697d195730045e29e54c250354a99a610",
     "scripts/run-compatibility-tests.mjs": "562a6c818ff94c013cb8a9f69a5c9dd2bdfb609c7ae90a3cd17c24aa96f35db9",
     "scripts/run-concurrency-load.mjs": "6ac4ab549f52c750d952be44984d4afe049a71b64fd54bd3b9c78557f7431600",
     "scripts/smoke-package.mjs": "b5f69bc4c0109632acdd266717695065dbce04e4d7f8d543eb164c1596a1568c",
@@ -24465,12 +24481,12 @@
     "tests/budget-reservation.test.ts": "f6e2a8e70103140b6f6feb063b0eb13e80df7500244ed604a6d85cea1caf4c52",
     "tests/budget-usage.test.ts": "62a656deb6e48e7f63302ac5900407f01b07cbf6d1963acdf6bffb8c27454807",
     "tests/candidate-calibration-input-closure.test.ts": "bcb660ce6025a59152b17c8a8c5ec531e3571a2c644646122b8c17e0a03825e4",
-    "tests/candidate-calibration-integration.test.ts": "cda3a5bdbc727826efd10f6af53b9ba258d5ca4d3dc1e474b9d4e8acf5408048",
+    "tests/candidate-calibration-integration.test.ts": "d063244f0e3ac02ab9c75a91e9ddbc4ad2512ff165a9abd066d88e0112d545e4",
     "tests/candidate-calibration-source-final.test.ts": "432b87ed53c3ca93fb4c432def8c9063926189f6bd7df67baff7e0caeac89ab5",
     "tests/candidate-cleanup-policy.test.ts": "5e913e01f82acb7a976985e404ca37ef5bf63f5d61bb7a4b5893c72fbebfd51d",
     "tests/candidate-codegraph-batching.test.ts": "b09716c92c340c2668b1f0ce0a6694e341add650503b2732739a4c27a9ba66f1",
     "tests/candidate-codegraph-mixed-report.test.ts": "209df8323549378fe7ef8f50a8c968734edcbc60e9bb749f15670508e1a43f7d",
-    "tests/candidate-codegraph-scheduler.test.ts": "d51a5a40fd551091efcacc724a3991c3a9e0b7a2a69322559753455ae97b6029",
+    "tests/candidate-codegraph-scheduler.test.ts": "c628a636da033c2b4238fdf2eab0c74a116bb7527e00327a690f60da4da7a426",
     "tests/candidate-counted-fixture.test.ts": "8fc87d828d2e375c5af74f8bfff3217e0479f6e2d5e2ba75c6a4a7db73eec20c",
     "tests/candidate-counted-native.test.ts": "cc0a8dd2cc182389266fe87c4e3485b8b3af359f6fce4ea4c0651b6b4cfa9864",
     "tests/candidate-counted-scheduler.test.ts": "c20fd4ae868309949cd9a412ddf6276ec65a08b96632751a56c9c704236ccb59",
@@ -24487,7 +24503,7 @@
     "tests/candidate-gate-efficient-timeout.test.ts": "a18bc19de52697e8258b1b72a5a3d0692df1480f7306ca0d8bade4ea66807fcc",
     "tests/candidate-gate-eol.test.ts": "db72054d71bb5bb2cb986c7a5ccb7b31d714b6c863e5901fd7d1fe723e8a1ad4",
     "tests/candidate-gate-orchestration-boundaries.test.ts": "8f7c5fd2c3f35a47e7a5353cfbc54a7094ef553f02f5521862fe8edf1a3fa5a2",
-    "tests/candidate-gate-trust.test.ts": "6c0c6508acce42867fb8aff499a2ca3bcb6c8d8e2fcd652ff2801bf678a87718",
+    "tests/candidate-gate-trust.test.ts": "272d3dfdc66ba5ad71652a94334506833a0c1872fb56e4355fda71725afa0b6f",
     "tests/candidate-gate-workflow-errors.test.ts": "073adf6802bc32d65bc3fa8dad2e766466a97206907517ab9da96931aa2f9048",
     "tests/candidate-gate.test.ts": "2d711c21af8fe0dfb02187aa87aae3f653f50fedfea9694859b94aeb5b1206c6",
     "tests/candidate-integration-dependencies.test.ts": "cf7b57b88909268baceb4d17eb0a5acab080011e20c37739746502d7758e5553",
@@ -24554,7 +24570,7 @@
     "tests/fixtures/portable-path.ts": "03d7c64e1636efe1d008fccb62aeea0fde2474668128dd8e2a5d4043e173eca8",
     "tests/fixtures/portable-paths.ts": "08f08667a406a20f05e574225c39dc934b36d950786fc82dd5ee770c473d749f",
     "tests/fixtures/short-unix-socket.ts": "8b6e158c7a9880b2db6d3c3d87d533e208660f7b611089e08152a8689958a803",
-    "tests/full-test-timeout.test.ts": "6fe8ab89b4fae0180d1f9c6dfd75b42246a7f10244f752617d13c664f9900e70",
+    "tests/full-test-timeout.test.ts": "3e79b461ca81178c2a90225a0b1c063e2fa4197d06f3e3a985579324712e62f3",
     "tests/generation10-recovery-accounting.test.ts": "e55f536251eedd89b4d4f6c4dd427f66ddc197f2bfcdda34ae061514a6a9fbcb",
     "tests/generation10-recovery-completion.test.ts": "777f8a18fe452c29b9ade2ff17a5a2da2e86622550c0695791eea5faaf358d55",
     "tests/generation10-recovery-contract.test.ts": "a68f1797bd02fcba08de4f6f9aee5336994f188d8c0cb328621e11fe6873ba89",

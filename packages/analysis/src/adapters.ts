@@ -12,7 +12,7 @@ import type { Diagnostic } from '../../domain/src/index.js';
  */
 export function mergeCandidateVitestReports(reports: readonly Buffer[], expectedIds: readonly string[]): Buffer {
   const testResults: Array<Record<string, unknown>> = [];
-  const seenFiles = new Set<string>(), seenIds = new Set<string>();
+  const seenFiles = new Set<string>(), seenIds = new Set<string>(), seenAssertions = new Set<string>();
   let total = 0, passed = 0, failed = 0, skipped = 0;
   for (const bytes of reports) {
     const report = JSON.parse(bytes.toString('utf8')) as Record<string, unknown>;
@@ -30,7 +30,11 @@ export function mergeCandidateVitestReports(reports: readonly Buffer[], expected
         }
         const id = String(assertion.title).match(/^(TEST-[A-Z0-9-]+)(?: |$)/)?.[1];
         if (id) {
-          if (!expectedIds.includes(id) || seenIds.has(id)) throw new Error(`CANDIDATE_PARTITION_REPORT_INVALID: ${id}`);
+          const identity = typeof assertion.fullName === 'string' ? assertion.fullName : String(assertion.title);
+          if (!expectedIds.includes(id) || seenAssertions.has(identity)) {
+            throw new Error(`CANDIDATE_PARTITION_REPORT_INVALID: ${id}`);
+          }
+          seenAssertions.add(identity);
           seenIds.add(id);
         }
         total++;

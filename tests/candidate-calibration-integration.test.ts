@@ -153,6 +153,36 @@ it('TEST-M5-LINUX-CALIBRATION-NATIVE-SELECTION-DIAGNOSTIC-001 identifies the inv
   expect(runtime).toContain('statuses=${statuses || "none"}');
 });
 
+/** @id TEST-M5-LINUX-CALIBRATION-PARAMETERIZED-MERGE-001
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-CALIBRATION-PARAMETERIZED-MERGE-001 accepts distinct parameterized assertions and rejects duplicate assertion identities', async () => {
+  const { mergeCandidateVitestReports } = await import('../packages/analysis/src/adapters.js');
+  const testId = 'TEST-M5-PARALLEL-CONSUMER-POLICY-DIAGNOSTIC-001';
+  const report = (assertionResults: Array<Record<string, unknown>>) => Buffer.from(JSON.stringify({
+    testResults: [{
+      name: '/repo/tests/parallel-consumer-policy-generation5.test.ts',
+      status: 'passed',
+      assertionResults,
+    }],
+  }));
+  const assertion = (parameter: string) => ({
+    title: `${testId} maps ${parameter} approved policy to PARALLEL_PLAN_STALE`,
+    fullName: `${testId} maps ${parameter} approved policy to PARALLEL_PLAN_STALE`,
+    status: 'passed',
+    failureMessages: [],
+  });
+
+  const merged = JSON.parse(mergeCandidateVitestReports([
+    report([assertion('missing'), assertion('malformed')]),
+  ], [testId]).toString('utf8')) as Record<string, unknown>;
+  expect(merged).toMatchObject({ success: true, numTotalTests: 2, numPassedTests: 2 });
+  expect(() => mergeCandidateVitestReports([
+    report([assertion('missing'), assertion('missing')]),
+  ], [testId])).toThrow(`CANDIDATE_PARTITION_REPORT_INVALID: ${testId}`);
+});
+
 /** @id TEST-M5-LINUX-CALIBRATION-WORKER-PACKET-ATOMICITY-001
  * @verifies REQ-M5-LINUX-DELIVERY-002
  * @design DES-M5-LINUX-DELIVERY-002
