@@ -136,6 +136,22 @@ it('TEST-M5-LINUX-CALIBRATION-WORKER-PACKET-ATOMICITY-001 publishes complete wor
   expect(setup).toContain("renameSync(staging, resolve(dirname(requestPath), 'worker-acks', `${workerId}.json`))");
 });
 
+/** @id TEST-M5-LINUX-CALIBRATION-NATIVE-DESCRIPTOR-ATOMICITY-001
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-CALIBRATION-NATIVE-DESCRIPTOR-ATOMICITY-001 publishes complete native descriptors atomically', async () => {
+  const [processSource, executionPlan] = await Promise.all([
+    readFile('packages/analysis/src/process.ts', 'utf8'),
+    readFile('packages/analysis/src/candidate-execution-plan.ts', 'utf8'),
+  ]);
+  expect(processSource).toContain('function publishCandidateNativeDescriptorSync(');
+  expect(processSource).toContain('linkSync(staging, path)');
+  expect(processSource).toContain('renameSync(staging, path)');
+  expect(processSource).not.toContain("writeFileSync(path, JSON.stringify({ ...descriptor, status: 'terminated' })");
+  expect(executionPlan).toContain('CANDIDATE_NATIVE_DESCRIPTOR_INVALID: ${name}');
+});
+
 /** @id TEST-M5-LINUX-CALIBRATION-TIMEOUT-DIAGNOSTIC-001
  * @verifies REQ-M5-LINUX-DELIVERY-002
  * @design DES-M5-LINUX-DELIVERY-002

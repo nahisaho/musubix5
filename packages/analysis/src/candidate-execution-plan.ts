@@ -1,7 +1,7 @@
-import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
-import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { mkdirSync, readFileSync, readdirSync, renameSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { canonicalBytes, sha256 } from './canonical.js';
 import { files, safePath } from './files.js';
@@ -374,6 +374,32 @@ export function calibrateCandidateTimeouts(observations: unknown): CandidateTime
 
     export interface CandidateSlotLedger { root: string; nonce: string; capacity: number }
 
+    function replaceCandidateNativeDescriptorSync(path: string, value: unknown): void {
+      const stagingDirectory = join(dirname(path), '.native-staging');
+      mkdirSync(stagingDirectory, { recursive: true, mode: 0o700 });
+      const staging = join(stagingDirectory, `${process.pid}.${randomUUID()}.tmp`);
+      writeFileSync(staging, canonicalBytes(value), { flag: 'wx', mode: 0o600 });
+      try { renameSync(staging, path); }
+      catch (cause) {
+        try { unlinkSync(staging); } catch (cleanup) {
+          if ((cleanup as NodeJS.ErrnoException).code !== 'ENOENT') throw cleanup;
+        }
+        throw cause;
+      }
+    }
+
+    async function replaceCandidateNativeDescriptor(path: string, value: unknown): Promise<void> {
+      const stagingDirectory = join(dirname(path), '.native-staging');
+      await mkdir(stagingDirectory, { recursive: true, mode: 0o700 });
+      const staging = join(stagingDirectory, `${process.pid}.${randomUUID()}.tmp`);
+      await writeFile(staging, canonicalBytes(value), { flag: 'wx', mode: 0o600 });
+      try { await rename(staging, path); }
+      catch (cause) {
+        await rm(staging, { force: true });
+        throw cause;
+      }
+    }
+
     interface CandidateSlotLockOwner { pid: number; token: string }
     function slotLockOwnerTerminated(pid: number): boolean {
       if (!Number.isSafeInteger(pid) || pid <= 0) return false;
@@ -478,7 +504,7 @@ export function calibrateCandidateTimeouts(observations: unknown): CandidateTime
             if (sha256(canonicalBytes(JSON.parse(readFileSync(join(ledger.root, `slot-${slot}`, 'owner.json'), 'utf8')))) !== sha256(canonicalBytes(lease))) reject('foreign native terminal lease');
           }
           native.status = 'terminated';
-          writeFileSync(path, canonicalBytes(native), { mode: 0o600 });
+          replaceCandidateNativeDescriptorSync(path, native);
           observeCandidateFixtureSlotSync(ledger, lease, 'release');
           for (const slot of lease.slots) rmSync(join(ledger.root, `slot-${slot}`), { recursive: true });
         }
@@ -510,6 +536,7 @@ export function calibrateCandidateTimeouts(observations: unknown): CandidateTime
       const directory = join(root, `slots-${nonce}`);
       await mkdir(root, { recursive: true, mode: 0o700 });
       await mkdir(directory, { mode: 0o700 });
+      await mkdir(join(directory, '.native-staging'), { mode: 0o700 });
       const ledger = { root: directory, nonce, capacity };
       await writeFile(join(directory, 'ledger.json'), canonicalBytes({ nonce, capacity }), { flag: 'wx', mode: 0o600 });
       await writeFile(join(directory, 'observation-count'), '0', { flag: 'wx', mode: 0o600 });
@@ -575,11 +602,18 @@ export function calibrateCandidateTimeouts(observations: unknown): CandidateTime
     export async function validateCandidateSlotLedger(ledger: CandidateSlotLedger) {
       integer(ledger.capacity, 1, 16);
       const settleDeadline = Date.now() + 2_000;
-      while ((await readdir(ledger.root)).some(name => /^slot-[0-9]+$/.test(name))
-        && Date.now() < settleDeadline) await delay(25);
+      const stagingDirectory = join(ledger.root, '.native-staging');
+      while (Date.now() < settleDeadline) {
+        const [ledgerNames, stagingNames] = await Promise.all([readdir(ledger.root), readdir(stagingDirectory)]);
+        if (!ledgerNames.some(name => /^slot-[0-9]+$/.test(name)) && stagingNames.length === 0) break;
+        await delay(25);
+      }
       const nativeDescriptors = await Promise.all((await readdir(ledger.root)).filter(name => /^native-[a-f0-9-]{36}\.json$/.test(name))
         .sort().map(async name => {
-          const descriptor = closed(JSON.parse(await readFile(join(ledger.root, name), 'utf8')),
+          let parsed: unknown;
+          try { parsed = JSON.parse(await readFile(join(ledger.root, name), 'utf8')); }
+          catch { return reject(`CANDIDATE_NATIVE_DESCRIPTOR_INVALID: ${name}`); }
+          const descriptor = closed(parsed,
             ['schemaVersion', 'nonce', 'leaseId', 'callerPid', 'childPid', 'status']);
           if (descriptor.schemaVersion !== 1 || descriptor.nonce !== ledger.nonce
             || name !== `native-${descriptor.leaseId}.json` || !['launched', 'terminated'].includes(String(descriptor.status))) reject('native termination binding');
@@ -611,12 +645,13 @@ export function calibrateCandidateTimeouts(observations: unknown): CandidateTime
         if (native.callerPid !== lease.pid) reject('foreign native descriptor');
         if (!await terminated(Number(native.childPid))) reject('live native child');
         native.status = 'terminated';
-        await writeFile(join(ledger.root, `native-${lease.leaseId}.json`), canonicalBytes(native), { mode: 0o600 });
+        await replaceCandidateNativeDescriptor(join(ledger.root, `native-${lease.leaseId}.json`), native);
         await releaseCandidateSlots(ledger, lease);
       }
       const names = await readdir(ledger.root);
-      if (names.some((name) => !['ledger.json', 'observation-count'].includes(name) && !/^observation-[0-9]+\.json$/.test(name)
+      if (names.some((name) => !['ledger.json', 'observation-count', '.native-staging'].includes(name) && !/^observation-[0-9]+\.json$/.test(name)
         && !/^native-[a-f0-9-]{36}\.json$/.test(name))) reject('leaked or foreign slot');
+      if ((await readdir(stagingDirectory)).length) reject('leaked native staging');
       const observations: CandidateSlotObservation[] = [];
       for (const name of names.filter((name) => /^observation-/.test(name))) {
         if (!/^observation-[0-9]+\.json$/.test(name)) continue;

@@ -1,8 +1,9 @@
 import * as childProcess from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import { syncBuiltinESMExports } from 'node:module';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { linkSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
 import { promisify } from 'node:util';
-import { join, win32 } from 'node:path';
+import { dirname, join, win32 } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { pathToFileURL } from 'node:url';
 import { readFile } from 'node:fs/promises';
@@ -44,6 +45,33 @@ function invocationSlotCount(args: unknown[]): number {
  * @design DES-M5-CI-EFFICIENCY-002 DES-M5-CI-EFFICIENCY-003
  */
 type SlotRelease = (() => void) & { bindNative?: (child: childProcess.ChildProcess) => void; environment?: NodeJS.ProcessEnv };
+/** @id CODE-M5-CI-NATIVE-DESCRIPTOR-ATOMIC-001
+ * @implements REQ-M5-CI-EFFICIENCY-001 REQ-M5-CI-EFFICIENCY-002 REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-CI-EFFICIENCY-002 DES-M5-LINUX-DELIVERY-002
+ */
+function publishCandidateNativeDescriptorSync(
+  path: string,
+  descriptor: Record<string, unknown>,
+  replace: boolean,
+): void {
+  const stagingDirectory = join(dirname(path), '.native-staging');
+  mkdirSync(stagingDirectory, { recursive: true, mode: 0o700 });
+  const staging = join(stagingDirectory, `${process.pid}.${randomUUID()}.tmp`);
+  writeFileSync(staging, JSON.stringify(descriptor), { flag: 'wx', mode: 0o600 });
+  try {
+    if (replace) renameSync(staging, path);
+    else {
+      linkSync(staging, path);
+      unlinkSync(staging);
+    }
+  } catch (cause) {
+    try { unlinkSync(staging); } catch (cleanup) {
+      if ((cleanup as NodeJS.ErrnoException).code !== 'ENOENT') throw cleanup;
+    }
+    throw cause;
+  }
+}
+
 function processSlotLeases(args: unknown[], shell = false, cleanup = false): SlotRelease {
   // A verified Vitest coordinator's pool is already reserved atomically by its launcher.
   if (/[\\/]node_modules[\\/]vitest[\\/]vitest\.mjs$/.test(process.argv[1] ?? '')
@@ -100,8 +128,8 @@ function processSlotLeases(args: unknown[], shell = false, cleanup = false): Slo
       const path = join(ledger.root, `native-${lease.leaseId}.json`);
       const descriptor = { schemaVersion: 1, nonce: ledger.nonce, leaseId: lease.leaseId,
         callerPid: process.pid, childPid: child.pid, status: 'launched' };
-      writeFileSync(path, JSON.stringify(descriptor), { flag: 'wx', mode: 0o600 });
-      const terminated = () => writeFileSync(path, JSON.stringify({ ...descriptor, status: 'terminated' }), { mode: 0o600 });
+      publishCandidateNativeDescriptorSync(path, descriptor, false);
+      const terminated = () => publishCandidateNativeDescriptorSync(path, { ...descriptor, status: 'terminated' }, true);
       child.once('exit', terminated);
       child.once('close', terminated);
     }
