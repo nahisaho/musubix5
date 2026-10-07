@@ -38757,6 +38757,167 @@
       "phase": "g1:quality:44",
       "previousSha256": "5dd9c5d17730f3a8afd8030015f407b915db72a6dd98a28e69e050762205ad90",
       "recordSha256": "329ef3a93dc7c6eeda2ab8ba2a5f1266a39c740fc6e2681893c5d5a4ba9187cb"
+    },
+    {
+      "sequence": 4842,
+      "kind": "tdd",
+      "entityId": "b040071e-87d0-44ae-912d-faebf39750a9",
+      "phase": "red",
+      "previousSha256": "329ef3a93dc7c6eeda2ab8ba2a5f1266a39c740fc6e2681893c5d5a4ba9187cb",
+      "recordSha256": "26bb84de840bd0d5b7e6bfea044ad338069b16f4bc39d6765baa48a142e1ffbe"
+    },
+    {
+      "sequence": 4843,
+      "kind": "change",
+      "entityId": "CHANGE-0020",
+      "phase": "g1:red:REQ-M5-LINUX-DELIVERY-002#35",
+      "previousSha256": "26bb84de840bd0d5b7e6bfea044ad338069b16f4bc39d6765baa48a142e1ffbe",
+      "recordSha256": "3d5e01251ab2d6263d32205c33b2a4260e1803ff08a8461c2392406fb1094b8f"
+    },
+    {
+      "sequence": 4844,
+      "kind": "change",
+      "entityId": "CHANGE-0020",
+      "phase": "g1:implementation:REQ-M5-LINUX-DELIVERY-002#35",
+      "previousSha256": "3d5e01251ab2d6263d32205c33b2a4260e1803ff08a8461c2392406fb1094b8f",
+      "recordSha256": "e7979e46ca935ab4a6e096e9859e67bcb1c5a7824c87e3ee26100a68b414dc17"
+    },
+    {
+      "sequence": 4845,
+      "kind": "tdd",
+      "entityId": "b040071e-87d0-44ae-912d-faebf39750a9",
+      "phase": "green",
+      "previousSha256": "e7979e46ca935ab4a6e096e9859e67bcb1c5a7824c87e3ee26100a68b414dc17",
+      "recordSha256": "68cccfbda85a3c91f503c735af0a725697050d086aa5de5d91c2671524d6d9b5"
+    },
+    {
+      "sequence": 4846,
+      "kind": "tdd",
+      "entityId": "b040071e-87d0-44ae-912d-faebf39750a9",
+      "phase": "void",
+      "testId": "TEST-M5-LINUX-CALIBRATION-PARTITION-OUTPUT-DIAGNOSTIC-001",
+      "previousSha256": "68cccfbda85a3c91f503c735af0a725697050d086aa5de5d91c2671524d6d9b5",
+      "recordSha256": "e775bee6fb5ef2d484321441aa16d5b2ac6e441c2499eb34b0970e1a3d430191"
+    },
+    {
+      "sequence": 4847,
+      "kind": "tdd",
+      "entityId": "d0bdaa19-dd02-4d73-9173-ff6f5ce92eb0",
+      "phase": "red",
+      "previousSha256": "e775bee6fb5ef2d484321441aa16d5b2ac6e441c2499eb34b0970e1a3d430191",
+      "recordSha256": "fd48fa3de9ecdfe7afed2779fe2062a5b71eb26a28209e20c12ea20959853def"
+    },
+    {
+      "sequence": 4848,
+      "kind": "tdd",
+      "entityId": "d0bdaa19-dd02-4d73-9173-ff6f5ce92eb0",
+      "phase": "green",
+      "previousSha256": "fd48fa3de9ecdfe7afed2779fe2062a5b71eb26a28209e20c12ea20959853def",
+      "recordSha256": "fee52bb9aa47c86f94a818a727c20acaef0db12b9b05ef3dcf5c42b37867967d"
+    },
+    {
+      "sequence": 4849,
+      "kind": "change",
+      "entityId": "CHANGE-0020",
+      "phase": "g1:green:REQ-M5-LINUX-DELIVERY-002#35",
+      "previousSha256": "fee52bb9aa47c86f94a818a727c20acaef0db12b9b05ef3dcf5c42b37867967d",
+      "recordSha256": "35131ea2526f3fb714db118612c84894cb34423d6028b37b50bdd0ca7e8c54d6"
+    },
+    {
+      "sequence": 4850,
+      "kind": "tdd",
+      "entityId": "d39de508-a3bb-4d7f-9f37-a4ae244e36d2",
+      "phase": "red",
+      "previousSha256": "35131ea2526f3fb714db118612c84894cb34423d6028b37b50bdd0ca7e8c54d6",
+      "recordSha256": "dc0cf17ea2044b94d68190bfa44ae18d4fb7c2a5e6c3d26fe10f00a162af528e"
+    },
+    {
+      "sequence": 4851,
+      "kind": "change",
+      "entityId": "CHANGE-0020",
+      "phase": "g1:red:REQ-M5-LINUX-DELIVERY-002#36",
+      "previousSha256": "dc0cf17ea2044b94d68190bfa44ae18d4fb7c2a5e6c3d26fe10f00a162af528e",
+      "recordSha256": "80af30df5d0fee94d4c5c4719626af4a8b319231e4164018a1c5af169240d9bd"
+    },
+    {
+      "sequence": 4852,
+      "kind": "change",
+      "entityId": "CHANGE-0020",
+      "phase": "g1:implementation:REQ-M5-LINUX-DELIVERY-002#36",
+      "previousSha256": "80af30df5d0fee94d4c5c4719626af4a8b319231e4164018a1c5af169240d9bd",
+      "recordSha256": "96b8577769f710a3b9e7f69ab18cc0afd641474afc99d6a291c9c66aff35cde2"
+    },
+    {
+      "sequence": 4853,
+      "kind": "tdd",
+      "entityId": "d39de508-a3bb-4d7f-9f37-a4ae244e36d2",
+      "phase": "green",
+      "previousSha256": "96b8577769f710a3b9e7f69ab18cc0afd641474afc99d6a291c9c66aff35cde2",
+      "recordSha256": "d757da71b951c65f326d7fe55bc58f3c75ca792560b204aa7361a13187544c4b"
+    },
+    {
+      "sequence": 4854,
+      "kind": "change",
+      "entityId": "CHANGE-0020",
+      "phase": "g1:green:REQ-M5-LINUX-DELIVERY-002#36",
+      "previousSha256": "d757da71b951c65f326d7fe55bc58f3c75ca792560b204aa7361a13187544c4b",
+      "recordSha256": "0f8c1bf3b0d7b08aa5b7aa49b0faaa2d7f88f5bb112a2cc8baac85a1cfd3d2c5"
+    },
+    {
+      "sequence": 4855,
+      "kind": "change",
+      "entityId": "CHANGE-0020",
+      "phase": "g1:quality:45",
+      "previousSha256": "0f8c1bf3b0d7b08aa5b7aa49b0faaa2d7f88f5bb112a2cc8baac85a1cfd3d2c5",
+      "recordSha256": "a668cee2cc14590a282fdd842ff805cb1b8494937046dbcbda0f2436e6aba989"
+    },
+    {
+      "sequence": 4856,
+      "kind": "tdd",
+      "entityId": "8e343689-c9cb-407a-ba1b-77a0ee3e15a5",
+      "phase": "red",
+      "previousSha256": "a668cee2cc14590a282fdd842ff805cb1b8494937046dbcbda0f2436e6aba989",
+      "recordSha256": "3f4cd4335adefc14394f8636fc90eade79e16fa3752677ee616e8e8a9c040fb2"
+    },
+    {
+      "sequence": 4857,
+      "kind": "change",
+      "entityId": "CHANGE-0020",
+      "phase": "g1:red:REQ-M5-LINUX-DELIVERY-002#37",
+      "previousSha256": "3f4cd4335adefc14394f8636fc90eade79e16fa3752677ee616e8e8a9c040fb2",
+      "recordSha256": "4a677292cb019e6f177a0a8e1c0004161737e537cc330fceeb1fecdc544355a2"
+    },
+    {
+      "sequence": 4858,
+      "kind": "change",
+      "entityId": "CHANGE-0020",
+      "phase": "g1:implementation:REQ-M5-LINUX-DELIVERY-002#37",
+      "previousSha256": "4a677292cb019e6f177a0a8e1c0004161737e537cc330fceeb1fecdc544355a2",
+      "recordSha256": "da43fde522b8d59e3c06e05f114d0028f142ebadcc171713c363a0b857b30b47"
+    },
+    {
+      "sequence": 4859,
+      "kind": "tdd",
+      "entityId": "8e343689-c9cb-407a-ba1b-77a0ee3e15a5",
+      "phase": "green",
+      "previousSha256": "da43fde522b8d59e3c06e05f114d0028f142ebadcc171713c363a0b857b30b47",
+      "recordSha256": "f21a2c6d2f4099a087318141262e8a439baf3d80957cec484b7ffd829f6e2687"
+    },
+    {
+      "sequence": 4860,
+      "kind": "change",
+      "entityId": "CHANGE-0020",
+      "phase": "g1:green:REQ-M5-LINUX-DELIVERY-002#37",
+      "previousSha256": "f21a2c6d2f4099a087318141262e8a439baf3d80957cec484b7ffd829f6e2687",
+      "recordSha256": "af33ce55f137becb2c73871feb39b1ecc8c646f669ebfd7487df9a47b94a000c"
+    },
+    {
+      "sequence": 4861,
+      "kind": "change",
+      "entityId": "CHANGE-0020",
+      "phase": "g1:quality:46",
+      "previousSha256": "af33ce55f137becb2c73871feb39b1ecc8c646f669ebfd7487df9a47b94a000c",
+      "recordSha256": "c132d7f2c1cd0a953488dcb71a17d4759015b4d913e55707daf3bf1afbbcf853"
     }
   ]
 }

@@ -53,6 +53,32 @@ function incompleteCommand(command: unknown, result?: unknown): never {
   invalid('acknowledgment-binding', formatIncompleteCommand(command, result).slice('acknowledgment-binding: '.length));
 }
 
+function partitionNativeFailure(value: unknown): string {
+  if (typeof value !== 'string' || !value) return '';
+  if (value.length > 1_398_104) return 'native-report-invalid';
+  try {
+    const report = JSON.parse(Buffer.from(value, 'base64').toString('utf8')) as {
+      testResults?: Array<{ assertionResults?: Array<{
+        status?: unknown; title?: unknown; fullName?: unknown; failureMessages?: unknown;
+      }> }>;
+    };
+    for (const file of report.testResults ?? []) {
+      for (const assertion of file.assertionResults ?? []) {
+        if (assertion.status === 'passed') continue;
+        const title = typeof assertion.fullName === 'string' ? assertion.fullName
+          : typeof assertion.title === 'string' ? assertion.title : 'native assertion';
+        const messages = Array.isArray(assertion.failureMessages)
+          ? assertion.failureMessages.filter((message): message is string => typeof message === 'string')
+            .map(message => message.slice(0, 512)) : [];
+        return `${title}: ${messages.join('\n')}`.trim();
+      }
+    }
+    return '';
+  } catch {
+    return 'native-report-invalid';
+  }
+}
+
 interface CommandConfig {
   name: string;
   command: string;
@@ -1236,8 +1262,11 @@ export async function runTestRuntimeCommand(
         if (missing.length) {
           let suffix = '';
           if (detail) {
-            const output = [detail.stderrTail, detail.stdoutTail, detail.childErrorMessage]
-              .find(value => typeof value === 'string' && value.trim());
+            const output = [
+              [detail.stderrTail, detail.stdoutTail, detail.childErrorMessage]
+                .find(value => typeof value === 'string' && value.trim()),
+              partitionNativeFailure(detail.nativeReportBase64),
+            ].find(value => typeof value === 'string' && value.trim());
             const bounded = typeof output === 'string'
               ? output.replace(/[\u0000-\u001f\u007f]+/g, ' ').trim().slice(-2048) : '';
             suffix = `:tests=${entry.group.testIds.slice(0, 8).join("+")}`

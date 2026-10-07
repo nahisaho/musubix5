@@ -240,6 +240,11 @@ it('TEST-M5-LINUX-CALIBRATION-PARTITION-OUTPUT-DIAGNOSTIC-001 selects the first 
   const runtime = await readFile('packages/analysis/src/test-runtime.ts', 'utf8');
   expect(runtime).toContain("[detail.stderrTail, detail.stdoutTail, detail.childErrorMessage]");
   expect(runtime).toContain(".find(value => typeof value === 'string' && value.trim())");
+  expect(runtime).toContain('partitionNativeFailure(detail.nativeReportBase64)');
+  expect(runtime).toContain('native-report-invalid');
+  expect(runtime).toContain('assertion.failureMessages');
+  expect(runtime).toContain("value.length > 1_398_104");
+  expect(runtime).toContain("message.slice(0, 512)");
 });
 
 /** @id TEST-M5-LINUX-CALIBRATION-PRECONDITION-DIAGNOSTIC-001

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "kind": "repository-trace-index",
-  "generatedAt": "2026-10-07T21:56:34.309Z",
+  "generatedAt": "2026-10-07T23:28:04.566Z",
   "nodes": [
     {
       "id": "ADR-0002",
@@ -583,7 +583,7 @@
       "id": "CODE-M5-CI-ARCHIVED-RUNTIME-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 682
+      "line": 708
     },
     {
       "id": "CODE-M5-CI-ATOMIC-SLOT-LEASE-001",
@@ -787,7 +787,7 @@
       "id": "CODE-M5-CI-LIVE-RUNTIME-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 690
+      "line": 716
     },
     {
       "id": "CODE-M5-CI-MATRIX-INPUTS-001",
@@ -2071,19 +2071,19 @@
       "id": "CODE-M5-TEST-RUNTIME-ACTIVATION-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 804
+      "line": 830
     },
     {
       "id": "CODE-M5-TEST-RUNTIME-AUGMENTATION-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 285
+      "line": 311
     },
     {
       "id": "CODE-M5-TEST-RUNTIME-BLOBS-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 678
+      "line": 704
     },
     {
       "id": "CODE-M5-TEST-RUNTIME-BUILD-ISOLATION-001",
@@ -2095,7 +2095,7 @@
       "id": "CODE-M5-TEST-RUNTIME-COMMAND-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 1047
+      "line": 1073
     },
     {
       "id": "CODE-M5-TEST-RUNTIME-GLOBAL-SETUP-001",
@@ -2107,13 +2107,13 @@
       "id": "CODE-M5-TEST-RUNTIME-PROFILE-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 199
+      "line": 225
     },
     {
       "id": "CODE-M5-TEST-RUNTIME-PROVIDER-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 1447
+      "line": 1476
     },
     {
       "id": "CODE-M5-TEST-RUNTIME-REPORTER-001",
@@ -4236,7 +4236,7 @@
       "id": "TEST-M5-CI-CALIBRATION-FAILURE-ENVELOPE-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 401
+      "line": 406
     },
     {
       "id": "TEST-M5-CI-CALIBRATION-INPUT-CLOSURE-001",
@@ -5304,7 +5304,7 @@
       "id": "TEST-M5-LINUX-CALIBRATION-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 433
+      "line": 438
     },
     {
       "id": "TEST-M5-LINUX-CALIBRATION-BUDGET-REALLOCATION-001",
@@ -5340,7 +5340,7 @@
       "id": "TEST-M5-LINUX-CALIBRATION-NATIVE-DESCRIPTOR-ATOMICITY-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 315
+      "line": 320
     },
     {
       "id": "TEST-M5-LINUX-CALIBRATION-NATIVE-REPORT-DIAGNOSTIC-001",
@@ -5370,7 +5370,7 @@
       "id": "TEST-M5-LINUX-CALIBRATION-PARAMETERIZED-MERGE-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 274
+      "line": 279
     },
     {
       "id": "TEST-M5-LINUX-CALIBRATION-PARAMETERIZED-SELECTION-001",
@@ -5412,19 +5412,19 @@
       "id": "TEST-M5-LINUX-CALIBRATION-POSTCONDITION-STAGE-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 342
+      "line": 347
     },
     {
       "id": "TEST-M5-LINUX-CALIBRATION-PRECONDITION-DIAGNOSTIC-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 245
+      "line": 250
     },
     {
       "id": "TEST-M5-LINUX-CALIBRATION-PRECONDITION-PROBE-DIAGNOSTIC-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 254
+      "line": 259
     },
     {
       "id": "TEST-M5-LINUX-CALIBRATION-REMAINING-BUDGET-001",
@@ -5442,7 +5442,7 @@
       "id": "TEST-M5-LINUX-CALIBRATION-SIGNER-DIAGNOSTIC-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 364
+      "line": 369
     },
     {
       "id": "TEST-M5-LINUX-CALIBRATION-SLOT-RELEASE-DIAGNOSTIC-001",
@@ -5454,31 +5454,31 @@
       "id": "TEST-M5-LINUX-CALIBRATION-TIMEOUT-DIAGNOSTIC-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 331
+      "line": 336
     },
     {
       "id": "TEST-M5-LINUX-CALIBRATION-TREE-BUFFER-002",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 264
+      "line": 269
     },
     {
       "id": "TEST-M5-LINUX-CALIBRATION-WORKER-PACKET-ATOMICITY-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 304
+      "line": 309
     },
     {
       "id": "TEST-M5-LINUX-CALIBRATION-WRAPPER-DIAGNOSTIC-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 354
+      "line": 359
     },
     {
       "id": "TEST-M5-LINUX-CANDIDATE-WORKFLOW-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 414
+      "line": 419
     },
     {
       "id": "TEST-M5-LINUX-RELEASE-001",
@@ -5502,13 +5502,13 @@
       "id": "TEST-M5-LINUX-SIGNER-CONTEXT-BOUNDARY-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 376
+      "line": 381
     },
     {
       "id": "TEST-M5-LINUX-SIGNER-CONTEXT-BOUNDARY-002",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
-      "line": 389
+      "line": 394
     },
     {
       "id": "TEST-M5-LINUX-STABILITY-001",
@@ -24602,7 +24602,7 @@
     "packages/analysis/src/tdd-types.ts": "83fc67aa4db7dd1a2df42e56a8cb63ffc11a6185bd12a9f191ba4f5b20e12103",
     "packages/analysis/src/tdd.ts": "7cef740f0a030d316442316df6da0320a3cbaf750001d94f89e75b259c0103cd",
     "packages/analysis/src/test-report.ts": "c4389c1a73b8ff61beae2061c1eaaeeadc4c5cc529befc059111ea5430d602c4",
-    "packages/analysis/src/test-runtime.ts": "e33eeb6f7cc2e0ef000183e9d79eed7c75e28bca1462364d8e4d8c260c80df33",
+    "packages/analysis/src/test-runtime.ts": "e6dfd72419cd093021985185774f9bb526e0780a9771908eb79c6712cc811d70",
     "packages/analysis/src/trace.ts": "b2dd6c6e73cb209c8b45bc1749440a3444fd1b65891ad6ee0f87c30c38c08715",
     "packages/analysis/src/workflow-correction.ts": "63fddf07315b8af34b7a96a542c68f82eee5ba8a321795a24bafe1ca8033e2f6",
     "packages/analysis/src/workflow-types.ts": "4fa0d85248bd9373eed4dc7043f1320c9b918f08fc8874dd982c528876b74783",
@@ -24646,7 +24646,7 @@
     "tests/budget-reservation.test.ts": "f6e2a8e70103140b6f6feb063b0eb13e80df7500244ed604a6d85cea1caf4c52",
     "tests/budget-usage.test.ts": "62a656deb6e48e7f63302ac5900407f01b07cbf6d1963acdf6bffb8c27454807",
     "tests/candidate-calibration-input-closure.test.ts": "bcb660ce6025a59152b17c8a8c5ec531e3571a2c644646122b8c17e0a03825e4",
-    "tests/candidate-calibration-integration.test.ts": "618b1c0a0756661a45777b0d052705ac5e0fdabe6938ecf500d5437caa514591",
+    "tests/candidate-calibration-integration.test.ts": "092b4826c1bac74e99de90f7a0161dcef699f7eab1ba67729a59e72d387da9b8",
     "tests/candidate-calibration-source-final.test.ts": "432b87ed53c3ca93fb4c432def8c9063926189f6bd7df67baff7e0caeac89ab5",
     "tests/candidate-cleanup-policy.test.ts": "5e913e01f82acb7a976985e404ca37ef5bf63f5d61bb7a4b5893c72fbebfd51d",
     "tests/candidate-codegraph-batching.test.ts": "afe956d93000fd79ea0ab77df32a69666de1f2fc60bbc4dfded23f44d3905d45",
