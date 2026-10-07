@@ -230,6 +230,15 @@ it('TEST-M5-LINUX-CALIBRATION-PARTITION-OUTPUT-DIAGNOSTIC-001 selects the first 
   expect(runtime).toContain(".find(value => typeof value === 'string' && value.trim())");
 });
 
+/** @id TEST-M5-LINUX-CALIBRATION-PRECONDITION-DIAGNOSTIC-001
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-CALIBRATION-PRECONDITION-DIAGNOSTIC-001 preserves nested probe errors', async () => {
+  const runner = await readFile('packages/analysis/src/candidate-gate-runner.ts', 'utf8');
+  expect(runner).toContain("const source = value.error && typeof value.error === 'object' ? value.error : value");
+});
+
 /** @id TEST-M5-LINUX-CALIBRATION-PARAMETERIZED-MERGE-001
  * @verifies REQ-M5-LINUX-DELIVERY-002
  * @design DES-M5-LINUX-DELIVERY-002

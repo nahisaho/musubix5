@@ -1058,8 +1058,9 @@ function preconditionFailure(cause: unknown): {
     try {
         if (cause === null || (typeof cause !== 'object' && typeof cause !== 'function'))
             return generic;
-        const value = cause as { code?: unknown; message?: unknown };
-        const code = value.code, message = value.message;
+        const value = cause as { code?: unknown; message?: unknown; error?: unknown };
+        const source = value.error && typeof value.error === 'object' ? value.error : value;
+        const code = (source as { code?: unknown }).code, message = (source as { message?: unknown }).message;
         if (typeof code !== 'string' || !/^[A-Z][A-Z0-9_]{0,127}$/.test(code) || code.startsWith('GATE_')
             || code === 'CANDIDATE_GATE_REPORT_INVALID' || typeof message !== 'string')
             return generic;

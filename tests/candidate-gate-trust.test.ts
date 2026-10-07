@@ -44,7 +44,7 @@ describe('candidate gate trust contract', () => {
       fileURLToPath(new URL('..', import.meta.url)),
     );
     expect(sha256(canonicalBytes(projection)))
-      .toBe('5c293e9025220c9d8d752fcebb411867c4c98c9c392cb84339868e230110e37a');
+      .toBe('148d4f74432e5bd6b0c17213f698386314378dacc7d163d731877414101cf996');
 
     await expect(ingestCandidateGateEnvelopes(root, [{
       schemaVersion: 1,
