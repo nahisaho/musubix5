@@ -220,6 +220,16 @@ it('TEST-M5-LINUX-CALIBRATION-PARTITION-GROUP-DIAGNOSTIC-001 identifies failed p
   expect(runtime).toContain('tests=${entry.group.testIds.slice(0, 8).join("+")}');
 });
 
+/** @id TEST-M5-LINUX-CALIBRATION-PARTITION-OUTPUT-DIAGNOSTIC-001
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-CALIBRATION-PARTITION-OUTPUT-DIAGNOSTIC-001 selects the first non-empty child output', async () => {
+  const runtime = await readFile('packages/analysis/src/test-runtime.ts', 'utf8');
+  expect(runtime).toContain("[detail.stderrTail, detail.stdoutTail, detail.childErrorMessage]");
+  expect(runtime).toContain(".find(value => typeof value === 'string' && value.trim())");
+});
+
 /** @id TEST-M5-LINUX-CALIBRATION-PARAMETERIZED-MERGE-001
  * @verifies REQ-M5-LINUX-DELIVERY-002
  * @design DES-M5-LINUX-DELIVERY-002

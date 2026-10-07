@@ -1236,7 +1236,8 @@ export async function runTestRuntimeCommand(
         if (missing.length) {
           let suffix = '';
           if (detail) {
-            const output = detail.stderrTail ?? detail.stdoutTail ?? detail.childErrorMessage;
+            const output = [detail.stderrTail, detail.stdoutTail, detail.childErrorMessage]
+              .find(value => typeof value === 'string' && value.trim());
             const bounded = typeof output === 'string'
               ? output.replace(/[\u0000-\u001f\u007f]+/g, ' ').trim().slice(-2048) : '';
             suffix = `:tests=${entry.group.testIds.slice(0, 8).join("+")}`

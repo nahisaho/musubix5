@@ -151,7 +151,7 @@ it('TEST-M5-CI-PARTITION-CHILD-DIAGNOSTIC-001 preserves bounded child output for
   expect(scheduler).toContain('captureBytes: 4096');
   expect(scheduler).toContain('stdoutTail: result.stdoutTail');
   expect(scheduler).toContain('stderrTail: result.stderrTail');
-  expect(runtime).toContain("detail.stderrTail ?? detail.stdoutTail ?? detail.childErrorMessage");
+  expect(runtime).toContain("[detail.stderrTail, detail.stdoutTail, detail.childErrorMessage]");
 });
 
 /** @id TEST-M5-CI-PARTITION-PREBUILT-RUNTIME-001
