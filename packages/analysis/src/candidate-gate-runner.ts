@@ -1248,13 +1248,16 @@ export async function runCandidateGateWorkflow(input: CommandInput & NormalizeOp
     }
     let postTreeMatchesCandidate = false;
     const postconditionsStarted = now();
+    let postconditionStage: 'lfs' | 'tree' | 'normalization' = 'lfs';
     try {
         dependencies.fault?.('postconditions');
         let postTimer: ReturnType<typeof setTimeout> | undefined;
         try {
             await Promise.race([(async () => {
                     await preconditions.lfsClosure();
+                    postconditionStage = 'tree';
                     postTreeMatchesCandidate = await preconditions.trackedTree('post');
+                    postconditionStage = 'normalization';
                 })(), new Promise<never>((_, reject) => { postTimer = schedule(() => { abort.abort(); reject(expired); },
                     input.execution ? Math.min(input.execution.regionTimeouts?.postconditions ?? 60_000,
                         input.execution.gateDeadline - Date.now() - (input.execution.regionTimeouts?.persistence ?? 60_000)) : probeRegionTimeoutMs); })]);
@@ -1270,6 +1273,7 @@ export async function runCandidateGateWorkflow(input: CommandInput & NormalizeOp
         return await normalizeCandidateGateReport(outcome, { ...input, secrets, preTreeMatchesCandidate: true, postTreeMatchesCandidate });
     }
     catch (cause) {
+        const failedPostconditionStage = postconditionStage;
         if (cause instanceof PrimaryPersistenceError)
             throw cause;
         commandTermination.get(outcome)?.();
@@ -1285,6 +1289,10 @@ export async function runCandidateGateWorkflow(input: CommandInput & NormalizeOp
         }
         return normalizeCandidateGateReport(outcome, { ...input, secrets, preTreeMatchesCandidate: true, postTreeMatchesCandidate: false,
             initialCause: 'runner-processing-failure',
-            domainFailure: { code: 'GATE_RUNNER_PROCESSING_FAILED', message: 'Candidate gate runner processing failed.' } });
+            domainFailure: failedPostconditionStage === 'lfs'
+                ? { code: 'GATE_RUNNER_POSTCONDITION_LFS_FAILED', message: 'Candidate gate postcondition LFS verification failed.' }
+                : failedPostconditionStage === 'tree'
+                    ? { code: 'GATE_RUNNER_POSTCONDITION_TREE_FAILED', message: 'Candidate gate postcondition tree verification failed.' }
+                    : { code: 'GATE_RUNNER_POSTCONDITION_NORMALIZATION_FAILED', message: 'Candidate gate postcondition normalization failed.' } });
     }
 }

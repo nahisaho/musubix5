@@ -846,8 +846,13 @@ it('TEST-M5-CI-MATRIX-ORCHESTRATION-TIMEOUT-001 Generation 45 proves orchestrati
         for (const stage of ['stream-processing', 'postconditions', 'normalization'] as const) {
             const result = await workflow({ ...input, dependencies: { ...dependencies(), fault: at => { if (at === stage)
                         throw Error(stage); } } });
-            expect(result.originalDomainCode).toBe('GATE_RUNNER_PROCESSING_FAILED');
-            expect(result.originalDomainMessage).toBe('Candidate gate runner processing failed.');
+            const expected = stage === 'postconditions'
+                ? ['GATE_RUNNER_POSTCONDITION_LFS_FAILED', 'Candidate gate postcondition LFS verification failed.']
+                : stage === 'normalization'
+                    ? ['GATE_RUNNER_POSTCONDITION_NORMALIZATION_FAILED', 'Candidate gate postcondition normalization failed.']
+                    : ['GATE_RUNNER_PROCESSING_FAILED', 'Candidate gate runner processing failed.'];
+            expect(result.originalDomainCode).toBe(expected[0]);
+            expect(result.originalDomainMessage).toBe(expected[1]);
             expect(result.matchedCauses).toContain('runner-processing-failure');
             if (stage === 'postconditions') {
                 expect(result.postTreeMatchesCandidate).toBe(false);
@@ -898,7 +903,7 @@ it('TEST-M5-CI-MATRIX-ORCHESTRATION-TIMEOUT-001 Generation 45 proves orchestrati
         await vi.advanceTimersByTimeAsync(300000);
         const postResult = await postExpiry;
         expect(postTreeCalls).toBe(1);
-        expect(postResult.originalDomainCode).toBe('GATE_RUNNER_PROCESSING_FAILED');
+        expect(postResult.originalDomainCode).toBe('GATE_RUNNER_POSTCONDITION_TREE_FAILED');
         expect(postResult.matchedCauses).toContain('runner-processing-failure');
         expect(postResult.matchedCauses).not.toContain('timeout');
         expect(postResult.postTreeMatchesCandidate).toBe(false);

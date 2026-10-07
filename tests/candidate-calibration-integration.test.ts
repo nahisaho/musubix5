@@ -105,6 +105,18 @@ it('TEST-M5-LINUX-CALIBRATION-TIMEOUT-DIAGNOSTIC-001 exposes only bounded schedu
   expect(runtime).toContain('configuredTimeoutMs=${observed.configuredTimeoutMs}');
 });
 
+/** @id TEST-M5-LINUX-CALIBRATION-POSTCONDITION-STAGE-001
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-CALIBRATION-POSTCONDITION-STAGE-001 preserves a fixed postcondition failure stage', async () => {
+  const runner = await readFile('packages/analysis/src/candidate-gate-runner.ts', 'utf8');
+  expect(runner).toContain("let postconditionStage: 'lfs' | 'tree' | 'normalization' = 'lfs'");
+  expect(runner).toContain('GATE_RUNNER_POSTCONDITION_LFS_FAILED');
+  expect(runner).toContain('GATE_RUNNER_POSTCONDITION_TREE_FAILED');
+  expect(runner).toContain('GATE_RUNNER_POSTCONDITION_NORMALIZATION_FAILED');
+});
+
 /** @id TEST-M5-LINUX-CALIBRATION-WRAPPER-DIAGNOSTIC-001
  * @verifies REQ-M5-LINUX-DELIVERY-002
  * @design DES-M5-LINUX-DELIVERY-002
