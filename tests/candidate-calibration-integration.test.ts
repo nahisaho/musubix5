@@ -94,6 +94,17 @@ it('TEST-M5-LINUX-CALIBRATION-POSTCONDITION-BUDGET-001 gives calibration postcon
   expect(runner).toContain('persistence: calibration?.budgets.timeouts.persistence ?? 60_000');
 });
 
+/** @id TEST-M5-LINUX-CALIBRATION-TIMEOUT-DIAGNOSTIC-001
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-CALIBRATION-TIMEOUT-DIAGNOSTIC-001 exposes only bounded scheduler timeout metadata', async () => {
+  const runtime = await readFile('packages/analysis/src/test-runtime.ts', 'utf8');
+  expect(runtime).toContain('configuredTimeoutMs: options.timeoutMs');
+  expect(runtime).toContain('schedulerTimeoutMs, matrix');
+  expect(runtime).toContain('configuredTimeoutMs=${observed.configuredTimeoutMs}');
+});
+
 /** @id TEST-M5-LINUX-CALIBRATION-WRAPPER-DIAGNOSTIC-001
  * @verifies REQ-M5-LINUX-DELIVERY-002
  * @design DES-M5-LINUX-DELIVERY-002

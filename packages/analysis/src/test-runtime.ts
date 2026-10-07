@@ -41,6 +41,11 @@ export function formatIncompleteCommand(command: unknown, result?: unknown): str
   if (['completed', 'missing', 'timeout', 'error'].some(status => status === observed.status)) message += ` status=${observed.status}`;
   if (observed.exitCode === null || Number.isSafeInteger(observed.exitCode)) message += ` exitCode=${observed.exitCode}`;
   if (Number.isSafeInteger(observed.durationMs) && (observed.durationMs as number) >= 0) message += ` durationMs=${observed.durationMs}`;
+  if (Number.isSafeInteger(observed.configuredTimeoutMs) && (observed.configuredTimeoutMs as number) > 0)
+    message += ` configuredTimeoutMs=${observed.configuredTimeoutMs}`;
+  if (Number.isSafeInteger(observed.schedulerTimeoutMs) && (observed.schedulerTimeoutMs as number) > 0)
+    message += ` schedulerTimeoutMs=${observed.schedulerTimeoutMs}`;
+  if (typeof observed.matrix === 'boolean') message += ` matrix=${observed.matrix}`;
   return message;
 }
 
@@ -1192,7 +1197,8 @@ export async function runTestRuntimeCommand(
       { ...options, env: entry.env });
   }
   if (execution.status !== 'completed') {
-    incompleteCommand(command.name, execution);
+    incompleteCommand(command.name, { ...execution,
+      configuredTimeoutMs: options.timeoutMs, schedulerTimeoutMs, matrix });
   }
   let slotObservation: Awaited<ReturnType<typeof validateCandidateSlotLedger>> | undefined;
   const regions: Record<string, { durationMs: number; status: 'completed'; exitCode: 0; reportComplete: true; acknowledgmentComplete: true }> = {};
