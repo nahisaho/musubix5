@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-07T01:03:48.506Z",
+  "generatedAt": "2026-10-07T01:12:10.520Z",
   "status": "fail",
   "checks": [
     {
@@ -884,7 +884,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 4670,
+      "durationMs": 4722,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.2.0 typecheck\n> tsc --noEmit\n\n",
       "stderr": ""
@@ -894,7 +894,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 4176,
+      "durationMs": 4071,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.2.0 build\n> tsc -p tsconfig.build.json\n\n",
       "stderr": ""
@@ -904,7 +904,7 @@
       "required": true,
       "status": "pass",
       "summary": "npx: completed, exit 0.",
-      "durationMs": 190384,
+      "durationMs": 170227,
       "exitCode": 0,
       "stdout": "JSON report written to /home/nahisaho/.copilot/session-state/c7e1440d-e606-4988-ab43-5bb82dedb4bb/files/change-0018-ci-efficiency/.musubix/evidence/native/test/aggregate.json\n",
       "stderr": "Preparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\n",
@@ -912,20 +912,20 @@
         "kind": "stable-test-wall-clock-v1",
         "profileSha256": "a6ed695f234afda58c7826caf4d04d1b89e9ddf16378da425f722916a25c4832",
         "inputsSha256": "8d3d2018cf58783f83cc4aca5ebefcb60d1c03e26b066ab113b97d59edcd66ad",
-        "dispatchSha256": "30cbda50a5376b9f4688c69a3edfd5d95a0975f37079f0492e0e87006d753cb1",
+        "dispatchSha256": "f8603ad29545edf3fca37cab90a0e33a0247a9888d95c901a37e8acb070a365f",
         "runs": [
           {
             "ordinal": 0,
-            "runId": "2e8eb681-1d69-437d-bdaf-17d91fbf6cd8",
-            "requestSha256": "17aa0d2e78d227ce3940a5bb7ca6c466ae27e9e394d197f4ce3a5738f0ec9176",
-            "anchorSha256": "8d48ebc571802c1d070f6cd9290e593ebbc0a37e740c6cf5048298fadf62e1f9",
-            "acknowledgmentSha256": "369957ca81943cc72fb16874e4c770bb317223c983e561d992984a8c661153b9",
-            "resultSha256": "243e66b5cef97026661b8cefdd28d32b3e0f0fc5f45c1db4360e33f5b6e45fda"
+            "runId": "04e0f4f8-e1a6-43a8-8669-145b85540aba",
+            "requestSha256": "b5db948d90a7c07fe22aab67e7244f14371c3ed5b6001cc0425f91ca1f60b327",
+            "anchorSha256": "efa9b5a0b0e53e53197c2569b89698f67d86becafaefaf807ac0811547ae2b7e",
+            "acknowledgmentSha256": "fd734cc25c9a61d841bae9995f53268ad6d5c8b8291d7fce1a7546eccb6d0ba0",
+            "resultSha256": "0a4e6acef4e26a5da4cc558e89553f379f61b225a028795fdc7642321ca54abb"
           }
         ],
         "publication": {
           "durability": "posix-file-directory-fsync",
-          "closureSha256": "ab90e9fcaa2ea22c9e11a366e9e2c0fc6a613035357ce118efdb8171e530fc7c"
+          "closureSha256": "28a30d1d5400fbadf3a88888e7b0c3b87dcbff16f3f93444bd5c0a199a90a8e5"
         }
       }
     },
@@ -934,7 +934,7 @@
       "required": true,
       "status": "pass",
       "summary": "node: completed, exit 0.",
-      "durationMs": 66568,
+      "durationMs": 67259,
       "exitCode": 0,
       "stdout": "JSON report written to /home/nahisaho/.copilot/session-state/c7e1440d-e606-4988-ab43-5bb82dedb4bb/files/change-0018-ci-efficiency/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-001.json\nJSON report written to /home/nahisaho/.copilot/session-state/c7e1440d-e606-4988-ab43-5bb82dedb4bb/files/change-0018-ci-efficiency/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-NOCHANGE-001.json\nJSON report written to /home/nahisaho/.copilot/session-state/c7e1440d-e606-4988-ab43-5bb82dedb4bb/files/change-0018-ci-efficiency/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-FALLBACK-001.json\nJSON report written to /home/nahisaho/.copilot/session-state/c7e1440d-e606-4988-ab43-5bb82dedb4bb/files/change-0018-ci-efficiency/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-GIT-001.json\nJSON report written to /home/nahisaho/.copilot/session-state/c7e1440d-e606-4988-ab43-5bb82dedb4bb/files/change-0018-ci-efficiency/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-CACHE-WRITE-001.json\nJSON report written to /home/nahisaho/.copilot/session-state/c7e1440d-e606-4988-ab43-5bb82dedb4bb/files/change-0018-ci-efficiency/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-TRAVERSAL-001.json\nJSON report written to /home/nahisaho/.copilot/session-state/c7e1440d-e606-4988-ab43-5bb82dedb4bb/files/change-0018-ci-efficiency/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-CYCLES-001.json\nJSON report written to /home/nahisaho/.copilot/session-state/c7e1440d-e606-4988-ab43-5bb82dedb4bb/files/change-0018-ci-efficiency/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-GATE-SCAN-001.json\nJSON report written to /home/nahisaho/.copilot/session-state/c7e1440d-e606-4988-ab43-5bb82dedb4bb/files/change-0018-ci-efficiency/.musubix/cache/test-results/.vitest-TEST-M5-CI-CODEGRAPH-MIXED-REPORT-001.json\nJSON report written to /home/nahisaho/.copilot/session-state/c7e1440d-e606-4988-ab43-5bb82dedb4bb/files/change-0018-ci-efficiency/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-GATE-ORDER-001.json\n",
       "stderr": "Preparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\n",
@@ -942,92 +942,92 @@
         "kind": "stable-test-wall-clock-v1",
         "profileSha256": "a6ed695f234afda58c7826caf4d04d1b89e9ddf16378da425f722916a25c4832",
         "inputsSha256": "8d3d2018cf58783f83cc4aca5ebefcb60d1c03e26b066ab113b97d59edcd66ad",
-        "dispatchSha256": "da42dc70d48e1cf3e80435cb672e3485722c2883815257cf74bb0d22682e4474",
+        "dispatchSha256": "81e9a69125d12465d0ba22dbff3a558eaa78fd16cfcea7bf4af5a9c08fb28540",
         "runs": [
           {
             "ordinal": 0,
-            "runId": "d0b74bb3-3975-4d84-ac0a-bac986462c7e",
-            "requestSha256": "af81794fb27535e703cee35236f5ffd1695215c64b41d3ec7cf90f8f72dbcf36",
-            "anchorSha256": "201a60e514ac296bee64912d95c35ba09a7ad20e94a45856f76a37b2139eac37",
-            "acknowledgmentSha256": "803db40ee7287a0fe9ca24a9d3de51afd3b6eeb25b565cb1975e9c083ce2ab58",
-            "resultSha256": "eabe363d60fe0f5a2cc3f37c3c5faa86a105a78c7b1c20d33bd17ea93010a760"
+            "runId": "deb08dcf-fad0-412f-a749-f9e348508337",
+            "requestSha256": "902edfbe49def85c39a6e0a7a1395bcc8c0ea9604faac20a4a15bf6ca1b1a1c9",
+            "anchorSha256": "23b3357cc215b26e09f269e210e3b098dcead1f04f7aa71d7a11951198683869",
+            "acknowledgmentSha256": "84827f8ad94fb0d800bb64a554c18a84494161e9540134d10f89da1a925c4b1e",
+            "resultSha256": "4ddee7d0c42b39c922ecd569fa02f503fd010e68d222fee50817209fa34ee9b5"
           },
           {
             "ordinal": 1,
-            "runId": "ed1c39ce-8dac-4c74-ab26-64b2606eed1b",
-            "requestSha256": "f78a426dc49e7a8a639005bd462491f1742cb8c96c39dd9d40b96a87b91d2139",
-            "anchorSha256": "201a60e514ac296bee64912d95c35ba09a7ad20e94a45856f76a37b2139eac37",
-            "acknowledgmentSha256": "7e69cd841ed8bce6a519fcf9e140218f99618ab2fae052b18732b8a3ab238fd3",
-            "resultSha256": "241729beed8a3e76aa11ac26c0a2eb39620b9434c9cc04406e188c4bb48a227c"
+            "runId": "17f30293-5945-4b70-b314-064e1a9775c9",
+            "requestSha256": "bb5cbf8f8a44801fab87528d9cf367ff8b7e9d2cc2dc7689c84c85f581d49174",
+            "anchorSha256": "23b3357cc215b26e09f269e210e3b098dcead1f04f7aa71d7a11951198683869",
+            "acknowledgmentSha256": "dd49b2c024c1103dd93317c7d6f366c03add6453f71ecaae63bb7cb57355a0dd",
+            "resultSha256": "1e509e669a0e6b113c0ae759feeddc64b6555e1843f9b590f125f349842a9a1c"
           },
           {
             "ordinal": 2,
-            "runId": "51e47363-f957-4653-a844-6adc43f20b67",
-            "requestSha256": "b7b4cec62cc85ec79c35298b3ae9f2a10018c50215c3ba3514a82cbc574c8340",
-            "anchorSha256": "201a60e514ac296bee64912d95c35ba09a7ad20e94a45856f76a37b2139eac37",
-            "acknowledgmentSha256": "49733f51337df07111401120c2dbe303e26d93b2376224968074f0e3e05f05ae",
-            "resultSha256": "c4f02fe3f5f9954c8e402e6366c850b99a47d941139664f3d8dadbea12b3f07d"
+            "runId": "5215dec6-8216-4ce0-85ca-097b4fcb39c2",
+            "requestSha256": "06f9059a16ca0b9a5af9d41c8a8053bbbd0cb201a90d49d9887fa492704bfe22",
+            "anchorSha256": "23b3357cc215b26e09f269e210e3b098dcead1f04f7aa71d7a11951198683869",
+            "acknowledgmentSha256": "3dade69ba68b758f28bf2d47cdc19b6088497af3547d051a1845984b921068fa",
+            "resultSha256": "fbbd70d3c752600804eb727bead5b17f098b13d799d04a856793dce86436d30f"
           },
           {
             "ordinal": 3,
-            "runId": "f34503ff-b538-4487-aebe-3f523e94f2e9",
-            "requestSha256": "ea4f07553500b7aec57ae9f4c92eac80d71ca1f7778b83e0baebbb074721aac5",
-            "anchorSha256": "201a60e514ac296bee64912d95c35ba09a7ad20e94a45856f76a37b2139eac37",
-            "acknowledgmentSha256": "fc5525f0ade99f8bbde9c622f9eb309a64fa317283f08080ffb6edf00fbee14c",
-            "resultSha256": "378ae5e939c94bb37d0e579a2723680af9794a948790bb4a07c81af6e363af92"
+            "runId": "82a8f329-4f8a-4ef4-bd3f-018318404a92",
+            "requestSha256": "340a492b39ce3fbe328492782a851cd5b5fca43d6f1edb925723f7d246211630",
+            "anchorSha256": "23b3357cc215b26e09f269e210e3b098dcead1f04f7aa71d7a11951198683869",
+            "acknowledgmentSha256": "3d3d582720f7c6c893ffa85b5283b40b3a2011bd6f39e3fcccfca15bbb697b6c",
+            "resultSha256": "f46d9053621ed1000920813edc1db23630b1d9956cc7327ca4e097f7a64d98e6"
           },
           {
             "ordinal": 4,
-            "runId": "22fb5bfe-ee91-43e5-8ad8-d8604e7f1196",
-            "requestSha256": "ecb3cce2b11179ea362dd915bb0c0608f559ac7ec8aa0df50d90aade5a66049b",
-            "anchorSha256": "201a60e514ac296bee64912d95c35ba09a7ad20e94a45856f76a37b2139eac37",
-            "acknowledgmentSha256": "2561450e073c6c644a1c97cdb947f44c3c08616f80eb62ad75e7fee0064dc847",
-            "resultSha256": "33c28fc0c25c49a850c1a9a7fa45b925b6a2f9222e9dda6d6b6050f4ae44ab5e"
+            "runId": "9d706073-5043-4853-b658-3e381e1ed24a",
+            "requestSha256": "26ee268e9a9304cd38b0204c18bbd275e7d15d0bbac7d7948f9a8555848d7e3b",
+            "anchorSha256": "23b3357cc215b26e09f269e210e3b098dcead1f04f7aa71d7a11951198683869",
+            "acknowledgmentSha256": "a363f3a87d69d5fb35d217ac06eff2ca8efd7859c346c941a04e5aa7b6c4d1aa",
+            "resultSha256": "b0d3c69a21f91e10ad396d6920940c86162dd37655fcd36473cd980f35e778c1"
           },
           {
             "ordinal": 5,
-            "runId": "bdbf9ecd-98d3-4455-9e22-d5bee5beb970",
-            "requestSha256": "a70c3e30bdb7ac0097c48de42ec65d5ba835bd21233ac085e2413ce7b1d80be9",
-            "anchorSha256": "201a60e514ac296bee64912d95c35ba09a7ad20e94a45856f76a37b2139eac37",
-            "acknowledgmentSha256": "f76a111c6ee24c8ad6a8d1f193660eba531ecbffffb53b33efdb6303060a4510",
-            "resultSha256": "6a85aad57854569d1358160c712862fed666154064a593fa2b8df6fbbe6ef9ec"
+            "runId": "841cb445-8981-4d4a-bc59-c6af650cb0de",
+            "requestSha256": "516d6fab84d4ffbefb1b7d3837141d4b51793825cb4d19c93d51fb3249173c76",
+            "anchorSha256": "23b3357cc215b26e09f269e210e3b098dcead1f04f7aa71d7a11951198683869",
+            "acknowledgmentSha256": "79313509fc4fc549a67edb14a7917953b19eea9535d960ed4d412b31acdd8677",
+            "resultSha256": "d02f9019386acadab341ce5eb3fcde20821b6e82565b3a56d3044ca8ad77f016"
           },
           {
             "ordinal": 6,
-            "runId": "054ade2f-6f98-40aa-b1d9-bc2f81b56ffa",
-            "requestSha256": "7c8ce07bbf16c84644e56449b8c2c9fc5e1a572c9041a43bea916810eeed09b5",
-            "anchorSha256": "201a60e514ac296bee64912d95c35ba09a7ad20e94a45856f76a37b2139eac37",
-            "acknowledgmentSha256": "ecbb0071a92d43d7c854238b88a8873f5d0cd4898bc6359ecd7ffeb47d871589",
-            "resultSha256": "742323fa89edb8b8611356d42dde1ed545bd56eda8513ec922e7d564006cd8b0"
+            "runId": "4bad88a7-5017-4c94-8673-137246c61519",
+            "requestSha256": "20e5b364b0f929f87264bb06fd295a2c6ca7e5f690674760a093f9dc755e8d59",
+            "anchorSha256": "23b3357cc215b26e09f269e210e3b098dcead1f04f7aa71d7a11951198683869",
+            "acknowledgmentSha256": "4ede1b5014daab3089793f98e70c68acb3b232aeb4fb56eec3a317fe5c9837a2",
+            "resultSha256": "9e145a95cbff92fabcd5ba66bcb3ce37149998cf26bf51e2209c5f8f5250a778"
           },
           {
             "ordinal": 7,
-            "runId": "5b5f491a-c311-4b1f-8057-daf05c6ac3ed",
-            "requestSha256": "28e6c7620447e30a2e42cfd9dc0de73ebd3c1ffae8f0cc0d1eb3807fcfec1071",
-            "anchorSha256": "201a60e514ac296bee64912d95c35ba09a7ad20e94a45856f76a37b2139eac37",
-            "acknowledgmentSha256": "d626b6cc55926f18dd84b396bb50cc4ee0e07fd396400fbb03e8da7478e5e147",
-            "resultSha256": "3807e308509c961383a2c30c90fa542a55c81fcf468b427d76418cb2fa17393f"
+            "runId": "6b41f636-00e5-4f2e-a6f7-9ecd956af026",
+            "requestSha256": "651d29359c6762a30f63c334d84937b648eeef53bccdc6ba5c7eb88a87d1946e",
+            "anchorSha256": "23b3357cc215b26e09f269e210e3b098dcead1f04f7aa71d7a11951198683869",
+            "acknowledgmentSha256": "74a92e8e742c32422d444cc3db959a47bacebdf00baa78a3c2f396ee8620aee4",
+            "resultSha256": "13b5e53168ced4b649cfa2ea7575b3d9e3368d33249f5946b2142f8ae5ef05c6"
           },
           {
             "ordinal": 8,
-            "runId": "91b0903f-c905-4856-b998-ba4ed49fcce0",
-            "requestSha256": "933fbbe3fff7775032d05e02ef51ce507430e6290269d5ce5f88a421560a7797",
-            "anchorSha256": "201a60e514ac296bee64912d95c35ba09a7ad20e94a45856f76a37b2139eac37",
-            "acknowledgmentSha256": "0ba02bee705aa6568aada9e1388f88b75d3755ac1fe96e094d3155fcb18c5e16",
-            "resultSha256": "ed23f56f5d5a83d5671c279e719897d991633d824200956fcdcebf242216665d"
+            "runId": "b6b30cb8-e016-4974-a781-3b51a4bb2d4f",
+            "requestSha256": "6435453cf41430bed7e24e9ee961865cd50865f686806ff341bc06e44dc8ba2c",
+            "anchorSha256": "23b3357cc215b26e09f269e210e3b098dcead1f04f7aa71d7a11951198683869",
+            "acknowledgmentSha256": "1ecdd3325fe4345a0ce81396aea2ac85f177d96b9f6c2abed585bdf2413b6646",
+            "resultSha256": "9133b2dfcb00a658aac22b892c62ecebf6a8e3b08ac89c532bdd8fb73a4199f3"
           },
           {
             "ordinal": 9,
-            "runId": "1ac5f425-f7a7-4cf8-8171-9d2d2b64c6e8",
-            "requestSha256": "90b54c0e0801e35a77452b401230ae0f255a3781e1a52823f2a16b17a9b4cf0b",
-            "anchorSha256": "201a60e514ac296bee64912d95c35ba09a7ad20e94a45856f76a37b2139eac37",
-            "acknowledgmentSha256": "6402eb7a17b854145b223b171107bea94937ea95a8b35988d12e9ff1dfc05706",
-            "resultSha256": "6319651860c46a0637927318b4f5fadb4dd6004ec7c8bf9102fd73803bfcd3ca"
+            "runId": "f1eb7e9b-3f76-4923-883d-f5bbc9746f45",
+            "requestSha256": "7a9976fbef6721e8eaa16d67e7b492d1ebe802fa3fd75581309a6ba2f01da83d",
+            "anchorSha256": "23b3357cc215b26e09f269e210e3b098dcead1f04f7aa71d7a11951198683869",
+            "acknowledgmentSha256": "d09959a251e7768948196577ac34e031be97e80b5ae8fefb1544cc5d433e99ba",
+            "resultSha256": "afde51c0ce03aa91acf9ddf7275a07e476366baa435aeee5edb547e39c3f2e3a"
           }
         ],
         "publication": {
           "durability": "posix-file-directory-fsync",
-          "closureSha256": "c141ab2d660dde6f5119832af203e0e9733babf7438f80b66fecdf19e5b61829"
+          "closureSha256": "8b80f7073ea6cb8b378a4a92fac5b4c18b8fd4dc605bfd78292169c25240a1d4"
         }
       }
     },
@@ -1036,28 +1036,28 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 9453,
+      "durationMs": 9394,
       "exitCode": 0,
-      "stdout": "\n RUN  v3.2.7 /home/nahisaho/.copilot/session-state/c7e1440d-e606-4988-ab43-5bb82dedb4bb/files/change-0018-ci-efficiency\n\n ✓ tests/compatibility-oracle.test.ts (2 tests) 1128ms\n   ✓ compatibility oracle > TEST-M5-SOURCE-REGISTRY-001 binds candidate-only source commands to the approved registry and migration contract  1122ms\n ✓ tests/cli-help-contract.test.ts (3 tests) 1200ms\n   ✓ CLI help compatibility > TEST-M5-SOURCE-HELP-001 preserves the candidate-only parent and child help aggregate  1115ms\n ✓ tests/cli-json-error-contract.test.ts (3 tests) 3301ms\n   ✓ CLI JSON failure compatibility > TEST-M5-SOURCE-JSON-001 preserves stdout envelopes and closed usage reasons before generation admission  2639ms\n   ✓ CLI JSON failure compatibility > TEST-M5-APPROVAL-GUIDANCE-001 names the published approval recovery command  388ms\n\n Test Files  3 passed (3)\n      Tests  8 passed (8)\n   Start at  10:02:32\n   Duration  9.05s (transform 912ms, setup 56ms, collect 264ms, tests 5.63s, environment 0ms, prepare 227ms)\n\n",
+      "stdout": "\n RUN  v3.2.7 /home/nahisaho/.copilot/session-state/c7e1440d-e606-4988-ab43-5bb82dedb4bb/files/change-0018-ci-efficiency\n\n ✓ tests/compatibility-oracle.test.ts (2 tests) 1067ms\n   ✓ compatibility oracle > TEST-M5-SOURCE-REGISTRY-001 binds candidate-only source commands to the approved registry and migration contract  1061ms\n ✓ tests/cli-help-contract.test.ts (3 tests) 1154ms\n   ✓ CLI help compatibility > TEST-M5-SOURCE-HELP-001 preserves the candidate-only parent and child help aggregate  1074ms\n ✓ tests/cli-json-error-contract.test.ts (3 tests) 3278ms\n   ✓ CLI JSON failure compatibility > TEST-M5-SOURCE-JSON-001 preserves stdout envelopes and closed usage reasons before generation admission  2612ms\n   ✓ CLI JSON failure compatibility > TEST-M5-APPROVAL-GUIDANCE-001 names the published approval recovery command  397ms\n\n Test Files  3 passed (3)\n      Tests  8 passed (8)\n   Start at  10:10:53\n   Duration  8.99s (transform 903ms, setup 67ms, collect 311ms, tests 5.50s, environment 0ms, prepare 161ms)\n\n",
       "stderr": "",
       "testRuntime": {
         "kind": "stable-test-wall-clock-v1",
         "profileSha256": "a6ed695f234afda58c7826caf4d04d1b89e9ddf16378da425f722916a25c4832",
         "inputsSha256": "8d3d2018cf58783f83cc4aca5ebefcb60d1c03e26b066ab113b97d59edcd66ad",
-        "dispatchSha256": "9e557d8073c40adc45a676ed40df25e245eab7037616f00a71b7da42ac9064b3",
+        "dispatchSha256": "783de5bcde94ba6c1014e962dbdaa7ce878d6d33f8c39918ddb4002fd3024663",
         "runs": [
           {
             "ordinal": 0,
-            "runId": "c4f8d6a4-5196-4ccc-8d31-b7a7b0d4ebe7",
-            "requestSha256": "bcfda4390a86d31adfee2a04949a33e091ea451e13809c0537feca72a1d1cd29",
-            "anchorSha256": "1286e8bedc28a66a28158a973ba9e312014ad468c55678134602b316459079a6",
-            "acknowledgmentSha256": "8f668d22e73d12158339913031c31cb864c96d32eb16c82225b5bd07cc867089",
-            "resultSha256": "1c44379b021a24be9b8f0e389cbecf2e1fe40ff3a10621a7b759f4124edfb692"
+            "runId": "1c629ea7-0838-46ed-ada3-31802eb882ae",
+            "requestSha256": "894e3cc95980b0074e55cac1ff0cfc80781a9183ffbc377f36f1e9ba570fe231",
+            "anchorSha256": "54024ae6c79fdf039c38ad2ad6bcd8bb5377b384bbc5535a8e392d6d59b298e2",
+            "acknowledgmentSha256": "18e6f6736ed40670ffdb92126c5ffc4bbff29cb86ba8e5eaf7366ee708911403",
+            "resultSha256": "37525a9681eb7122945b3290cab0a5932e7a6c098fd54ab33afc3ed76300996c"
           }
         ],
         "publication": {
           "durability": "posix-file-directory-fsync",
-          "closureSha256": "640aafc2008fe8f0e36ce5c305c2308a87c6cfe81dd5ca4cba649f1f589eef0f"
+          "closureSha256": "2de8b7e92bbe9deb87ce43bf515b7a86ca5e0f95cdceecf76826eba13a4e87f6"
         }
       }
     },
@@ -1066,7 +1066,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 1094,
+      "durationMs": 1120,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.2.0 pack:check\n> node scripts/check-package.mjs\n\nPackage verified: musubix5-0.2.0.tgz, 290 files, 12 skills.\n",
       "stderr": ""
@@ -1076,7 +1076,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 4485,
+      "durationMs": 4572,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.2.0 pack:smoke\n> node scripts/smoke-package.mjs\n\nInstalled tarball verified: executable bin, ESM exports, init, status, assets, and hidden skills (0.2.0).\n",
       "stderr": ""
@@ -1202,7 +1202,7 @@
     "coverage.implementation": 1,
     "coverage.tests": 1
   },
-  "mode": "changed",
+  "mode": "full",
   "feature": null,
   "changed": [
     ".musubix/candidate-execution-plan.json",
@@ -3662,6 +3662,7 @@
     ".musubix/journal/normal/000000001007.json": "b42e800744c36c1100682d9a012f797aa077508eb2f5582d3ae84c4151a5e905",
     ".musubix/journal/normal/000000001008.json": "495c65592f30c2bf5a58cf369adf091a30db75ab58efb85ee5f3a3cf6c21f9fd",
     ".musubix/journal/normal/000000001009.json": "4048bea39f2bcd24dc395cce38b71f1ad0eb3609dd705603db3dd8ed72cb9bd4",
+    ".musubix/journal/normal/000000001010.json": "fbbcc5314c3acb532960bf8b1c4283dde4f6fcdc530e771b4223a99fdf72d8ab",
     ".musubix/parallel/CHANGE-0014-plan.json": "6ca6deeecdb33ac4e07ebfe0e3019d6e86b93ced67d72339aee586d577ef7e64",
     "assets/ADR-0001.md": "07d68c567d75e9ec88f554114f8df4d1259a82cf45fd6567c65c3fc9db7090f0",
     "assets/constitution.md": "f8b47fdc486f395bab05223a94821b145cf8df70ffde2c838a28f8d71fe0fa92",
