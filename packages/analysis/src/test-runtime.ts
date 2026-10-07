@@ -621,7 +621,11 @@ async function runtimeClosure(root: string, value: unknown, context: unknown) {
     for (const id of strings(request.selectedTestIds, 'blob-schema')) {
       const selected = assertions.map((a) => object(a, 'blob-schema')).filter((a) =>
         a.title === id || typeof a.title === 'string' && a.title.startsWith(`${id} `));
-      if (selected.length !== 1 || !['passed', 'failed'].includes(String(selected[0]!.status))) {
+      const identities = selected.map((entry) =>
+        typeof entry.fullName === 'string' ? entry.fullName : String(entry.title));
+      if (selected.length === 0
+        || selected.some((entry) => !['passed', 'failed'].includes(String(entry.status)))
+        || new Set(identities).size !== identities.length) {
         const statuses = selected.map((entry) => String(entry.status)).join(',').slice(0, 128);
         invalid('acknowledgment-binding',
           `native selection ordinal=${ordinal} command=${String(request.commandName)} testId=${id} matches=${selected.length}`

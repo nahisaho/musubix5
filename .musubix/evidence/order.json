@@ -37925,6 +37925,62 @@
       "phase": "g1:quality:26",
       "previousSha256": "d92a7986981b1389f05be0d8c6356725c42413f8fd62430bf7f68106d8685544",
       "recordSha256": "be426c4dec168b66f1a593540102200c2d2497e7db57cb7db40c09e32c00a767"
+    },
+    {
+      "sequence": 4738,
+      "kind": "tdd",
+      "entityId": "e68de454-91d3-407c-a870-14772cf0bb8b",
+      "phase": "red",
+      "previousSha256": "be426c4dec168b66f1a593540102200c2d2497e7db57cb7db40c09e32c00a767",
+      "recordSha256": "7dfd302d9f39737b6797d6e611456df0c19439ace005745db3be431dc03a1311"
+    },
+    {
+      "sequence": 4739,
+      "kind": "change",
+      "entityId": "CHANGE-0020",
+      "phase": "g1:red:REQ-M5-LINUX-DELIVERY-002#18",
+      "previousSha256": "7dfd302d9f39737b6797d6e611456df0c19439ace005745db3be431dc03a1311",
+      "recordSha256": "266f2af44dda98109800d7db5e8f7a3c9660c5502d63e1efe40201855d19b7c3"
+    },
+    {
+      "sequence": 4740,
+      "kind": "change",
+      "entityId": "CHANGE-0020",
+      "phase": "g1:implementation:REQ-M5-LINUX-DELIVERY-002#18",
+      "previousSha256": "266f2af44dda98109800d7db5e8f7a3c9660c5502d63e1efe40201855d19b7c3",
+      "recordSha256": "819835a8a82f88d659cdf604c6ab8e07532dd7aaed7fc989ccb018cc3891e50d"
+    },
+    {
+      "sequence": 4741,
+      "kind": "tdd",
+      "entityId": "e68de454-91d3-407c-a870-14772cf0bb8b",
+      "phase": "green",
+      "previousSha256": "819835a8a82f88d659cdf604c6ab8e07532dd7aaed7fc989ccb018cc3891e50d",
+      "recordSha256": "c81573eac3ce3b27af0adcc05d1863d1f5385f899d3b3d3441f80b638798f476"
+    },
+    {
+      "sequence": 4742,
+      "kind": "change",
+      "entityId": "CHANGE-0020",
+      "phase": "g1:green:REQ-M5-LINUX-DELIVERY-002#18",
+      "previousSha256": "c81573eac3ce3b27af0adcc05d1863d1f5385f899d3b3d3441f80b638798f476",
+      "recordSha256": "19d4f27f9318f86d255ffeb30e388ab2f8078a7e45a7888f92ed6b4756ce8980"
+    },
+    {
+      "sequence": 4743,
+      "kind": "tdd",
+      "entityId": "e68de454-91d3-407c-a870-14772cf0bb8b",
+      "phase": "refactor",
+      "previousSha256": "19d4f27f9318f86d255ffeb30e388ab2f8078a7e45a7888f92ed6b4756ce8980",
+      "recordSha256": "1a83c99e58829bee7819c1f2afd7f9fc520f480a4e5175f3e6ddecf2bd7f8f0e"
+    },
+    {
+      "sequence": 4744,
+      "kind": "change",
+      "entityId": "CHANGE-0020",
+      "phase": "g1:quality:27",
+      "previousSha256": "1a83c99e58829bee7819c1f2afd7f9fc520f480a4e5175f3e6ddecf2bd7f8f0e",
+      "recordSha256": "e5e742f03716257a31a2b8d16906b3660728bc98a4f2a376e56fab426fc46665"
     }
   ]
 }

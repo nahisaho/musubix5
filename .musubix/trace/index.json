@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "kind": "repository-trace-index",
-  "generatedAt": "2026-10-07T07:43:06.657Z",
+  "generatedAt": "2026-10-07T09:05:10.011Z",
   "nodes": [
     {
       "id": "ADR-0002",
@@ -583,7 +583,7 @@
       "id": "CODE-M5-CI-ARCHIVED-RUNTIME-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 678
+      "line": 682
     },
     {
       "id": "CODE-M5-CI-ATOMIC-SLOT-LEASE-001",
@@ -787,7 +787,7 @@
       "id": "CODE-M5-CI-LIVE-RUNTIME-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 686
+      "line": 690
     },
     {
       "id": "CODE-M5-CI-MATRIX-INPUTS-001",
@@ -2065,7 +2065,7 @@
       "id": "CODE-M5-TEST-RUNTIME-ACTIVATION-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 800
+      "line": 804
     },
     {
       "id": "CODE-M5-TEST-RUNTIME-AUGMENTATION-001",
@@ -2077,7 +2077,7 @@
       "id": "CODE-M5-TEST-RUNTIME-BLOBS-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 674
+      "line": 678
     },
     {
       "id": "CODE-M5-TEST-RUNTIME-BUILD-ISOLATION-001",
@@ -2089,7 +2089,7 @@
       "id": "CODE-M5-TEST-RUNTIME-COMMAND-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 1043
+      "line": 1047
     },
     {
       "id": "CODE-M5-TEST-RUNTIME-GLOBAL-SETUP-001",
@@ -2107,7 +2107,7 @@
       "id": "CODE-M5-TEST-RUNTIME-PROVIDER-001",
       "kind": "code",
       "path": "packages/analysis/src/test-runtime.ts",
-      "line": 1441
+      "line": 1445
     },
     {
       "id": "CODE-M5-TEST-RUNTIME-REPORTER-001",
@@ -5343,6 +5343,12 @@
       "line": 125
     },
     {
+      "id": "TEST-M5-LINUX-CALIBRATION-PARAMETERIZED-SELECTION-001",
+      "kind": "test",
+      "path": "tests/test-runtime-evidence.test.ts",
+      "line": 662
+    },
+    {
       "id": "TEST-M5-LINUX-CALIBRATION-PARTITION-BUDGET-001",
       "kind": "test",
       "path": "tests/candidate-calibration-integration.test.ts",
@@ -6552,13 +6558,13 @@
       "id": "TEST-M5-TEST-CLOCK-AGGREGATE-001",
       "kind": "test",
       "path": "tests/test-runtime-evidence.test.ts",
-      "line": 831
+      "line": 893
     },
     {
       "id": "TEST-M5-TEST-CLOCK-BLOB-PLATFORM-001",
       "kind": "test",
       "path": "tests/test-runtime-evidence.test.ts",
-      "line": 969
+      "line": 1031
     },
     {
       "id": "TEST-M5-TEST-CLOCK-CHILD-001",
@@ -6570,7 +6576,7 @@
       "id": "TEST-M5-TEST-CLOCK-EVIDENCE-001",
       "kind": "test",
       "path": "tests/test-runtime-evidence.test.ts",
-      "line": 709
+      "line": 771
     },
     {
       "id": "TEST-M5-TEST-CLOCK-GATE-FINGERPRINT-001",
@@ -20948,6 +20954,16 @@
       "relation": "verifies"
     },
     {
+      "from": "TEST-M5-LINUX-CALIBRATION-PARAMETERIZED-SELECTION-001",
+      "to": "DES-M5-LINUX-DELIVERY-002",
+      "relation": "implements"
+    },
+    {
+      "from": "TEST-M5-LINUX-CALIBRATION-PARAMETERIZED-SELECTION-001",
+      "to": "REQ-M5-LINUX-DELIVERY-002",
+      "relation": "verifies"
+    },
+    {
       "from": "TEST-M5-LINUX-CALIBRATION-PARTITION-BUDGET-001",
       "to": "REQ-M5-LINUX-DELIVERY-002",
       "relation": "verifies"
@@ -24405,7 +24421,7 @@
     "packages/analysis/src/tdd-types.ts": "83fc67aa4db7dd1a2df42e56a8cb63ffc11a6185bd12a9f191ba4f5b20e12103",
     "packages/analysis/src/tdd.ts": "7cef740f0a030d316442316df6da0320a3cbaf750001d94f89e75b259c0103cd",
     "packages/analysis/src/test-report.ts": "c4389c1a73b8ff61beae2061c1eaaeeadc4c5cc529befc059111ea5430d602c4",
-    "packages/analysis/src/test-runtime.ts": "a701a7b5c786c70e559c40f74b1cafef5db7294cfc371c3a1990a5a9b9096823",
+    "packages/analysis/src/test-runtime.ts": "46e79252e41f47d2cff1d9588958ccb47aadea4dea2399b25d0f5235753083b2",
     "packages/analysis/src/trace.ts": "b2dd6c6e73cb209c8b45bc1749440a3444fd1b65891ad6ee0f87c30c38c08715",
     "packages/analysis/src/workflow-correction.ts": "63fddf07315b8af34b7a96a542c68f82eee5ba8a321795a24bafe1ca8033e2f6",
     "packages/analysis/src/workflow-types.ts": "4fa0d85248bd9373eed4dc7043f1320c9b918f08fc8874dd982c528876b74783",
@@ -24471,7 +24487,7 @@
     "tests/candidate-gate-efficient-timeout.test.ts": "a18bc19de52697e8258b1b72a5a3d0692df1480f7306ca0d8bade4ea66807fcc",
     "tests/candidate-gate-eol.test.ts": "db72054d71bb5bb2cb986c7a5ccb7b31d714b6c863e5901fd7d1fe723e8a1ad4",
     "tests/candidate-gate-orchestration-boundaries.test.ts": "8f7c5fd2c3f35a47e7a5353cfbc54a7094ef553f02f5521862fe8edf1a3fa5a2",
-    "tests/candidate-gate-trust.test.ts": "312809ae1e08df088fb5e4324cffc9880f42a0417d29b55163f358a576d308e5",
+    "tests/candidate-gate-trust.test.ts": "6c0c6508acce42867fb8aff499a2ca3bcb6c8d8e2fcd652ff2801bf678a87718",
     "tests/candidate-gate-workflow-errors.test.ts": "073adf6802bc32d65bc3fa8dad2e766466a97206907517ab9da96931aa2f9048",
     "tests/candidate-gate.test.ts": "2d711c21af8fe0dfb02187aa87aae3f653f50fedfea9694859b94aeb5b1206c6",
     "tests/candidate-integration-dependencies.test.ts": "cf7b57b88909268baceb4d17eb0a5acab080011e20c37739746502d7758e5553",
@@ -24538,7 +24554,7 @@
     "tests/fixtures/portable-path.ts": "03d7c64e1636efe1d008fccb62aeea0fde2474668128dd8e2a5d4043e173eca8",
     "tests/fixtures/portable-paths.ts": "08f08667a406a20f05e574225c39dc934b36d950786fc82dd5ee770c473d749f",
     "tests/fixtures/short-unix-socket.ts": "8b6e158c7a9880b2db6d3c3d87d533e208660f7b611089e08152a8689958a803",
-    "tests/full-test-timeout.test.ts": "369e95702538d21a6ad3c3c29425ea65182e5928b4239f0715ccbc46f5004c0b",
+    "tests/full-test-timeout.test.ts": "6fe8ab89b4fae0180d1f9c6dfd75b42246a7f10244f752617d13c664f9900e70",
     "tests/generation10-recovery-accounting.test.ts": "e55f536251eedd89b4d4f6c4dd427f66ddc197f2bfcdda34ae061514a6a9fbcb",
     "tests/generation10-recovery-completion.test.ts": "777f8a18fe452c29b9ade2ff17a5a2da2e86622550c0695791eea5faaf358d55",
     "tests/generation10-recovery-contract.test.ts": "a68f1797bd02fcba08de4f6f9aee5336994f188d8c0cb328621e11fe6873ba89",
@@ -24622,7 +24638,7 @@
     "tests/tdd-source-windows-durability.test.ts": "3b6a3a2786aaca3c531bd309571e6205699aa11a20126d46e9dd09ea7049303f",
     "tests/tdd-writer-concurrency.test.ts": "16ae66ae3bc083aa390e3ce1497aff78674bea547a0e59a02b183769fcd6783d",
     "tests/test-harness-portability.test.ts": "644252711db925d5a45ceed8b5f0bb9b0108ec726aebb80d1a833493df585ee3",
-    "tests/test-runtime-evidence.test.ts": "7b1aa047d1aa5ac0859445404f7932313db1e3d3bc84d1dbdb66b7ab6bb7d6ed",
+    "tests/test-runtime-evidence.test.ts": "f1cc38ee948370bd11ac1ae21e3519dce89d90269cd905d8e1ccf1b608a42ca1",
     "tests/test-runtime-gate.test.ts": "2f061a55b5d69d3c757f2e838966f0350a9fe0d634ba5632b6d6120cfb5083ae",
     "tests/test-runtime-incomplete-command.test.ts": "82401b9d4fa595a02ccef88d51a1ef5323ada2f55beaa05cce9d64538e1e97cb",
     "tests/test-runtime-timers.test.ts": "c75e63498176fbcaf8692a9484910b5abdc4dfc4538ed6e031578c6d8671f135",

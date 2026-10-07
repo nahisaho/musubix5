@@ -83,7 +83,7 @@ it('TEST-M5-FULL-TEST-TIMEOUT-001 Generation 49 binds the 900-second policy into
   expect(commandTimeout(config, 'pack-smoke')).toBe(180000);
   expect(sha256(canonicalBytes(normativeGate(design)))).toBe(approvedGateSha256);
   expect(sha256(canonicalBytes(await candidateGateFingerprintConfig(root))))
-    .toBe('76e975f0344840ec632f9004929a5e919a0f8c5b7dc7dda5cb260c86e0b79555');
+    .toBe('618ccc0383c9e10556e420df63fdd1faf7fc2717ccf806e4c9c2ca9b90ff55af');
 
   const declarationCount = candidateGateSource.split(candidateGateDeclaration).length - 1;
   expect(declarationCount).toBe(1);
@@ -102,7 +102,7 @@ it('TEST-M5-FULL-TEST-TIMEOUT-001 Generation 49 binds the 900-second policy into
   const runtimeGateSha256 = runtimeGateDigest(runtimeGate);
   expect(historicalSource).toBe(greenSource);
   expect(candidateGateSource.match(/@id CODE-M5-CANDIDATE-GATE-FINGERPRINT-CONFIG-001/g)).toHaveLength(1);
-  expect.soft(candidateTrustSha256).toBe('76e975f0344840ec632f9004929a5e919a0f8c5b7dc7dda5cb260c86e0b79555');
+  expect.soft(candidateTrustSha256).toBe('618ccc0383c9e10556e420df63fdd1faf7fc2717ccf806e4c9c2ca9b90ff55af');
   expect.soft(runtimeGateSha256).toBe(approvedGateSha256);
   expect.soft(runtimeLegacyGateDigest(runtimeGate)).toBe(approvedLegacyGateSha256);
 });

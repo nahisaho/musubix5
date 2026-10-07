@@ -659,6 +659,68 @@ function rehashedMutation(
   return { provenance: result, added };
 }
 
+/** @id TEST-M5-LINUX-CALIBRATION-PARAMETERIZED-SELECTION-001
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-CALIBRATION-PARAMETERIZED-SELECTION-001 accepts distinct parameterized assertions and rejects duplicate assertion identities', async () => {
+  const call = await runtime();
+  const value = await fixture('integration', call);
+  const parameterized = rehashedMutation(value, value.resultSha256, object => {
+    const report: unknown = JSON.parse(Buffer.from(String(object.nativeReportBase64), 'base64').toString('utf8'));
+    record(report);
+    if (!Array.isArray(report.testResults) || report.testResults.length !== 1) {
+      throw new Error('Expected one native report test result');
+    }
+    const testResult = report.testResults[0];
+    record(testResult);
+    testResult.assertionResults = [
+      {
+        fullName: 'TEST-M5-TEST-CLOCK-EVIDENCE-001 maps missing policy',
+        title: 'TEST-M5-TEST-CLOCK-EVIDENCE-001 maps missing policy',
+        status: 'passed',
+        failureMessages: [],
+      },
+      {
+        fullName: 'TEST-M5-TEST-CLOCK-EVIDENCE-001 maps malformed policy',
+        title: 'TEST-M5-TEST-CLOCK-EVIDENCE-001 maps malformed policy',
+        status: 'passed',
+        failureMessages: [],
+      },
+    ];
+    object.nativeReportBase64 = canonicalBytes(report).toString('base64');
+  });
+  try {
+    await call('validateTestRuntimeProvenance', value.directory, parameterized.provenance, value.context);
+  } finally {
+    for (const path of parameterized.added) rmSync(path);
+  }
+  const duplicated = rehashedMutation(value, value.resultSha256, object => {
+    const report: unknown = JSON.parse(Buffer.from(String(object.nativeReportBase64), 'base64').toString('utf8'));
+    record(report);
+    if (!Array.isArray(report.testResults) || report.testResults.length !== 1) {
+      throw new Error('Expected one native report test result');
+    }
+    const testResult = report.testResults[0];
+    record(testResult);
+    const assertion = {
+      fullName: 'TEST-M5-TEST-CLOCK-EVIDENCE-001 duplicate',
+      title: 'TEST-M5-TEST-CLOCK-EVIDENCE-001 duplicate',
+      status: 'passed',
+      failureMessages: [],
+    };
+    testResult.assertionResults = [assertion, assertion];
+    object.nativeReportBase64 = canonicalBytes(report).toString('base64');
+  });
+  try {
+    await expect(call('validateTestRuntimeProvenance', value.directory, duplicated.provenance, value.context))
+      .rejects.toThrow(/TEST_RUNTIME_BOOTSTRAP_INVALID.*native selection/);
+  } finally {
+    for (const path of duplicated.added) rmSync(path);
+    rmSync(value.directory, { recursive: true, force: true });
+  }
+});
+
 async function observedPublication(
   options: {
     sourceRoot: string; controlRoot: string; provenance: unknown; context: unknown; platform: string;
