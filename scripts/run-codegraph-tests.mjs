@@ -368,7 +368,7 @@ async function executeGroups(selected) {
   }
   await Promise.all(sequences.map(async (sequence, index) => {
     try {
-      const concurrency = index === 1 && matrixPlan ? 2 : 1;
+      const concurrency = index === 1 && matrixPlan ? 3 : 1;
       await runBounded(sequence, concurrency);
     } catch (cause) { stopChildren(cause); }
   }));
