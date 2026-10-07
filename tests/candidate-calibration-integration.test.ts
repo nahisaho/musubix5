@@ -58,7 +58,7 @@ it('TEST-M5-LINUX-CALIBRATION-PARTITION-BUDGET-001 expands only calibration test
   const scheduler = await readFile('scripts/test-runtime/partition-scheduler.mjs', 'utf8');
   expect(scheduler).toContain("commandName === 'test' && process.env.CANDIDATE_MODE === 'calibration'");
   expect(scheduler).toContain('900_000 - command.mergeAllowanceMs - command.terminationAllowanceMs');
-  expect(scheduler).toContain('timeoutMs: partitionTimeouts[partition.ordinal]');
+  expect(scheduler).toContain('timeoutMs: calibration ? remainingCalibrationBudget()');
 });
 
 /** @id TEST-M5-LINUX-CALIBRATION-MODE-BINDING-001
@@ -102,6 +102,17 @@ it('TEST-M5-LINUX-CALIBRATION-POSTCONDITION-HEADROOM-001 reserves 300 seconds fo
   const runner = await readFile('packages/analysis/src/candidate-gate-runner.ts', 'utf8');
   expect(runner).toContain("postconditions: mode === 'calibration' ? maxInnerTimeoutMs");
   expect(runner).toContain('const maxInnerTimeoutMs = 300000');
+});
+
+/** @id TEST-M5-LINUX-CALIBRATION-REMAINING-BUDGET-001
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-CALIBRATION-REMAINING-BUDGET-001 carries unused calibration time into later partition waves', async () => {
+  const scheduler = await readFile('scripts/test-runtime/partition-scheduler.mjs', 'utf8');
+  expect(scheduler).toContain('const calibrationDeadline = calibration');
+  expect(scheduler).toContain('calibrationDeadline - Number(process.hrtime.bigint()) / 1_000_000');
+  expect(scheduler).toContain('timeoutMs: calibration ? remainingCalibrationBudget()');
 });
 
 /** @id TEST-M5-LINUX-CALIBRATION-TIMEOUT-DIAGNOSTIC-001

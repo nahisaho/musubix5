@@ -33,20 +33,16 @@ export async function runPartitionScheduler(commandName) {
   const { plan } = await loadCandidateExecutionPlan(process.cwd());
   const command = plan.commands.find(command => command.name === commandName);
   if (!command?.partitions.length) throw new Error('CANDIDATE_PARTITION_INVENTORY_MISSING');
-  const plannedPartitionBudget = command.partitions.reduce((sum, partition) => sum + partition.timeoutMs, 0);
   const calibrationFromEnvironment = commandName === 'test' && process.env.CANDIDATE_MODE === 'calibration';
-  const calibrationPartitionBudget = commandName === 'test'
-    && (option('--candidate-mode') === 'calibration' || calibrationFromEnvironment)
-    ? 900_000 - command.mergeAllowanceMs - command.terminationAllowanceMs
-    : plannedPartitionBudget;
-  let allocatedCalibrationBudget = 0;
-  const partitionTimeouts = command.partitions.map((partition, index) => {
-    if (calibrationPartitionBudget === plannedPartitionBudget) return partition.timeoutMs;
-    if (index === command.partitions.length - 1) return calibrationPartitionBudget - allocatedCalibrationBudget;
-    const timeoutMs = Math.floor(partition.timeoutMs * calibrationPartitionBudget / plannedPartitionBudget);
-    allocatedCalibrationBudget += timeoutMs;
-    return timeoutMs;
-  });
+  const calibration = commandName === 'test'
+    && (option('--candidate-mode') === 'calibration' || calibrationFromEnvironment);
+  const calibrationPartitionBudget = 900_000 - command.mergeAllowanceMs - command.terminationAllowanceMs;
+  const calibrationDeadline = calibration
+    ? Number(process.hrtime.bigint()) / 1_000_000 + calibrationPartitionBudget
+    : null;
+  const remainingCalibrationBudget = () => Math.max(1, Math.floor(
+    calibrationDeadline - Number(process.hrtime.bigint()) / 1_000_000,
+  ));
   const groups = command.partitions.map(partition => ({
     ordinal: partition.ordinal, testIds: partition.testIds, testFiles: partition.files, command: process.execPath,
     args: [resolve('node_modules/vitest/vitest.mjs'), 'run', ...partition.files,
@@ -70,7 +66,7 @@ export async function runPartitionScheduler(commandName) {
       const result = await launchCountedProcess(group.command, group.args, {
         env: { ...group.env, MUSUBIX5_PREBUILT_TEST_RUNTIME: 'true' },
         partition: partition.id, maxWorkers: partition.maxWorkers,
-        timeoutMs: partitionTimeouts[partition.ordinal], captureBytes: 4096,
+        timeoutMs: calibration ? remainingCalibrationBudget() : partition.timeoutMs, captureBytes: 4096,
       });
       const path = resolve(dirname(reportPath), `partition-${partition.id}.json`);
       let nativeReportBase64 = null;
