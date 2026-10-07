@@ -7,16 +7,16 @@ import { expect, it } from 'vitest';
  * @verifies REQ-M5-CI-EFFICIENCY-001
  * @design DES-M5-CI-EFFICIENCY-002
  */
-it('TEST-M5-CI-CODEGRAPH-BATCHING-001 pays one non-counter bootstrap and keeps every operation counter isolated within the exact plan', async () => {
+it('TEST-M5-CI-CODEGRAPH-BATCHING-001 balances non-counter files across two bootstraps and keeps every operation counter isolated within the exact plan', async () => {
   const groups = JSON.parse(execFileSync(process.execPath, [
     'scripts/run-codegraph-tests.mjs', '--describe-groups',
     '--report', '.musubix/cache/codegraph-batching-description.json',
   ], { encoding: 'utf8' })).groups as Array<{ testIds: string[]; testFiles: string[]; args: string[] }>;
   const batched = groups.filter(group => !group.testIds.some(id => id.startsWith('TEST-M5-GRAPH-')));
   const operations = groups.filter(group => group.testIds.some(id => id.startsWith('TEST-M5-GRAPH-')));
-  expect(batched, 'non-counter assertions share one verified bootstrap, not one per file').toHaveLength(1);
-  expect(batched[0]!.testFiles.length).toBeGreaterThan(20);
-  expect(batched[0]!.args).toContain('--maxWorkers=3');
+  expect(batched, 'non-counter assertions use two balanced bootstraps, not one per file').toHaveLength(2);
+  expect(batched.every(group => group.testFiles.length > 10)).toBe(true);
+  expect(batched.every(group => group.args.includes('--maxWorkers=3'))).toBe(true);
   expect(operations.length).toBeGreaterThan(0);
   for (const group of operations) {
     expect(group.testIds).toHaveLength(1);
@@ -24,7 +24,7 @@ it('TEST-M5-CI-CODEGRAPH-BATCHING-001 pays one non-counter bootstrap and keeps e
   }
   const ids = groups.flatMap(group => group.testIds);
   expect(new Set(ids).size).toBe(ids.length);
-  expect(groups.length).toBe(operations.length + 1);
+  expect(groups.length).toBe(operations.length + 2);
   const plan = JSON.parse(await readFile('.musubix/candidate-execution-plan.json', 'utf8'));
   const command = plan.commands.find((command: { name: string }) => command.name === 'codegraph-tests');
   expect([...command.testIds].sort()).toEqual([...ids].sort());

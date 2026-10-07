@@ -1001,11 +1001,12 @@ it('TEST-M5-SOURCE-ENVIRONMENT-001 rejects self-consistently hashed undeclared o
  */
 it('TEST-M5-SOURCE-CLI-001 exposes closed source commands, generation-first admission and immutable completed replay JSON', async () => {
   const root = await mkdtemp(join(tmpdir(), 'musubix5-source-cli-'));
-  const invoke = (args: string[]) => spawnSync('npx', ['musubix5', 'tdd', 'source-supersession',
+  const cli = join(process.cwd(), 'dist/packages/cli/src/main.js');
+  const invoke = (args: string[]) => spawnSync(process.execPath, [cli, 'tdd', 'source-supersession',
     ...args, '--root', root, '--json'], { encoding: 'utf8' });
   try {
     const { review, projection } = await archivedFixture(root);
-    const help = spawnSync('npx', ['musubix5', 'tdd', 'source-supersession', '--help'], { encoding: 'utf8' });
+    const help = spawnSync(process.execPath, [cli, 'tdd', 'source-supersession', '--help'], { encoding: 'utf8' });
     expect(help.status).toBe(0);
     for (const name of ['prepare', 'approve', 'record', 'resume', 'replay']) expect(help.stdout).toContain(name);
     const scope = ['--change', review.changeId, '--generation', '4', '--operation-id', review.operationId];

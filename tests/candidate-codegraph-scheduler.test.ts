@@ -67,6 +67,7 @@ const expectedIds = [
     'TEST-M5-LINUX-CALIBRATION-PARTITION-OUTPUT-DIAGNOSTIC-001',
     'TEST-M5-LINUX-CALIBRATION-PRECONDITION-DIAGNOSTIC-001',
     'TEST-M5-LINUX-CALIBRATION-PRECONDITION-PROBE-DIAGNOSTIC-001',
+    'TEST-M5-LINUX-CALIBRATION-TREE-BUFFER-002',
     'TEST-M5-LINUX-CALIBRATION-PARAMETERIZED-MERGE-001',
     'TEST-M5-LINUX-CALIBRATION-WORKER-PACKET-ATOMICITY-001',
     'TEST-M5-LINUX-CALIBRATION-NATIVE-DESCRIPTOR-ATOMICITY-001',
@@ -208,7 +209,9 @@ it('TEST-M5-CI-CODEGRAPH-SCHEDULER-001 bounds real wrapper scheduling without lo
         const graph = groups.filter((group) => group.testIds[0]!.startsWith('TEST-M5-GRAPH-'));
         const expectedNonGraphFiles = [...new Set(expectedIds
                 .filter((id) => !id.startsWith('TEST-M5-GRAPH-')).map((id) => fileById.get(id)))];
-        expect(nonGraph.map((group) => group.testFiles)).toEqual([expectedNonGraphFiles]);
+        expect(nonGraph).toHaveLength(2);
+        expect(nonGraph.flatMap((group) => group.testFiles).sort()).toEqual(expectedNonGraphFiles.sort());
+        expect(new Set(nonGraph.flatMap((group) => group.testFiles)).size).toBe(expectedNonGraphFiles.length);
         expect(groups.flatMap((group) => group.testIds).sort()).toEqual([...expectedIds].sort());
         expect(graph.map((group) => group.testIds)).toEqual(expectedIds
             .filter((id) => id.startsWith('TEST-M5-GRAPH-')).map((id) => [id]));
@@ -317,11 +320,11 @@ if (failed) process.exitCode = 1;
         let maximum = 0;
         for (const boundary of boundaries) {
             active += boundary.delta;
-            expect(active).toBeLessThanOrEqual(2);
+            expect(active).toBeLessThanOrEqual(5);
             maximum = Math.max(maximum, active);
         }
         expect(active).toBe(0);
-        expect(maximum).toBe(2);
+        expect(maximum).toBeGreaterThanOrEqual(3);
         expect((await readdir(join(root, 'reports'))).filter((file) => file.startsWith('.'))).toEqual([]);
         // A failed child remains a failure; all other children still close and report.
         for (const group of dispatch.groups) {

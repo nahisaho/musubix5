@@ -1,47 +1,19 @@
 {
   "schemaVersion": 2,
-  "runId": "c70de896-e665-493c-b0fd-e5f692404582",
-  "generatedAt": "2026-10-07T17:21:17.652Z",
+  "runId": "56d445b5-2ab3-47b4-bece-772b8c7ced07",
+  "generatedAt": "2026-10-07T22:11:59.708Z",
   "executions": [
     {
-      "runId": "c70de896-e665-493c-b0fd-e5f692404582",
-      "executionId": "0dfe914d3131c7574f9fb6ad65adf8dc20c4fddfd5ecbc5e019e16a0f22757d4",
+      "runId": "56d445b5-2ab3-47b4-bece-772b8c7ced07",
+      "executionId": "7c90b926fbfa70a1eb02466b669beed984899e66c92af8b34eccf5ed61a1ac6e",
       "commandName": "codegraph-tests",
       "commandSha256": "367841ceaa4c4655755dd32b6963719d0cc36c88dc15ca491ac13e1e5d3850a1",
       "reportPath": ".musubix/cache/test-results/codegraph.json",
       "sourceKind": "file",
-      "reportSha256": "5685efd9de837fceef1cec6fd80f6dba364a69ff6cd5c1872f999e0960bbf15c",
+      "reportSha256": "83e2b4921d831f11997564c390839f2897422b07f423a654684110d898cc9ce5",
       "processStatus": "completed",
       "exitCode": 0,
       "tests": [
-        {
-          "id": "TEST-M5-CI-CODEGRAPH-MIXED-REPORT-001",
-          "status": "passed"
-        },
-        {
-          "id": "TEST-M5-CI-CODEGRAPH-BATCHING-001",
-          "status": "passed"
-        },
-        {
-          "id": "TEST-M5-CI-SLOT-TRANSACTION-001",
-          "status": "passed"
-        },
-        {
-          "id": "TEST-M5-CI-NATIVE-LEDGER-CHAIN-001",
-          "status": "passed"
-        },
-        {
-          "id": "TEST-M5-CI-STABILITY-ARTIFACT-001",
-          "status": "passed"
-        },
-        {
-          "id": "TEST-M5-CI-COUNTED-NATIVE-001",
-          "status": "passed"
-        },
-        {
-          "id": "TEST-M5-CI-COUNTED-FIXTURE-001",
-          "status": "passed"
-        },
         {
           "id": "TEST-M5-CI-CALIBRATION-INTEGRATION-001",
           "status": "passed"
@@ -115,6 +87,10 @@
           "status": "passed"
         },
         {
+          "id": "TEST-M5-LINUX-CALIBRATION-TREE-BUFFER-002",
+          "status": "passed"
+        },
+        {
           "id": "TEST-M5-LINUX-CALIBRATION-PARAMETERIZED-MERGE-001",
           "status": "passed"
         },
@@ -159,73 +135,6 @@
           "status": "passed"
         },
         {
-          "id": "TEST-M5-CI-CALIBRATION-SOURCE-FINAL-001",
-          "status": "passed"
-        },
-        {
-          "id": "TEST-M5-CI-CALIBRATION-INPUT-CLOSURE-001",
-          "status": "passed"
-        },
-        {
-          "id": "TEST-M5-CI-PORTABLE-EXECUTION-001",
-          "status": "passed"
-        },
-        {
-          "id": "TEST-M5-CI-STABILITY-PROOF-001",
-          "status": "passed"
-        },
-        {
-          "id": "TEST-M5-LINUX-STABILITY-001",
-          "status": "passed"
-        },
-        {
-          "id": "TEST-M5-LINUX-RELEASE-001",
-          "status": "passed"
-        },
-        {
-          "id": "TEST-M5-LINUX-RUN-OWNERSHIP-001",
-          "status": "passed"
-        },
-        {
-          "id": "TEST-M5-LINUX-CALIBRATION-OWNERSHIP-001",
-          "status": "passed"
-        },
-        {
-          "id": "TEST-M5-LINUX-STABILITY-OWNERSHIP-001",
-          "status": "passed"
-        },
-        {
-          "id": "TEST-M5-LINUX-RELEASE-OWNERSHIP-001",
-          "status": "passed"
-        },
-        {
-          "id": "TEST-M5-CI-COUNTED-SCHEDULER-001",
-          "status": "passed"
-        },
-        {
-          "id": "TEST-M5-CI-RESOURCE-PLAN-001",
-          "status": "passed",
-          "operations": {
-            "candidatePlannedExecutionSlots": 16
-          }
-        },
-        {
-          "id": "TEST-M5-LINUX-CALIBRATION-ISOLATED-WORKERS-001",
-          "status": "passed"
-        },
-        {
-          "id": "TEST-M5-CI-EFFICIENT-ORCHESTRATION-TIMEOUT-001",
-          "status": "passed"
-        },
-        {
-          "id": "TEST-M5-CI-FIRST-FAILURE-LEDGER-001",
-          "status": "passed"
-        },
-        {
-          "id": "TEST-M5-TEST-RUNTIME-INCOMPLETE-COMMAND-001",
-          "status": "passed"
-        },
-        {
           "id": "TEST-M5-LFS-APPROVAL-BINDING-001",
           "status": "passed"
         },
@@ -242,7 +151,59 @@
           "status": "passed"
         },
         {
+          "id": "TEST-M5-CHECKPOINT-REGISTRY-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CHECKPOINT-RECOVERY-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CHECKPOINT-LIFECYCLE-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CHECKPOINT-STATUS-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-FINALIZATION-SCOPE-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-FINALIZATION-MATERIALIZE-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CI-SLOT-TRANSACTION-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CI-STABILITY-ARTIFACT-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CI-COUNTED-FIXTURE-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CI-CALIBRATION-INPUT-CLOSURE-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CI-COUNTED-SCHEDULER-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CI-FIRST-FAILURE-LEDGER-001",
+          "status": "passed"
+        },
+        {
           "id": "TEST-M5-CONCURRENCY-LEASE-CONTRACT-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CHECKPOINT-MONOTONIC-WAIT-001",
           "status": "passed"
         },
         {
@@ -258,19 +219,11 @@
           "status": "passed"
         },
         {
-          "id": "TEST-M5-FINALIZATION-PLATFORM-001",
-          "status": "passed"
-        },
-        {
           "id": "TEST-M5-FINALIZATION-TAIL-PUBLIC-001",
           "status": "passed"
         },
         {
           "id": "TEST-M5-FINALIZATION-TAIL-RECOVERY-001",
-          "status": "passed"
-        },
-        {
-          "id": "TEST-M5-FINALIZATION-DURABILITY-001",
           "status": "passed"
         },
         {
@@ -306,22 +259,6 @@
           "status": "passed"
         },
         {
-          "id": "TEST-M5-FINALIZATION-SCOPE-001",
-          "status": "passed"
-        },
-        {
-          "id": "TEST-M5-FINALIZATION-MATERIALIZE-001",
-          "status": "passed"
-        },
-        {
-          "id": "TEST-M5-FINALIZATION-MARKER-001",
-          "status": "passed"
-        },
-        {
-          "id": "TEST-M5-CHECKPOINT-MONOTONIC-WAIT-001",
-          "status": "passed"
-        },
-        {
           "id": "TEST-M5-CHECKPOINT-RECOVERY-ORDER-001",
           "status": "passed"
         },
@@ -339,10 +276,6 @@
         },
         {
           "id": "TEST-M5-CHECKPOINT-WORKSPACE-CONCURRENCY-001",
-          "status": "passed"
-        },
-        {
-          "id": "TEST-M5-CHECKPOINT-NONGIT-ORDER-001",
           "status": "passed"
         },
         {
@@ -374,6 +307,38 @@
           "status": "passed"
         },
         {
+          "id": "TEST-M5-CI-STABILITY-PROOF-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-LINUX-STABILITY-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-LINUX-RELEASE-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-LINUX-RUN-OWNERSHIP-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-LINUX-CALIBRATION-OWNERSHIP-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-LINUX-STABILITY-OWNERSHIP-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-LINUX-RELEASE-OWNERSHIP-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CHECKPOINT-NONGIT-ORDER-001",
+          "status": "passed"
+        },
+        {
           "id": "TEST-M5-CHECKPOINT-LEASE-001",
           "status": "passed"
         },
@@ -382,23 +347,62 @@
           "status": "passed"
         },
         {
-          "id": "TEST-M5-CHECKPOINT-REGISTRY-001",
-          "status": "passed"
-        },
-        {
           "id": "TEST-M5-CHECKPOINT-ORDER-001",
           "status": "passed"
         },
         {
-          "id": "TEST-M5-CHECKPOINT-RECOVERY-001",
+          "id": "TEST-M5-CI-RESOURCE-PLAN-001",
+          "status": "passed",
+          "operations": {
+            "candidatePlannedExecutionSlots": 16
+          }
+        },
+        {
+          "id": "TEST-M5-LINUX-CALIBRATION-ISOLATED-WORKERS-001",
           "status": "passed"
         },
         {
-          "id": "TEST-M5-CHECKPOINT-LIFECYCLE-001",
+          "id": "TEST-M5-FINALIZATION-PLATFORM-001",
           "status": "passed"
         },
         {
-          "id": "TEST-M5-CHECKPOINT-STATUS-001",
+          "id": "TEST-M5-FINALIZATION-DURABILITY-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CI-CODEGRAPH-MIXED-REPORT-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CI-CODEGRAPH-BATCHING-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CI-NATIVE-LEDGER-CHAIN-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CI-COUNTED-NATIVE-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CI-CALIBRATION-SOURCE-FINAL-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CI-PORTABLE-EXECUTION-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-CI-EFFICIENT-ORCHESTRATION-TIMEOUT-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-TEST-RUNTIME-INCOMPLETE-COMMAND-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-FINALIZATION-MARKER-001",
           "status": "passed"
         },
         {
@@ -447,7 +451,7 @@
           "status": "passed"
         }
       ],
-      "recordSha256": "1ea3c04632a8cf0c1f7a1d1199ff35012e12ed5ca26377c0791bcfe12870343d"
+      "recordSha256": "9d51d93f98471079735eb65574b92593b3c6ab4e8e871ea75cbe58881294a40f"
     }
   ],
   "observations": [
@@ -459,21 +463,21 @@
       "maximum": 16,
       "status": "pass",
       "provenance": {
-        "runId": "c70de896-e665-493c-b0fd-e5f692404582",
-        "executionId": "0dfe914d3131c7574f9fb6ad65adf8dc20c4fddfd5ecbc5e019e16a0f22757d4",
+        "runId": "56d445b5-2ab3-47b4-bece-772b8c7ced07",
+        "executionId": "7c90b926fbfa70a1eb02466b669beed984899e66c92af8b34eccf5ed61a1ac6e",
         "commandName": "codegraph-tests",
         "commandSha256": "367841ceaa4c4655755dd32b6963719d0cc36c88dc15ca491ac13e1e5d3850a1",
         "reportPath": ".musubix/cache/test-results/codegraph.json",
         "sourceKind": "file",
-        "reportSha256": "5685efd9de837fceef1cec6fd80f6dba364a69ff6cd5c1872f999e0960bbf15c",
+        "reportSha256": "83e2b4921d831f11997564c390839f2897422b07f423a654684110d898cc9ce5",
         "testId": "TEST-M5-CI-RESOURCE-PLAN-001",
         "testStatus": "passed",
         "counter": "candidatePlannedExecutionSlots",
         "value": 16,
         "processStatus": "completed",
         "exitCode": 0,
-        "executionRecordSha256": "1ea3c04632a8cf0c1f7a1d1199ff35012e12ed5ca26377c0791bcfe12870343d",
-        "recordSha256": "e3ed8c77f27a0a96300b553876003e444af7e5092ef5aa889cf4e0f8191ea821"
+        "executionRecordSha256": "9d51d93f98471079735eb65574b92593b3c6ab4e8e871ea75cbe58881294a40f",
+        "recordSha256": "4514eefd1599b4f977106b9e7ca7236af06161c317469ca150387923974a4eca"
       }
     },
     {
@@ -484,21 +488,21 @@
       "maximum": 13,
       "status": "pass",
       "provenance": {
-        "runId": "c70de896-e665-493c-b0fd-e5f692404582",
-        "executionId": "0dfe914d3131c7574f9fb6ad65adf8dc20c4fddfd5ecbc5e019e16a0f22757d4",
+        "runId": "56d445b5-2ab3-47b4-bece-772b8c7ced07",
+        "executionId": "7c90b926fbfa70a1eb02466b669beed984899e66c92af8b34eccf5ed61a1ac6e",
         "commandName": "codegraph-tests",
         "commandSha256": "367841ceaa4c4655755dd32b6963719d0cc36c88dc15ca491ac13e1e5d3850a1",
         "reportPath": ".musubix/cache/test-results/codegraph.json",
         "sourceKind": "file",
-        "reportSha256": "5685efd9de837fceef1cec6fd80f6dba364a69ff6cd5c1872f999e0960bbf15c",
+        "reportSha256": "83e2b4921d831f11997564c390839f2897422b07f423a654684110d898cc9ce5",
         "testId": "TEST-M5-GRAPH-TRAVERSAL-001",
         "testStatus": "passed",
         "counter": "forwardAdjacencyVisits",
         "value": 13,
         "processStatus": "completed",
         "exitCode": 0,
-        "executionRecordSha256": "1ea3c04632a8cf0c1f7a1d1199ff35012e12ed5ca26377c0791bcfe12870343d",
-        "recordSha256": "7778b3e6d9922d0903f76fe642a7187b9dcbe923dd5a70107391f755ac6a3c61"
+        "executionRecordSha256": "9d51d93f98471079735eb65574b92593b3c6ab4e8e871ea75cbe58881294a40f",
+        "recordSha256": "0aae3663a379c6fc8eeff1bf28f5262f9dc487282eb648b1dfa59c1e9f4ef682"
       }
     }
   ]

@@ -4,6 +4,7 @@ import { dirname, resolve } from 'node:path';
 import { launchCountedProcess } from './test-runtime/counted-launcher.mjs';
 import { writePartitionManifest } from './test-runtime/partition-scheduler.mjs';
 import { performance } from 'node:perf_hooks';
+import { setTimeout as delay } from 'node:timers/promises';
 
 const testIds = [
   'TEST-M5-CI-CODEGRAPH-MIXED-REPORT-001',
@@ -31,6 +32,7 @@ const testIds = [
   'TEST-M5-LINUX-CALIBRATION-PARTITION-OUTPUT-DIAGNOSTIC-001',
   'TEST-M5-LINUX-CALIBRATION-PRECONDITION-DIAGNOSTIC-001',
   'TEST-M5-LINUX-CALIBRATION-PRECONDITION-PROBE-DIAGNOSTIC-001',
+  'TEST-M5-LINUX-CALIBRATION-TREE-BUFFER-002',
   'TEST-M5-LINUX-CALIBRATION-PARAMETERIZED-MERGE-001',
   'TEST-M5-LINUX-CALIBRATION-WORKER-PACKET-ATOMICITY-001',
   'TEST-M5-LINUX-CALIBRATION-NATIVE-DESCRIPTOR-ATOMICITY-001',
@@ -201,6 +203,12 @@ const reportPath = resolve(reportArgument);
 const tests = [];
 let failed = false;
 const nonCounterIds = selected.filter(id => !id.startsWith('TEST-M5-GRAPH-'));
+const regularGroups = [[], []];
+for (const ids of [...Map.groupBy(nonCounterIds, id => filesByTestId.get(id)).values()]
+  .sort((left, right) => right.length - left.length)) {
+  const target = regularGroups[0].length <= regularGroups[1].length ? regularGroups[0] : regularGroups[1];
+  target.push(...ids);
+}
 const matrixPlan = process.env.MUSUBIX5_CANDIDATE_ROOT === process.cwd() && !targetTestId
   ? (await (await import('../dist/packages/analysis/src/candidate-execution-plan.js')).loadCandidateExecutionPlan(process.cwd())).plan.commands.find(command => command.name === 'codegraph-tests') : null;
 const groups = targetTestId ? [[targetTestId]] : matrixPlan ? matrixPlan.partitions.flatMap(partition => {
@@ -208,7 +216,7 @@ const groups = targetTestId ? [[targetTestId]] : matrixPlan ? matrixPlan.partiti
   return [...(regular.length ? [regular] : []),
     ...partition.testIds.filter(id => id.startsWith('TEST-M5-GRAPH-')).map(id => [id])];
 }) : [
-  ...(nonCounterIds.length ? [nonCounterIds] : []),
+  ...regularGroups.filter(group => group.length),
   ...selected.filter((id) => id.startsWith('TEST-M5-GRAPH-')).map((id) => [id]),
 ];
 
@@ -282,6 +290,19 @@ const interrupt = (signal) => stopChildren(new Error(`CodeGraph scheduler interr
 const onSigint = () => interrupt('SIGINT');
 const onSigterm = () => interrupt('SIGTERM');
 
+async function readNativeReport(path, testId) {
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    try {
+      return await readFile(path);
+    } catch (cause) {
+      if (cause?.code !== 'ENOENT') throw cause;
+      if (attempt === 9) throw new Error(`TEST_RUNTIME_NATIVE_REPORT_MISSING: ${testId}`);
+      await delay(25);
+    }
+  }
+  throw new Error(`TEST_RUNTIME_NATIVE_REPORT_MISSING: ${testId}`);
+}
+
 async function runGroup({ ordinal, testIds: group, args }) {
   const supplied = runtimeDispatch?.groups[ordinal];
   const operationsPath = resolve(dirname(reportPath), `.operations-${group[0]}.json`);
@@ -308,24 +329,25 @@ async function runGroup({ ordinal, testIds: group, args }) {
   if (schedulerError) return;
   let assertions = [];
   let nativeReportBase64 = null;
+  let nativeReportError;
   try {
-    const bytes = await readFile(vitestReportPath);
+    const bytes = await readNativeReport(vitestReportPath, group[0]);
     nativeReportBase64 = bytes.toString('base64');
     const vitestReport = JSON.parse(bytes.toString('utf8'));
     assertions = (vitestReport.testResults ?? []).flatMap((file) => file.assertionResults ?? []);
   } catch (cause) {
-    if (cause?.code !== 'ENOENT') throw cause;
-    console.error(`CodeGraph group ${ordinal}: missing native report ${vitestReportPath}.`);
+    nativeReportError = cause;
   }
   assertions.push(...group.flatMap(testId => reusedAssertions.has(testId) ? [reusedAssertions.get(testId)] : []));
   if (supplied) await writeFile(supplied.resultPath, `${JSON.stringify({
     status: result.status,
     exitCode: result.exitCode, durationMs: Math.max(0, Math.round(performance.now() - started)),
     stdout: result.stdout?.slice(-32_768) ?? '', stderr: result.stderr?.slice(-32_768) ?? '', nativeReportBase64,
-    ...(matrixPlan ? { startedAt, completedAt: Number(process.hrtime.bigint()) / 1_000_000 } : {}),
+    ...(process.env.MUSUBIX5_CANDIDATE_PARTITION_MANIFEST ? { startedAt, completedAt: Number(process.hrtime.bigint()) / 1_000_000 } : {}),
   })}\n`, { flag: 'wx', mode: 0o600 });
   if (result.error) throw result.error;
   if (result.exitCode !== 0) console.error(`CodeGraph group ${ordinal} exited with ${result.signal ?? result.exitCode}.`);
+  if (nativeReportError && result.exitCode === 0) throw nativeReportError;
   let operations;
   try {
     const value = JSON.parse(await readFile(operationsPath, 'utf8'));
@@ -359,21 +381,31 @@ async function executeGroups(selected) {
     selected.filter(group => !group.testIds.some(id => id.startsWith('TEST-M5-GRAPH-'))),
     selected.filter(group => group.testIds.some(id => id.startsWith('TEST-M5-GRAPH-'))),
   ];
-  async function runBounded(sequence, concurrency) {
+  async function runBounded(sequence, concurrency, execute = runGroup) {
     let next = 0;
     const workers = Array.from({ length: Math.min(concurrency, sequence.length) }, async () => {
       while (next < sequence.length) {
-        const group = sequence[next++];
+        const item = sequence[next++];
         if (schedulerError) return;
-        await runGroup(group);
+        await execute(item);
       }
     });
     await Promise.all(workers);
   }
   await Promise.all(sequences.map(async (sequence, index) => {
     try {
-      const concurrency = index === 1 && matrixPlan ? 3 : 1;
-      await runBounded(sequence, concurrency);
+      const concurrency = index === 1 ? 3 : 2;
+      if (index === 1) {
+        const graphFileLanes = [...new Map(sequence.map(group => [group.testFiles[0], []])).values()];
+        for (const group of sequence) {
+          graphFileLanes.find(lane => lane[0]?.testFiles[0] === group.testFiles[0] || lane.length === 0).push(group);
+        }
+        await runBounded(graphFileLanes, concurrency, async lane => {
+          for (const group of lane) await runGroup(group);
+        });
+      } else {
+        await runBounded(sequence, concurrency);
+      }
     } catch (cause) { stopChildren(cause); }
   }));
 }

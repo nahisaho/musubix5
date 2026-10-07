@@ -228,7 +228,7 @@ async function gitRaw(root: string, args: string[]): Promise<string> {
   try {
     const { stdout } = await execFileAsync('git', ['-C', root, ...args], {
       encoding: 'utf8',
-      maxBuffer: 10 * 1024 * 1024,
+      maxBuffer: 100 * 1024 * 1024,
     });
     return stdout;
   } catch (cause) {

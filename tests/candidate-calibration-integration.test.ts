@@ -159,10 +159,22 @@ it('TEST-M5-LINUX-CALIBRATION-CODEGRAPH-BUDGET-001 reallocates the fixed command
  * @verifies REQ-M5-LINUX-DELIVERY-002
  * @design DES-M5-LINUX-DELIVERY-002
  */
-it('TEST-M5-LINUX-CALIBRATION-CODEGRAPH-LANES-001 bounds planned graph execution to three concurrent lanes', async () => {
+it('TEST-M5-LINUX-CALIBRATION-CODEGRAPH-LANES-001 bounds graph execution to three concurrent lanes', async () => {
   const scheduler = await readFile('scripts/run-codegraph-tests.mjs', 'utf8');
-  expect(scheduler).toContain('index === 1 && matrixPlan ? 3 : 1');
+  const plan = await readFile('.musubix/candidate-execution-plan.json', 'utf8');
+  expect(scheduler).toContain('process.env.MUSUBIX5_CANDIDATE_ROOT === process.cwd() && !targetTestId');
+  expect(scheduler).toContain('const regularGroups = [[], []]');
+  expect(scheduler).toContain('index === 1 ? 3 : 2');
   expect(scheduler).toContain('await runBounded(sequence, concurrency)');
+  expect(scheduler).toContain('await readNativeReport(vitestReportPath, group[0])');
+  expect(scheduler).toContain('let nativeReportError');
+  expect(scheduler).toContain('if (nativeReportError && result.exitCode === 0) throw nativeReportError');
+  expect(scheduler.indexOf('if (supplied) await writeFile(supplied.resultPath'))
+    .toBeLessThan(scheduler.indexOf('if (result.error) throw result.error'));
+  expect(scheduler).toContain('const graphFileLanes = [...new Map(sequence.map(group => [group.testFiles[0], []]))');
+  expect(scheduler).toContain('process.env.MUSUBIX5_CANDIDATE_PARTITION_MANIFEST ? { startedAt, completedAt:');
+  expect(plan).toContain('TEST-M5-LINUX-CALIBRATION-TREE-BUFFER-002');
+  expect(plan).not.toContain('TEST-M5-LINUX-CALIBRATION-TREE-BUFFER-001');
   expect(scheduler).toContain('const workers = Array.from({ length: Math.min(concurrency, sequence.length) }');
 });
 
@@ -247,6 +259,16 @@ it('TEST-M5-LINUX-CALIBRATION-PRECONDITION-PROBE-DIAGNOSTIC-001 assigns a stable
   const probe = await readFile('.github/scripts/run-candidate-precondition-probe.mjs', 'utf8');
   expect(probe).toContain("const embedded = /^([A-Z][A-Z0-9_]{0,127})(?::|$)/.exec(message)?.[1]");
   expect(probe).toContain("code: error?.code ?? embedded ?? 'CANDIDATE_PRECONDITION_PROBE_FAILED'");
+});
+
+/** @id TEST-M5-LINUX-CALIBRATION-TREE-BUFFER-002
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-CALIBRATION-TREE-BUFFER-002 supports the authoritative candidate index size', async () => {
+  const workspace = await readFile('packages/analysis/src/workspace-manager.ts', 'utf8');
+  const gitRaw = workspace.slice(workspace.indexOf('async function gitRaw'), workspace.indexOf('async function gitBuffer'));
+  expect(gitRaw).toContain('maxBuffer: 100 * 1024 * 1024');
 });
 
 /** @id TEST-M5-LINUX-CALIBRATION-PARAMETERIZED-MERGE-001
