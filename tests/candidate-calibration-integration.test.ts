@@ -211,6 +211,15 @@ it('TEST-M5-LINUX-CALIBRATION-NATIVE-STAGING-DIAGNOSTIC-001 identifies leaked na
   expect(executionPlan).toContain('files=${stagingNames.slice(0, 8).join(",")}');
 });
 
+/** @id TEST-M5-LINUX-CALIBRATION-PARTITION-GROUP-DIAGNOSTIC-001
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-CALIBRATION-PARTITION-GROUP-DIAGNOSTIC-001 identifies failed partition test groups', async () => {
+  const runtime = await readFile('packages/analysis/src/test-runtime.ts', 'utf8');
+  expect(runtime).toContain('tests=${entry.group.testIds.slice(0, 8).join("+")}');
+});
+
 /** @id TEST-M5-LINUX-CALIBRATION-PARAMETERIZED-MERGE-001
  * @verifies REQ-M5-LINUX-DELIVERY-002
  * @design DES-M5-LINUX-DELIVERY-002

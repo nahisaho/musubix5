@@ -1239,7 +1239,8 @@ export async function runTestRuntimeCommand(
             const output = detail.stderrTail ?? detail.stdoutTail ?? detail.childErrorMessage;
             const bounded = typeof output === 'string'
               ? output.replace(/[\u0000-\u001f\u007f]+/g, ' ').trim().slice(-2048) : '';
-            suffix = `:status=${String(detail.status)}:exitCode=${String(detail.exitCode)}`
+            suffix = `:tests=${entry.group.testIds.slice(0, 8).join("+")}`
+              + `:status=${String(detail.status)}:exitCode=${String(detail.exitCode)}`
               + (bounded ? `:output=${JSON.stringify(bounded)}` : '');
           }
           missingPartitions.push(`partition-${entry.group.ordinal}:${missing.join('+')}${suffix}`);
