@@ -301,7 +301,8 @@ const regionCaps: Readonly<Record<string, number>> = {
 };
 const calibrationRegionCaps: Readonly<Record<string, number>> = {
   ...regionCaps,
-  test: 900_000,
+  test: 1_050_000,
+  ...Object.fromEntries(candidateCommandOrder.filter((name) => name !== 'test').map((name) => [name, 95_000])),
 };
 
 /** @id CODE-M5-CI-EFFICIENCY-MODE-BUDGET-001

@@ -288,7 +288,7 @@ export async function runGate(root: string, options: {
       const planned = plan.commands[index]!;
       if (planned.name !== command.name || planned.executable !== command.command
         || JSON.stringify(planned.args) !== JSON.stringify(command.args)) throw new Error('CANDIDATE_EXECUTION_PLAN_INVALID: configured invocation mismatch');
-      return { ...command, timeoutMs: mode === 'calibration' ? command.name === 'test' ? 900_000 : 120_000 : planned.timeoutMs };
+      return { ...command, timeoutMs: mode === 'calibration' ? command.name === 'test' ? 1_050_000 : 95_000 : planned.timeoutMs };
     }), formal: { ...config.formal, timeoutMs: mode === 'calibration' ? 120_000 : plan.formalTimeoutMs } };
   }
   const matrixScope: MatrixPerformanceContext | undefined = matrixMode ? {

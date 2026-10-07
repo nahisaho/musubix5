@@ -1172,7 +1172,7 @@ export async function runTestRuntimeCommand(
   }
   let execution: ProcessResult;
   const schedulerTimeoutMs = matrix && environment.CANDIDATE_MODE === 'calibration'
-    && command.name === 'test' ? 900_000 : options.timeoutMs;
+    && command.name === 'test' ? 1_050_000 : options.timeoutMs;
   if (ledger) await transportJson(join(transport, 'candidate-slot-ledger.json'), ledger, true);
   if (grouped) {
     const groupPath = join(transport, 'groups.json');

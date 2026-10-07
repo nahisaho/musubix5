@@ -36,7 +36,7 @@ export async function runPartitionScheduler(commandName) {
   const calibrationFromEnvironment = commandName === 'test' && process.env.CANDIDATE_MODE === 'calibration';
   const calibration = commandName === 'test'
     && (option('--candidate-mode') === 'calibration' || calibrationFromEnvironment);
-  const calibrationPartitionBudget = 900_000 - command.mergeAllowanceMs - command.terminationAllowanceMs;
+  const calibrationPartitionBudget = 1_050_000 - command.mergeAllowanceMs - command.terminationAllowanceMs;
   const calibrationDeadline = calibration
     ? Number(process.hrtime.bigint()) / 1_000_000 + calibrationPartitionBudget
     : null;

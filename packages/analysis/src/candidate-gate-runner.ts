@@ -277,7 +277,7 @@ export async function validateCandidateGateWrapperInput(input: {
             const calibration = mode === 'candidate' ? await loadApprovedCandidateCalibration(input.cwd, plan) : undefined;
             if (calibration) await verifyCandidateCalibrationSourceFinal(input.cwd, calibration.manifest, context.candidateCommit);
             const commands = plan.commands.map(command => ({ name: command.name,
-                timeoutMs: mode === 'calibration' ? command.name === 'test' ? 900_000 : 120_000 : command.timeoutMs }));
+                timeoutMs: mode === 'calibration' ? command.name === 'test' ? 1_050_000 : 95_000 : command.timeoutMs }));
             const formalTimeout = mode === 'calibration' ? 120_000 : plan.formalTimeoutMs;
             const execution: CandidateExecutionBindings = { mode, noCredit: mode === 'calibration', runId: env.GITHUB_RUN_ID!,
                 runAttempt: 1, planDigest: candidateExecutionPlanDigest(plan), calibrationDigest: plan.calibrationDigest,

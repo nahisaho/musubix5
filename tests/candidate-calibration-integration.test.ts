@@ -57,7 +57,7 @@ it('TEST-M5-CI-CALIBRATION-INTEGRATION-001 binds workflow mode budgets and rejec
 it('TEST-M5-LINUX-CALIBRATION-PARTITION-BUDGET-001 expands only calibration test partition deadlines', async () => {
   const scheduler = await readFile('scripts/test-runtime/partition-scheduler.mjs', 'utf8');
   expect(scheduler).toContain("commandName === 'test' && process.env.CANDIDATE_MODE === 'calibration'");
-  expect(scheduler).toContain('900_000 - command.mergeAllowanceMs - command.terminationAllowanceMs');
+  expect(scheduler).toContain('1_050_000 - command.mergeAllowanceMs - command.terminationAllowanceMs');
   expect(scheduler).toContain('timeoutMs: calibration ? remainingCalibrationBudget()');
 });
 
@@ -78,9 +78,10 @@ it('TEST-M5-LINUX-CALIBRATION-MODE-BINDING-001 binds calibration mode into the p
  * @verifies REQ-M5-LINUX-DELIVERY-002
  * @design DES-M5-LINUX-DELIVERY-002
  */
-it('TEST-M5-LINUX-CALIBRATION-SCHEDULER-TIMEOUT-001 fixes the calibration scheduler boundary at 900 seconds', async () => {
+it('TEST-M5-LINUX-CALIBRATION-SCHEDULER-TIMEOUT-001 fixes the calibration scheduler boundary at 1050 seconds', async () => {
   const runtime = await readFile('packages/analysis/src/test-runtime.ts', 'utf8');
   expect(runtime).toContain("const schedulerTimeoutMs = matrix && environment.CANDIDATE_MODE === 'calibration'");
+  expect(runtime).toContain("&& command.name === 'test' ? 1_050_000 : options.timeoutMs");
   expect(runtime).toContain('timeoutMs: schedulerTimeoutMs');
 });
 
@@ -113,6 +114,22 @@ it('TEST-M5-LINUX-CALIBRATION-REMAINING-BUDGET-001 carries unused calibration ti
   expect(scheduler).toContain('const calibrationDeadline = calibration');
   expect(scheduler).toContain('calibrationDeadline - Number(process.hrtime.bigint()) / 1_000_000');
   expect(scheduler).toContain('timeoutMs: calibration ? remainingCalibrationBudget()');
+});
+
+/** @id TEST-M5-LINUX-CALIBRATION-BUDGET-REALLOCATION-001
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-CALIBRATION-BUDGET-REALLOCATION-001 reallocates fixed outer budget to the test command', async () => {
+  const [runner, scheduler, executionPlan] = await Promise.all([
+    readFile('packages/analysis/src/candidate-gate-runner.ts', 'utf8'),
+    readFile('scripts/test-runtime/partition-scheduler.mjs', 'utf8'),
+    readFile('packages/analysis/src/candidate-execution-plan.ts', 'utf8'),
+  ]);
+  expect(runner).toContain("command.name === 'test' ? 1_050_000 : 95_000");
+  expect(scheduler).toContain('1_050_000 - command.mergeAllowanceMs - command.terminationAllowanceMs');
+  expect(executionPlan).toContain('test: 1_050_000');
+  expect(executionPlan).toContain("map((name) => [name, 95_000])");
 });
 
 /** @id TEST-M5-LINUX-CALIBRATION-NATIVE-REPORT-DIAGNOSTIC-001
