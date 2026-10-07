@@ -239,6 +239,16 @@ it('TEST-M5-LINUX-CALIBRATION-PRECONDITION-DIAGNOSTIC-001 preserves nested probe
   expect(runner).toContain("const source = value.error && typeof value.error === 'object' ? value.error : value");
 });
 
+/** @id TEST-M5-LINUX-CALIBRATION-PRECONDITION-PROBE-DIAGNOSTIC-001
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-CALIBRATION-PRECONDITION-PROBE-DIAGNOSTIC-001 assigns a stable probe error code', async () => {
+  const probe = await readFile('.github/scripts/run-candidate-precondition-probe.mjs', 'utf8');
+  expect(probe).toContain("const embedded = /^([A-Z][A-Z0-9_]{0,127})(?::|$)/.exec(message)?.[1]");
+  expect(probe).toContain("code: error?.code ?? embedded ?? 'CANDIDATE_PRECONDITION_PROBE_FAILED'");
+});
+
 /** @id TEST-M5-LINUX-CALIBRATION-PARAMETERIZED-MERGE-001
  * @verifies REQ-M5-LINUX-DELIVERY-002
  * @design DES-M5-LINUX-DELIVERY-002

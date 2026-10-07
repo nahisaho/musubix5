@@ -1,5 +1,5 @@
 /** @id CODE-M5-CI-CANDIDATE-PRECONDITION-PROBE-001
- * @implements REQ-M5-CI-008
+ * @implements REQ-M5-CI-008 REQ-M5-LINUX-DELIVERY-002
  * @design DES-M5-CI-008
  */
 import { pathToFileURL } from 'node:url';
@@ -47,6 +47,11 @@ try {
     throw new Error('Candidate gate precondition probe input invalid.');
   }
 } catch (error) {
-  console.log(JSON.stringify({ code: error?.code, message: error?.message }));
+  const message = typeof error?.message === 'string' ? error.message : 'Candidate precondition probe failed.';
+  const embedded = /^([A-Z][A-Z0-9_]{0,127})(?::|$)/.exec(message)?.[1];
+  console.log(JSON.stringify({
+    code: error?.code ?? embedded ?? 'CANDIDATE_PRECONDITION_PROBE_FAILED',
+    message,
+  }));
   process.exitCode = 1;
 }

@@ -1,16 +1,16 @@
 {
   "schemaVersion": 2,
-  "runId": "b474eb29-b27b-45f4-96e7-b1214e601779",
-  "generatedAt": "2026-10-07T16:58:44.900Z",
+  "runId": "c70de896-e665-493c-b0fd-e5f692404582",
+  "generatedAt": "2026-10-07T17:21:17.652Z",
   "executions": [
     {
-      "runId": "b474eb29-b27b-45f4-96e7-b1214e601779",
-      "executionId": "5c0a56d570e4bff3eb43da5aa5dbb2d53a938ad1988d967c210f935601743fee",
+      "runId": "c70de896-e665-493c-b0fd-e5f692404582",
+      "executionId": "0dfe914d3131c7574f9fb6ad65adf8dc20c4fddfd5ecbc5e019e16a0f22757d4",
       "commandName": "codegraph-tests",
       "commandSha256": "367841ceaa4c4655755dd32b6963719d0cc36c88dc15ca491ac13e1e5d3850a1",
       "reportPath": ".musubix/cache/test-results/codegraph.json",
       "sourceKind": "file",
-      "reportSha256": "08405b095557519bec149e2a9658d64c8cbe8e8e1db64eeb0d9c56949fc50060",
+      "reportSha256": "5685efd9de837fceef1cec6fd80f6dba364a69ff6cd5c1872f999e0960bbf15c",
       "processStatus": "completed",
       "exitCode": 0,
       "tests": [
@@ -108,6 +108,10 @@
         },
         {
           "id": "TEST-M5-LINUX-CALIBRATION-PRECONDITION-DIAGNOSTIC-001",
+          "status": "passed"
+        },
+        {
+          "id": "TEST-M5-LINUX-CALIBRATION-PRECONDITION-PROBE-DIAGNOSTIC-001",
           "status": "passed"
         },
         {
@@ -443,7 +447,7 @@
           "status": "passed"
         }
       ],
-      "recordSha256": "0e14039eb691368fa4436430437bfafe94cf4b1e549d4818c1f3eadd2786c700"
+      "recordSha256": "1ea3c04632a8cf0c1f7a1d1199ff35012e12ed5ca26377c0791bcfe12870343d"
     }
   ],
   "observations": [
@@ -455,21 +459,21 @@
       "maximum": 16,
       "status": "pass",
       "provenance": {
-        "runId": "b474eb29-b27b-45f4-96e7-b1214e601779",
-        "executionId": "5c0a56d570e4bff3eb43da5aa5dbb2d53a938ad1988d967c210f935601743fee",
+        "runId": "c70de896-e665-493c-b0fd-e5f692404582",
+        "executionId": "0dfe914d3131c7574f9fb6ad65adf8dc20c4fddfd5ecbc5e019e16a0f22757d4",
         "commandName": "codegraph-tests",
         "commandSha256": "367841ceaa4c4655755dd32b6963719d0cc36c88dc15ca491ac13e1e5d3850a1",
         "reportPath": ".musubix/cache/test-results/codegraph.json",
         "sourceKind": "file",
-        "reportSha256": "08405b095557519bec149e2a9658d64c8cbe8e8e1db64eeb0d9c56949fc50060",
+        "reportSha256": "5685efd9de837fceef1cec6fd80f6dba364a69ff6cd5c1872f999e0960bbf15c",
         "testId": "TEST-M5-CI-RESOURCE-PLAN-001",
         "testStatus": "passed",
         "counter": "candidatePlannedExecutionSlots",
         "value": 16,
         "processStatus": "completed",
         "exitCode": 0,
-        "executionRecordSha256": "0e14039eb691368fa4436430437bfafe94cf4b1e549d4818c1f3eadd2786c700",
-        "recordSha256": "f2dceb02f4ebf86a785f8a835acb59c58345a416d3bc61124c3c7d957d7a87c3"
+        "executionRecordSha256": "1ea3c04632a8cf0c1f7a1d1199ff35012e12ed5ca26377c0791bcfe12870343d",
+        "recordSha256": "e3ed8c77f27a0a96300b553876003e444af7e5092ef5aa889cf4e0f8191ea821"
       }
     },
     {
@@ -480,21 +484,21 @@
       "maximum": 13,
       "status": "pass",
       "provenance": {
-        "runId": "b474eb29-b27b-45f4-96e7-b1214e601779",
-        "executionId": "5c0a56d570e4bff3eb43da5aa5dbb2d53a938ad1988d967c210f935601743fee",
+        "runId": "c70de896-e665-493c-b0fd-e5f692404582",
+        "executionId": "0dfe914d3131c7574f9fb6ad65adf8dc20c4fddfd5ecbc5e019e16a0f22757d4",
         "commandName": "codegraph-tests",
         "commandSha256": "367841ceaa4c4655755dd32b6963719d0cc36c88dc15ca491ac13e1e5d3850a1",
         "reportPath": ".musubix/cache/test-results/codegraph.json",
         "sourceKind": "file",
-        "reportSha256": "08405b095557519bec149e2a9658d64c8cbe8e8e1db64eeb0d9c56949fc50060",
+        "reportSha256": "5685efd9de837fceef1cec6fd80f6dba364a69ff6cd5c1872f999e0960bbf15c",
         "testId": "TEST-M5-GRAPH-TRAVERSAL-001",
         "testStatus": "passed",
         "counter": "forwardAdjacencyVisits",
         "value": 13,
         "processStatus": "completed",
         "exitCode": 0,
-        "executionRecordSha256": "0e14039eb691368fa4436430437bfafe94cf4b1e549d4818c1f3eadd2786c700",
-        "recordSha256": "70cd71de0de1fac8081b532f46dd0db64a964b8bf1b2db1bc319f612c1bacdac"
+        "executionRecordSha256": "1ea3c04632a8cf0c1f7a1d1199ff35012e12ed5ca26377c0791bcfe12870343d",
+        "recordSha256": "7778b3e6d9922d0903f76fe642a7187b9dcbe923dd5a70107391f755ac6a3c61"
       }
     }
   ]

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-07T16:59:45.444Z",
+  "generatedAt": "2026-10-07T17:22:15.296Z",
   "status": "fail",
   "checks": [
     {
@@ -862,7 +862,7 @@
       "name": "tdd",
       "required": true,
       "status": "pass",
-      "summary": "1300 Red-Green TDD cycle(s) recorded.",
+      "summary": "1301 Red-Green TDD cycle(s) recorded.",
       "diagnostics": []
     },
     {
@@ -884,7 +884,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 4778,
+      "durationMs": 4734,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.2.0 typecheck\n> tsc --noEmit\n\n",
       "stderr": ""
@@ -894,7 +894,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 4455,
+      "durationMs": 4403,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.2.0 build\n> tsc -p tsconfig.build.json\n\n",
       "stderr": ""
@@ -904,28 +904,28 @@
       "required": true,
       "status": "pass",
       "summary": "npx: completed, exit 0.",
-      "durationMs": 172120,
+      "durationMs": 175965,
       "exitCode": 0,
       "stdout": "JSON report written to /home/nahisaho/.copilot/session-state/c7e1440d-e606-4988-ab43-5bb82dedb4bb/files/change-0018-ci-efficiency/.musubix/evidence/native/test/aggregate.json\n",
       "stderr": "Preparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\n",
       "testRuntime": {
         "kind": "stable-test-wall-clock-v1",
         "profileSha256": "a6ed695f234afda58c7826caf4d04d1b89e9ddf16378da425f722916a25c4832",
-        "inputsSha256": "b152dceab0eab06938544af018d2f872b6f585070db18789cb79c8c2b13ee192",
-        "dispatchSha256": "97dafe1de50ff934f19ef04dc599b978c3be18dfafb47a4b75a1f2577f1e31aa",
+        "inputsSha256": "9ccca8ca6427df7c2f97bd72ea4eb4370e60469ddd7ae043f387f9451b2ee7f1",
+        "dispatchSha256": "2bb356e741d27310c6bf159ba9b1e5b517221d4e411e1876bdf320059b5345c3",
         "runs": [
           {
             "ordinal": 0,
-            "runId": "fe5f3091-4f07-4bda-bd99-e269f8fa5804",
-            "requestSha256": "2b703657ad0e1babedcbf73f80694e78c720b0a1e23cf590606cd182fd65f42c",
-            "anchorSha256": "35e1937fed2379093d2bf16daef084e457c92633d235750c0f81deb90db582d4",
-            "acknowledgmentSha256": "d13dbc6d36a613dd438701989940ea942ef929b82fb24561e63098378c845d53",
-            "resultSha256": "0824ceafabc710652419db442e6d0116fe8032fda226d2fde5be54cf583212a4"
+            "runId": "72fabc28-e2be-409b-82ca-208797c90476",
+            "requestSha256": "0672272bfa1ee7e1c166ca6c8ba3ab467c02c524c5bcccd1fe54c482d9f0d018",
+            "anchorSha256": "00a5bee752288ca8e291f8b0cfde091a807e1483cb03a4ac3bdbe84b5b87fb9c",
+            "acknowledgmentSha256": "be50cc3c2a64220d7a73574295c07d7644e2299936cdb19ca07da0fefb4e2f95",
+            "resultSha256": "3d4a702d39a745b6fa15cf974110acb4a6849bc7d04bdf0b57cbe308f367dda0"
           }
         ],
         "publication": {
           "durability": "posix-file-directory-fsync",
-          "closureSha256": "99fd50305dd89488c6c0113301e86cc123e27a5d0be03acf157b7f08e22ffe11"
+          "closureSha256": "62ee9bcdb7242fa6e53625543aa7f55164c56dec2985c827e64619aff194ebc8"
         }
       }
     },
@@ -934,100 +934,100 @@
       "required": true,
       "status": "pass",
       "summary": "node: completed, exit 0.",
-      "durationMs": 71467,
+      "durationMs": 69068,
       "exitCode": 0,
       "stdout": "JSON report written to /home/nahisaho/.copilot/session-state/c7e1440d-e606-4988-ab43-5bb82dedb4bb/files/change-0018-ci-efficiency/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-001.json\nJSON report written to /home/nahisaho/.copilot/session-state/c7e1440d-e606-4988-ab43-5bb82dedb4bb/files/change-0018-ci-efficiency/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-NOCHANGE-001.json\nJSON report written to /home/nahisaho/.copilot/session-state/c7e1440d-e606-4988-ab43-5bb82dedb4bb/files/change-0018-ci-efficiency/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-FALLBACK-001.json\nJSON report written to /home/nahisaho/.copilot/session-state/c7e1440d-e606-4988-ab43-5bb82dedb4bb/files/change-0018-ci-efficiency/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-INCREMENTAL-GIT-001.json\nJSON report written to /home/nahisaho/.copilot/session-state/c7e1440d-e606-4988-ab43-5bb82dedb4bb/files/change-0018-ci-efficiency/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-CACHE-WRITE-001.json\nJSON report written to /home/nahisaho/.copilot/session-state/c7e1440d-e606-4988-ab43-5bb82dedb4bb/files/change-0018-ci-efficiency/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-TRAVERSAL-001.json\nJSON report written to /home/nahisaho/.copilot/session-state/c7e1440d-e606-4988-ab43-5bb82dedb4bb/files/change-0018-ci-efficiency/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-CYCLES-001.json\nJSON report written to /home/nahisaho/.copilot/session-state/c7e1440d-e606-4988-ab43-5bb82dedb4bb/files/change-0018-ci-efficiency/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-GATE-SCAN-001.json\nJSON report written to /home/nahisaho/.copilot/session-state/c7e1440d-e606-4988-ab43-5bb82dedb4bb/files/change-0018-ci-efficiency/.musubix/cache/test-results/.vitest-TEST-M5-CI-CODEGRAPH-MIXED-REPORT-001.json\nJSON report written to /home/nahisaho/.copilot/session-state/c7e1440d-e606-4988-ab43-5bb82dedb4bb/files/change-0018-ci-efficiency/.musubix/cache/test-results/.vitest-TEST-M5-GRAPH-GATE-ORDER-001.json\n",
       "stderr": "Preparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\nPreparing worktree (checking out 'candidate-first')\nPreparing worktree (checking out 'candidate-second')\n",
       "testRuntime": {
         "kind": "stable-test-wall-clock-v1",
         "profileSha256": "a6ed695f234afda58c7826caf4d04d1b89e9ddf16378da425f722916a25c4832",
-        "inputsSha256": "b152dceab0eab06938544af018d2f872b6f585070db18789cb79c8c2b13ee192",
-        "dispatchSha256": "f9da1730b790ea2d750fba9039c8e11032b5abf067ae797fa37f691f52316425",
+        "inputsSha256": "9ccca8ca6427df7c2f97bd72ea4eb4370e60469ddd7ae043f387f9451b2ee7f1",
+        "dispatchSha256": "27b26c7f80e5b49814feca53cc1748abe2f31cd6db3e85b4fc2d5fae9a03237e",
         "runs": [
           {
             "ordinal": 0,
-            "runId": "8c6e494c-cf31-4a24-8016-8c1818140c52",
-            "requestSha256": "2788dec4f925bae6bb4e0ae6b5b93acfcbbb3f7843ce025967c3a6b421156929",
-            "anchorSha256": "7152713607b53fc77511970bfb51f2345f276af184e605e9e57169d5991038d8",
-            "acknowledgmentSha256": "ab6912e76a7db72a7b3401c54757b1abd441cc21608b57281e44625701c5b138",
-            "resultSha256": "0932708ebdfb87b1e9c6838e1416e3cac044b3c973df5f848ef27285a3ee0cdf"
+            "runId": "9495ad64-24de-40bd-b461-c9e93de76a83",
+            "requestSha256": "19be172cf0184fbb14d6cf111a726a58611a40ef34f79ace3501569e4a12530a",
+            "anchorSha256": "538de9c5671325fef4d912a572cd172e4a1201ba7b2b15a6fd87da7b6d657384",
+            "acknowledgmentSha256": "84a95d1ef47c5f7d783da86c14cb4c2fdfb24907156e3b9872e317c6574e7d06",
+            "resultSha256": "e282678e96bfe14067fe337b2b69863f0a4e95cb3557a2cef085d2de8c60043c"
           },
           {
             "ordinal": 1,
-            "runId": "81992f9b-8986-4edc-b65f-7533f4ef126f",
-            "requestSha256": "438760974befd874483d9479fa1941b6fe137dc101cb7e3faa9bcd151e7db279",
-            "anchorSha256": "7152713607b53fc77511970bfb51f2345f276af184e605e9e57169d5991038d8",
-            "acknowledgmentSha256": "f6d1443329f5337f20f3c8282f7d5f2de2fc385cb580034412fd8cc7d1faef89",
-            "resultSha256": "7f113f8d0a9d0856ff8e678db5f2ae2791800e390ff6a3f0c1b924dde94cae42"
+            "runId": "23f0e79e-e50e-4761-99af-7400ab9e7d81",
+            "requestSha256": "39bf7745f59211d2adc7d3129061322cb562dd1c8a1def37b0c152ba8ccbff10",
+            "anchorSha256": "538de9c5671325fef4d912a572cd172e4a1201ba7b2b15a6fd87da7b6d657384",
+            "acknowledgmentSha256": "fe0658927ad5eacc5e975df150f47abf7ab2b0057f982e05f4103cedbc6d9de6",
+            "resultSha256": "f8ceb8804854fcb263c225d915bd7574c869ffefd5b4ce384e55e4107b7e2cbf"
           },
           {
             "ordinal": 2,
-            "runId": "bed2a535-1723-43f9-a1a4-08a6a2632091",
-            "requestSha256": "8808a61f718d8b79572bad98b54d416729cb42a176c0b04a7a1db79d42080d58",
-            "anchorSha256": "7152713607b53fc77511970bfb51f2345f276af184e605e9e57169d5991038d8",
-            "acknowledgmentSha256": "d2f045e92029919fb4f0718d62fb040c4b7f5fed6cff9407626bc9b10d22dd01",
-            "resultSha256": "d7f97212d3664808baa31cd2c905e22b9c5ea3b92ee36f4b69adf5ea136d60f0"
+            "runId": "222b8946-80cb-4d83-ba31-257994d74ee6",
+            "requestSha256": "30745734e7ee5bf11912b6fa55a0298b6f18f1e1392a0416a65649afa6a7c491",
+            "anchorSha256": "538de9c5671325fef4d912a572cd172e4a1201ba7b2b15a6fd87da7b6d657384",
+            "acknowledgmentSha256": "0b0587c2b32e8143cfd1e9bfb572456924dc444fd2a6f66e7e276da15acc40d2",
+            "resultSha256": "167aea28412dcb86dd3bdb15f2df073c4b31a5a10ec6d20106a88573649a8088"
           },
           {
             "ordinal": 3,
-            "runId": "02832079-ec2a-4aaa-8d4c-795bc768c2f1",
-            "requestSha256": "034bda185cc2398ba0f20716b744fe166aada7cf3c74e84d461e14a60a871a9d",
-            "anchorSha256": "7152713607b53fc77511970bfb51f2345f276af184e605e9e57169d5991038d8",
-            "acknowledgmentSha256": "558479c28948350372f79c627cad35bc363f77b52f70636450aa932e603c24b0",
-            "resultSha256": "8e92673b23582bdc44f3d97e742fe1ef9c4a0490d95a9109a8eaa9ac4f1a635d"
+            "runId": "6b46beec-93e2-403a-9728-a2a9a8320e78",
+            "requestSha256": "03ecb64446b8218df17f86e223ce1d66d0407859583faae31b03583dfbf7d6d2",
+            "anchorSha256": "538de9c5671325fef4d912a572cd172e4a1201ba7b2b15a6fd87da7b6d657384",
+            "acknowledgmentSha256": "d8e3cddabc7529cb8efb19cae1c4a88759cc5bfa6a039c96b409bd0c24a25987",
+            "resultSha256": "3dc4c45be814fd74480fb9691bfd240158eb6f338d530bc0ed1a8b15957a4d69"
           },
           {
             "ordinal": 4,
-            "runId": "e109e918-5022-45c8-9b20-163f03a6f6c0",
-            "requestSha256": "e28f0ea5fb6395c46f590925cf8d342eefea82de64254315cd03102bbfaa3a34",
-            "anchorSha256": "7152713607b53fc77511970bfb51f2345f276af184e605e9e57169d5991038d8",
-            "acknowledgmentSha256": "6f4956f89c009723401e9ca0d5d647eb010e2e067fed44de0d312d78f6d23478",
-            "resultSha256": "25f1ab49979adbbdd2f8c80377b2f78d8c4e7e1839e8e11e8438727e5e179299"
+            "runId": "02a8feaa-17bc-4d2e-b63e-2dd9dc71a1d7",
+            "requestSha256": "f4f75f02230c01130788ae6f7ac88d15c9dff8dad9ebb3bf70551c268d0f2522",
+            "anchorSha256": "538de9c5671325fef4d912a572cd172e4a1201ba7b2b15a6fd87da7b6d657384",
+            "acknowledgmentSha256": "c9fd274e62d290d67e28863c933f90c5ea2c2efa680ea460ebf8148eca848f7d",
+            "resultSha256": "e3970e8f7abbb9fe71c08c2e870c06f0326f9d531f30d6c4c454e0b71764d1bb"
           },
           {
             "ordinal": 5,
-            "runId": "1f0b7112-6e95-4e66-b37f-40e861df2c6a",
-            "requestSha256": "117b1ba03cf23c769e24420b6331f017274f1a9f31d9efeedeef4f88aed32bf6",
-            "anchorSha256": "7152713607b53fc77511970bfb51f2345f276af184e605e9e57169d5991038d8",
-            "acknowledgmentSha256": "42e132e7c0745b528c295170a0184d2e3d905466d4b99927b8508d005d07efc7",
-            "resultSha256": "073f59f2c90a33c0c0b771618a047b7c1045362148d3ac765a9064c62186864e"
+            "runId": "a1fa2a79-650e-4455-bdbb-24237cd85fb0",
+            "requestSha256": "831e5315dd7752bc44b688dfa51d05c7be1200a3a781b0762bed266da684dddb",
+            "anchorSha256": "538de9c5671325fef4d912a572cd172e4a1201ba7b2b15a6fd87da7b6d657384",
+            "acknowledgmentSha256": "17d2344acdcddb121206a071aaa9d53d1d6a326cee285a2424507e7464532428",
+            "resultSha256": "782413bde1c2db22215f1993553af8771b3ee7ba04ca1d5db2c854ea4458779c"
           },
           {
             "ordinal": 6,
-            "runId": "f762a4b8-d0b8-499d-b335-46ab7074c8a9",
-            "requestSha256": "5fbf0e064eb10e64624cf3435dc7f657fe98c6d2a950ca0fedaa35329b66bfcb",
-            "anchorSha256": "7152713607b53fc77511970bfb51f2345f276af184e605e9e57169d5991038d8",
-            "acknowledgmentSha256": "b382ef7bc2caaad11adf863b8de487262e0bb709276037d4710597975eca3cfb",
-            "resultSha256": "53ec849cee2c470b1b7a97394de64c2a76212ce1d13b568286277bb57b0c9bc9"
+            "runId": "95ed8c2b-7a41-4442-8e01-b5e3521a9867",
+            "requestSha256": "aa1281d972c06ab9026a57cc9522096da722016890ccb6f7057d3aede44e8b0d",
+            "anchorSha256": "538de9c5671325fef4d912a572cd172e4a1201ba7b2b15a6fd87da7b6d657384",
+            "acknowledgmentSha256": "2824f76a4adaeb30f911391932cbf6dfde4b83f909ee3fa40a0dc2a1195dc6a9",
+            "resultSha256": "ed36b0956ebf56c12d2a61d2e2212ddb0f4ed47a987907f2333163c522533840"
           },
           {
             "ordinal": 7,
-            "runId": "ad326ddb-345f-4274-959b-80038750a2c1",
-            "requestSha256": "17f3861c934de5411c8f180371a8dd2183211615bd85ee5c03a77a89ea7dfe52",
-            "anchorSha256": "7152713607b53fc77511970bfb51f2345f276af184e605e9e57169d5991038d8",
-            "acknowledgmentSha256": "a79156745b3734dbeb08506ee07784e67eb1eb14f82556dfb9b105cd634f14cd",
-            "resultSha256": "79f852592abd21ca1435f5da678b059ba4659c87b5fbcec6788423db503d2aa7"
+            "runId": "f4eac1a8-810e-469f-ad60-a540773e2a85",
+            "requestSha256": "8e35af60f99e7395dbd5016df71fbc976dfbeb12e72d001791c00fede8cb9200",
+            "anchorSha256": "538de9c5671325fef4d912a572cd172e4a1201ba7b2b15a6fd87da7b6d657384",
+            "acknowledgmentSha256": "516aaae06914f777b2393c5ffe1aaee9fd969f48ad0aa7e0fde98280d707c5a1",
+            "resultSha256": "97a57d866c6753a423fa354ce4ab2799cfc651c8e2bfd7d6756a8cf1c41cb021"
           },
           {
             "ordinal": 8,
-            "runId": "b8e9e980-1383-4e51-a98a-221958d8a36d",
-            "requestSha256": "657f6e0b66c5b29ea859eb25112ae5166bebb54e459fe0a759d34188bb4c88eb",
-            "anchorSha256": "7152713607b53fc77511970bfb51f2345f276af184e605e9e57169d5991038d8",
-            "acknowledgmentSha256": "f2f7c71e2d9d163274e82d243327e60112f5149aaa3465a538a4e4aaa2d0e54c",
-            "resultSha256": "d8928fdf6c177a15978e484b39b0d79aebf97f11c1cf5f129eef681597970162"
+            "runId": "0774101d-b69b-4c71-ba01-a97f20182f9e",
+            "requestSha256": "7345335d53e05d75854b001fef6a4ea5e85b72a81556023f8a782069eb85ce00",
+            "anchorSha256": "538de9c5671325fef4d912a572cd172e4a1201ba7b2b15a6fd87da7b6d657384",
+            "acknowledgmentSha256": "8021fce626958d2ca2fa7fad9b51ae94454d41c11334550169f5cabbe8cfff64",
+            "resultSha256": "575d79eb64377a4a35ca13eb7f1f9e07c0cdea0633531b7146be6c998ffca1c5"
           },
           {
             "ordinal": 9,
-            "runId": "82655823-f27c-4b64-bf98-f15fb253c962",
-            "requestSha256": "799895ce971c7385454a25d541d46c11d44af72db79f974b83b799f350917158",
-            "anchorSha256": "7152713607b53fc77511970bfb51f2345f276af184e605e9e57169d5991038d8",
-            "acknowledgmentSha256": "9390358361a04488f8d5711ddac1f2b6670825d0704276ad0f0a081a432e56a5",
-            "resultSha256": "e8e39ad93f5e46e0b0a8649d4dec1eee1265fa8ab3da71c30e377820edb36e09"
+            "runId": "93e32803-df89-4416-81cf-1013f8a6a98d",
+            "requestSha256": "bd92024bc8f75beff4e6f4c010abc53b658bd60636b9e1f2df51eae00335e8eb",
+            "anchorSha256": "538de9c5671325fef4d912a572cd172e4a1201ba7b2b15a6fd87da7b6d657384",
+            "acknowledgmentSha256": "81da4f60e3891f06f7a0a71b391ef4115223898d799b13582c7179bed6070d29",
+            "resultSha256": "deb08a79da8cd4cd99ee5f182db43989027fd44ec948c28c281d5d412f306eb7"
           }
         ],
         "publication": {
           "durability": "posix-file-directory-fsync",
-          "closureSha256": "11023e960d5d8d1efd405d03107f7faef5618cd5de5a90cc2affdd9599bb4ada"
+          "closureSha256": "9de4b61f1a5d44a2b2773de84412a8f505c5e2ddb6f5ea9b0b37206ea4fd221f"
         }
       }
     },
@@ -1036,28 +1036,28 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 10108,
+      "durationMs": 9664,
       "exitCode": 0,
-      "stdout": "\n RUN  v3.2.7 /home/nahisaho/.copilot/session-state/c7e1440d-e606-4988-ab43-5bb82dedb4bb/files/change-0018-ci-efficiency\n\n ✓ tests/compatibility-oracle.test.ts (2 tests) 1127ms\n   ✓ compatibility oracle > TEST-M5-SOURCE-REGISTRY-001 binds candidate-only source commands to the approved registry and migration contract  1120ms\n ✓ tests/cli-help-contract.test.ts (3 tests) 1215ms\n   ✓ CLI help compatibility > TEST-M5-SOURCE-HELP-001 preserves the candidate-only parent and child help aggregate  1136ms\n ✓ tests/cli-json-error-contract.test.ts (3 tests) 3474ms\n   ✓ CLI JSON failure compatibility > TEST-M5-SOURCE-JSON-001 preserves stdout envelopes and closed usage reasons before generation admission  2763ms\n   ✓ CLI JSON failure compatibility > TEST-M5-APPROVAL-GUIDANCE-001 names the published approval recovery command  418ms\n\n Test Files  3 passed (3)\n      Tests  8 passed (8)\n   Start at  01:58:28\n   Duration  9.69s (transform 943ms, setup 65ms, collect 289ms, tests 5.82s, environment 0ms, prepare 163ms)\n\n",
+      "stdout": "\n RUN  v3.2.7 /home/nahisaho/.copilot/session-state/c7e1440d-e606-4988-ab43-5bb82dedb4bb/files/change-0018-ci-efficiency\n\n ✓ tests/compatibility-oracle.test.ts (2 tests) 1078ms\n   ✓ compatibility oracle > TEST-M5-SOURCE-REGISTRY-001 binds candidate-only source commands to the approved registry and migration contract  1071ms\n ✓ tests/cli-help-contract.test.ts (3 tests) 1160ms\n   ✓ CLI help compatibility > TEST-M5-SOURCE-HELP-001 preserves the candidate-only parent and child help aggregate  1079ms\n ✓ tests/cli-json-error-contract.test.ts (3 tests) 3296ms\n   ✓ CLI JSON failure compatibility > TEST-M5-SOURCE-JSON-001 preserves stdout envelopes and closed usage reasons before generation admission  2630ms\n   ✓ CLI JSON failure compatibility > TEST-M5-APPROVAL-GUIDANCE-001 names the published approval recovery command  390ms\n\n Test Files  3 passed (3)\n      Tests  8 passed (8)\n   Start at  02:21:01\n   Duration  9.26s (transform 904ms, setup 67ms, collect 313ms, tests 5.53s, environment 0ms, prepare 146ms)\n\n",
       "stderr": "",
       "testRuntime": {
         "kind": "stable-test-wall-clock-v1",
         "profileSha256": "a6ed695f234afda58c7826caf4d04d1b89e9ddf16378da425f722916a25c4832",
-        "inputsSha256": "b152dceab0eab06938544af018d2f872b6f585070db18789cb79c8c2b13ee192",
-        "dispatchSha256": "30213fe725ebceea037b81596c26ce3821443dd9180ee3c3072f48a9c7c6ceed",
+        "inputsSha256": "9ccca8ca6427df7c2f97bd72ea4eb4370e60469ddd7ae043f387f9451b2ee7f1",
+        "dispatchSha256": "40a8193c6dcbe00e8805673aff7fd3551e46fc9fca6cc8e0439a72c7a5c6494d",
         "runs": [
           {
             "ordinal": 0,
-            "runId": "99f82138-c7e8-4a45-a4ec-a3525fefbbbb",
-            "requestSha256": "92b20f3790bd68c23462d82c099ca35ec65258caeecc88de763c612b86204844",
-            "anchorSha256": "a0c18a00b938dfa384bf5461a3d3cce5b5a7fabf27359de426c9cb08481b2a9e",
-            "acknowledgmentSha256": "17e4550bcbeac21a58e7c999995720e2a7a46a0d9cf22bf191738c7d428850f7",
-            "resultSha256": "c1dd710039caa1b7ca0ab8aba2ef16b7f729df25f6ff38a181ba84cc9746a12e"
+            "runId": "f8bdf9be-8fc4-4bde-a326-80b720831a67",
+            "requestSha256": "2e596b54ef548d93283fc722ffe0a0fc469f0e102ee63ac752948c3745d19075",
+            "anchorSha256": "126e20fa7a75d54f7082220b614c7677e2687279d3fa9d9ad30bc0814279d43d",
+            "acknowledgmentSha256": "da36df685b8c3e6ba00850f7dbefe38b25fed6eebe8707bffcc4e73026739103",
+            "resultSha256": "c70711b85dae31d3dc383ccf3465f6f935b7405c6490f1171f4ff3e4b7e3a21c"
           }
         ],
         "publication": {
           "durability": "posix-file-directory-fsync",
-          "closureSha256": "9acc76a15157f8852d297d12664e61aa191c0790dd7a7243292d877f3b9c2313"
+          "closureSha256": "6f9300415401f02257d19bf0bae65fd6ac504793ee38f40c87da808df5d2b92e"
         }
       }
     },
@@ -1066,7 +1066,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 1139,
+      "durationMs": 1127,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.2.0 pack:check\n> node scripts/check-package.mjs\n\nPackage verified: musubix5-0.2.0.tgz, 290 files, 12 skills.\n",
       "stderr": ""
@@ -1076,7 +1076,7 @@
       "required": true,
       "status": "pass",
       "summary": "npm: completed, exit 0.",
-      "durationMs": 4508,
+      "durationMs": 4532,
       "exitCode": 0,
       "stdout": "\n> musubix5@0.2.0 pack:smoke\n> node scripts/smoke-package.mjs\n\nInstalled tarball verified: executable bin, ESM exports, init, status, assets, and hidden skills (0.2.0).\n",
       "stderr": ""
@@ -1085,7 +1085,7 @@
       "name": "test-identities",
       "required": false,
       "status": "pass",
-      "summary": "532/532 annotated test IDs passed in structured command reports.",
+      "summary": "533/533 annotated test IDs passed in structured command reports.",
       "diagnostics": []
     },
     {
@@ -1179,9 +1179,9 @@
     "commands.failures": 0,
     "candidateObservedExecutionSlots": 0,
     "commands.skipped": 0,
-    "tests.annotatedIds": 532,
-    "tests.executedIds": 532,
-    "tdd.cycles": 1300,
+    "tests.annotatedIds": 533,
+    "tests.executedIds": 533,
+    "tdd.cycles": 1301,
     "tdd.errors": 0,
     "changes.count": 19,
     "changes.errors": 0,
@@ -1205,29 +1205,27 @@
   "mode": "changed",
   "feature": null,
   "changed": [
+    ".github/scripts/run-candidate-precondition-probe.mjs",
     ".musubix/candidate-execution-plan.json",
     ".musubix/evidence/changes.json",
     ".musubix/evidence/order.json",
     ".musubix/evidence/tdd.json",
-    ".musubix/evidence/test-runtime/v1/blobs/051d72418b1dde7ea7abbee90d895f6a707b545d75a84b3439651607d890d490",
-    ".musubix/evidence/test-runtime/v1/blobs/08bb396d1e26791fb1b5d545a8d21cf646cd27913ecfe0ac760cf5d5039d2eda",
-    ".musubix/evidence/test-runtime/v1/blobs/15466aef31e5a13a6b8fe87306ad0fad7bd00f4603618da675c1e9d5f108c7e8",
-    ".musubix/evidence/test-runtime/v1/blobs/1623a90188597bc7d7aac2bf804e9d73b1b5f98400f53ceae63bba599a85e35f",
-    ".musubix/evidence/test-runtime/v1/blobs/190583cf4f67c6483e7c8edfa692576ee913fe70ef3412a7406937a080f4a5ed",
-    ".musubix/evidence/test-runtime/v1/blobs/281c753a360fb395b017f08bb56fef5309e31bd21d338efb4e2a01059f6a2af9",
-    ".musubix/evidence/test-runtime/v1/blobs/41e95c94e1ca11dbca7cf4032998f0401138837963faed068e2393b7a5975819",
-    ".musubix/evidence/test-runtime/v1/blobs/6f85b717fe50fc52ce3d6086416231b0c0b677fbe1e007aba13834c3881372da",
-    ".musubix/evidence/test-runtime/v1/blobs/8a37c816a36e1d66577087fe2253edccd61cf295f3b89dcbeed75cebf3fdbf37",
-    ".musubix/evidence/test-runtime/v1/blobs/8df98580f46d000be56232d2d2df2eef1ffd0548b784115dec96445674469709",
-    ".musubix/evidence/test-runtime/v1/blobs/983374ef76963cdd622bc69efe8a142e8eb07221ab7b072684c2fffd6a469d7c",
-    ".musubix/evidence/test-runtime/v1/blobs/9d55f6af715e29b4e8fe47e4a209f94c66ab27de2d88265dacc3a5bb837b9212",
-    ".musubix/evidence/test-runtime/v1/blobs/b152dceab0eab06938544af018d2f872b6f585070db18789cb79c8c2b13ee192",
-    ".musubix/evidence/test-runtime/v1/blobs/c4b3549685029b5e86bcd80bb4e4788ad08502f038970ae9d1ca6d50d1252575",
-    ".musubix/evidence/test-runtime/v1/blobs/e330e13129561273cc974c7090e6f8e872c0f244f3a1344b3c558f7d90ec407f",
-    ".musubix/evidence/test-runtime/v1/blobs/e82f7ebec2d663a70421721186df70658414af894ad4b989c03375cc94a174a6",
-    ".musubix/evidence/test-runtime/v1/blobs/eb7ffc40785a6f7d551d7da738e691d965d55d9926db38a3e8a2eb58a2248e31",
+    ".musubix/evidence/test-runtime/v1/blobs/0d74a945d20798bc918dcc1aa9759e869670dac430198b8d7e67f318486f082a",
+    ".musubix/evidence/test-runtime/v1/blobs/306893b3a72d63402e23f8ca769878b8497bf6e4d0c83c62ea08d93d7fd9becf",
+    ".musubix/evidence/test-runtime/v1/blobs/390c1497bf0f5d75bcb5efe146eaa4a0ec93a28fa8899131a813f0061ff52fce",
+    ".musubix/evidence/test-runtime/v1/blobs/7b05c9d8ba3cc156672538f72e7b5e52c54b6a7b163078d225f4b362fef17f8a",
+    ".musubix/evidence/test-runtime/v1/blobs/841c3aadeb256091b1964d0986ee97d09e1ac077d4ec3686ba1ae14f20e16935",
+    ".musubix/evidence/test-runtime/v1/blobs/844868372d30359e808f1a778d1336a21c182c261131b87eafa8c2f1793a3455",
+    ".musubix/evidence/test-runtime/v1/blobs/9ccca8ca6427df7c2f97bd72ea4eb4370e60469ddd7ae043f387f9451b2ee7f1",
+    ".musubix/evidence/test-runtime/v1/blobs/b29c2920745a8760f1699ec67c5d20bf9f02c84470d643b545ea64bea62a4904",
+    ".musubix/evidence/test-runtime/v1/blobs/d1be98d65bf5fd4a870e00e6498fa2b63a5029f7765827f9f708313aaad1592d",
+    ".musubix/evidence/test-runtime/v1/blobs/d2e5fcd8ebfdf268bedc3efcc05d34cd12be91a7a75294f79c84f77ac9861c11",
+    ".musubix/evidence/test-runtime/v1/blobs/d6dabe8b4296d2d5acc6b2971fae1d0783d811ae3c37534e6b5540b0e26352cf",
+    ".musubix/evidence/test-runtime/v1/blobs/e67a2ac1f3f5be0acc77aebc974b85770bcc05fb3e2ff33510902e20fcce0475",
+    ".musubix/evidence/test-runtime/v1/blobs/f35e6d71984c65d769ed649606f3a80ad5b30c606fd05383a65a914a9ffcee6c",
+    ".musubix/evidence/test-runtime/v1/blobs/f569d0cbc5dbcf36f8c893741f1fe2b4c12eaad6cebdb70a2e7e5a0b7f463121",
+    ".musubix/evidence/test-runtime/v1/blobs/f838b62dd8e02f5cbb863d6dae7b05509dd776d2ee2e7ab66170d8740d56775c",
     ".musubix/trace/index.json",
-    "packages/analysis/src/candidate-gate-runner.ts",
     "scripts/run-codegraph-tests.mjs",
     "tests/candidate-calibration-integration.test.ts",
     "tests/candidate-codegraph-scheduler.test.ts",
@@ -1235,46 +1233,38 @@
     "tests/full-test-timeout.test.ts"
   ],
   "impacted": [
-    "packages/analysis/src/candidate-gate-runner.ts",
+    ".github/scripts/run-candidate-precondition-probe.mjs",
     "scripts/run-codegraph-tests.mjs",
     "tests/candidate-calibration-integration.test.ts",
     "tests/candidate-codegraph-scheduler.test.ts",
-    "tests/candidate-first-failure-ledger.test.ts",
-    "tests/candidate-gate-orchestration-boundaries.test.ts",
     "tests/candidate-gate-trust.test.ts",
-    "tests/candidate-gate-workflow-errors.test.ts",
-    "tests/full-test-timeout.test.ts",
-    "tests/git-lfs-distribution.test.ts",
-    "tests/repository-identity-workflows.test.ts",
-    "tests/test-runtime-incomplete-command.test.ts"
+    "tests/full-test-timeout.test.ts"
   ],
   "lastChangeAnalysis": {
     "baseline": "HEAD",
-    "head": "a146b971f6e60a8699dd2eaa779c253ebff23e5c",
+    "head": "af3804215e8f5978f06310356e6744f98398c11c",
     "changed": [
+      ".github/scripts/run-candidate-precondition-probe.mjs",
       ".musubix/candidate-execution-plan.json",
       ".musubix/evidence/changes.json",
       ".musubix/evidence/order.json",
       ".musubix/evidence/tdd.json",
-      ".musubix/evidence/test-runtime/v1/blobs/051d72418b1dde7ea7abbee90d895f6a707b545d75a84b3439651607d890d490",
-      ".musubix/evidence/test-runtime/v1/blobs/08bb396d1e26791fb1b5d545a8d21cf646cd27913ecfe0ac760cf5d5039d2eda",
-      ".musubix/evidence/test-runtime/v1/blobs/15466aef31e5a13a6b8fe87306ad0fad7bd00f4603618da675c1e9d5f108c7e8",
-      ".musubix/evidence/test-runtime/v1/blobs/1623a90188597bc7d7aac2bf804e9d73b1b5f98400f53ceae63bba599a85e35f",
-      ".musubix/evidence/test-runtime/v1/blobs/190583cf4f67c6483e7c8edfa692576ee913fe70ef3412a7406937a080f4a5ed",
-      ".musubix/evidence/test-runtime/v1/blobs/281c753a360fb395b017f08bb56fef5309e31bd21d338efb4e2a01059f6a2af9",
-      ".musubix/evidence/test-runtime/v1/blobs/41e95c94e1ca11dbca7cf4032998f0401138837963faed068e2393b7a5975819",
-      ".musubix/evidence/test-runtime/v1/blobs/6f85b717fe50fc52ce3d6086416231b0c0b677fbe1e007aba13834c3881372da",
-      ".musubix/evidence/test-runtime/v1/blobs/8a37c816a36e1d66577087fe2253edccd61cf295f3b89dcbeed75cebf3fdbf37",
-      ".musubix/evidence/test-runtime/v1/blobs/8df98580f46d000be56232d2d2df2eef1ffd0548b784115dec96445674469709",
-      ".musubix/evidence/test-runtime/v1/blobs/983374ef76963cdd622bc69efe8a142e8eb07221ab7b072684c2fffd6a469d7c",
-      ".musubix/evidence/test-runtime/v1/blobs/9d55f6af715e29b4e8fe47e4a209f94c66ab27de2d88265dacc3a5bb837b9212",
-      ".musubix/evidence/test-runtime/v1/blobs/b152dceab0eab06938544af018d2f872b6f585070db18789cb79c8c2b13ee192",
-      ".musubix/evidence/test-runtime/v1/blobs/c4b3549685029b5e86bcd80bb4e4788ad08502f038970ae9d1ca6d50d1252575",
-      ".musubix/evidence/test-runtime/v1/blobs/e330e13129561273cc974c7090e6f8e872c0f244f3a1344b3c558f7d90ec407f",
-      ".musubix/evidence/test-runtime/v1/blobs/e82f7ebec2d663a70421721186df70658414af894ad4b989c03375cc94a174a6",
-      ".musubix/evidence/test-runtime/v1/blobs/eb7ffc40785a6f7d551d7da738e691d965d55d9926db38a3e8a2eb58a2248e31",
+      ".musubix/evidence/test-runtime/v1/blobs/0d74a945d20798bc918dcc1aa9759e869670dac430198b8d7e67f318486f082a",
+      ".musubix/evidence/test-runtime/v1/blobs/306893b3a72d63402e23f8ca769878b8497bf6e4d0c83c62ea08d93d7fd9becf",
+      ".musubix/evidence/test-runtime/v1/blobs/390c1497bf0f5d75bcb5efe146eaa4a0ec93a28fa8899131a813f0061ff52fce",
+      ".musubix/evidence/test-runtime/v1/blobs/7b05c9d8ba3cc156672538f72e7b5e52c54b6a7b163078d225f4b362fef17f8a",
+      ".musubix/evidence/test-runtime/v1/blobs/841c3aadeb256091b1964d0986ee97d09e1ac077d4ec3686ba1ae14f20e16935",
+      ".musubix/evidence/test-runtime/v1/blobs/844868372d30359e808f1a778d1336a21c182c261131b87eafa8c2f1793a3455",
+      ".musubix/evidence/test-runtime/v1/blobs/9ccca8ca6427df7c2f97bd72ea4eb4370e60469ddd7ae043f387f9451b2ee7f1",
+      ".musubix/evidence/test-runtime/v1/blobs/b29c2920745a8760f1699ec67c5d20bf9f02c84470d643b545ea64bea62a4904",
+      ".musubix/evidence/test-runtime/v1/blobs/d1be98d65bf5fd4a870e00e6498fa2b63a5029f7765827f9f708313aaad1592d",
+      ".musubix/evidence/test-runtime/v1/blobs/d2e5fcd8ebfdf268bedc3efcc05d34cd12be91a7a75294f79c84f77ac9861c11",
+      ".musubix/evidence/test-runtime/v1/blobs/d6dabe8b4296d2d5acc6b2971fae1d0783d811ae3c37534e6b5540b0e26352cf",
+      ".musubix/evidence/test-runtime/v1/blobs/e67a2ac1f3f5be0acc77aebc974b85770bcc05fb3e2ff33510902e20fcce0475",
+      ".musubix/evidence/test-runtime/v1/blobs/f35e6d71984c65d769ed649606f3a80ad5b30c606fd05383a65a914a9ffcee6c",
+      ".musubix/evidence/test-runtime/v1/blobs/f569d0cbc5dbcf36f8c893741f1fe2b4c12eaad6cebdb70a2e7e5a0b7f463121",
+      ".musubix/evidence/test-runtime/v1/blobs/f838b62dd8e02f5cbb863d6dae7b05509dd776d2ee2e7ab66170d8740d56775c",
       ".musubix/trace/index.json",
-      "packages/analysis/src/candidate-gate-runner.ts",
       "scripts/run-codegraph-tests.mjs",
       "tests/candidate-calibration-integration.test.ts",
       "tests/candidate-codegraph-scheduler.test.ts",
@@ -1282,20 +1272,14 @@
       "tests/full-test-timeout.test.ts"
     ],
     "impacted": [
-      "packages/analysis/src/candidate-gate-runner.ts",
+      ".github/scripts/run-candidate-precondition-probe.mjs",
       "scripts/run-codegraph-tests.mjs",
       "tests/candidate-calibration-integration.test.ts",
       "tests/candidate-codegraph-scheduler.test.ts",
-      "tests/candidate-first-failure-ledger.test.ts",
-      "tests/candidate-gate-orchestration-boundaries.test.ts",
       "tests/candidate-gate-trust.test.ts",
-      "tests/candidate-gate-workflow-errors.test.ts",
-      "tests/full-test-timeout.test.ts",
-      "tests/git-lfs-distribution.test.ts",
-      "tests/repository-identity-workflows.test.ts",
-      "tests/test-runtime-incomplete-command.test.ts"
+      "tests/full-test-timeout.test.ts"
     ],
-    "generatedAt": "2026-10-07T16:59:45.444Z"
+    "generatedAt": "2026-10-07T17:22:15.296Z"
   },
   "fingerprints": {
     ".git": "3c3f61fa485d36eeaa0b4ea766f27b4b6cddee71cc43b05e2119f8ded3cded09",
@@ -1304,7 +1288,7 @@
     ".github/plugin/marketplace.json": "7904e466f476b1ec77e25ad4dc0e7434ac14707dc69edf2437fb73d3809d5e39",
     ".github/scripts/resolve-candidate-job-timing.mjs": "b736fa81638fb29619c6c6087f7669406993c467f6e805d6a6f8e62b347579da",
     ".github/scripts/run-candidate-gate-wrapper.mjs": "3035e95669f363221fa1a2c9eb3cd85a66b52bf1dfce4daa3089a6c952eb894c",
-    ".github/scripts/run-candidate-precondition-probe.mjs": "5edee32d7bf6b789ecb0a590e1eebbeefb1bf91c7e8c50922cc0333b34c952dd",
+    ".github/scripts/run-candidate-precondition-probe.mjs": "13c9cff1594e0780a59d4ed12ab5e3d7d1ea3931f1ec2e2d2a00341dfc5dda9f",
     ".github/scripts/write-candidate-gate-runner-failure.mjs": "945f2f3919fa8f26f0f69da138f794ad4c204e3c51bb4735a13422ca6f711df5",
     ".github/skills/sdd-agent-assignment/SKILL.md": "a92acc1af27365d13272c1b0a65f84d29fa5f582f1eb2a450da05ff8920c31a1",
     ".github/skills/sdd-change/SKILL.md": "043787ee6ccc065cf9b397905f033074b291832745350efb96bbfcb783b5221b",
@@ -1323,7 +1307,7 @@
     ".github/workflows/npm-publish.yml": "6d1b7c5a13c384864c45bac7b876b06216ca691f7ae431991ee8a279426cbcbf",
     ".github/workflows/release.yml": "aa1a48f56ad5e361e15a563f8bd3cf1c28d2a8be522ba305641fa4aef48c51b7",
     ".gitignore": "ed99a5e21e0874d31191b558aaec4d6a3238db0fba3eb2c67418ece8c85f1c4f",
-    ".musubix/candidate-execution-plan.json": "8564682f935319f5b36c74f7f74432221120ad8d55a2762a61f54579ee3df0de",
+    ".musubix/candidate-execution-plan.json": "73598e9bf8565d113a73f68c0bc3f55771ac3d878efa73d28f56aa206b81354c",
     ".musubix/changes/CHANGE-0002.md": "314b6441c0be6a484ffc354e3585fde0019b78b42ee28e2e18ea06be4790495e",
     ".musubix/changes/CHANGE-0003.md": "4ae48abb9e3be0c0e2b78014b4064877a6b5f02a73d7c021e630a2b237d410a3",
     ".musubix/changes/CHANGE-0004.md": "827f8e03200eb9ba8221be3ecc8adfe0e5554f8b28aff2b6a658fba0e70270c7",
@@ -2468,6 +2452,8 @@
     ".musubix/journal/normal/000000001041.json": "5aa85142c49025723c484a40a70b999b141f6e7f8330024ac336a0b615ed2e49",
     ".musubix/journal/normal/000000001042.json": "c872cd15b78b142cd06591dd74168d41595dc89ff40a342752e883e9ed7bad83",
     ".musubix/journal/normal/000000001043.json": "12d366b4f3e470c2ca6a2b75f46b407d4561359e5c4363e921577849293a71a1",
+    ".musubix/journal/normal/000000001044.json": "aa97d2cacc3d8fb4c76822fede2ee08448f074937657d57cc508852b60bee98c",
+    ".musubix/journal/normal/000000001045.json": "f427d34f5527a811f117790136436c4349084137a95a93d3f2b2f9838ab9bbd5",
     ".musubix/parallel/CHANGE-0014-plan.json": "6ca6deeecdb33ac4e07ebfe0e3019d6e86b93ced67d72339aee586d577ef7e64",
     "assets/ADR-0001.md": "07d68c567d75e9ec88f554114f8df4d1259a82cf45fd6567c65c3fc9db7090f0",
     "assets/constitution.md": "f8b47fdc486f395bab05223a94821b145cf8df70ffde2c838a28f8d71fe0fa92",
@@ -2588,7 +2574,7 @@
     "scripts/check-lfs-tool.mjs": "1996502c4b2c96e16121b53175b273d97795debf66aa3e00feb7990df5acfb2e",
     "scripts/check-package.mjs": "b817a08296efb0f2f90be012df55c598f59aaaf5230c8501c1af02b900546593",
     "scripts/run-candidate-tests.mjs": "a1646e4571f3389b3f31eab09311a90dd07712e6db803c315526acd3b41ed9ea",
-    "scripts/run-codegraph-tests.mjs": "13f985178183aaae2e5240341ad8c3dbbe47530cfcbaf001786334630ef94162",
+    "scripts/run-codegraph-tests.mjs": "c58eb7cb1d6a4e276f644cc3908e68e930ae927f0177987b3536b128eaeb156e",
     "scripts/run-compatibility-tests.mjs": "562a6c818ff94c013cb8a9f69a5c9dd2bdfb609c7ae90a3cd17c24aa96f35db9",
     "scripts/run-concurrency-load.mjs": "6ac4ab549f52c750d952be44984d4afe049a71b64fd54bd3b9c78557f7431600",
     "scripts/smoke-package.mjs": "b5f69bc4c0109632acdd266717695065dbce04e4d7f8d543eb164c1596a1568c",
@@ -2614,12 +2600,12 @@
     "tests/budget-reservation.test.ts": "f6e2a8e70103140b6f6feb063b0eb13e80df7500244ed604a6d85cea1caf4c52",
     "tests/budget-usage.test.ts": "62a656deb6e48e7f63302ac5900407f01b07cbf6d1963acdf6bffb8c27454807",
     "tests/candidate-calibration-input-closure.test.ts": "bcb660ce6025a59152b17c8a8c5ec531e3571a2c644646122b8c17e0a03825e4",
-    "tests/candidate-calibration-integration.test.ts": "8b190ff381831bb6897539ab5883f5189431506737054e8ee3da55056f879fa3",
+    "tests/candidate-calibration-integration.test.ts": "c4e862f8a715feabd63b9d94a838624284c233c0718b5b47f1d3d5e6602e2dd0",
     "tests/candidate-calibration-source-final.test.ts": "432b87ed53c3ca93fb4c432def8c9063926189f6bd7df67baff7e0caeac89ab5",
     "tests/candidate-cleanup-policy.test.ts": "5e913e01f82acb7a976985e404ca37ef5bf63f5d61bb7a4b5893c72fbebfd51d",
     "tests/candidate-codegraph-batching.test.ts": "b09716c92c340c2668b1f0ce0a6694e341add650503b2732739a4c27a9ba66f1",
     "tests/candidate-codegraph-mixed-report.test.ts": "209df8323549378fe7ef8f50a8c968734edcbc60e9bb749f15670508e1a43f7d",
-    "tests/candidate-codegraph-scheduler.test.ts": "8fadf84cbf370b526616d150b4419b60d6502f4a5dbb73913f4239c521153923",
+    "tests/candidate-codegraph-scheduler.test.ts": "5782ecb0ae30cf3d63b77eca1c789b754f8119417f02100cdcf38bc89b202212",
     "tests/candidate-counted-fixture.test.ts": "8fc87d828d2e375c5af74f8bfff3217e0479f6e2d5e2ba75c6a4a7db73eec20c",
     "tests/candidate-counted-native.test.ts": "cc0a8dd2cc182389266fe87c4e3485b8b3af359f6fce4ea4c0651b6b4cfa9864",
     "tests/candidate-counted-scheduler.test.ts": "c20fd4ae868309949cd9a412ddf6276ec65a08b96632751a56c9c704236ccb59",
@@ -2636,7 +2622,7 @@
     "tests/candidate-gate-efficient-timeout.test.ts": "44c80b34ff784fdef56ba89bd43ca8a37ab20f6e4b2a0304c3250ad889105342",
     "tests/candidate-gate-eol.test.ts": "db72054d71bb5bb2cb986c7a5ccb7b31d714b6c863e5901fd7d1fe723e8a1ad4",
     "tests/candidate-gate-orchestration-boundaries.test.ts": "8f7c5fd2c3f35a47e7a5353cfbc54a7094ef553f02f5521862fe8edf1a3fa5a2",
-    "tests/candidate-gate-trust.test.ts": "df70283785dd129f90c15b8af532c7f71af2c5a3de9dff4120ff3e83a3f27c90",
+    "tests/candidate-gate-trust.test.ts": "a782ec07035ec42d8b04e392c2ba5e6e1670d8c2dd512bca7bba78094e4e13c9",
     "tests/candidate-gate-workflow-errors.test.ts": "073adf6802bc32d65bc3fa8dad2e766466a97206907517ab9da96931aa2f9048",
     "tests/candidate-gate.test.ts": "2d711c21af8fe0dfb02187aa87aae3f653f50fedfea9694859b94aeb5b1206c6",
     "tests/candidate-integration-dependencies.test.ts": "cf7b57b88909268baceb4d17eb0a5acab080011e20c37739746502d7758e5553",
@@ -2704,7 +2690,7 @@
     "tests/fixtures/portable-paths.ts": "08f08667a406a20f05e574225c39dc934b36d950786fc82dd5ee770c473d749f",
     "tests/fixtures/short-unix-socket.ts": "8b6e158c7a9880b2db6d3c3d87d533e208660f7b611089e08152a8689958a803",
     "tests/fixtures/source-supersession-help.json": "8430c86a4ff801da653e16622604b3b66bf388d68221f5b92de39a76b0c811c1",
-    "tests/full-test-timeout.test.ts": "7040637ca061920b27b8d02e4f7c3b76f20360455b979f107f525521abcec46e",
+    "tests/full-test-timeout.test.ts": "16917c9206669ca1cd3ea9cb4a6e447368b6b85795044abeabe91e0e540704b2",
     "tests/generation10-recovery-accounting.test.ts": "e55f536251eedd89b4d4f6c4dd427f66ddc197f2bfcdda34ae061514a6a9fbcb",
     "tests/generation10-recovery-completion.test.ts": "777f8a18fe452c29b9ade2ff17a5a2da2e86622550c0695791eea5faaf358d55",
     "tests/generation10-recovery-contract.test.ts": "a68f1797bd02fcba08de4f6f9aee5336994f188d8c0cb328621e11fe6873ba89",
@@ -20554,6 +20540,37 @@
         "0423f7cec274859e713394bd6774dcbb166f687757fa19753e3e2d92c0b99225",
         "--old-fingerprint",
         "cdd074cbb725beec4622cfe7eba394baf90e4c38c699cae0fe581a95aab50d8f",
+        "--requirement",
+        "REQ-M5-LINUX-DELIVERY-002",
+        "--command",
+        "codegraph-tests"
+      ]
+    },
+    {
+      "testId": "TEST-M5-LINUX-CALIBRATION-PRECONDITION-PROBE-DIAGNOSTIC-001",
+      "cycleId": "2a0a87d9-879a-4db3-bdc3-239c89781514",
+      "terminalKind": "green",
+      "terminalOrder": 4817,
+      "terminalSha256": "d3907136c28fef3939af6d000168ea2149ae45dc35e5c83f9d5e304b3bd36ead",
+      "oldFingerprint": "eb6ab08d75d1aa8e756a7b731c88faaaa505494e31a72e433d8a0f7e659052bd",
+      "requirementId": "REQ-M5-LINUX-DELIVERY-002",
+      "command": "codegraph-tests",
+      "changeId": "CHANGE-0020",
+      "generation": 1,
+      "selectionReason": "greatest-terminal",
+      "cliArgs": [
+        "--test",
+        "TEST-M5-LINUX-CALIBRATION-PRECONDITION-PROBE-DIAGNOSTIC-001",
+        "--cycle",
+        "2a0a87d9-879a-4db3-bdc3-239c89781514",
+        "--terminal-kind",
+        "green",
+        "--terminal-order",
+        "4817",
+        "--terminal-sha256",
+        "d3907136c28fef3939af6d000168ea2149ae45dc35e5c83f9d5e304b3bd36ead",
+        "--old-fingerprint",
+        "eb6ab08d75d1aa8e756a7b731c88faaaa505494e31a72e433d8a0f7e659052bd",
         "--requirement",
         "REQ-M5-LINUX-DELIVERY-002",
         "--command",
