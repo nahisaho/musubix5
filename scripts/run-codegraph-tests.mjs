@@ -22,6 +22,7 @@ const testIds = [
   'TEST-M5-LINUX-CALIBRATION-REMAINING-BUDGET-001',
   'TEST-M5-LINUX-CALIBRATION-BUDGET-REALLOCATION-001',
   'TEST-M5-LINUX-CALIBRATION-CODEGRAPH-BUDGET-001',
+  'TEST-M5-LINUX-CALIBRATION-CODEGRAPH-LANES-001',
   'TEST-M5-LINUX-CALIBRATION-NATIVE-REPORT-DIAGNOSTIC-001',
   'TEST-M5-LINUX-CALIBRATION-NATIVE-SELECTION-DIAGNOSTIC-001',
   'TEST-M5-LINUX-CALIBRATION-SLOT-RELEASE-DIAGNOSTIC-001',
@@ -344,14 +345,30 @@ async function runGroup({ ordinal, testIds: group, args }) {
   groupResults[ordinal] = results;
 }
 
+/** @id CODE-M5-LINUX-CALIBRATION-CODEGRAPH-LANES-001
+ * @implements REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
 async function executeGroups(selected) {
   const sequences = [
     selected.filter(group => !group.testIds.some(id => id.startsWith('TEST-M5-GRAPH-'))),
     selected.filter(group => group.testIds.some(id => id.startsWith('TEST-M5-GRAPH-'))),
   ];
-  await Promise.all(sequences.map(async sequence => {
+  async function runBounded(sequence, concurrency) {
+    let next = 0;
+    const workers = Array.from({ length: Math.min(concurrency, sequence.length) }, async () => {
+      while (next < sequence.length) {
+        const group = sequence[next++];
+        if (schedulerError) return;
+        await runGroup(group);
+      }
+    });
+    await Promise.all(workers);
+  }
+  await Promise.all(sequences.map(async (sequence, index) => {
     try {
-      for (const group of sequence) { if (schedulerError) return; await runGroup(group); }
+      const concurrency = index === 1 && matrixPlan ? 2 : 1;
+      await runBounded(sequence, concurrency);
     } catch (cause) { stopChildren(cause); }
   }));
 }

@@ -155,6 +155,17 @@ it('TEST-M5-LINUX-CALIBRATION-CODEGRAPH-BUDGET-001 reallocates the fixed command
   expect(api.candidateGateOuterTimeoutMs('calibration', timeouts, 120_000)).toBe(1_785_000);
 });
 
+/** @id TEST-M5-LINUX-CALIBRATION-CODEGRAPH-LANES-001
+ * @verifies REQ-M5-LINUX-DELIVERY-002
+ * @design DES-M5-LINUX-DELIVERY-002
+ */
+it('TEST-M5-LINUX-CALIBRATION-CODEGRAPH-LANES-001 bounds planned graph execution to two concurrent lanes', async () => {
+  const scheduler = await readFile('scripts/run-codegraph-tests.mjs', 'utf8');
+  expect(scheduler).toContain('index === 1 && matrixPlan ? 2 : 1');
+  expect(scheduler).toContain('await runBounded(sequence, concurrency)');
+  expect(scheduler).toContain('const workers = Array.from({ length: Math.min(concurrency, sequence.length) }');
+});
+
 /** @id TEST-M5-LINUX-CALIBRATION-NATIVE-REPORT-DIAGNOSTIC-001
  * @verifies REQ-M5-LINUX-DELIVERY-002
  * @design DES-M5-LINUX-DELIVERY-002

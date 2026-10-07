@@ -67653,6 +67653,176 @@
         "diagnostics": [],
         "order": 4766
       }
+    },
+    {
+      "cycleId": "a7d7436a-82b8-45a6-80b5-23abfa6c4569",
+      "changeId": "CHANGE-0020",
+      "generation": 1,
+      "requirementId": "REQ-M5-LINUX-DELIVERY-002",
+      "testId": "TEST-M5-LINUX-CALIBRATION-CODEGRAPH-LANES-001",
+      "testPath": "tests/candidate-calibration-integration.test.ts",
+      "commandName": "codegraph-tests",
+      "red": {
+        "testRuntime": {
+          "kind": "stable-test-wall-clock-v1",
+          "profileSha256": "a6ed695f234afda58c7826caf4d04d1b89e9ddf16378da425f722916a25c4832",
+          "inputsSha256": "eceb0df4290e3a1e1168db14fc00c869e046648985d704b9f9cc21eb4b49b52d",
+          "dispatchSha256": "c5a4a0ec26051918b628f9031fd6ea492f9248ad5e5f559ee523df2d62d7eed7",
+          "runs": [
+            {
+              "ordinal": 0,
+              "runId": "51da36c5-21dc-4e47-9e9b-996136b88b94",
+              "requestSha256": "bc4e09d9148c25e2fb37e19dd4c3aee104b372820185c0d9232ba37ab6bef736",
+              "anchorSha256": "994f91e4ad62e7246f3a248f7f27661cf46130932e9216d745a4351d9e793bea",
+              "acknowledgmentSha256": "287e22f8e338c45b06c18f7f9982300f9fa6552e3f3751c081318369ef563f1a",
+              "resultSha256": "42fa516cabb74dc8dd62dedef350f1156330fb73fe1a68b4dfc39a787788939e"
+            }
+          ],
+          "publication": {
+            "durability": "posix-file-directory-fsync",
+            "closureSha256": "cc7b32457089a52514a48c4d1b5f179e406ff7875441447f536042c7157d6aab"
+          }
+        },
+        "phase": "red",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "failed",
+        "reportSha256": "98ac789c965776595287a2b502e0f2c96e915bc8270aa8faa1cb8fcc29b08b80",
+        "commandSha256": "f1eb78dfddcad49e167c265682441f9bf1b8d871b927d2cc72ec8d1586721b4e",
+        "outputSha256": "69939af88a6492122fe6473df1f7b96b54c808060f21282e3fbe17d5fee27494",
+        "exitCode": 1,
+        "durationMs": 8386,
+        "testFingerprint": "7274194fabaff915a923d2365bad58da68b71dafb38ae5751c78ec6f87c2eab5",
+        "sourceFingerprint": "5052e886c3f3d77dbdd596c975bd1244544c553c63e3087f148fbd26e08cf3a6",
+        "executionId": "0170c8ba-359c-4071-9394-fe79710bd53f",
+        "recordedAt": "2026-10-07T12:12:46.075Z",
+        "diagnostics": [],
+        "order": 4769
+      },
+      "green": {
+        "testRuntime": {
+          "kind": "stable-test-wall-clock-v1",
+          "profileSha256": "a6ed695f234afda58c7826caf4d04d1b89e9ddf16378da425f722916a25c4832",
+          "inputsSha256": "76b848db3f80b49a6cffa38655b57895d9f8d66fefd7a86df2811f8c7398afec",
+          "dispatchSha256": "e68b741640709f48746a9c7acb8074102f42e0230f976de7206cc0c8c72409c1",
+          "runs": [
+            {
+              "ordinal": 0,
+              "runId": "fb05ba28-422c-40b9-91cf-914af2a322fa",
+              "requestSha256": "508b71d5668fc903657e089e8f9519b54401b893be3b9223a1f99336bac19a7b",
+              "anchorSha256": "f3d7b426ea48655a3c798f9cc6e9ab75d73d82a6d72fc3ab9425e015b26a719f",
+              "acknowledgmentSha256": "7e14d278ea403f3d6c20ff4b253eece573054d8f15cb151c73413dbdac16e207",
+              "resultSha256": "34c5cf20df15577f3e17704ddeceeb0aaa6a1edc1246e139b3587f48551945f2"
+            }
+          ],
+          "publication": {
+            "durability": "posix-file-directory-fsync",
+            "closureSha256": "47be1e7cbb0f51a591b42ab932971db122efeed266bbbc2a06a19441398e7fc7"
+          }
+        },
+        "phase": "green",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "passed",
+        "reportSha256": "f2b420f7af8e756d58d74bb26bc04957fcc07160b42f40a576f3771b3e23100e",
+        "commandSha256": "f1eb78dfddcad49e167c265682441f9bf1b8d871b927d2cc72ec8d1586721b4e",
+        "outputSha256": "1c27bf0563e1f7974c9bf7945d43247d67fb5e68f9c58d0084216fc9513901da",
+        "exitCode": 0,
+        "durationMs": 8879,
+        "testFingerprint": "7274194fabaff915a923d2365bad58da68b71dafb38ae5751c78ec6f87c2eab5",
+        "sourceFingerprint": "fd1b80a3595977d96b8eb6de12e28d64ea09ce095a1c586c5bdb790a39f5aa41",
+        "executionId": "622b00e0-382e-417a-836b-a984a3423a19",
+        "recordedAt": "2026-10-07T12:16:16.135Z",
+        "diagnostics": [],
+        "order": 4772
+      }
+    },
+    {
+      "cycleId": "f0037d06-33fd-44b0-ba91-d64412b916bd",
+      "changeId": "CHANGE-0020",
+      "generation": 1,
+      "requirementId": "REQ-M5-LINUX-DELIVERY-002",
+      "testId": "TEST-M5-LINUX-CALIBRATION-CODEGRAPH-LANES-001",
+      "testPath": "tests/candidate-calibration-integration.test.ts",
+      "commandName": "codegraph-tests",
+      "red": {
+        "testRuntime": {
+          "kind": "stable-test-wall-clock-v1",
+          "profileSha256": "a6ed695f234afda58c7826caf4d04d1b89e9ddf16378da425f722916a25c4832",
+          "inputsSha256": "76b848db3f80b49a6cffa38655b57895d9f8d66fefd7a86df2811f8c7398afec",
+          "dispatchSha256": "e77cde4db159724a33aefa14dc1eec691e2197b33d9eea9e7916bc50145ffcd0",
+          "runs": [
+            {
+              "ordinal": 0,
+              "runId": "6c44ba72-6134-4956-9637-a93f45e7304d",
+              "requestSha256": "50ba09f250b0341caee322a7f36c65997ed9440d2daf1279187848340fc5bed2",
+              "anchorSha256": "a5f4a3e9dd1c994f7408a834d17c3796493bca05447c6281f54c2f915da5d054",
+              "acknowledgmentSha256": "d72ae438f8a5ac0351d48a6c2df576465af342bc97cc328a3b939dd1eb3eee05",
+              "resultSha256": "7ed7eba990bef5add025d7ce6357edb9c9667824e62500eeab7cd3f564550f3a"
+            }
+          ],
+          "publication": {
+            "durability": "posix-file-directory-fsync",
+            "closureSha256": "1d230687637887b8935a7c2769397c41b895c25f0f6b9131827170d82c930f7b"
+          }
+        },
+        "phase": "red",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "failed",
+        "reportSha256": "98ac789c965776595287a2b502e0f2c96e915bc8270aa8faa1cb8fcc29b08b80",
+        "commandSha256": "f1eb78dfddcad49e167c265682441f9bf1b8d871b927d2cc72ec8d1586721b4e",
+        "outputSha256": "39156941c5122b0f33ff0f1a26a07c2317b358270bfc7c9643cda8eb6eb691bf",
+        "exitCode": 1,
+        "durationMs": 7674,
+        "testFingerprint": "d86d692fda47bc56ee71e489b4cd4fc9a8f069471c1f13e334abe4ca968e6bdf",
+        "sourceFingerprint": "fd1b80a3595977d96b8eb6de12e28d64ea09ce095a1c586c5bdb790a39f5aa41",
+        "executionId": "1c733e0e-b2ef-4ab2-93c8-f0ba02fde2b8",
+        "recordedAt": "2026-10-07T12:30:13.152Z",
+        "diagnostics": [],
+        "order": 4775
+      },
+      "green": {
+        "testRuntime": {
+          "kind": "stable-test-wall-clock-v1",
+          "profileSha256": "a6ed695f234afda58c7826caf4d04d1b89e9ddf16378da425f722916a25c4832",
+          "inputsSha256": "33f03b91fa7368f1fc8b7e26c467992a8981482a29731b85398d6143bab93cdf",
+          "dispatchSha256": "d7ce2d8d0ec581823f8eb1e361c9ac946feac61a5099f60b94bc38670b6b0036",
+          "runs": [
+            {
+              "ordinal": 0,
+              "runId": "8d19e7c3-10b8-48f3-a8ec-09df5fae6033",
+              "requestSha256": "4f971f8350cfa9ba356f897155abd76c2509ded89c4021fe82a01357de07109a",
+              "anchorSha256": "6244b582263df1b5b3255858fade9806089214d0486e07238092aa53fe79e29e",
+              "acknowledgmentSha256": "9a58fb8fa0cca64512d7698773d4be48a9862aea9dd8ddfd080095d83a1f2eb4",
+              "resultSha256": "7cbba0614175fc00cb4a86348d42c6173686d6cfe58afd0e604b885b53781195"
+            }
+          ],
+          "publication": {
+            "durability": "posix-file-directory-fsync",
+            "closureSha256": "e3756d7fdde3937ce70f02df2b06ff41325ee413bb37e53c732ddb0cdf1bd467"
+          }
+        },
+        "phase": "green",
+        "valid": true,
+        "scoped": true,
+        "resultObserved": true,
+        "testStatus": "passed",
+        "reportSha256": "f2b420f7af8e756d58d74bb26bc04957fcc07160b42f40a576f3771b3e23100e",
+        "commandSha256": "f1eb78dfddcad49e167c265682441f9bf1b8d871b927d2cc72ec8d1586721b4e",
+        "outputSha256": "1c27bf0563e1f7974c9bf7945d43247d67fb5e68f9c58d0084216fc9513901da",
+        "exitCode": 0,
+        "durationMs": 7409,
+        "testFingerprint": "d86d692fda47bc56ee71e489b4cd4fc9a8f069471c1f13e334abe4ca968e6bdf",
+        "sourceFingerprint": "1f89b60278bdf2ffc58110d66bbd4faf764ae0c7ca70c6e4850f57249e82130f",
+        "executionId": "0d8dfb26-0c34-41a9-a590-c1dc93b253a4",
+        "recordedAt": "2026-10-07T12:32:32.446Z",
+        "diagnostics": [],
+        "order": 4778
+      }
     }
   ],
   "chain": [
@@ -105235,6 +105405,62 @@
       "phaseEvidenceSha256": "1eb09169d4c29ab1f9cb2557d59a12bcf441e7cb9d77d182410c53d054e65b0c",
       "previousSha256": "0ad8e8857126991aa5758bc4de9942deebc5650525c7107b581b17c73b7b69ab",
       "recordSha256": "323fbf713bd05206a5c59b100ac8cb37b1ed03a2a436a632bb149c3fbc41ad83"
+    },
+    {
+      "sequence": 2523,
+      "cycleId": "a7d7436a-82b8-45a6-80b5-23abfa6c4569",
+      "changeId": "CHANGE-0020",
+      "generation": 1,
+      "requirementId": "REQ-M5-LINUX-DELIVERY-002",
+      "testId": "TEST-M5-LINUX-CALIBRATION-CODEGRAPH-LANES-001",
+      "testPath": "tests/candidate-calibration-integration.test.ts",
+      "commandName": "codegraph-tests",
+      "phase": "red",
+      "phaseEvidenceSha256": "e3bf876b1123ff24be10a081d2ed22373ed59602bead5cb5ae9e693adbfe193d",
+      "previousSha256": "323fbf713bd05206a5c59b100ac8cb37b1ed03a2a436a632bb149c3fbc41ad83",
+      "recordSha256": "dd6e7111d2aae851faa12d3387b0d04fbc63f14d48895f77f443b7c5e176cd14"
+    },
+    {
+      "sequence": 2524,
+      "cycleId": "a7d7436a-82b8-45a6-80b5-23abfa6c4569",
+      "changeId": "CHANGE-0020",
+      "generation": 1,
+      "requirementId": "REQ-M5-LINUX-DELIVERY-002",
+      "testId": "TEST-M5-LINUX-CALIBRATION-CODEGRAPH-LANES-001",
+      "testPath": "tests/candidate-calibration-integration.test.ts",
+      "commandName": "codegraph-tests",
+      "phase": "green",
+      "phaseEvidenceSha256": "dfd4f57effd693841c91d1bfec9d0b73b2fafba497a52bfeb71fbe3e9662f22a",
+      "previousSha256": "dd6e7111d2aae851faa12d3387b0d04fbc63f14d48895f77f443b7c5e176cd14",
+      "recordSha256": "c19da518098fcc841afec297e7699906e605bdd9bf4bec174dd761c3a120030a"
+    },
+    {
+      "sequence": 2525,
+      "cycleId": "f0037d06-33fd-44b0-ba91-d64412b916bd",
+      "changeId": "CHANGE-0020",
+      "generation": 1,
+      "requirementId": "REQ-M5-LINUX-DELIVERY-002",
+      "testId": "TEST-M5-LINUX-CALIBRATION-CODEGRAPH-LANES-001",
+      "testPath": "tests/candidate-calibration-integration.test.ts",
+      "commandName": "codegraph-tests",
+      "phase": "red",
+      "phaseEvidenceSha256": "1ccc8dbe715c6706fbecc69c78f5c60a152bb29d6ab9a739f2ae45b7b8d66a5e",
+      "previousSha256": "c19da518098fcc841afec297e7699906e605bdd9bf4bec174dd761c3a120030a",
+      "recordSha256": "1d03528c1ebfc3ff877296293ef507c4840ac0bcdf2068046ab8704d6e65c2a5"
+    },
+    {
+      "sequence": 2526,
+      "cycleId": "f0037d06-33fd-44b0-ba91-d64412b916bd",
+      "changeId": "CHANGE-0020",
+      "generation": 1,
+      "requirementId": "REQ-M5-LINUX-DELIVERY-002",
+      "testId": "TEST-M5-LINUX-CALIBRATION-CODEGRAPH-LANES-001",
+      "testPath": "tests/candidate-calibration-integration.test.ts",
+      "commandName": "codegraph-tests",
+      "phase": "green",
+      "phaseEvidenceSha256": "199b37f644782bff94ea1e15551fbda88f412f3b27f9264c8eef474dbdbe0031",
+      "previousSha256": "1d03528c1ebfc3ff877296293ef507c4840ac0bcdf2068046ab8704d6e65c2a5",
+      "recordSha256": "6ec9bebd132abc9158b6e929172f2629f5cf584f555f489b79870e3209dadf45"
     }
   ],
   "sourceSupersessions": [
